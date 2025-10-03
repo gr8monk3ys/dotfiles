@@ -1,0 +1,6 @@
+.git/
+.git
+bundle/*/doc/tags
+init.vim
+view
+result
