@@ -1,0 +1,42 @@
+# duti configuration file
+# Sets default applications for file types and URL schemes on macOS
+# Format: <bundle id> <UTI/ext/MIME type> [role]
+# Roles: all, viewer, editor, shell
+
+# Browser - Firefox
+org.mozilla.firefox http all
+org.mozilla.firefox https all
+org.mozilla.firefox html all
+
+# Text Editor - VSCodium
+com.visualstudio.code.oss public.plain-text all
+com.visualstudio.code.oss public.unix-executable all
+com.visualstudio.code.oss public.source-code all
+
+# PDF Viewer - Zathura (if installed) or Preview
+# Note: Zathura may not have a standard bundle ID, fallback to Preview
+com.apple.Preview com.adobe.pdf all
+
+# Markdown - VSCodium
+com.visualstudio.code.oss net.daringfireball.markdown all
+
+# Archives
+com.apple.archiveutility public.zip-archive all
+com.apple.archiveutility public.tar-archive all
+
+# Images
+com.apple.Preview public.image all
+com.apple.Preview public.jpeg all
+com.apple.Preview public.png all
+
+# Videos
+org.videolan.vlc public.movie all
+org.videolan.vlc public.avi all
+org.videolan.vlc public.mpeg-4 all
+
+# Audio
+com.apple.Music public.audio all
+com.apple.Music public.mp3 all
+
+# Notes - Obsidian
+md.obsidian .md all

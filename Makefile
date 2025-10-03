@@ -36,19 +36,30 @@ ifndef GITHUB_ACTION
 endif
 
 link: stow-$(OS)
-	for FILE in $$(\ls -A runcom); do if [ -f $(HOME)/$$FILE -a ! -h $(HOME)/$$FILE ]; then \
-		mv -v $(HOME)/$$FILE{,.bak}; fi; done
+	@echo "Linking dotfiles..."
 	mkdir -p "$(XDG_CONFIG_HOME)"
-	stow -t "$(HOME)" runcom
-	stow -t "$(XDG_CONFIG_HOME)" config
+	# Backup existing .zshenv if it exists and is not a symlink
+	if [ -f $(HOME)/.zshenv -a ! -h $(HOME)/.zshenv ]; then \
+		mv -v $(HOME)/.zshenv $(HOME)/.zshenv.bak; \
+	fi
+	# Link .zshenv to home directory
+	ln -sf $(DOTFILES_DIR)/.zshenv $(HOME)/.zshenv
+	# Link .config directory contents
+	stow -t "$(XDG_CONFIG_HOME)" .config
 	mkdir -p $(HOME)/.local/runtime
 	chmod 700 $(HOME)/.local/runtime
+	@echo "Dotfiles linked successfully!"
 
 unlink: stow-$(OS)
-	stow --delete -t "$(HOME)" runcom
-	stow --delete -t "$(XDG_CONFIG_HOME)" config
-	for FILE in $$(\ls -A runcom); do if [ -f $(HOME)/$$FILE.bak ]; then \
-		mv -v $(HOME)/$$FILE.bak $(HOME)/$${FILE%%.bak}; fi; done
+	@echo "Unlinking dotfiles..."
+	stow --delete -t "$(XDG_CONFIG_HOME)" .config
+	# Remove .zshenv symlink
+	rm -f $(HOME)/.zshenv
+	# Restore backup if it exists
+	if [ -f $(HOME)/.zshenv.bak ]; then \
+		mv -v $(HOME)/.zshenv.bak $(HOME)/.zshenv; \
+	fi
+	@echo "Dotfiles unlinked successfully!"
 
 brew:
 	is-executable brew || curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh | bash
@@ -97,10 +108,21 @@ rust-packages: brew-packages
 	cargo install $(shell cat install/Rustfile)
 
 duti:
-	duti -v $(DOTFILES_DIR)/install/duti
+	@if command -v duti >/dev/null 2>&1; then \
+		echo "Setting default applications with duti..."; \
+		duti -v $(DOTFILES_DIR)/install/duti; \
+	else \
+		echo "⚠️  duti not installed. Skipping default application setup."; \
+		echo "   Install with: brew install duti"; \
+	fi
 
 bun:
-  curl -fsSL https://bun.sh/install | bash
+	@if command -v bun >/dev/null 2>&1; then \
+		echo "✓ Bun already installed"; \
+	else \
+		echo "Installing Bun..."; \
+		curl -fsSL https://bun.sh/install | bash; \
+	fi
 
 test:
 	bats test

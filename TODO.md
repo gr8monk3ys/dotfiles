@@ -5,31 +5,31 @@ Organized list of improvements, fixes, and future enhancements for the dotfiles 
 ## Critical Issues
 
 ### Directory Structure Mismatches
-- [ ] **Fix Makefile directory references**
-  - Makefile references `runcom` directory that doesn't exist
-  - Makefile references `config` directory but uses `.config` instead
-  - Update Makefile to use correct directory names or create missing directories
-  
-- [ ] **Create missing runcom directory**
-  - Decision needed: Use `runcom/` or continue with root-level files?
-  - If using `runcom/`, move `.zshenv` and other shell startup files there
-  - Update symlink logic in Makefile accordingly
+- [x] **Fix Makefile directory references** ✅ COMPLETED
+  - ~~Makefile references `runcom` directory that doesn't exist~~
+  - ~~Makefile references `config` directory but uses `.config` instead~~
+  - Updated Makefile to work with current structure (root-level `.zshenv` and `.config/`)
+
+- [x] **Create missing runcom directory** ✅ COMPLETED
+  - Decision made: Keep root-level files, no `runcom/` directory needed
+  - Makefile now links `.zshenv` directly to home directory
+  - Symlink logic updated to use `.config/` instead of `config/`
 
 ### Missing Files
-- [ ] **Add duti configuration file**
-  - Makefile references `install/duti` but file doesn't exist
-  - Create `install/duti` with default application associations
-  - Document duti usage in install/README.md
+- [x] **Add duti configuration file** ✅ COMPLETED
+  - Created `install/duti` with default application associations
+  - Configured for Firefox, VSCodium, Preview, and other apps
+  - Makefile now handles missing duti gracefully with helpful messages
 
 - [ ] **Populate Codefile**
   - `install/Codefile` is currently empty
   - Add VS Code / VSCodium extensions list
   - Or remove if not using VSCode extensions
 
-- [ ] **Create missing scripts**
-  - Makefile references bin scripts: `is-supported`, `is-macos`, `is-arch`, `is-arm64`
-  - These may exist but aren't visible - verify location
-  - Document all scripts in .local/bin/
+- [x] **Create missing scripts** ✅ COMPLETED
+  - Created all required bin scripts: `is-supported`, `is-macos`, `is-arch`, `is-arm64`, `is-executable`
+  - Added comprehensive documentation in `bin/README.md`
+  - Scripts will be executable when committed to git
 
 ## Documentation
 
@@ -88,7 +88,7 @@ Organized list of improvements, fixes, and future enhancements for the dotfiles 
 - [ ] **Add .gitattributes**
   - Define line ending behavior
   - Add diff patterns for common file types
-  
+
 - [ ] **Enhance .gitconfig**
   - Add more useful aliases
   - Configure GPG signing

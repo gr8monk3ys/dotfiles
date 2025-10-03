@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# Check if a command is supported (executable exists)
+# Usage: is-supported <command> <return-value-if-true> <return-value-if-false>
+
+if [ -x "$1" ] || command -v "${1##*/}" > /dev/null 2>&1; then
+  echo "$2"
+else
+  echo "$3"
+fi
