@@ -38,8 +38,18 @@ jobs:
             sudo make
           fi
 
-      - name: Load & verify runcom setup
-        run: source $HOME/.bash_profile
+      - name: Load & verify shell setup
+        run: |
+          if [ -f "$HOME/.zshenv" ]; then
+            source "$HOME/.zshenv"
+          fi
+
+      - name: Run health check
+        run: make doctor
+
+      - name: Install BATS
+        if: startsWith(matrix.os, 'macos')
+        run: brew install bats-core
 
       - name: Run tests
         if: startsWith(matrix.os, 'macos')

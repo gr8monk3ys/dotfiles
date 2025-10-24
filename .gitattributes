@@ -1,0 +1,80 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Shell scripts
+*.sh text eol=lf
+*.bash text eol=lf
+*.zsh text eol=lf
+
+# Source code
+*.c text diff=c
+*.h text diff=c
+*.cpp text diff=cpp
+*.py text diff=python
+*.rs text diff=rust
+*.go text diff=golang
+*.js text diff=javascript
+*.ts text diff=typescript
+*.jsx text diff=javascript
+*.tsx text diff=typescript
+
+# Configuration files
+*.json text
+*.yaml text
+*.yml text
+*.toml text
+*.ini text
+*.conf text
+*.config text
+
+# Markdown and documentation
+*.md text diff=markdown
+*.txt text
+*.rst text
+
+# Dotfiles
+.gitignore text
+.gitattributes text
+.editorconfig text
+.zshenv text eol=lf
+
+# Make
+Makefile text eol=lf
+*.mk text eol=lf
+
+# Scripts in bin/
+bin/* text eol=lf
+
+# Vim
+*.vim text
+*.vimrc text
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar.gz binary
+*.dmg binary
+
+# Archives
+*.7z binary
+*.gz binary
+*.tar binary
+*.tgz binary
+*.zip binary
+
+# Fonts
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+
+# Linguist overrides for GitHub language detection
+*.md linguist-detectable
+*.md linguist-documentation=false
+.config/** linguist-vendored=false
+install/* linguist-language=Shell

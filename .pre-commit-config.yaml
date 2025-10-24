@@ -1,0 +1,84 @@
+# Pre-commit hooks configuration
+# Install: pip install pre-commit
+# Setup: pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+
+  # ShellCheck - Shell script linting
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.9.0.6
+    hooks:
+      - id: shellcheck
+        args: [--severity=warning]
+        files: ^bin/.*$
+
+  # Markdownlint - Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.38.0
+    hooks:
+      - id: markdownlint
+        args: [--fix]
+        files: \.md$
+
+  # EditorConfig checker
+  - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
+    rev: 2.7.3
+    hooks:
+      - id: editorconfig-checker
+        alias: ec
+
+# Custom local hooks
+  - repo: local
+    hooks:
+      # Validate Brewfile format
+      - id: validate-brewfile
+        name: Validate Brewfile
+        entry: bash -c 'grep -qE "^(brew|tap|cask)" install/Brewfile'
+        language: system
+        files: install/Brewfile
+        pass_filenames: false
+
+      # Validate npmfile format
+      - id: validate-npmfile
+        name: Validate npmfile
+        entry: bash -c 'grep -v "^#" install/npmfile | grep -v "^$" | grep -qE "^[@a-z0-9][a-z0-9._/-]*$"'
+        language: system
+        files: install/npmfile
+        pass_filenames: false
+
+      # Validate Rustfile format
+      - id: validate-rustfile
+        name: Validate Rustfile
+        entry: bash -c 'grep -v "^#" install/Rustfile | grep -v "^$" | grep -qE "^[a-z0-9][a-z0-9_-]*$"'
+        language: system
+        files: install/Rustfile
+        pass_filenames: false
+
+      # Check for TODO comments in commits
+      - id: check-todos
+        name: Check for TODO comments
+        entry: bash -c '! git diff --cached | grep -i "TODO"'
+        language: system
+        pass_filenames: false
+        always_run: true
+
+# Configuration
+default_language_version:
+  python: python3

@@ -1,0 +1,31 @@
+# VSCodium Extensions
+# Install with: make vscode-extensions
+
+# Language Support
+vscodevim.vim
+ms-python.python
+rust-lang.rust-analyzer
+golang.go
+dbaeumer.vscode-eslint
+esbenp.prettier-vscode
+
+# Git Integration
+eamodio.gitlens
+mhutchie.git-graph
+
+# Utilities
+editorconfig.editorconfig
+usernamehw.errorlens
+streetsidesoftware.code-spell-checker
+christian-kohler.path-intellisense
+yzhang.markdown-all-in-one
+
+# Themes
+github.github-vscode-theme
+catppuccin.catppuccin-vsc
+
+# Docker & Containers (if needed)
+ms-azuretools.vscode-docker
+
+# Markdown & Documentation
+davidanson.vscode-markdownlint

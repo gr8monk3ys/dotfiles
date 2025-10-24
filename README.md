@@ -1,5 +1,10 @@
 # dotfiles
 
+[![Installation](https://github.com/gr8monk3ys/dotfiles/workflows/Dotfiles%20Installation/badge.svg)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/install.yml)
+[![Tests](https://github.com/gr8monk3ys/dotfiles/workflows/Tests/badge.svg)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/test.yml)
+[![Lint](https://github.com/gr8monk3ys/dotfiles/workflows/Lint/badge.svg)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/lint.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Personal configuration files (dotfiles) for macOS, with support for Linux systems.
 
 ## Highlights
@@ -293,6 +298,112 @@ Or start a new shell session.
 
 Inspired by the [dotfiles community](https://dotfiles.github.io) and various configurations from across GitHub.
 
+## Documentation
+
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Guidelines for contributing to this repository
+- **[CHANGELOG.md](CHANGELOG.md)** - Version history and release notes
+- **[CLAUDE.md](CLAUDE.md)** - AI assistant guide for working with this repository
+- **[MAKEFILE.md](MAKEFILE.md)** - Complete Makefile reference and usage guide
+- **[LICENSE](LICENSE)** - MIT License
+
+## FAQ
+
+### Can I use these dotfiles on my system?
+
+Yes! Fork the repository and customize to your preferences. The dotfiles are designed to be modular - you can use only the parts you need.
+
+### How do I update my dotfiles?
+
+```bash
+cd ~/.dotfiles
+git pull
+make link  # Re-create symlinks if needed
+```
+
+### How do I uninstall?
+
+```bash
+cd ~/.dotfiles
+make unlink  # Remove all symlinks
+```
+
+Then manually delete the repository directory if desired.
+
+### Can I use these on Linux?
+
+Partial support exists for Arch Linux. See `install/pacmanfile` for the package list. Other distributions will require creating appropriate package lists.
+
+### What if I already have configurations?
+
+The `make link` command backs up your existing `.zshenv` automatically. For other configs in `~/.config/`, back them up manually before running `make link`.
+
+### How do I add my own configurations?
+
+1. Add configurations to `.config/[app-name]/`
+2. Run `make link` to create symlinks
+3. Update package lists in `install/` if needed
+4. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
+
+## Troubleshooting
+
+### Symlink creation fails
+
+**Problem:** "File exists" errors during `make link`
+
+**Solution:** Backup and remove existing configurations:
+```bash
+mv ~/.config/[app] ~/.config/[app].backup
+make link
+```
+
+### Homebrew installation fails
+
+**Problem:** Permission errors or command not found
+
+**Solution:**
+```bash
+# Ensure Xcode Command Line Tools are installed
+xcode-select --install
+
+# Check Homebrew installation
+brew doctor
+```
+
+### Shell configuration not loading
+
+**Problem:** Changes to `.zshrc` not taking effect
+
+**Solution:**
+```bash
+# Ensure .zshenv is properly linked
+ls -la ~/.zshenv
+
+# If not, relink
+make link
+
+# Start new shell or source
+source ~/.zshenv
+```
+
+### Packages fail to install
+
+**Problem:** npm or cargo packages fail
+
+**Solution:**
+```bash
+# Ensure prerequisite packages are installed
+make brew-packages  # Install Homebrew packages first
+make npm           # Ensure Node.js is installed
+
+# Try installing packages individually
+npm install -g <package-name>
+cargo install <package-name>
+```
+
+For more troubleshooting, see individual configuration READMEs in `.config/*/README.md`.
+
 ## License
 
-Take anything you want, but at your own risk.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+Take anything you want and customize to your needs!

@@ -1,32 +1,91 @@
-cask "aerospace"
-cask "audacity"
-cask "balenaetcher"
-cask "brave-browser"
-cask "cameracontroller"
-cask "db-browser-for-sqlite"
-cask "dorion"
-cask "figma"
-cask "firefox"
-cask "font-0xproto-nerd-font"
-cask "font-3270-nerd-font"
-cask "font-agave-nerd-font"
-cask "font-fira-code-nerd-font"
-cask "font-fontawesome"
-cask "godot"
-cask "karabiner-elements"
-cask "keepassxc"
-cask "keycastr"
-cask "kitty"
-cask "love"
-cask "lunar-client"
-cask "monero-wallet"
-cask "obs"
-cask "obsidian"
-cask "proton-drive"
-cask "raycast"
-cask "rode-central"
-cask "spacedrive"
-cask "tidal"
-cask "tor-browser"
-cask "vscodium"
-cask "zen"
+# Homebrew Caskfile
+# GUI applications for macOS
+# Install with: brew bundle --file=install/Caskfile --cask
+
+# ============================================================================
+# Window Management & System Utilities
+# ============================================================================
+cask "aerospace"                       # i3-like tiling window manager for macOS
+cask "karabiner-elements"              # Keyboard customization and remapping
+cask "raycast"                         # Spotlight replacement with extensions
+cask "keycastr"                        # Keystroke visualizer for presentations
+
+# ============================================================================
+# Terminals & Terminal Tools
+# ============================================================================
+cask "kitty"                           # GPU-accelerated terminal emulator
+
+# ============================================================================
+# Web Browsers
+# ============================================================================
+cask "firefox"                         # Mozilla Firefox web browser
+cask "brave-browser"                   # Privacy-focused Chromium browser
+cask "zen"                             # Zen browser (privacy-focused)
+cask "tor-browser"                     # Anonymous web browser
+
+# ============================================================================
+# Development Tools & IDEs
+# ============================================================================
+cask "vscodium"                        # Open-source VS Code without telemetry
+cask "db-browser-for-sqlite"           # SQLite database browser
+
+# ============================================================================
+# Design & Creative Tools
+# ============================================================================
+cask "figma"                           # Interface design and prototyping
+cask "godot"                           # Open-source game engine
+
+# ============================================================================
+# Media Creation & Editing
+# ============================================================================
+cask "audacity"                        # Audio editing software
+cask "obs"                             # Open Broadcaster Software (streaming/recording)
+cask "rode-central"                    # Rode microphone control software
+
+# ============================================================================
+# Media Players & Music
+# ============================================================================
+cask "tidal"                           # Music streaming service
+
+# ============================================================================
+# Note-Taking & Knowledge Management
+# ============================================================================
+cask "obsidian"                        # Markdown-based knowledge base
+
+# ============================================================================
+# Productivity & Organization
+# ============================================================================
+cask "spacedrive"                      # Cross-platform file manager
+
+# ============================================================================
+# Security & Privacy
+# ============================================================================
+cask "keepassxc"                       # Password manager
+cask "proton-drive"                    # End-to-end encrypted cloud storage
+cask "monero-wallet"                   # Cryptocurrency wallet
+
+# ============================================================================
+# Communication
+# ============================================================================
+cask "dorion"                          # Discord client alternative
+
+# ============================================================================
+# System Utilities & Tools
+# ============================================================================
+cask "balenaetcher"                    # USB/SD card imaging tool
+cask "cameracontroller"                # Webcam control software
+
+# ============================================================================
+# Gaming & Entertainment
+# ============================================================================
+cask "lunar-client"                    # Minecraft client with mods
+cask "love"                            # LÖVE 2D game framework
+
+# ============================================================================
+# Fonts
+# ============================================================================
+cask "font-0xproto-nerd-font"          # 0xProto Nerd Font (programming font)
+cask "font-3270-nerd-font"             # IBM 3270 Nerd Font (terminal font)
+cask "font-agave-nerd-font"            # Agave Nerd Font (monospace font)
+cask "font-fira-code-nerd-font"        # Fira Code Nerd Font (ligature support)
+cask "font-fontawesome"                # Font Awesome icon font

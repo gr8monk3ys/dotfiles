@@ -126,3 +126,48 @@ bun:
 
 test:
 	bats test
+
+doctor:
+	@bin/dotfiles-doctor
+
+update:
+	@bin/dotfiles-update
+
+backup:
+	@bin/dotfiles-backup
+
+backup-compress:
+	@bin/dotfiles-backup --compress
+
+backup-cleanup:
+	@bin/dotfiles-backup --cleanup
+
+clean:
+	@echo "Cleaning broken symlinks..."
+	@find "$(HOME)/.config" -xtype l -delete 2>/dev/null || true
+	@if [ -h "$(HOME)/.zshenv" ] && [ ! -e "$(HOME)/.zshenv" ]; then \
+		rm -f "$(HOME)/.zshenv"; \
+		echo "Removed broken .zshenv symlink"; \
+	fi
+	@echo "✓ Cleanup complete"
+
+restore:
+	@if [ -f "$(HOME)/.zshenv.bak" ]; then \
+		mv "$(HOME)/.zshenv.bak" "$(HOME)/.zshenv"; \
+		echo "✓ Restored .zshenv from backup"; \
+	else \
+		echo "No .zshenv backup found"; \
+	fi
+
+brew-update:
+	@echo "Updating Homebrew..."
+	@brew update && brew upgrade
+	@echo "✓ Homebrew updated"
+
+brew-cleanup:
+	@echo "Cleaning up Homebrew..."
+	@brew cleanup
+	@brew bundle cleanup --force
+	@echo "✓ Homebrew cleanup complete"
+
+.PHONY: doctor update backup backup-compress backup-cleanup clean restore brew-update brew-cleanup

@@ -1,0 +1,36 @@
+# ShellCheck configuration for dotfiles repository
+# See: https://www.shellcheck.net/wiki/
+
+# Disable specific warnings
+
+# SC1090: Can't follow non-constant source
+# We use dynamic sourcing in many places
+disable=SC1090
+
+# SC1091: Not following sourced file
+# We source files that may not exist during static analysis
+disable=SC1091
+
+# SC2034: Variable appears unused
+# Many variables are used in sourced files or exported
+disable=SC2034
+
+# SC2154: Variable is referenced but not assigned
+# Variables may be set in parent shells or sourced files
+disable=SC2154
+
+# Enable optional checks
+
+# Check for unassigned variables
+# enable=check-unassigned-uppercase
+
+# Formatting options
+# Use 'auto' to follow file encoding
+# format=auto
+
+# Source path for resolving source statements
+# source-path=SCRIPTDIR
+
+# Shell dialect to assume
+# Default is auto-detection based on shebang
+# shell=bash

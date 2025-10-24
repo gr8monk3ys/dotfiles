@@ -1,0 +1,63 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: BATS Tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install BATS (macOS)
+        if: runner.os == 'macOS'
+        run: brew install bats-core
+
+      - name: Install BATS (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo add-apt-repository ppa:duggan/bats
+          sudo apt-get update
+          sudo apt-get install -y bats
+
+      - name: Run platform detection tests
+        run: bats test/test_platform.bats
+
+      - name: Run bin script tests
+        run: bats test/test_bin_scripts.bats
+
+      - name: Run package validation tests
+        run: bats test/test_packages.bats
+
+      - name: Run all tests
+        run: make test
+
+  integration:
+    name: Integration Tests
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Test symlink creation
+        run: |
+          make link
+          test -L "$HOME/.zshenv"
+          test -d "$HOME/.config"
+
+      - name: Test symlink removal
+        run: |
+          make unlink
+          ! test -L "$HOME/.zshenv" || exit 1
+
+      - name: Test clean target
+        run: make clean

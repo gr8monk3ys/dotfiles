@@ -1,103 +1,209 @@
-tap "dominikbraun/timetrace"
-tap "homebrew-zathura/borderless"
-tap "homebrew-zathura/zathura"
-tap "homebrew/services"
-tap "koekeishiya/formulae"
-tap "nikitabobko/tap"
-tap "oven-sh/bun"
-tap "psharma04/dorion"
-tap "sylvanfranklin/local"
-tap "sylvanfranklin/srhd"
-tap "vldmrkl/formulae"
-brew "freetype"
-brew "glib"
-brew "harfbuzz"
-brew "librsvg"
-brew "adwaita-icon-theme"
-brew "ca-certificates"
-brew "aria2"
-brew "dbus", restart_service: :changed
-brew "at-spi2-core"
-brew "bear"
-brew "biome"
-brew "bob"
-brew "tbb"
-brew "cabin"
-brew "ruby"
-brew "cocoapods"
-brew "colima"
-brew "deno"
-brew "docker"
-brew "docker-compose"
-brew "fd"
-brew "ffmpeg"
-brew "fzf"
-brew "fzy"
-brew "gcc"
-brew "gh"
-brew "ghc"
-brew "ghcup"
-brew "gsettings-desktop-schemas"
-brew "gnupg"
-brew "node"
-brew "gtop"
-brew "haskell-stack"
-brew "himalaya"
-brew "imagemagick"
-brew "ios-deploy"
-brew "isync"
-brew "pandoc"
-brew "python@3.13"
-brew "jupyterlab"
-brew "kakoune"
-brew "lazygit"
-brew "libimobiledevice"
-brew "lua-language-server"
-brew "luarocks"
-brew "lux"
-brew "manim"
-brew "meson"
-brew "msmtp"
-brew "mupdf"
-brew "mysql"
-brew "mysql@8.4"
-brew "neomutt"
-brew "ollama"
-brew "tree"
-brew "pass"
-brew "pipx"
-brew "pnpm"
-brew "poetry"
-brew "pyenv"
-brew "python-lsp-server"
-brew "python-matplotlib"
-brew "python@3.12"
-brew "r"
-brew "ripgrep"
-brew "rust-analyzer"
-brew "sk"
-brew "sl"
-brew "sphinx-doc"
-brew "spotify_player"
-brew "telnet"
-brew "timewarrior"
-brew "tldr"
-brew "tmux"
-brew "transmission-cli"
-brew "typescript"
-brew "typos-cli"
-brew "typst"
-brew "typstyle"
-brew "uv"
-brew "uvicorn"
-brew "xcodegen"
-brew "xh"
-brew "yarn"
-brew "yt-dlp"
-brew "zig"
-brew "zsh-syntax-highlighting"
-brew "dominikbraun/timetrace/timetrace"
-brew "homebrew-zathura/zathura/zathura"
-brew "homebrew-zathura/zathura/zathura-pdf-mupdf"
-brew "oven-sh/bun/bun"
+# Homebrew Brewfile
+# Command-line tools and development packages
+# Install with: brew bundle --file=install/Brewfile
 
+# ============================================================================
+# Taps (Third-party repositories)
+# ============================================================================
+tap "dominikbraun/timetrace"           # Time tracking
+tap "homebrew-zathura/borderless"      # Zathura document viewer
+tap "homebrew-zathura/zathura"         # Zathura plugins
+tap "homebrew/services"                # Background services management
+tap "koekeishiya/formulae"             # Window management tools
+tap "nikitabobko/tap"                  # AeroSpace window manager
+tap "oven-sh/bun"                      # Bun JavaScript runtime
+tap "psharma04/dorion"                 # Discord client
+tap "sylvanfranklin/local"             # Local development tools
+tap "sylvanfranklin/srhd"              # Simple hotkey daemon
+tap "vldmrkl/formulae"                 # Additional tools
+
+# ============================================================================
+# Core System Dependencies
+# ============================================================================
+brew "ca-certificates"                 # SSL/TLS certificates
+brew "dbus", restart_service: :changed # Message bus system
+brew "gnupg"                           # PGP encryption
+
+# ============================================================================
+# Graphics & UI Libraries
+# ============================================================================
+brew "freetype"                        # Font rendering
+brew "glib"                            # Core library
+brew "harfbuzz"                        # Text shaping
+brew "librsvg"                         # SVG rendering
+brew "adwaita-icon-theme"              # Icon theme
+brew "at-spi2-core"                    # Accessibility toolkit
+brew "gsettings-desktop-schemas"       # Desktop settings
+
+# ============================================================================
+# Development Tools
+# ============================================================================
+
+## Build Systems & Compilers
+brew "gcc"                             # GNU Compiler Collection
+brew "bear"                            # Generate compilation database
+brew "meson"                           # Build system
+brew "tbb"                             # Threading Building Blocks
+brew "xcodegen"                        # Xcode project generator
+
+## Version Control & Git Tools
+brew "gh"                              # GitHub CLI
+brew "lazygit"                         # Terminal UI for git
+
+## Language Servers & Development Tools
+brew "rust-analyzer"                   # Rust language server
+brew "lua-language-server"             # Lua language server
+brew "python-lsp-server"               # Python language server
+brew "typescript"                      # TypeScript compiler
+
+# ============================================================================
+# Programming Languages & Runtimes
+# ============================================================================
+
+## JavaScript/TypeScript
+brew "node"                            # Node.js runtime
+brew "deno"                            # Secure TypeScript runtime
+brew "pnpm"                            # Fast npm alternative
+brew "yarn"                            # Package manager
+brew "oven-sh/bun/bun"                 # Fast all-in-one JavaScript runtime
+
+## Python
+brew "python@3.12"                     # Python 3.12
+brew "python@3.13"                     # Python 3.13 (latest)
+brew "pyenv"                           # Python version manager
+brew "poetry"                          # Python dependency management
+brew "pipx"                            # Install Python apps in isolation
+brew "uv"                              # Fast Python package installer
+brew "uvicorn"                         # ASGI server
+
+## Haskell
+brew "ghc"                             # Glasgow Haskell Compiler
+brew "ghcup"                           # Haskell toolchain installer
+brew "haskell-stack"                   # Haskell build tool
+
+## Other Languages
+brew "ruby"                            # Ruby programming language
+brew "r"                               # R statistical language
+brew "zig"                             # Zig programming language
+brew "luarocks"                        # Lua package manager
+
+# ============================================================================
+# Mobile Development
+# ============================================================================
+brew "cocoapods"                       # iOS dependency manager
+brew "ios-deploy"                      # Deploy iOS apps
+brew "libimobiledevice"                # iOS device communication
+
+# ============================================================================
+# Containerization
+# ============================================================================
+brew "colima"                          # Container runtime on macOS
+brew "docker"                          # Container platform
+brew "docker-compose"                  # Multi-container Docker apps
+
+# ============================================================================
+# Text Editors & IDEs
+# ============================================================================
+brew "kakoune"                         # Modal text editor
+brew "bob"                             # Neovim version manager
+
+# ============================================================================
+# Shell & Terminal Tools
+# ============================================================================
+brew "tmux"                            # Terminal multiplexer
+brew "zsh-syntax-highlighting"         # Zsh syntax highlighting
+brew "fzf"                             # Fuzzy finder
+brew "fzy"                             # Fuzzy text selector
+
+# ============================================================================
+# File & Text Search
+# ============================================================================
+brew "fd"                              # Fast find alternative
+brew "ripgrep"                         # Fast grep alternative (rg)
+brew "sk"                              # Fuzzy finder (skim)
+brew "tree"                            # Directory tree viewer
+
+# ============================================================================
+# File Transfer & Download
+# ============================================================================
+brew "aria2"                           # Download utility
+brew "transmission-cli"                # Torrent client CLI
+brew "yt-dlp"                          # YouTube downloader
+
+# ============================================================================
+# Media Processing
+# ============================================================================
+brew "ffmpeg"                          # Video/audio processing
+brew "imagemagick"                     # Image processing
+
+# ============================================================================
+# Document Tools
+# ============================================================================
+
+## PDF & Document Viewers
+brew "mupdf"                           # Lightweight PDF viewer
+brew "homebrew-zathura/zathura/zathura"                  # Document viewer with Vim keybindings
+brew "homebrew-zathura/zathura/zathura-pdf-mupdf"        # MuPDF backend for Zathura
+
+## Documentation & Publishing
+brew "pandoc"                          # Universal document converter
+brew "sphinx-doc"                      # Documentation generator
+brew "typst"                           # Modern typesetting system
+brew "typstyle"                        # Typst formatter
+
+## LaTeX & Math
+brew "manim"                           # Math animation engine
+
+# ============================================================================
+# Data Science & Jupyter
+# ============================================================================
+brew "jupyterlab"                      # Interactive notebooks
+brew "python-matplotlib"               # Plotting library
+
+# ============================================================================
+# Communication & Email
+# ============================================================================
+brew "neomutt"                         # Terminal email client
+brew "msmtp"                           # SMTP client
+brew "isync"                           # Mailbox synchronization
+brew "himalaya"                        # Modern terminal email client
+
+# ============================================================================
+# Security & Privacy
+# ============================================================================
+brew "pass"                            # Password manager
+
+# ============================================================================
+# Productivity & Utilities
+# ============================================================================
+
+## Time & Task Management
+brew "dominikbraun/timetrace/timetrace"                  # Time tracking
+brew "timewarrior"                     # Time tracking
+
+## System Monitoring
+brew "gtop"                            # System monitoring
+
+## Music & Media
+brew "spotify_player"                  # Spotify TUI player
+
+## Miscellaneous
+brew "tldr"                            # Simplified man pages
+brew "sl"                              # Steam Locomotive (fun)
+brew "telnet"                          # Telnet client
+brew "xh"                              # HTTPie alternative
+brew "lux"                             # Video downloader
+brew "typos-cli"                       # Source code spell checker
+brew "biome"                           # Web dev toolchain
+brew "cabin"                            # Package manager
+
+# ============================================================================
+# Databases
+# ============================================================================
+brew "mysql"                           # MySQL database
+brew "mysql@8.4"                       # MySQL 8.4
+
+# ============================================================================
+# AI & Machine Learning
+# ============================================================================
+brew "ollama"                          # Local LLM runner

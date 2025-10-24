@@ -81,9 +81,20 @@ Packages for Arch Linux systems installed via [pacman](https://wiki.archlinux.or
 - **Editor**: nano
 
 ### [Codefile](Codefile)
-**VS Code extensions** - Currently empty placeholder.
+**VSCodium/VS Code extensions** - Editor extensions.
 
-This file is intended for VS Code extension installation but is currently empty. Can be populated with VS Code extension IDs for automated installation.
+Contains VSCodium/VS Code extension IDs for automated installation.
+
+**Extensions include:**
+- **Language Support**: Python, Rust, Go, JavaScript/TypeScript, ESLint, Prettier
+- **Editor Enhancement**: Vim keybindings
+- **Git Integration**: GitLens, Git Graph
+- **Utilities**: EditorConfig, Error Lens, Code Spell Checker, Path Intellisense
+- **Markdown**: Markdown All in One, Markdownlint
+- **Themes**: GitHub Theme, Catppuccin
+- **Containers**: Docker support
+
+Install with: `make vscode-extensions`
 
 ## Usage
 
@@ -184,6 +195,185 @@ brew bundle cleanup --force
 # This will uninstall any packages not listed in the files
 ```
 
+## Troubleshooting
+
+### Homebrew Installation Issues
+
+**Problem:** `brew bundle` fails with permission errors
+
+**Solution:**
+```bash
+# Fix Homebrew permissions
+sudo chown -R $(whoami) /usr/local/* /opt/homebrew/*
+
+# Or reinstall Homebrew
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+**Problem:** Package installation fails due to conflicts
+
+**Solution:**
+```bash
+# Update Homebrew first
+brew update
+
+# Try installing specific package
+brew install <package>
+
+# Check for issues
+brew doctor
+```
+
+### npm Installation Issues
+
+**Problem:** Permission errors when installing global packages
+
+**Solution:**
+```bash
+# Use n version manager (already in npmfile)
+# Or configure npm to use a different directory
+mkdir ~/.npm-global
+npm config set prefix '~/.npm-global'
+echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.zshrc
+```
+
+**Problem:** Package not found or outdated
+
+**Solution:**
+```bash
+# Clear npm cache
+npm cache clean --force
+
+# Update npm itself
+npm install -g npm@latest
+```
+
+### Cargo Installation Issues
+
+**Problem:** Cargo not found
+
+**Solution:**
+```bash
+# Install Rust toolchain
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source ~/.cargo/env
+```
+
+**Problem:** Compilation errors
+
+**Solution:**
+```bash
+# Update Rust toolchain
+rustup update
+
+# Ensure build tools are installed (macOS)
+xcode-select --install
+```
+
+### Platform-Specific Issues
+
+**macOS:**
+- Ensure Xcode Command Line Tools are installed: `xcode-select --install`
+- Some casks require Rosetta 2 on Apple Silicon: `softwareupdate --install-rosetta`
+
+**Linux:**
+- pacmanfile is for Arch-based distributions only
+- For Debian/Ubuntu, you'll need to create a separate package list
+- Some Homebrew formulae may not be available on Linux
+
+## Backup & Restore
+
+### Creating a Backup
+
+Before installing or updating packages, create a backup of current packages:
+
+```bash
+# Create backup directory
+mkdir -p ~/dotfiles-backup/$(date +%Y%m%d)
+
+# Backup current Homebrew packages
+brew bundle dump --file=~/dotfiles-backup/$(date +%Y%m%d)/Brewfile
+brew bundle dump --file=~/dotfiles-backup/$(date +%Y%m%d)/Caskfile --cask
+
+# Backup current npm packages
+npm list -g --depth=0 > ~/dotfiles-backup/$(date +%Y%m%d)/npmfile.txt
+
+# Backup current cargo packages
+cargo install --list > ~/dotfiles-backup/$(date +%Y%m%d)/Rustfile.txt
+```
+
+### Restoring from Backup
+
+To restore packages from a backup:
+
+```bash
+# Restore Homebrew packages
+brew bundle --file=~/dotfiles-backup/YYYYMMDD/Brewfile
+
+# Restore npm packages (parse the backup file)
+# Manual restoration recommended
+
+# Restore cargo packages
+# Extract package names from backup and install
+```
+
+## Platform-Specific Quirks
+
+### macOS
+
+**Apple Silicon (M1/M2/M3) Considerations:**
+- Homebrew installs to `/opt/homebrew` instead of `/usr/local`
+- Some packages may require Rosetta 2 for x86_64 binaries
+- Native ARM builds are available for most packages
+
+**Common Issues:**
+- **Karabiner-Elements** requires system permissions to be granted in Security & Privacy
+- **AeroSpace** requires Accessibility permissions
+- **Kitty** may require Font Book to install Nerd Fonts properly
+
+### Linux (Arch)
+
+**Package Manager Differences:**
+- Use `pacman` instead of Homebrew for system packages
+- AUR packages may need a helper like `yay` or `paru`
+- Some Homebrew formulae have different names in pacman
+
+**Considerations:**
+- GUI applications (casks) won't work - use pacman equivalents
+- Terminal tools generally work the same way
+- Font installation differs - use pacman or manual installation
+
+## Package Explanations
+
+### Why These Specific Packages?
+
+**Development:**
+- **gcc, cmake, ninja** - Build systems for compiling software
+- **pyenv, poetry** - Python version and dependency management
+- **rust-analyzer** - Rust language server for IDE support
+
+**Shell Enhancement:**
+- **zsh-syntax-highlighting** - Syntax highlighting for Zsh
+- **tmux** - Terminal multiplexer for persistent sessions
+- **fzf** - Fuzzy finder for quick file/command navigation
+
+**Text & Search:**
+- **ripgrep (rg)** - Fast grep alternative written in Rust
+- **fd** - Fast find alternative
+- **sk** - Fuzzy finder alternative to fzf
+
+**Media:**
+- **ffmpeg** - Video/audio processing
+- **yt-dlp** - YouTube video downloader (youtube-dl fork)
+
+**Security:**
+- **pass** - Password manager using GPG
+- **keepassxc** - Cross-platform password manager GUI
+
+**Communication:**
+- **neomutt, msmtp, isync** - Terminal-based email client setup
+- **himalaya** - Modern terminal email client
+
 ## Resources
 
 - [Homebrew Documentation](https://docs.brew.sh/)
@@ -191,3 +381,4 @@ brew bundle cleanup --force
 - [npm Documentation](https://docs.npmjs.com/)
 - [Cargo Book](https://doc.rust-lang.org/cargo/)
 - [Pacman Wiki](https://wiki.archlinux.org/title/Pacman)
+- [Homebrew on Linux](https://docs.brew.sh/Homebrew-on-Linux)

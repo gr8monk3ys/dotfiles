@@ -1,4 +1,35 @@
-cargo-cache
-cargo-update
-jless
-just
+# Rust/Cargo Packages
+# Rust packages installed via Cargo
+# Install with: cat install/Rustfile | xargs -n1 cargo install
+
+# ============================================================================
+# Cargo Utilities
+# ============================================================================
+cargo-cache                   # Manage cargo cache (clean, list, size)
+cargo-update                  # Update installed cargo packages
+
+# ============================================================================
+# Development Tools
+# ============================================================================
+just                          # Command runner (Make alternative)
+
+# ============================================================================
+# Data Processing & Viewers
+# ============================================================================
+jless                         # JSON viewer for the terminal
+
+# ============================================================================
+# Additional Useful Rust Tools (Optional - uncomment to install)
+# ============================================================================
+# bat                         # Cat clone with syntax highlighting (also in Homebrew)
+# exa                         # Modern ls replacement (also in Homebrew)
+# ripgrep                     # Fast grep alternative (also in Homebrew)
+# fd-find                     # Fast find alternative (also in Homebrew)
+# hyperfine                   # Benchmarking tool
+# tokei                       # Code statistics tool
+# bottom                      # System monitor (btm)
+# du-dust                     # du replacement
+# procs                       # ps replacement
+# sd                          # sed alternative
+# zoxide                      # Smarter cd command
+# starship                    # Cross-shell prompt

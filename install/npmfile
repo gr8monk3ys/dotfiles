@@ -1,18 +1,53 @@
-@antfu/ni
-fast-cli
-fkill-cli
-get-port-cli
-gtop
-local-web-server
-npm
-npm-check-updates
-pnpm
-prettier
-release-it
-remark-cli
-remark-preset-webpro
-svgo
-tldr
-tsx
-underscore-cli
-yarn
+# npm Global Packages
+# Global npm packages installed system-wide
+# Install with: cat install/npmfile | xargs npm install -g
+
+# ============================================================================
+# Package Managers
+# ============================================================================
+npm                           # npm package manager (self-update)
+pnpm                          # Fast, disk space efficient package manager
+yarn                          # Alternative package manager
+
+# ============================================================================
+# Package Management Tools
+# ============================================================================
+@antfu/ni                     # Use the right package manager (npm/pnpm/yarn)
+npm-check-updates             # Update package.json dependencies
+
+# ============================================================================
+# Development & Build Tools
+# ============================================================================
+tsx                           # TypeScript Execute - run TS files directly
+prettier                      # Code formatter for multiple languages
+release-it                    # Automated versioning and package publishing
+
+# ============================================================================
+# Documentation & Markdown
+# ============================================================================
+remark-cli                    # Markdown processor
+remark-preset-webpro          # Remark preset for markdown processing
+tldr                          # Simplified man pages
+
+# ============================================================================
+# CLI Utilities
+# ============================================================================
+fkill-cli                     # Kill processes interactively
+get-port-cli                  # Get an available port
+underscore-cli                # Command-line JSON processing
+
+# ============================================================================
+# Network & System Monitoring
+# ============================================================================
+fast-cli                      # Test your download/upload speed
+gtop                          # System monitoring dashboard
+
+# ============================================================================
+# Local Development
+# ============================================================================
+local-web-server              # Lean, modular web server for rapid development
+
+# ============================================================================
+# Image Optimization
+# ============================================================================
+svgo                          # SVG optimizer

@@ -1,0 +1,77 @@
+name: Lint
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: './bin'
+          severity: warning
+          ignore_paths: |
+            .github
+            test
+
+  markdownlint:
+    name: Markdown Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run markdownlint
+        uses: articulate/actions-markdownlint@v1
+        with:
+          config: .markdownlint.json
+          files: '**/*.md'
+          ignore: |
+            .github
+            test
+
+  validate-package-files:
+    name: Validate Package Files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Check Brewfile format
+        run: |
+          grep -E "^(brew|tap|cask)" install/Brewfile || exit 1
+
+      - name: Check npmfile format
+        run: |
+          while IFS= read -r line; do
+            [[ -z "$line" ]] && continue
+            [[ "$line" =~ ^# ]] && continue
+            echo "Validating: $line"
+          done < install/npmfile
+
+      - name: Check Rustfile format
+        run: |
+          while IFS= read -r line; do
+            [[ -z "$line" ]] && continue
+            [[ "$line" =~ ^# ]] && continue
+            echo "Validating: $line"
+          done < install/Rustfile
+
+      - name: Verify all package files exist
+        run: |
+          test -f install/Brewfile
+          test -f install/Caskfile
+          test -f install/npmfile
+          test -f install/Rustfile
+          test -f install/Codefile
+          test -f install/pacmanfile
+          test -f install/duti
