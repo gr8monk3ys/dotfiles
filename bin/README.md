@@ -71,30 +71,18 @@ fi
 
 ## Scripts from .local/bin
 
-Additional utility scripts are located in `.local/bin/`. These include:
+Additional utility scripts are located in `.local/bin/`. These include 20 scripts for:
 
-- `browser-exec` - Execute browser commands
-- `check-go-repos` - Check Go repository status
-- `check-kconfig` - Verify kernel configuration
-- `cleanup-non-running-images` - Docker image cleanup
-- `createvm` - Create virtual machines
-- `fancy-i3lock` - Enhanced i3 lock screen
-- `generate-go-project-files` - Go project scaffolding
-- `generate-md-toc` - Generate Markdown table of contents
-- `install.sh` - Installation script
-- `macos-defaults` - Apply macOS system defaults
-- `monitor-hotplug` - Handle monitor connection events
-- `openprs` - Open pull requests
-- `screen-backlight` - Control screen backlight
-- `setup-tor-iptables` - Configure Tor iptables rules
-- `slackpm` - Slack package manager integration
-- `tor-exit-threat-score` - Check Tor exit node threat level
-- `update-firmware` - Update system firmware
-- `update-iwlwifi` - Update Intel WiFi firmware
-- `update-repos` - Update git repositories
-- `yubikey-ssh-setup` - Configure Yubikey for SSH
+- **System Configuration**: `macos-defaults`
+- **Security**: `yubikey-ssh-setup`, `setup-tor-iptables`, `tor-exit-threat-score`
+- **Development**: `check-go-repos`, `generate-go-project-files`, `generate-md-toc`, `openprs`
+- **Repository Management**: `update-repos`
+- **Docker**: `cleanup-non-running-images`
+- **Display/Hardware**: `monitor-hotplug`, `screen-backlight`, `fancy-i3lock`
+- **Firmware**: `update-firmware`, `update-iwlwifi`
+- **Other**: `browser-exec`, `check-kconfig`, `createvm`, `slackpm`, `install.sh`
 
-See individual script files for detailed documentation.
+**See [.local/bin/README.md](../.local/bin/README.md) for comprehensive documentation** including usage examples, platform compatibility, and dependencies.
 
 ## Making Scripts Executable
 
