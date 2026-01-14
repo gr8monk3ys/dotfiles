@@ -52,10 +52,11 @@ Organized list of improvements, fixes, and future enhancements for the dotfiles 
 ## Documentation
 
 ### Missing READMEs
-- [ ] **Create .local/bin/README.md**
-  - Document all utility scripts in user's ~/.local/bin if any
-  - Explain what each script does
-  - Add usage examples
+- [x] **Create .local/bin/README.md** ✅ COMPLETED
+  - Documented all 20 utility scripts
+  - Added platform compatibility table
+  - Included usage examples and dependencies
+  - Added security notes
 
 - [x] **Create .github/README.md** ✅ COMPLETED
   - Documented all three CI/CD workflows (install, test, lint)
@@ -147,11 +148,11 @@ Organized list of improvements, fixes, and future enhancements for the dotfiles 
   - Document all custom settings
 
 ### Application Configurations
-- [ ] **Review Neovim configuration**
-  - Ensure .config/nvim/README.md is up to date
-  - Document all plugins and their purposes
-  - Document custom keybindings
-  - Add troubleshooting section
+- [x] **Review Neovim configuration** ✅ COMPLETED
+  - Expanded README.md with comprehensive documentation
+  - Documented all 25+ plugins with purposes
+  - Added complete keybinding reference tables
+  - Included LSP setup, formatting, and troubleshooting sections
 
 - [ ] **Review Tmux configuration**
   - Document key bindings
@@ -542,7 +543,10 @@ Organized list of improvements, fixes, and future enhancements for the dotfiles 
 - [x] **Codefile is empty** - ✅ RESOLVED: Populated with VSCodium extensions
 - [x] **No test directory** - ✅ RESOLVED: Created test infrastructure with BATS
 - [x] **Missing GitHub workflows** - ✅ RESOLVED: Updated install.yml, created lint.yml and test.yml
-- [ ] **Some configs lack READMEs** - All 15 .config directories have READMEs (verified)
+- [x] **Some configs lack READMEs** - ✅ VERIFIED: All 15 .config directories have READMEs
+- [x] **Duplicate LF_ICONS entry** - ✅ RESOLVED: Removed duplicate `.zsh` icon in .zshenv
+- [x] **Neovim README minimal** - ✅ RESOLVED: Expanded with full plugin/keybinding documentation
+- [x] **.local/bin undocumented** - ✅ RESOLVED: Created comprehensive .local/bin/README.md
 
 ## Contributing Guidelines
 
@@ -566,7 +570,7 @@ When working on TODO items:
 
 ---
 
-**Last Updated:** October 24, 2025
+**Last Updated:** January 14, 2026
 **Repository State:** PRODUCTION-READY with comprehensive documentation, testing, and CI/CD
 **Recent Session Achievements:**
 - Documentation (12 files): CLAUDE.md, CONTRIBUTING.md, CHANGELOG.md, LICENSE, .gitattributes, MAKEFILE.md, .github/README.md
@@ -579,3 +583,9 @@ When working on TODO items:
 - Configuration: Expanded .editorconfig to 20+ file types
 - Verified: All .config directories have READMEs, all known issues resolved
 - Result: World-class, production-ready dotfiles repository
+
+**January 2026 Updates:**
+- Fixed: Duplicate `.zsh` icon entry in .zshenv LF_ICONS
+- Expanded: Neovim README with comprehensive plugin/keybinding documentation (270+ lines)
+- Created: .local/bin/README.md documenting all 20 utility scripts
+- Updated: bin/README.md to reference .local/bin documentation
