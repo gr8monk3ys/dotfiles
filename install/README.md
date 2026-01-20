@@ -145,35 +145,43 @@ brew bundle dump --force --file=install/Caskfile --cask
 ```
 
 **npm:**
+
 ```bash
-npm list -g --depth=0 --parseable | awk -F'/node_modules/' '{print $2}' | grep -v '^npm$' > install/npmfile
+npm list -g --depth=0 --parseable | \
+  awk -F'/node_modules/' '{print $2}' | grep -v '^npm$' > install/npmfile
 ```
 
 **Cargo:**
+
 ```bash
 cargo install --list | grep -v '^ ' | cut -d' ' -f1 > install/Rustfile
 ```
 
 **Pacman:**
+
 ```bash
 pacman -Qqe > install/pacmanfile
 ```
 
 ## Adding New Packages
 
-### To add a new Homebrew formula:
+### To add a new Homebrew formula
+
 1. Install it: `brew install <package>`
 2. Add to Brewfile: `echo 'brew "<package>"' >> install/Brewfile`
 
-### To add a new Homebrew cask:
+### To add a new Homebrew cask
+
 1. Install it: `brew install --cask <cask>`
 2. Add to Caskfile: `echo 'cask "<cask>"' >> install/Caskfile`
 
-### To add a new npm package:
+### To add a new npm package
+
 1. Install it: `npm install -g <package>`
 2. Add to npmfile: `echo '<package>' >> install/npmfile`
 
-### To add a new Rust package:
+### To add a new Rust package
+
 1. Install it: `cargo install <package>`
 2. Add to Rustfile: `echo '<package>' >> install/Rustfile`
 
@@ -202,6 +210,7 @@ brew bundle cleanup --force
 **Problem:** `brew bundle` fails with permission errors
 
 **Solution:**
+
 ```bash
 # Fix Homebrew permissions
 sudo chown -R $(whoami) /usr/local/* /opt/homebrew/*
@@ -213,6 +222,7 @@ sudo chown -R $(whoami) /usr/local/* /opt/homebrew/*
 **Problem:** Package installation fails due to conflicts
 
 **Solution:**
+
 ```bash
 # Update Homebrew first
 brew update
@@ -229,6 +239,7 @@ brew doctor
 **Problem:** Permission errors when installing global packages
 
 **Solution:**
+
 ```bash
 # Use n version manager (already in npmfile)
 # Or configure npm to use a different directory
@@ -240,6 +251,7 @@ echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.zshrc
 **Problem:** Package not found or outdated
 
 **Solution:**
+
 ```bash
 # Clear npm cache
 npm cache clean --force
@@ -253,6 +265,7 @@ npm install -g npm@latest
 **Problem:** Cargo not found
 
 **Solution:**
+
 ```bash
 # Install Rust toolchain
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -262,6 +275,7 @@ source ~/.cargo/env
 **Problem:** Compilation errors
 
 **Solution:**
+
 ```bash
 # Update Rust toolchain
 rustup update
@@ -273,10 +287,12 @@ xcode-select --install
 ### Platform-Specific Issues
 
 **macOS:**
+
 - Ensure Xcode Command Line Tools are installed: `xcode-select --install`
 - Some casks require Rosetta 2 on Apple Silicon: `softwareupdate --install-rosetta`
 
 **Linux:**
+
 - pacmanfile is for Arch-based distributions only
 - For Debian/Ubuntu, you'll need to create a separate package list
 - Some Homebrew formulae may not be available on Linux
@@ -322,23 +338,27 @@ brew bundle --file=~/dotfiles-backup/YYYYMMDD/Brewfile
 ### macOS
 
 **Apple Silicon (M1/M2/M3) Considerations:**
+
 - Homebrew installs to `/opt/homebrew` instead of `/usr/local`
 - Some packages may require Rosetta 2 for x86_64 binaries
 - Native ARM builds are available for most packages
 
 **Common Issues:**
-- **Karabiner-Elements** requires system permissions to be granted in Security & Privacy
+
+- **Karabiner-Elements** requires system permissions in Security & Privacy
 - **AeroSpace** requires Accessibility permissions
 - **Kitty** may require Font Book to install Nerd Fonts properly
 
 ### Linux (Arch)
 
 **Package Manager Differences:**
+
 - Use `pacman` instead of Homebrew for system packages
 - AUR packages may need a helper like `yay` or `paru`
 - Some Homebrew formulae have different names in pacman
 
 **Considerations:**
+
 - GUI applications (casks) won't work - use pacman equivalents
 - Terminal tools generally work the same way
 - Font installation differs - use pacman or manual installation
@@ -348,29 +368,35 @@ brew bundle --file=~/dotfiles-backup/YYYYMMDD/Brewfile
 ### Why These Specific Packages?
 
 **Development:**
+
 - **gcc, cmake, ninja** - Build systems for compiling software
 - **pyenv, poetry** - Python version and dependency management
 - **rust-analyzer** - Rust language server for IDE support
 
 **Shell Enhancement:**
+
 - **zsh-syntax-highlighting** - Syntax highlighting for Zsh
 - **tmux** - Terminal multiplexer for persistent sessions
 - **fzf** - Fuzzy finder for quick file/command navigation
 
 **Text & Search:**
+
 - **ripgrep (rg)** - Fast grep alternative written in Rust
 - **fd** - Fast find alternative
 - **sk** - Fuzzy finder alternative to fzf
 
 **Media:**
+
 - **ffmpeg** - Video/audio processing
 - **yt-dlp** - YouTube video downloader (youtube-dl fork)
 
 **Security:**
+
 - **pass** - Password manager using GPG
 - **keepassxc** - Cross-platform password manager GUI
 
 **Communication:**
+
 - **neomutt, msmtp, isync** - Terminal-based email client setup
 - **himalaya** - Modern terminal email client
 

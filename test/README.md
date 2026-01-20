@@ -1,17 +1,20 @@
 # Test Suite
 
-This directory contains the test suite for the dotfiles repository using [BATS (Bash Automated Testing System)](https://github.com/bats-core/bats-core).
+This directory contains the test suite for the dotfiles repository using
+[BATS (Bash Automated Testing System)](https://github.com/bats-core/bats-core).
 
 ## Setup
 
 ### Install BATS
 
 **macOS (via Homebrew):**
+
 ```bash
 brew install bats-core
 ```
 
 **Linux:**
+
 ```bash
 # Arch Linux
 sudo pacman -S bats
@@ -77,7 +80,7 @@ bats test --formatter tap
 
 ## Test Structure
 
-```
+```text
 test/
 ├── README.md              # This file
 ├── test_bin_scripts.bats  # Tests for bin/ utility scripts
@@ -94,25 +97,33 @@ test/
 ## Test Files
 
 ### test_bin_scripts.bats
+
 Tests for utility scripts in `bin/`:
+
 - Platform detection scripts (is-macos, is-arch, is-arm64)
 - Executable checker (is-executable, is-supported)
 - Utility scripts (dotfiles-doctor, dotfiles-update, dotfiles-backup)
 
 ### test_symlinks.bats
+
 Tests for symlink management:
+
 - Link creation and deletion
 - Backup handling
 - Error conditions
 
 ### test_platform.bats
+
 Tests for platform-specific behavior:
+
 - macOS vs Linux detection
 - Architecture detection (ARM64 vs x86_64)
 - Homebrew prefix detection
 
 ### test_packages.bats
+
 Tests for package file validation:
+
 - Brewfile/Caskfile format
 - npmfile format
 - Rustfile format
@@ -262,6 +273,7 @@ git clone https://github.com/bats-core/bats-file.git test/test_helper/bats-file
 ## Contributing
 
 When adding new features:
+
 1. Write tests first (TDD approach)
 2. Ensure tests pass before submitting PR
 3. Maintain test coverage above 80%
