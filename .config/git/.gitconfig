@@ -204,3 +204,8 @@
 	required = true
 [init]
 	defaultBranch = main
+
+# Include local config for machine-specific settings (gitignored)
+# Create ~/.config/git/config.local for overrides
+[include]
+	path = ~/.config/git/config.local

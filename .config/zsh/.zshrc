@@ -83,3 +83,13 @@ alias c='clear'
 # Shell integrations
 eval "$(fzf --zsh)"
 eval "$(zoxide init --cmd cd zsh)"
+
+# Machine type detection (personal, work, server)
+export MACHINE_TYPE="${MACHINE_TYPE:-$(cat ~/.machine_type 2>/dev/null || echo 'personal')}"
+
+# Load local overrides (not tracked in git)
+# Create ~/.config/zsh/zshrc.local for machine-specific settings
+[[ -f "${ZDOTDIR:-$HOME/.config/zsh}/zshrc.local" ]] && source "${ZDOTDIR:-$HOME/.config/zsh}/zshrc.local"
+
+# Load machine-type specific config if it exists
+[[ -f "${ZDOTDIR:-$HOME/.config/zsh}/zshrc.${MACHINE_TYPE}" ]] && source "${ZDOTDIR:-$HOME/.config/zsh}/zshrc.${MACHINE_TYPE}"

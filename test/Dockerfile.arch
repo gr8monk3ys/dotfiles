@@ -1,0 +1,40 @@
+# Dockerfile for testing dotfiles on Arch Linux
+#
+# Build: docker build -t dotfiles-test-arch -f test/Dockerfile.arch .
+# Run:   docker run --rm dotfiles-test-arch
+#
+# This tests the dotfiles installation in a clean Arch Linux environment.
+
+FROM archlinux:latest
+
+# Update system and install dependencies
+RUN pacman -Syu --noconfirm && \
+    pacman -S --noconfirm \
+    git \
+    curl \
+    wget \
+    stow \
+    zsh \
+    sudo \
+    make \
+    bash-bats \
+    && pacman -Scc --noconfirm
+
+# Create a non-root user for testing
+RUN useradd -m -s /bin/zsh testuser && \
+    echo "testuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Switch to test user
+USER testuser
+WORKDIR /home/testuser
+
+# Copy dotfiles repository
+COPY --chown=testuser:testuser . /home/testuser/.dotfiles
+
+# Set environment variables
+ENV HOME=/home/testuser
+ENV DOTFILES_DIR=/home/testuser/.dotfiles
+ENV XDG_CONFIG_HOME=/home/testuser/.config
+
+# Default command: run tests and link
+CMD ["/bin/bash", "-c", "cd $DOTFILES_DIR && make test && make link && make doctor"]

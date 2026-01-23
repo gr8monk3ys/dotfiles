@@ -69,6 +69,90 @@ if is-executable brew; then
 fi
 ```
 
+## Utility Scripts
+
+### [dotfiles-doctor](dotfiles-doctor)
+Comprehensive health check for your dotfiles installation.
+
+**Usage:**
+```bash
+dotfiles-doctor
+# or
+make doctor
+```
+
+### [dotfiles-update](dotfiles-update)
+Update all packages and configurations.
+
+**Usage:**
+```bash
+dotfiles-update [--skip-brew] [--skip-npm] [--skip-cargo]
+# or
+make update
+```
+
+### [dotfiles-backup](dotfiles-backup)
+Backup configurations and package lists.
+
+**Usage:**
+```bash
+dotfiles-backup [--compress] [--cleanup]
+# or
+make backup
+```
+
+### [dotfiles-template](dotfiles-template)
+Template processor for machine-specific configurations.
+
+**Usage:**
+```bash
+# List available variables
+dotfiles-template --list
+
+# Process a template
+dotfiles-template config.tmpl config
+
+# Dry run
+dotfiles-template --dry-run config.tmpl
+```
+
+**Available Variables:**
+- `{{HOSTNAME}}` - System hostname
+- `{{OS_TYPE}}` - OS type (macos, arch, linux)
+- `{{MACHINE_TYPE}}` - Machine profile (personal, work, server)
+- `{{USER}}` - Current username
+- `{{HOME}}` - Home directory
+
+**Conditional Blocks:**
+```
+{{#if MACHINE_TYPE eq work}}
+# Work-specific configuration
+{{/if}}
+```
+
+### [dotfiles-secrets](dotfiles-secrets)
+Secret management using age encryption.
+
+**Usage:**
+```bash
+# Initialize encryption key
+dotfiles-secrets init
+
+# Encrypt a file
+dotfiles-secrets encrypt ~/.ssh/config
+
+# Decrypt a file
+dotfiles-secrets decrypt secrets/config.age
+
+# Edit an encrypted file
+dotfiles-secrets edit secrets/config.age
+
+# Show status
+dotfiles-secrets status
+```
+
+**Requirements:** Install `age` with `brew install age` or `pacman -S age`.
+
 ## Scripts from .local/bin
 
 Additional utility scripts are located in `.local/bin/`. These include 20 scripts for:

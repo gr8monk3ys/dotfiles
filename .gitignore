@@ -167,3 +167,38 @@ linux-*.deb
 
 .yarnrc.yml
 .yarn/
+
+##
+# Local overrides (machine-specific, not committed)
+##
+*.local
+.config/**/*.local
+*.local.sh
+*.local.zsh
+
+##
+# Machine profile
+##
+.machine_type
+
+##
+# Secrets and sensitive files
+##
+secrets/
+*.age
+!secrets/.gitkeep
+.age/
+*.pem
+*.key
+!*.pub
+.env
+.env.*
+!.env.example
+credentials.json
+*.credential
+*.secret
+
+##
+# Age encryption
+##
+.config/age/key.txt

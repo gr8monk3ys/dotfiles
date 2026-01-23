@@ -79,6 +79,38 @@ repos:
         pass_filenames: false
         always_run: true
 
+      # Detect secrets and sensitive data
+      - id: detect-secrets
+        name: Detect secrets
+        entry: bash -c 'git diff --cached --name-only | xargs -I {} sh -c "grep -l -E \"(password|secret|api[_-]?key|token|credentials|private[_-]?key)\\s*[:=]\" {} 2>/dev/null && exit 1 || exit 0"'
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      # Prevent committing .env files
+      - id: check-env-files
+        name: Check for .env files
+        entry: bash -c '! git diff --cached --name-only | grep -E "^\.env(\..+)?$"'
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      # Prevent committing private keys
+      - id: check-private-keys
+        name: Check for private keys
+        entry: bash -c '! git diff --cached --name-only | grep -E "\.(pem|key)$" | grep -v "\.pub$"'
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      # Check for age-encrypted files that should be encrypted
+      - id: check-unencrypted-secrets
+        name: Check unencrypted secrets directory
+        entry: bash -c 'if [ -d secrets ]; then find secrets -type f ! -name "*.age" ! -name ".gitkeep" ! -name "README*" | grep -q . && echo "Error: Unencrypted files in secrets/ directory" && exit 1; fi; exit 0'
+        language: system
+        pass_filenames: false
+        always_run: true
+
 # Configuration
 default_language_version:
   python: python3

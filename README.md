@@ -80,6 +80,16 @@ Each directory in `.config/` contains a README with detailed information about t
 
 ## Installation
 
+### Quick Install (One Command)
+
+On a fresh machine with `git` and `curl` installed:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/gr8monk3ys/dotfiles/main/install.sh | bash
+```
+
+This will clone the repository, set up your machine profile, and run the full installation.
+
 ### Prerequisites
 
 On a fresh macOS installation:
@@ -89,7 +99,7 @@ On a fresh macOS installation:
 xcode-select --install
 ```
 
-### Clone Repository
+### Manual Installation
 
 ```bash
 git clone https://github.com/gr8monk3ys/dotfiles.git ~/.dotfiles
@@ -112,12 +122,24 @@ This will:
 
 ### Selective Installation
 
-You can also install specific package managers:
+You can also install specific components:
 
 ```bash
 make brew           # Install Homebrew packages
 make npm            # Install npm packages
 make rust           # Install Rust packages
+make link           # Create symlinks only
+make link-dry-run   # Preview symlinks without creating them
+```
+
+### Utility Commands
+
+```bash
+make doctor         # Health check for installation
+make update         # Update all packages
+make backup         # Backup configurations
+make test           # Run BATS test suite
+make test-docker    # Test in clean Ubuntu container
 ```
 
 ## Post-Installation
@@ -227,6 +249,60 @@ Fork this repository and customize to your preferences:
 2. Update package lists in `install/`
 3. Adjust macOS settings in `.config/macos/`
 4. Add your own aliases to `.config/.aliases`
+
+### Local Overrides
+
+For machine-specific settings that shouldn't be committed, use local override files:
+
+```bash
+# Zsh local configuration
+cp ~/.config/zsh/zshrc.local.example ~/.config/zsh/zshrc.local
+
+# Git local configuration
+cp ~/.config/git/config.local.example ~/.config/git/config.local
+```
+
+These files are gitignored and will be sourced automatically.
+
+### Machine Profiles
+
+Set your machine type for conditional configurations:
+
+```bash
+# Create machine type (personal, work, or server)
+echo "personal" > ~/.machine_type
+```
+
+Configurations can then check `$MACHINE_TYPE` for machine-specific behavior.
+
+### Secret Management
+
+Manage encrypted secrets using the `age` encryption tool:
+
+```bash
+# Initialize encryption
+make secrets-init
+
+# Encrypt a file
+dotfiles-secrets encrypt ~/.ssh/config
+
+# Decrypt a file
+dotfiles-secrets decrypt secrets/config.age
+```
+
+### Templates
+
+Use templates for machine-specific configs without duplicating files:
+
+```bash
+# List available template variables
+make template-list
+
+# Process a template
+dotfiles-template config.tmpl config
+```
+
+Available variables: `{{HOSTNAME}}`, `{{OS_TYPE}}`, `{{MACHINE_TYPE}}`, `{{USER}}`, etc.
 
 ## Platform Support
 

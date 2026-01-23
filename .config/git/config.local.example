@@ -1,0 +1,31 @@
+# Example local Git configuration
+# Copy this file to config.local for machine-specific settings
+#
+# This file is included from the main git config and is gitignored,
+# so you can safely add machine-specific configurations here.
+
+# User information (set per-machine)
+# [user]
+#     name = Your Name
+#     email = your.email@example.com
+#     signingkey = YOUR_GPG_KEY_ID
+
+# Work-specific configuration
+# [user]
+#     email = your.name@company.com
+
+# Credential helpers (machine-specific)
+# [credential]
+#     helper = osxkeychain  # macOS
+#     helper = store        # Linux (less secure)
+#     helper = manager      # Windows
+
+# Custom remotes
+# [url "git@github-work:"]
+#     insteadOf = https://github.com/company/
+
+# Proxy settings (if behind corporate firewall)
+# [http]
+#     proxy = http://proxy.company.com:8080
+# [https]
+#     proxy = http://proxy.company.com:8080
