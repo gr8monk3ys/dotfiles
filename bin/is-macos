@@ -2,5 +2,6 @@
 
 # Check if running on macOS
 # Usage: is-macos
+# Returns: exit code 0 if macOS, 1 otherwise
 
-[[ "$OSTYPE" =~ ^darwin ]] || return 1
+[[ "$OSTYPE" =~ ^darwin ]] && exit 0 || exit 1

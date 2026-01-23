@@ -104,7 +104,21 @@ cask-apps: brew
 	brew bundle --file=$(DOTFILES_DIR)/install/Caskfile || true
 
 vscode-extensions: cask-apps
-	for EXT in $$(cat install/Codefile); do code --install-extension $$EXT; done
+	@if command -v codium >/dev/null 2>&1; then \
+		echo "Installing extensions with VSCodium..."; \
+		while IFS= read -r ext || [[ -n "$$ext" ]]; do \
+			[[ -z "$$ext" || "$$ext" =~ ^# ]] && continue; \
+			codium --install-extension "$$ext" || true; \
+		done < install/Codefile; \
+	elif command -v code >/dev/null 2>&1; then \
+		echo "Installing extensions with VS Code..."; \
+		while IFS= read -r ext || [[ -n "$$ext" ]]; do \
+			[[ -z "$$ext" || "$$ext" =~ ^# ]] && continue; \
+			code --install-extension "$$ext" || true; \
+		done < install/Codefile; \
+	else \
+		echo "⚠️  Neither code nor codium found. Skipping extension installation."; \
+	fi
 
 node-packages: npm
 	$(N_PREFIX)/bin/npm install --force --location global $(shell cat install/npmfile)

@@ -123,9 +123,20 @@
 	light = false
 	side-by-side = true
 	line-numbers = true
-	syntax-theme = Dracula
-	plus-style = "syntax #003800"
-	minus-style = "syntax #3f0001"
+	# OneDark-inspired theme
+	syntax-theme = OneHalfDark
+	# OneDark colors for diff highlighting
+	plus-style = "syntax #2d3b2d"
+	plus-emph-style = "syntax #98c379"
+	minus-style = "syntax #3b2d2d"
+	minus-emph-style = "syntax #e06c75"
+	line-numbers-minus-style = "#e06c75"
+	line-numbers-plus-style = "#98c379"
+	line-numbers-zero-style = "#5c6370"
+	hunk-header-style = "file line-number syntax"
+	hunk-header-decoration-style = "blue box"
+	file-style = "bold #61afef"
+	file-decoration-style = "none"
 
 [color]
 
