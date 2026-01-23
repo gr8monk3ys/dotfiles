@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Install BATS (macOS)
         if: runner.os == 'macOS'
@@ -25,7 +25,6 @@ jobs:
       - name: Install BATS (Linux)
         if: runner.os == 'Linux'
         run: |
-          sudo add-apt-repository ppa:duggan/bats
           sudo apt-get update
           sudo apt-get install -y bats
 
@@ -38,15 +37,15 @@ jobs:
       - name: Run package validation tests
         run: bats test/test_packages.bats
 
-      - name: Run all tests
-        run: make test
-
   integration:
     name: Integration Tests
     runs-on: macos-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
+
+      - name: Install stow
+        run: brew install stow
 
       - name: Test symlink creation
         run: |
@@ -57,7 +56,7 @@ jobs:
       - name: Test symlink removal
         run: |
           make unlink
-          ! test -L "$HOME/.zshenv" || exit 1
+          test ! -L "$HOME/.zshenv"
 
       - name: Test clean target
         run: make clean
