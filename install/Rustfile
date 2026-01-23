@@ -19,17 +19,18 @@ just                          # Command runner (Make alternative)
 jless                         # JSON viewer for the terminal
 
 # ============================================================================
-# Additional Useful Rust Tools (Optional - uncomment to install)
+# Additional Rust Tools
+# Note: Many of these are also available via Homebrew.
+# Using Cargo ensures you get the latest versions.
 # ============================================================================
-# bat                         # Cat clone with syntax highlighting (also in Homebrew)
-# exa                         # Modern ls replacement (also in Homebrew)
-# ripgrep                     # Fast grep alternative (also in Homebrew)
-# fd-find                     # Fast find alternative (also in Homebrew)
-# hyperfine                   # Benchmarking tool
-# tokei                       # Code statistics tool
-# bottom                      # System monitor (btm)
-# du-dust                     # du replacement
-# procs                       # ps replacement
-# sd                          # sed alternative
-# zoxide                      # Smarter cd command
-# starship                    # Cross-shell prompt
+# hyperfine                   # Benchmarking tool (prefer brew version)
+# tokei                       # Code statistics tool (prefer brew version)
+# bottom                      # System monitor btm (prefer brew version)
+# du-dust                     # du replacement (prefer brew version)
+# procs                       # ps replacement (prefer brew version)
+# sd                          # sed alternative (prefer brew version)
+# zoxide                      # Smarter cd command (prefer brew version)
+# bat                         # Cat with highlighting (prefer brew version)
+# eza                         # Modern ls replacement (prefer brew version)
+# ripgrep                     # Fast grep (prefer brew version)
+# fd-find                     # Fast find (prefer brew version)

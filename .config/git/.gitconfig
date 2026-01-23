@@ -112,6 +112,21 @@
 	trustctime = false
 	editor = nvim
 
+	# Use delta for beautiful diffs (install: brew install git-delta)
+	pager = delta
+
+[interactive]
+	diffFilter = delta --color-only
+
+[delta]
+	navigate = true
+	light = false
+	side-by-side = true
+	line-numbers = true
+	syntax-theme = Dracula
+	plus-style = "syntax #003800"
+	minus-style = "syntax #3f0001"
+
 [color]
 
 	# Use colors in Git commands that are capable of colored output when
@@ -141,6 +156,8 @@
 
 	# Detect copies as well as renames
 	renames = copies
+	# Show moved lines in different color
+	colorMoved = default
 
 [help]
 
@@ -151,6 +168,8 @@
 
 	# Include summaries of merged commits in newly created merge commit messages
 	log = true
+	# Show original, ours, and theirs in conflicts
+	conflictstyle = diff3
 
 [push]
 	# change to maching for machines with older versions of git 1.x.x
