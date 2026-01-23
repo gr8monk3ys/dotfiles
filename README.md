@@ -1,485 +1,403 @@
-# dotfiles
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/gr8monk3ys/dotfiles/main/.github/assets/banner-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/gr8monk3ys/dotfiles/main/.github/assets/banner-light.svg">
+  <img alt="Lorenzo's Dotfiles" src="https://raw.githubusercontent.com/gr8monk3ys/dotfiles/main/.github/assets/banner-dark.svg">
+</picture>
 
-[![Installation](https://github.com/gr8monk3ys/dotfiles/workflows/Dotfiles%20Installation/badge.svg)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/install.yml)
-[![Tests](https://github.com/gr8monk3ys/dotfiles/workflows/Tests/badge.svg)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/test.yml)
-[![Lint](https://github.com/gr8monk3ys/dotfiles/workflows/Lint/badge.svg)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/lint.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-Personal configuration files (dotfiles) for macOS, with support for Linux systems.
-
-## Highlights
-
-- Comprehensive [.config](.config/) directory with detailed documentation
-- Minimal installation using [Makefile](./Makefile)
-- Package management via [Homebrew](https://brew.sh), npm, Cargo, and pacman
-- Keyboard-driven workflow with tiling window manager (AeroSpace)
-- Modern terminal setup (Kitty + Zsh + Tmux)
-- Neovim configuration with LSP support
-- Well-documented configurations with individual README files
-- Supports both Apple Silicon (M1) and Intel Macs
-
-## Structure
+<div align="center">
 
 ```
-dotfiles/
-├── .config/              # Application configurations (XDG Base Directory)
-│   ├── aerospace/        # AeroSpace window manager
-│   ├── curl/             # cURL defaults
-│   ├── firefox/          # Firefox user preferences
-│   ├── git/              # Git global config
-│   ├── kitty/            # Kitty terminal
-│   ├── latexmk/          # LaTeX automation
-│   ├── lf/               # File manager
-│   ├── macos/            # macOS-specific settings
-│   ├── mpd/              # Music Player Daemon
-│   ├── newsboat/         # RSS reader
-│   ├── nvim/             # Neovim editor
-│   ├── tmux/             # Terminal multiplexer
-│   ├── wget/             # Wget defaults
-│   ├── zathura/          # Document viewer
-│   ├── zsh/              # Zsh shell config
-│   └── .aliases          # Shell aliases
-├── install/              # Package lists for various package managers
-│   ├── Brewfile          # Homebrew formulae
-│   ├── Caskfile          # Homebrew casks
-│   ├── npmfile           # npm packages
-│   ├── Rustfile          # Cargo packages
-│   └── pacmanfile        # Arch Linux packages
-└── Makefile              # Installation automation
+██╗      ██████╗ ██████╗ ███████╗███╗   ██╗███████╗ ██████╗ ███████╗
+██║     ██╔═══██╗██╔══██╗██╔════╝████╗  ██║╚══███╔╝██╔═══██╗██╔════╝
+██║     ██║   ██║██████╔╝█████╗  ██╔██╗ ██║  ███╔╝ ██║   ██║███████╗
+██║     ██║   ██║██╔══██╗██╔══╝  ██║╚██╗██║ ███╔╝  ██║   ██║╚════██║
+███████╗╚██████╔╝██║  ██║███████╗██║ ╚████║███████╗╚██████╔╝███████║
+╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝╚══════╝ ╚═════╝ ╚══════╝
+
+██████╗  ██████╗ ████████╗███████╗██╗██╗     ███████╗███████╗
+██╔══██╗██╔═══██╗╚══██╔══╝██╔════╝██║██║     ██╔════╝██╔════╝
+██║  ██║██║   ██║   ██║   █████╗  ██║██║     █████╗  ███████╗
+██║  ██║██║   ██║   ██║   ██╔══╝  ██║██║     ██╔══╝  ╚════██║
+██████╔╝╚██████╔╝   ██║   ██║     ██║███████╗███████╗███████║
+╚═════╝  ╚═════╝    ╚═╝   ╚═╝     ╚═╝╚══════╝╚══════╝╚══════╝
 ```
 
-Each directory in `.config/` contains a README with detailed information about that specific configuration.
+**A keyboard-driven development environment**
 
-## Key Tools
+[![Installation](https://img.shields.io/github/actions/workflow/status/gr8monk3ys/dotfiles/install.yml?label=install&style=flat-square&logo=github)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/install.yml)
+[![Tests](https://img.shields.io/github/actions/workflow/status/gr8monk3ys/dotfiles/test.yml?label=tests&style=flat-square&logo=github)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/test.yml)
+[![Lint](https://img.shields.io/github/actions/workflow/status/gr8monk3ys/dotfiles/lint.yml?label=lint&style=flat-square&logo=github)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/lint.yml)
+[![License](https://img.shields.io/badge/license-MIT-98c379?style=flat-square)](LICENSE)
+[![Theme](https://img.shields.io/badge/theme-OneDark-61afef?style=flat-square)](#theme)
 
-### Window Management & Desktop
-- **AeroSpace** - i3-like tiling window manager for macOS
-- **Karabiner-Elements** - Keyboard customization
+[Installation](#-quick-start) •
+[Features](#-features) •
+[Structure](#-structure) •
+[Customization](#-customization) •
+[Documentation](#-documentation)
 
-### Terminal & Shell
-- **Kitty** - GPU-accelerated terminal emulator
-- **Zsh** - Enhanced shell with Oh My Zsh and Powerlevel10k
-- **Tmux** - Terminal multiplexer for session management
+</div>
 
-### Development
-- **Neovim** - Modern, extensible text editor
-- **Git** - Version control with custom configuration
-- **VSCodium** - Open-source VS Code
-- **Lazygit** - Terminal UI for git
+---
 
-### Document & Media
-- **Zathura** - Minimal document viewer with Vim keybindings
-- **MPD** - Music Player Daemon
-- **LaTeXmk** - LaTeX build automation
+## ⚡ Quick Start
 
-### Utilities
-- **lf** - Terminal file manager
-- **Newsboat** - RSS/Atom feed reader
-- **fzf** - Fuzzy finder
-- **ripgrep** - Fast grep alternative
-
-## Installation
-
-### Quick Install (One Command)
-
-On a fresh machine with `git` and `curl` installed:
+**One command to rule them all:**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/gr8monk3ys/dotfiles/main/install.sh | bash
 ```
 
-This will clone the repository, set up your machine profile, and run the full installation.
+<details>
+<summary>📋 <strong>Manual Installation</strong></summary>
 
-### Prerequisites
+```bash
+# Clone the repository
+git clone https://github.com/gr8monk3ys/dotfiles.git ~/.dotfiles
 
-On a fresh macOS installation:
+# Navigate to directory
+cd ~/.dotfiles
+
+# Run installation
+make
+```
+
+</details>
+
+<details>
+<summary>🍎 <strong>Prerequisites (macOS)</strong></summary>
 
 ```bash
 # Install Xcode Command Line Tools
 xcode-select --install
 ```
 
-### Manual Installation
+</details>
 
-```bash
-git clone https://github.com/gr8monk3ys/dotfiles.git ~/.dotfiles
-cd ~/.dotfiles
+---
+
+## ✨ Features
+
+<table>
+<tr>
+<td width="50%">
+
+### 🖥️ Window Management
+- **AeroSpace** - i3-like tiling for macOS
+- **Karabiner** - Keyboard customization
+
+### 🐚 Terminal & Shell
+- **Kitty** - GPU-accelerated terminal
+- **Zsh + Zinit** - Fast plugin manager
+- **Powerlevel10k** - Beautiful prompt
+- **Tmux** - Session management
+
+### ✏️ Development
+- **Neovim** - Modern editor with LSP
+- **Lazygit** - Terminal Git UI
+- **VSCodium** - Open-source VS Code
+
+</td>
+<td width="50%">
+
+### 🛠️ Modern CLI Tools
+- **eza** - Better `ls` with icons
+- **bat** - `cat` with syntax highlighting
+- **ripgrep** - Blazing fast grep
+- **fd** - User-friendly find
+- **zoxide** - Smarter `cd`
+- **delta** - Beautiful git diffs
+- **atuin** - Magical shell history
+
+### 📦 Package Management
+- **Homebrew** - macOS packages
+- **mise** - Universal version manager
+- **Cargo** - Rust packages
+- **npm/pnpm** - Node packages
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🎨 Theme
+
+These dotfiles use a consistent **OneDark** color scheme across all tools:
+
+| Color | Hex | Usage |
+|-------|-----|-------|
+| 🔴 Red | `#e06c75` | Errors, deletions |
+| 🟢 Green | `#98c379` | Success, additions |
+| 🟡 Yellow | `#e5c07b` | Warnings, modified |
+| 🔵 Blue | `#61afef` | Info, directories |
+| 🟣 Magenta | `#c678dd` | Special elements |
+| 🔵 Cyan | `#56b6c2` | Links, symlinks |
+| 🟠 Orange | `#d19a66` | Constants |
+
+**Themed tools:** Kitty, Neovim, bat, eza, git-delta, tmux, fzf
+
+---
+
+## 📁 Structure
+
+```
+~/.dotfiles/
+├── 📁 .config/              # XDG configurations
+│   ├── 📁 aerospace/        # Window manager
+│   ├── 📁 bat/              # Cat replacement (OneDark)
+│   ├── 📁 eza/              # Ls replacement (OneDark)
+│   ├── 📁 git/              # Git + Delta config
+│   ├── 📁 kitty/            # Terminal emulator
+│   ├── 📁 nvim/             # Neovim editor
+│   ├── 📁 tmux/             # Terminal multiplexer
+│   ├── 📁 zsh/              # Shell configuration
+│   └── 📄 .aliases          # Modern CLI aliases
+│
+├── 📁 bin/                  # Utility scripts
+│   ├── 📄 dotfiles-doctor   # Health check
+│   ├── 📄 dotfiles-update   # Update packages
+│   ├── 📄 dotfiles-backup   # Backup configs
+│   ├── 📄 dotfiles-secrets  # Secret management
+│   └── 📄 dotfiles-template # Config templating
+│
+├── 📁 install/              # Package lists
+│   ├── 📄 Brewfile          # Homebrew formulae
+│   ├── 📄 Caskfile          # macOS applications
+│   ├── 📄 npmfile           # Node packages
+│   └── 📄 Rustfile          # Cargo packages
+│
+├── 📁 test/                 # BATS test suite
+├── 📄 install.sh            # One-line installer
+└── 📄 Makefile              # Automation
 ```
 
-### Install Everything
+---
 
-Use the Makefile to install packages and symlink configurations:
+## 🔧 Commands
 
-```bash
-make
-```
+### Installation
 
-This will:
-1. Install Homebrew packages from `install/Brewfile` and `install/Caskfile`
-2. Install npm packages from `install/npmfile`
-3. Install Rust packages from `install/Rustfile`
-4. Symlink configuration files from `.config/` to `~/.config/`
+| Command | Description |
+|---------|-------------|
+| `make` | Full installation for detected OS |
+| `make link` | Create symlinks only |
+| `make link-dry-run` | Preview changes |
+| `make unlink` | Remove symlinks |
 
-### Selective Installation
+### Maintenance
 
-You can also install specific components:
+| Command | Description |
+|---------|-------------|
+| `make doctor` | Health check |
+| `make update` | Update all packages |
+| `make backup` | Backup configurations |
+| `make clean` | Remove broken symlinks |
 
-```bash
-make brew           # Install Homebrew packages
-make npm            # Install npm packages
-make rust           # Install Rust packages
-make link           # Create symlinks only
-make link-dry-run   # Preview symlinks without creating them
-```
+### Testing
 
-### Utility Commands
+| Command | Description |
+|---------|-------------|
+| `make test` | Run BATS tests |
+| `make test-docker` | Test in Ubuntu container |
+| `make test-docker-arch` | Test in Arch container |
 
-```bash
-make doctor         # Health check for installation
-make update         # Update all packages
-make backup         # Backup configurations
-make test           # Run BATS test suite
-make test-docker    # Test in clean Ubuntu container
-```
+---
 
-## Post-Installation
-
-### 1. Configure Git
-
-```bash
-git config --global user.name "Your Name"
-git config --global user.email "your@email.com"
-git config --global github.user "your-github-username"
-```
-
-### 2. Apply macOS Settings
-
-```bash
-# Configure macOS system defaults
-./.config/macos/defaults.sh
-
-# Set up Dock
-./.config/macos/dock.sh
-
-# Restart for changes to take effect
-sudo shutdown -r now
-```
-
-### 3. Set Up Zsh
-
-Install Oh My Zsh and Powerlevel10k:
-
-```bash
-# Install Oh My Zsh
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-
-# Install Powerlevel10k theme
-git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
-
-# Configure prompt
-p10k configure
-```
-
-### 4. Configure Neovim
-
-The Neovim configuration will automatically install plugins on first launch. See [.config/nvim/README.md](.config/nvim/README.md) for details.
-
-## Configuration Details
-
-Each tool has its own README with detailed information:
-
-- [.config/README.md](.config/README.md) - Overview of all configurations
-- [install/README.md](install/README.md) - Package installation details
-
-Individual tool documentation:
-- [aerospace](.config/aerospace/README.md) - Window manager setup
-- [kitty](.config/kitty/README.md) - Terminal configuration
-- [zsh](.config/zsh/README.md) - Shell setup
-- [tmux](.config/tmux/README.md) - Terminal multiplexer
-- [nvim](.config/nvim/README.md) - Editor configuration
-- [git](.config/git/README.md) - Version control setup
-- And more in each .config subdirectory...
-
-## Package Management
-
-### Adding Packages
-
-**Homebrew formula:**
-```bash
-brew install <package>
-brew bundle dump --force --file=install/Brewfile
-```
-
-**Homebrew cask:**
-```bash
-brew install --cask <app>
-brew bundle dump --force --file=install/Caskfile --cask
-```
-
-**npm package:**
-```bash
-npm install -g <package>
-echo '<package>' >> install/npmfile
-```
-
-**Cargo package:**
-```bash
-cargo install <package>
-echo '<package>' >> install/Rustfile
-```
-
-### Updating Packages
-
-```bash
-# Update Homebrew packages
-brew update && brew upgrade
-
-# Update npm packages
-npm update -g
-
-# Update Cargo packages
-cargo install-update -a
-```
-
-## Customization
-
-Fork this repository and customize to your preferences:
-
-1. Modify configurations in `.config/`
-2. Update package lists in `install/`
-3. Adjust macOS settings in `.config/macos/`
-4. Add your own aliases to `.config/.aliases`
+## 🎛️ Customization
 
 ### Local Overrides
 
-For machine-specific settings that shouldn't be committed, use local override files:
+Machine-specific settings that won't be committed:
 
 ```bash
-# Zsh local configuration
+# Zsh customizations
 cp ~/.config/zsh/zshrc.local.example ~/.config/zsh/zshrc.local
 
-# Git local configuration
+# Git customizations (name, email, signing key)
 cp ~/.config/git/config.local.example ~/.config/git/config.local
 ```
 
-These files are gitignored and will be sourced automatically.
-
 ### Machine Profiles
 
-Set your machine type for conditional configurations:
+Set your machine type for conditional configs:
 
 ```bash
-# Create machine type (personal, work, or server)
-echo "personal" > ~/.machine_type
+echo "personal" > ~/.machine_type  # or: work, server
 ```
-
-Configurations can then check `$MACHINE_TYPE` for machine-specific behavior.
 
 ### Secret Management
 
-Manage encrypted secrets using the `age` encryption tool:
+Encrypt sensitive files with `age`:
 
 ```bash
-# Initialize encryption
-make secrets-init
-
-# Encrypt a file
-dotfiles-secrets encrypt ~/.ssh/config
-
-# Decrypt a file
-dotfiles-secrets decrypt secrets/config.age
+make secrets-init                         # Initialize encryption
+dotfiles-secrets encrypt ~/.ssh/config    # Encrypt a file
+dotfiles-secrets decrypt file.age         # Decrypt a file
 ```
 
 ### Templates
 
-Use templates for machine-specific configs without duplicating files:
+Generate configs with machine-specific values:
 
 ```bash
-# List available template variables
-make template-list
-
-# Process a template
-dotfiles-template config.tmpl config
+make template-list                        # List variables
+dotfiles-template config.tmpl config      # Process template
 ```
 
-Available variables: `{{HOSTNAME}}`, `{{OS_TYPE}}`, `{{MACHINE_TYPE}}`, `{{USER}}`, etc.
+Available: `{{HOSTNAME}}`, `{{OS_TYPE}}`, `{{MACHINE_TYPE}}`, `{{USER}}`
 
-## Platform Support
+---
 
-- **macOS**: Full support (primary target)
-- **Linux**: Partial support (Arch Linux package list included)
-- **Windows**: Not supported
+## 🛠️ Modern CLI Aliases
 
-## Maintenance
+These aliases are automatically set when tools are installed:
 
-### Backup
+```bash
+# File listing (eza)
+ls    → eza --icons --group-directories-first
+ll    → eza -la --icons --git
+tree  → eza --tree --icons
 
-All configurations are version controlled. To backup:
+# File viewing (bat)
+cat   → bat --paging=never
+
+# Search (ripgrep, fd)
+grep  → rg
+find  → fd
+
+# System (dust, procs, bottom)
+du    → dust
+ps    → procs
+top   → btm
+
+# History (atuin)
+hs    → atuin search
+```
+
+---
+
+## 📚 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [CLAUDE.md](CLAUDE.md) | AI assistant guide |
+| [MAKEFILE.md](MAKEFILE.md) | Makefile reference |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution guidelines |
+| [CHANGELOG.md](CHANGELOG.md) | Version history |
+| [CODE_QUALITY_REPORT.md](CODE_QUALITY_REPORT.md) | Quality analysis |
+
+Each `.config/` directory has its own README with detailed documentation.
+
+---
+
+## ❓ FAQ
+
+<details>
+<summary><strong>Can I use these dotfiles?</strong></summary>
+
+Yes! Fork the repo and customize. The dotfiles are modular—use only what you need.
+
+</details>
+
+<details>
+<summary><strong>How do I update?</strong></summary>
+
+```bash
+cd ~/.dotfiles && git pull && make link
+# Or use the alias:
+dotsup
+```
+
+</details>
+
+<details>
+<summary><strong>How do I uninstall?</strong></summary>
 
 ```bash
 cd ~/.dotfiles
-git add .
-git commit -m "Update configurations"
-git push
+make unlink
 ```
 
-### Clean Up
+</details>
+
+<details>
+<summary><strong>What about existing configs?</strong></summary>
+
+The installer backs up `.zshenv` automatically. For other configs, back them up manually:
 
 ```bash
-# Remove unused Homebrew packages
-brew bundle cleanup --force
-
-# Clean Homebrew cache
-brew cleanup
-
-# Clean cargo cache
-cargo cache --autoclean
+mv ~/.config/nvim ~/.config/nvim.backup
+make link
 ```
 
-## Troubleshooting
+</details>
 
-### Symlinks Not Working
+<details>
+<summary><strong>Linux support?</strong></summary>
 
-Ensure the `.config` directory is properly linked:
+Partial support for Arch Linux. See `install/pacmanfile`. Other distros need custom package lists.
 
-```bash
-ln -sf ~/.dotfiles/.config ~/.config
-```
+</details>
 
-### Homebrew Installation Fails
+---
 
-Make sure Xcode Command Line Tools are installed:
+## 🐛 Troubleshooting
 
-```bash
-xcode-select --install
-```
-
-### Shell Configuration Not Loading
-
-Source the configuration manually:
+<details>
+<summary><strong>Symlink creation fails</strong></summary>
 
 ```bash
-source ~/.config/zsh/.zshrc
-```
-
-Or start a new shell session.
-
-## Resources
-
-- [Dotfiles Guide](https://dotfiles.github.io/)
-- [XDG Base Directory Spec](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html)
-- [Arch Wiki - Dotfiles](https://wiki.archlinux.org/title/Dotfiles)
-
-## Credits
-
-Inspired by the [dotfiles community](https://dotfiles.github.io) and various configurations from across GitHub.
-
-## Documentation
-
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Guidelines for contributing to this repository
-- **[CHANGELOG.md](CHANGELOG.md)** - Version history and release notes
-- **[CLAUDE.md](CLAUDE.md)** - AI assistant guide for working with this repository
-- **[MAKEFILE.md](MAKEFILE.md)** - Complete Makefile reference and usage guide
-- **[LICENSE](LICENSE)** - MIT License
-
-## FAQ
-
-### Can I use these dotfiles on my system?
-
-Yes! Fork the repository and customize to your preferences. The dotfiles are designed to be modular - you can use only the parts you need.
-
-### How do I update my dotfiles?
-
-```bash
-cd ~/.dotfiles
-git pull
-make link  # Re-create symlinks if needed
-```
-
-### How do I uninstall?
-
-```bash
-cd ~/.dotfiles
-make unlink  # Remove all symlinks
-```
-
-Then manually delete the repository directory if desired.
-
-### Can I use these on Linux?
-
-Partial support exists for Arch Linux. See `install/pacmanfile` for the package list. Other distributions will require creating appropriate package lists.
-
-### What if I already have configurations?
-
-The `make link` command backs up your existing `.zshenv` automatically. For other configs in `~/.config/`, back them up manually before running `make link`.
-
-### How do I add my own configurations?
-
-1. Add configurations to `.config/[app-name]/`
-2. Run `make link` to create symlinks
-3. Update package lists in `install/` if needed
-4. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
-
-## Troubleshooting
-
-### Symlink creation fails
-
-**Problem:** "File exists" errors during `make link`
-
-**Solution:** Backup and remove existing configurations:
-```bash
+# Backup existing config
 mv ~/.config/[app] ~/.config/[app].backup
 make link
 ```
 
-### Homebrew installation fails
+</details>
 
-**Problem:** Permission errors or command not found
+<details>
+<summary><strong>Shell config not loading</strong></summary>
 
-**Solution:**
 ```bash
-# Ensure Xcode Command Line Tools are installed
+# Verify symlink
+ls -la ~/.zshenv
+
+# Reload shell
+source ~/.zshenv
+exec zsh
+```
+
+</details>
+
+<details>
+<summary><strong>Homebrew issues</strong></summary>
+
+```bash
+# Ensure Xcode tools installed
 xcode-select --install
 
-# Check Homebrew installation
+# Run diagnostics
 brew doctor
 ```
 
-### Shell configuration not loading
+</details>
 
-**Problem:** Changes to `.zshrc` not taking effect
+---
 
-**Solution:**
-```bash
-# Ensure .zshenv is properly linked
-ls -la ~/.zshenv
+## 🙏 Credits
 
-# If not, relink
-make link
+Inspired by the [dotfiles community](https://dotfiles.github.io) and these amazing repos:
 
-# Start new shell or source
-source ~/.zshenv
-```
+- [mathiasbynens/dotfiles](https://github.com/mathiasbynens/dotfiles)
+- [holman/dotfiles](https://github.com/holman/dotfiles)
+- [thoughtbot/dotfiles](https://github.com/thoughtbot/dotfiles)
 
-### Packages fail to install
+---
 
-**Problem:** npm or cargo packages fail
+<div align="center">
 
-**Solution:**
-```bash
-# Ensure prerequisite packages are installed
-make brew-packages  # Install Homebrew packages first
-make npm           # Ensure Node.js is installed
+**[⬆ Back to Top](#)**
 
-# Try installing packages individually
-npm install -g <package-name>
-cargo install <package-name>
-```
+Made with ☕ by [Lorenzo](https://github.com/gr8monk3ys)
 
-For more troubleshooting, see individual configuration READMEs in `.config/*/README.md`.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-Take anything you want and customize to your needs!
+</div>
