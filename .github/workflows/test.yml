@@ -18,15 +18,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install BATS (macOS)
+      - name: Install BATS and libraries (macOS)
         if: runner.os == 'macOS'
-        run: brew install bats-core
+        run: |
+          brew install bats-core
+          brew tap bats-core/bats-core
+          brew install bats-support bats-assert
 
-      - name: Install BATS (Linux)
+      - name: Install BATS and libraries (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y bats
+          # Install bats-support and bats-assert
+          sudo mkdir -p /usr/lib/bats
+          sudo git clone https://github.com/bats-core/bats-support.git /usr/lib/bats/bats-support
+          sudo git clone https://github.com/bats-core/bats-assert.git /usr/lib/bats/bats-assert
 
       - name: Run platform detection tests
         run: bats test/test_platform.bats

@@ -5,6 +5,56 @@
 DOTFILES_DIR="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
 export DOTFILES_DIR
 
+# Load bats-support and bats-assert if available
+# macOS (Homebrew on Apple Silicon)
+if [[ -d "/opt/homebrew/lib/bats-support" ]]; then
+    load "/opt/homebrew/lib/bats-support/load"
+    load "/opt/homebrew/lib/bats-assert/load"
+# macOS (Homebrew on Intel)
+elif [[ -d "/usr/local/lib/bats-support" ]]; then
+    load "/usr/local/lib/bats-support/load"
+    load "/usr/local/lib/bats-assert/load"
+# Linux (manual install location)
+elif [[ -d "/usr/lib/bats/bats-support" ]]; then
+    load "/usr/lib/bats/bats-support/load"
+    load "/usr/lib/bats/bats-assert/load"
+else
+    # Fallback: define simple assert functions if libraries not found
+    assert_success() {
+        if [[ "$status" -ne 0 ]]; then
+            echo "Expected success (exit code 0), got exit code $status"
+            return 1
+        fi
+    }
+
+    assert_failure() {
+        if [[ "$status" -eq 0 ]]; then
+            echo "Expected failure (non-zero exit code), got exit code 0"
+            return 1
+        fi
+    }
+
+    assert_output() {
+        local expected
+        if [[ "$1" == "--partial" ]]; then
+            shift
+            expected="$1"
+            if [[ "$output" != *"$expected"* ]]; then
+                echo "Expected output to contain: $expected"
+                echo "Actual output: $output"
+                return 1
+            fi
+        else
+            expected="$1"
+            if [[ "$output" != "$expected" ]]; then
+                echo "Expected output: $expected"
+                echo "Actual output: $output"
+                return 1
+            fi
+        fi
+    }
+fi
+
 # Setup test environment
 setup_test_env() {
     # Create temporary test directory
