@@ -112,6 +112,32 @@
 	trustctime = false
 	editor = nvim
 
+	# Use delta for beautiful diffs (install: brew install git-delta)
+	pager = delta
+
+[interactive]
+	diffFilter = delta --color-only
+
+[delta]
+	navigate = true
+	light = false
+	side-by-side = true
+	line-numbers = true
+	# OneDark-inspired theme
+	syntax-theme = OneHalfDark
+	# OneDark colors for diff highlighting
+	plus-style = "syntax #2d3b2d"
+	plus-emph-style = "syntax #98c379"
+	minus-style = "syntax #3b2d2d"
+	minus-emph-style = "syntax #e06c75"
+	line-numbers-minus-style = "#e06c75"
+	line-numbers-plus-style = "#98c379"
+	line-numbers-zero-style = "#5c6370"
+	hunk-header-style = "file line-number syntax"
+	hunk-header-decoration-style = "blue box"
+	file-style = "bold #61afef"
+	file-decoration-style = "none"
+
 [color]
 
 	# Use colors in Git commands that are capable of colored output when
@@ -141,6 +167,8 @@
 
 	# Detect copies as well as renames
 	renames = copies
+	# Show moved lines in different color
+	colorMoved = default
 
 [help]
 
@@ -151,6 +179,8 @@
 
 	# Include summaries of merged commits in newly created merge commit messages
 	log = true
+	# Show original, ours, and theirs in conflicts
+	conflictstyle = diff3
 
 [push]
 	# change to maching for machines with older versions of git 1.x.x
@@ -204,3 +234,8 @@
 	required = true
 [init]
 	defaultBranch = main
+
+# Include local config for machine-specific settings (gitignored)
+# Create ~/.config/git/config.local for overrides
+[include]
+	path = ~/.config/git/config.local

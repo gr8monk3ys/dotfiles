@@ -102,8 +102,8 @@ alias hide="defaults write com.apple.finder AppleShowAllFiles -bool false && kil
 alias hidedesktop="defaults write com.apple.finder CreateDesktop -bool false && killall Finder"
 alias showdesktop="defaults write com.apple.finder CreateDesktop -bool true && killall Finder"
 
-# URL-encode strings
-alias urlencode='python -c "import sys, urllib as ul; print ul.quote_plus(sys.argv[1]);"'
+# URL-encode strings (Python 3 compatible)
+alias urlencode='python3 -c "import sys, urllib.parse; print(urllib.parse.quote_plus(sys.argv[1]))"'
 
 # Merge PDF files, preserving hyperlinks
 # Usage: `mergepdf input{1,2,3}.pdf`
@@ -146,3 +146,113 @@ alias reload="exec ${SHELL} -l"
 
 # Print each PATH entry on a separate line
 alias path='echo -e ${PATH//:/\\n}'
+
+# ============================================================================
+# Modern CLI Replacements (Rust-powered tools)
+# These override traditional Unix commands with faster, more feature-rich alternatives
+# ============================================================================
+
+# eza - Modern ls replacement with icons and git integration
+if command -v eza &> /dev/null; then
+    alias ls='eza --icons --group-directories-first'
+    alias l='eza -l --icons --git --group-directories-first'
+    alias la='eza -la --icons --git --group-directories-first'
+    alias ll='eza -la --icons --git --group-directories-first'
+    alias lt='eza --tree --icons --git -L 2'
+    alias lta='eza --tree --icons --git -L 2 -a'
+    alias tree='eza --tree --icons'
+fi
+
+# bat - Cat with syntax highlighting
+if command -v bat &> /dev/null; then
+    alias cat='bat --paging=never'
+    alias catp='bat'  # cat with pager
+    alias catl='bat --plain'  # cat without line numbers
+fi
+
+# Modern grep/find (ripgrep and fd are already faster)
+if command -v rg &> /dev/null; then
+    alias grep='rg'
+    alias rgi='rg -i'  # case insensitive
+fi
+
+if command -v fd &> /dev/null; then
+    alias find='fd'
+fi
+
+# dust - Modern du replacement
+if command -v dust &> /dev/null; then
+    alias du='dust'
+    alias dus='dust -s'  # summary only
+fi
+
+# procs - Modern ps replacement
+if command -v procs &> /dev/null; then
+    alias ps='procs'
+    alias psa='procs -a'  # all processes
+    alias pst='procs --tree'  # process tree
+fi
+
+# bottom - Modern htop replacement
+if command -v btm &> /dev/null; then
+    alias top='btm'
+    alias htop='btm'
+fi
+
+# sd - Modern sed replacement
+if command -v sd &> /dev/null; then
+    alias sed='sd'
+fi
+
+# Modern diff (delta is configured in git, but useful standalone too)
+if command -v delta &> /dev/null; then
+    alias diff='delta'
+fi
+
+# zoxide - Smart cd (already initialized in zshrc, adding convenience aliases)
+if command -v zoxide &> /dev/null; then
+    alias zi='zoxide query -i'  # interactive selection
+fi
+
+# Atuin - Shell history (convenience aliases)
+if command -v atuin &> /dev/null; then
+    alias hs='atuin search'  # history search
+    alias hsi='atuin search -i'  # interactive history search
+fi
+
+# mise - Version manager aliases
+if command -v mise &> /dev/null; then
+    alias mi='mise install'
+    alias mu='mise use'
+    alias ml='mise list'
+    alias mls='mise ls'
+fi
+
+# Quick benchmarking with hyperfine
+if command -v hyperfine &> /dev/null; then
+    alias bench='hyperfine'
+fi
+
+# Code statistics with tokei
+if command -v tokei &> /dev/null; then
+    alias loc='tokei'
+    alias sloc='tokei -s lines'
+fi
+
+# File watching with watchexec
+if command -v watchexec &> /dev/null; then
+    alias watch='watchexec'
+fi
+
+# ============================================================================
+# Utility Aliases
+# ============================================================================
+
+# Quick edit configs
+alias zshrc='${EDITOR:-nvim} ~/.config/zsh/.zshrc'
+alias aliases='${EDITOR:-nvim} ~/.config/.aliases'
+alias gitconfig='${EDITOR:-nvim} ~/.config/git/.gitconfig'
+
+# Dotfiles management
+alias dots='cd ~/.dotfiles'
+alias dotsup='cd ~/.dotfiles && git pull && make link'

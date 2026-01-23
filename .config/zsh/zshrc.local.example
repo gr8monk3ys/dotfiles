@@ -1,0 +1,30 @@
+# Example local Zsh configuration
+# Copy this file to zshrc.local for machine-specific settings
+#
+# This file is sourced at the end of .zshrc and is gitignored,
+# so you can safely add machine-specific configurations here.
+
+# Example: Work-specific aliases
+# alias vpn='sudo openconnect vpn.company.com'
+# alias work-ssh='ssh -i ~/.ssh/work_key'
+
+# Example: Personal machine paths
+# export PATH="$HOME/personal-projects/bin:$PATH"
+
+# Example: Machine-specific environment variables
+# export OPENAI_API_KEY="your-key-here"
+# export GITHUB_TOKEN="your-token-here"
+
+# Example: Custom prompt modifications
+# POWERLEVEL9K_LEFT_PROMPT_ELEMENTS+=(custom_machine_type)
+
+# Example: Conditional configurations based on machine type
+# case "$MACHINE_TYPE" in
+#     work)
+#         export HTTP_PROXY="http://proxy.company.com:8080"
+#         ;;
+#     server)
+#         # Minimal configuration for servers
+#         HISTSIZE=1000
+#         ;;
+# esac

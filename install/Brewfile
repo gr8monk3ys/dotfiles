@@ -124,6 +124,37 @@ brew "sk"                              # Fuzzy finder (skim)
 brew "tree"                            # Directory tree viewer
 
 # ============================================================================
+# Modern CLI Replacements (Rust-powered)
+# ============================================================================
+brew "eza"                             # Modern ls replacement (fork of exa)
+brew "bat"                             # Cat with syntax highlighting
+brew "zoxide"                          # Smart cd replacement (frecency-based)
+brew "git-delta"                       # Beautiful git diffs with syntax highlighting
+brew "dust"                            # Modern du replacement (disk usage)
+brew "bottom"                          # Modern htop replacement (btm)
+brew "procs"                           # Modern ps replacement
+brew "sd"                              # Modern sed replacement
+brew "hyperfine"                       # Command-line benchmarking tool
+brew "tokei"                           # Code statistics tool
+brew "watchexec"                       # File watcher for development
+
+# ============================================================================
+# Shell History & Environment
+# ============================================================================
+brew "atuin"                           # Magical shell history with sync
+brew "direnv"                          # Per-directory environment variables
+
+# ============================================================================
+# Version Management
+# ============================================================================
+brew "mise"                            # Universal version manager (replaces asdf/pyenv/nvm)
+
+# ============================================================================
+# Security & Encryption
+# ============================================================================
+brew "age"                             # Modern encryption tool (for dotfiles-secrets)
+
+# ============================================================================
 # File Transfer & Download
 # ============================================================================
 brew "aria2"                           # Download utility

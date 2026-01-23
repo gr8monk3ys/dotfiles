@@ -10,7 +10,12 @@ export XDG_CONFIG_HOME = $(HOME)/.config
 export STOW_DIR = $(DOTFILES_DIR)
 export ACCEPT_EULA=Y
 
-.PHONY: test
+.PHONY: all macos arch link unlink link-dry-run sudo test doctor update backup \
+        backup-compress backup-cleanup clean restore brew-update brew-cleanup \
+        brew bash git npm packages-macos packages-arch core-macos core-arch \
+        stow-arch stow-macos cask-apps vscode-extensions node-packages \
+        rust-packages duti bun pacman-packages brew-packages secrets-init \
+        secrets-status template-list
 
 all: $(OS)
 
@@ -99,7 +104,21 @@ cask-apps: brew
 	brew bundle --file=$(DOTFILES_DIR)/install/Caskfile || true
 
 vscode-extensions: cask-apps
-	for EXT in $$(cat install/Codefile); do code --install-extension $$EXT; done
+	@if command -v codium >/dev/null 2>&1; then \
+		echo "Installing extensions with VSCodium..."; \
+		while IFS= read -r ext || [[ -n "$$ext" ]]; do \
+			[[ -z "$$ext" || "$$ext" =~ ^# ]] && continue; \
+			codium --install-extension "$$ext" || true; \
+		done < install/Codefile; \
+	elif command -v code >/dev/null 2>&1; then \
+		echo "Installing extensions with VS Code..."; \
+		while IFS= read -r ext || [[ -n "$$ext" ]]; do \
+			[[ -z "$$ext" || "$$ext" =~ ^# ]] && continue; \
+			code --install-extension "$$ext" || true; \
+		done < install/Codefile; \
+	else \
+		echo "⚠️  Neither code nor codium found. Skipping extension installation."; \
+	fi
 
 node-packages: npm
 	$(N_PREFIX)/bin/npm install --force --location global $(shell cat install/npmfile)
@@ -170,4 +189,44 @@ brew-cleanup:
 	@brew bundle cleanup --force
 	@echo "✓ Homebrew cleanup complete"
 
-.PHONY: doctor update backup backup-compress backup-cleanup clean restore brew-update brew-cleanup
+## Dry-run: Show what symlinks would be created without making changes
+link-dry-run: stow-$(OS)
+	@echo "Dry run - the following symlinks would be created:"
+	@echo ""
+	@echo "==> .zshenv symlink:"
+	@if [ -f "$(HOME)/.zshenv" -a ! -h "$(HOME)/.zshenv" ]; then \
+		echo "    Would backup: $(HOME)/.zshenv -> $(HOME)/.zshenv.bak"; \
+	fi
+	@echo "    Would create: $(HOME)/.zshenv -> $(DOTFILES_DIR)/.zshenv"
+	@echo ""
+	@echo "==> .config symlinks (via stow):"
+	@stow -n -v -t "$(XDG_CONFIG_HOME)" .config 2>&1 | grep -E "^(LINK|UNLINK)" || echo "    (no changes needed)"
+	@echo ""
+	@echo "Run 'make link' to apply these changes."
+
+## Secret management
+secrets-init:
+	@bin/dotfiles-secrets init
+
+secrets-status:
+	@bin/dotfiles-secrets status
+
+## Template system
+template-list:
+	@bin/dotfiles-template --list
+
+## Docker-based testing (clean environment)
+test-docker:
+	@echo "Building and running tests in Ubuntu container..."
+	docker build -t dotfiles-test -f test/Dockerfile .
+	docker run --rm dotfiles-test
+
+test-docker-arch:
+	@echo "Building and running tests in Arch Linux container..."
+	docker build -t dotfiles-test-arch -f test/Dockerfile.arch .
+	docker run --rm dotfiles-test-arch
+
+test-docker-interactive:
+	@echo "Starting interactive Ubuntu container..."
+	docker build -t dotfiles-test -f test/Dockerfile .
+	docker run -it --rm dotfiles-test /bin/zsh

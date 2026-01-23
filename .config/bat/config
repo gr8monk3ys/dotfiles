@@ -1,0 +1,31 @@
+# bat configuration file
+# Location: ~/.config/bat/config
+# Syntax: bat --help
+
+# Use OneDark-like theme
+# OneHalfDark is built-in and closely matches OneDark
+--theme="OneHalfDark"
+
+# Show line numbers
+--style="numbers,changes,header"
+
+# Use italic text for comments (if terminal supports it)
+--italic-text=always
+
+# Enable mouse scrolling in less pager
+--pager="less -FR"
+
+# Set tab width
+--tabs=4
+
+# File type mappings for syntax highlighting
+--map-syntax "*.conf:INI"
+--map-syntax ".gitignore:Git Ignore"
+--map-syntax "*.zsh:Bourne Again Shell (bash)"
+--map-syntax "*.zshrc:Bourne Again Shell (bash)"
+--map-syntax ".zshenv:Bourne Again Shell (bash)"
+--map-syntax ".zprofile:Bourne Again Shell (bash)"
+--map-syntax "Brewfile:Ruby"
+--map-syntax "Caskfile:Ruby"
+--map-syntax "Makefile:Makefile"
+--map-syntax "*.tmpl:Jinja2"

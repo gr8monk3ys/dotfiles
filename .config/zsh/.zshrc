@@ -5,7 +5,7 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-if [[ -f "/opt/homebrew/bin/brew" ]] then
+if [[ -f "/opt/homebrew/bin/brew" ]]; then
   # If you're using macOS, you'll want this enabled
   eval "$(/opt/homebrew/bin/brew shellenv)"
 fi
@@ -72,14 +72,53 @@ setopt hist_find_no_dups
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 zstyle ':completion:*' menu no
-zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
-zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls --color $realpath'
+# Use eza for fzf-tab previews if available, otherwise fall back to ls
+if command -v eza &> /dev/null; then
+    zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza --icons --color=always $realpath'
+    zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'eza --icons --color=always $realpath'
+else
+    zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
+    zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls --color $realpath'
+fi
 
-# Aliases
-alias ls='ls --color'
+# Core Aliases (modern replacements loaded from ~/.config/.aliases)
 alias vim='nvim'
 alias c='clear'
 
+# Source aliases file
+[[ -f "${XDG_CONFIG_HOME:-$HOME/.config}/.aliases" ]] && source "${XDG_CONFIG_HOME:-$HOME/.config}/.aliases"
+
+# ============================================================================
 # Shell integrations
+# ============================================================================
+
+# fzf - Fuzzy finder
 eval "$(fzf --zsh)"
+
+# zoxide - Smart cd replacement
 eval "$(zoxide init --cmd cd zsh)"
+
+# Atuin - Magical shell history (replaces ctrl-r)
+if command -v atuin &> /dev/null; then
+    eval "$(atuin init zsh)"
+fi
+
+# direnv - Per-directory environment variables
+if command -v direnv &> /dev/null; then
+    eval "$(direnv hook zsh)"
+fi
+
+# mise - Universal version manager (replaces asdf/pyenv/nvm)
+if command -v mise &> /dev/null; then
+    eval "$(mise activate zsh)"
+fi
+
+# Machine type detection (personal, work, server)
+export MACHINE_TYPE="${MACHINE_TYPE:-$(cat ~/.machine_type 2>/dev/null || echo 'personal')}"
+
+# Load local overrides (not tracked in git)
+# Create ~/.config/zsh/zshrc.local for machine-specific settings
+[[ -f "${ZDOTDIR:-$HOME/.config/zsh}/zshrc.local" ]] && source "${ZDOTDIR:-$HOME/.config/zsh}/zshrc.local"
+
+# Load machine-type specific config if it exists
+[[ -f "${ZDOTDIR:-$HOME/.config/zsh}/zshrc.${MACHINE_TYPE}" ]] && source "${ZDOTDIR:-$HOME/.config/zsh}/zshrc.${MACHINE_TYPE}"

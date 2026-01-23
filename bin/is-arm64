@@ -2,5 +2,6 @@
 
 # Check if running on ARM64 (Apple Silicon)
 # Usage: is-arm64
+# Returns: exit code 0 if ARM64, 1 otherwise
 
-[[ $(uname -m) == "arm64" ]] || return 1
+[[ $(uname -m) == "arm64" ]] && exit 0 || exit 1
