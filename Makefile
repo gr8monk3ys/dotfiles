@@ -1,6 +1,6 @@
 DOTFILES_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-OS := $(shell bin/is-supported bin/is-macos macos $(shell bin/is-supported bin/is-arch arch linux))
-HOMEBREW_PREFIX := $(shell bin/is-supported bin/is-arm64 /opt/homebrew /usr/local)
+OS := $(shell bin/platform detect)
+HOMEBREW_PREFIX := $(shell bin/platform select /opt/homebrew /usr/local "bin/platform is-arm64")
 export N_PREFIX = $(HOME)/.n
 PATH := $(HOMEBREW_PREFIX)/bin:$(DOTFILES_DIR)/bin:$(N_PREFIX)/bin:$(PATH)
 SHELL := env PATH=$(PATH) /bin/bash
@@ -30,10 +30,10 @@ core-arch:
 	pacman -Syu --noconfirm
 
 stow-arch: core-arch
-	is-executable stow || pacman -S --noconfirm stow
+	bin/platform has stow || pacman -S --noconfirm stow
 
 stow-macos: brew
-	is-executable stow || brew install stow
+	bin/platform has stow || brew install stow
 
 sudo:
 ifndef GITHUB_ACTION

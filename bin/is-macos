@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-# Check if running on macOS
-# Usage: is-macos
-# Returns: exit code 0 if macOS, 1 otherwise
-
-[[ "$OSTYPE" =~ ^darwin ]] && exit 0 || exit 1
