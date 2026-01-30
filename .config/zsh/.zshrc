@@ -81,12 +81,12 @@ else
     zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls --color $realpath'
 fi
 
-# Core Aliases (modern replacements loaded from ~/.config/.aliases)
+# Core Aliases
 alias vim='nvim'
 alias c='clear'
 
-# Source aliases file
-[[ -f "${XDG_CONFIG_HOME:-$HOME/.config}/.aliases" ]] && source "${XDG_CONFIG_HOME:-$HOME/.config}/.aliases"
+# Source aliases file (modern CLI replacements)
+[[ -f "${ZDOTDIR:-$HOME/.config/zsh}/aliases.zsh" ]] && source "${ZDOTDIR:-$HOME/.config/zsh}/aliases.zsh"
 
 # ============================================================================
 # Shell integrations

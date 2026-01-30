@@ -1,87 +1,77 @@
 # Bin Directory
 
-Utility scripts used by the Makefile and for general system management.
+Utility scripts for system management and dotfiles operations.
 
-## Helper Scripts (Makefile Dependencies)
+## Platform Detection
 
-These scripts are used by the Makefile to detect system configuration:
+### [platform](platform)
 
-### [is-supported](is-supported)
-Checks if a command is supported (executable exists).
-
-**Usage:**
-```bash
-is-supported <command> <return-if-true> <return-if-false>
-```
-
-**Example:**
-```bash
-is-supported brew /opt/homebrew /usr/local
-```
-
-### [is-macos](is-macos)
-Checks if running on macOS.
-
-**Returns:** Exit code 0 if on macOS, 1 otherwise
+Unified platform detection utility (replaces individual is-* scripts).
 
 **Usage:**
 ```bash
-if is-macos; then
+# Detect OS
+platform detect              # Output: macos, arch, linux, or unknown
+
+# Detect architecture
+platform arch                # Output: arm64, x86_64, or unknown
+
+# Boolean checks (exit codes)
+platform is-macos            # Exit 0 if macOS
+platform is-arch             # Exit 0 if Arch Linux
+platform is-linux            # Exit 0 if Linux
+platform is-arm64            # Exit 0 if ARM64
+
+# Command existence
+platform has brew            # Exit 0 if brew exists
+
+# Conditional execution
+platform run-if brew update  # Only runs if brew exists
+
+# Value selection
+platform select /opt/homebrew /usr/local "platform is-arm64"
+```
+
+**Examples:**
+```bash
+# Conditional logic
+if platform is-macos; then
     echo "Running on macOS"
 fi
-```
 
-### [is-arch](is-arch)
-Checks if running on Arch Linux.
+# Homebrew prefix detection
+HOMEBREW_PREFIX=$(platform select /opt/homebrew /usr/local "platform is-arm64")
 
-**Returns:** Exit code 0 if on Arch Linux, 1 otherwise
-
-**Usage:**
-```bash
-if is-arch; then
-    echo "Running on Arch Linux"
-fi
-```
-
-### [is-arm64](is-arm64)
-Checks if running on ARM64 architecture (Apple Silicon).
-
-**Returns:** Exit code 0 if ARM64, 1 otherwise
-
-**Usage:**
-```bash
-if is-arm64; then
-    echo "Running on Apple Silicon"
-    HOMEBREW_PREFIX="/opt/homebrew"
-else
-    echo "Running on Intel"
-    HOMEBREW_PREFIX="/usr/local"
-fi
-```
-
-### [is-executable](is-executable)
-Checks if a command is executable (available in PATH).
-
-**Usage:**
-```bash
-if is-executable brew; then
-    echo "Homebrew is installed"
-fi
+# Check before running
+platform has docker && docker ps
 ```
 
 ## Utility Scripts
 
 ### [dotfiles-doctor](dotfiles-doctor)
+
 Comprehensive health check for your dotfiles installation.
 
 **Usage:**
 ```bash
-dotfiles-doctor
+dotfiles-doctor [--verbose]
 # or
 make doctor
 ```
 
+**Checks:**
+- System information
+- Dotfiles repository status
+- Symlink integrity
+- Package managers (Homebrew, npm, Cargo, Nix)
+- Core tools (git, zsh, nvim, stow)
+- Modern CLI tools (eza, bat, fd, rg, yazi, jj, etc.)
+- Nix setup (flakes, Home Manager, nix-darwin)
+- Shell configuration
+- File permissions
+
 ### [dotfiles-update](dotfiles-update)
+
 Update all packages and configurations.
 
 **Usage:**
@@ -92,6 +82,7 @@ make update
 ```
 
 ### [dotfiles-backup](dotfiles-backup)
+
 Backup configurations and package lists.
 
 **Usage:**
@@ -102,101 +93,47 @@ make backup
 ```
 
 ### [dotfiles-template](dotfiles-template)
+
 Template processor for machine-specific configurations.
 
 **Usage:**
 ```bash
-# List available variables
-dotfiles-template --list
-
-# Process a template
-dotfiles-template config.tmpl config
-
-# Dry run
-dotfiles-template --dry-run config.tmpl
+dotfiles-template --list              # List variables
+dotfiles-template config.tmpl config  # Process template
+dotfiles-template --dry-run file.tmpl # Preview
 ```
 
-**Available Variables:**
-- `{{HOSTNAME}}` - System hostname
-- `{{OS_TYPE}}` - OS type (macos, arch, linux)
-- `{{MACHINE_TYPE}}` - Machine profile (personal, work, server)
-- `{{USER}}` - Current username
-- `{{HOME}}` - Home directory
-
-**Conditional Blocks:**
-```
-{{#if MACHINE_TYPE eq work}}
-# Work-specific configuration
-{{/if}}
-```
+**Variables:** `{{HOSTNAME}}`, `{{OS_TYPE}}`, `{{MACHINE_TYPE}}`, `{{USER}}`, `{{HOME}}`
 
 ### [dotfiles-secrets](dotfiles-secrets)
+
 Secret management using age encryption.
 
 **Usage:**
 ```bash
-# Initialize encryption key
-dotfiles-secrets init
-
-# Encrypt a file
-dotfiles-secrets encrypt ~/.ssh/config
-
-# Decrypt a file
-dotfiles-secrets decrypt secrets/config.age
-
-# Edit an encrypted file
-dotfiles-secrets edit secrets/config.age
-
-# Show status
-dotfiles-secrets status
+dotfiles-secrets init                    # Initialize
+dotfiles-secrets encrypt ~/.ssh/config   # Encrypt
+dotfiles-secrets decrypt file.age        # Decrypt
+dotfiles-secrets edit file.age           # Edit in-place
+dotfiles-secrets status                  # Show status
 ```
 
-**Requirements:** Install `age` with `brew install age` or `pacman -S age`.
-
-## Scripts from .local/bin
-
-Additional utility scripts are located in `.local/bin/`. These include 20 scripts for:
-
-- **System Configuration**: `macos-defaults`
-- **Security**: `yubikey-ssh-setup`, `setup-tor-iptables`, `tor-exit-threat-score`
-- **Development**: `check-go-repos`, `generate-go-project-files`, `generate-md-toc`, `openprs`
-- **Repository Management**: `update-repos`
-- **Docker**: `cleanup-non-running-images`
-- **Display/Hardware**: `monitor-hotplug`, `screen-backlight`, `fancy-i3lock`
-- **Firmware**: `update-firmware`, `update-iwlwifi`
-- **Other**: `browser-exec`, `check-kconfig`, `createvm`, `slackpm`, `install.sh`
-
-**See [.local/bin/README.md](../.local/bin/README.md) for comprehensive documentation** including usage examples, platform compatibility, and dependencies.
-
-## Making Scripts Executable
-
-On Unix-like systems (macOS/Linux), ensure scripts are executable:
-
-```bash
-chmod +x bin/*
-chmod +x .local/bin/*
-```
-
-Git will preserve the executable bit when files are committed and cloned.
+**Requires:** `age` (`brew install age`)
 
 ## Adding New Scripts
 
-When adding new scripts:
-
-1. Create the script in the appropriate directory
-2. Add a shebang line (e.g., `#!/usr/bin/env bash`)
-3. Make it executable: `chmod +x script-name`
-4. Document it in this README
-5. Test on target platforms
+1. Create script with shebang (`#!/usr/bin/env bash`)
+2. Make executable: `chmod +x script-name`
+3. Document in this README
+4. Test on target platforms
 
 ## Platform Compatibility
 
-- **Helper scripts (is-*)**: macOS and Linux
-- **.local/bin scripts**: Varies by script, check individual documentation
-- **Windows**: Most scripts require WSL or Git Bash
-
-## Resources
-
-- [Bash Scripting Guide](https://www.gnu.org/software/bash/manual/)
-- [Shell Check](https://www.shellcheck.net/) - Script linting
-- [Makefile Documentation](../Makefile)
+| Script | macOS | Linux | Arch |
+|--------|-------|-------|------|
+| platform | ✓ | ✓ | ✓ |
+| dotfiles-doctor | ✓ | ✓ | ✓ |
+| dotfiles-update | ✓ | ✓ | ✓ |
+| dotfiles-backup | ✓ | ✓ | ✓ |
+| dotfiles-template | ✓ | ✓ | ✓ |
+| dotfiles-secrets | ✓ | ✓ | ✓ |

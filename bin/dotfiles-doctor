@@ -126,8 +126,8 @@ check_symlinks() {
     if [[ -d "$HOME/.config" ]]; then
         check_pass ".config directory exists"
 
-        # Check common config symlinks
-        local config_dirs=("zsh" "git" "nvim" "tmux" "kitty")
+        # Check common config symlinks (including new modern tools)
+        local config_dirs=("zsh" "git" "nvim" "ghostty" "yazi" "zellij" "jj" "tmux" "kitty")
         for dir in "${config_dirs[@]}"; do
             if [[ -e "$HOME/.config/$dir" ]]; then
                 if [[ -L "$HOME/.config/$dir" ]] || [[ -L "$HOME/.config/$dir"/* ]] 2>/dev/null; then
@@ -189,7 +189,7 @@ check_package_managers() {
 check_core_tools() {
     print_header "Core Tools"
 
-    local tools=("git" "zsh" "tmux" "nvim" "stow")
+    local tools=("git" "zsh" "nvim" "stow")
 
     for tool in "${tools[@]}"; do
         if command_exists "$tool"; then
@@ -198,6 +198,83 @@ check_core_tools() {
             check_fail "$tool not installed"
         fi
     done
+}
+
+# Check modern CLI tools
+check_modern_tools() {
+    print_header "Modern CLI Tools"
+
+    # Essential modern tools
+    local essential=("eza" "bat" "fd" "rg" "zoxide" "fzf")
+    for tool in "${essential[@]}"; do
+        if command_exists "$tool"; then
+            check_pass "$tool installed"
+        else
+            check_warn "$tool not installed (recommended)"
+        fi
+    done
+
+    # Next-gen tools (optional but nice to have)
+    local nextgen=("yazi" "zellij" "jj" "delta" "atuin")
+    for tool in "${nextgen[@]}"; do
+        if command_exists "$tool"; then
+            check_pass "$tool installed"
+        else
+            check_info "$tool not installed (optional)"
+        fi
+    done
+
+    # Additional modern tools
+    local additional=("navi" "broot" "tldr" "gping" "ouch")
+    for tool in "${additional[@]}"; do
+        if command_exists "$tool"; then
+            check_pass "$tool installed"
+        else
+            check_info "$tool not installed (optional)"
+        fi
+    done
+}
+
+# Check Nix installation
+check_nix() {
+    print_header "Nix (Reproducible Setup)"
+
+    if command_exists nix; then
+        check_pass "Nix installed ($(nix --version 2>/dev/null | head -n1))"
+
+        # Check for flakes support
+        if nix flake --help &>/dev/null; then
+            check_pass "Nix flakes enabled"
+        else
+            check_warn "Nix flakes not enabled"
+        fi
+
+        # Check for darwin-rebuild (macOS)
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            if command_exists darwin-rebuild; then
+                check_pass "nix-darwin installed"
+            else
+                check_info "nix-darwin not installed (optional)"
+            fi
+        fi
+
+        # Check for home-manager
+        if command_exists home-manager; then
+            check_pass "Home Manager installed"
+        else
+            check_info "Home Manager not installed (optional)"
+        fi
+
+        # Check flake.nix exists
+        if [[ -f "$DOTFILES_DIR/flake.nix" ]]; then
+            check_pass "flake.nix found"
+        else
+            check_warn "flake.nix not found"
+        fi
+    else
+        check_info "Nix not installed (optional for reproducible setup)"
+        check_info "  Install with: make nix-install"
+    fi
 }
 
 # Check shell configuration
@@ -338,6 +415,8 @@ main() {
     check_symlinks
     check_package_managers
     check_core_tools
+    check_modern_tools
+    check_nix
     check_shell_config
     check_permissions
     print_summary

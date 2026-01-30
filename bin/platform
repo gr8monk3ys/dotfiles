@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+#
+# platform - Unified platform detection utility
+#
+# Usage:
+#   platform detect           # Output: macos, arch, linux, or unknown
+#   platform arch             # Output: arm64, x86_64, or unknown
+#   platform is-macos         # Exit 0 if macOS, 1 otherwise
+#   platform is-arch          # Exit 0 if Arch Linux, 1 otherwise
+#   platform is-linux         # Exit 0 if Linux, 1 otherwise
+#   platform is-arm64         # Exit 0 if ARM64, 1 otherwise
+#   platform has <cmd>        # Exit 0 if command exists, 1 otherwise
+#   platform run-if <cmd> ... # Run command only if it exists
+#   platform select <true> <false> <check>
+#                             # Output <true> if check passes, <false> otherwise
+#
+# Examples:
+#   platform detect                    # "macos"
+#   platform is-macos && echo "Mac!"   # Conditional
+#   platform has brew && brew update   # Check before running
+#   platform select /opt/homebrew /usr/local "platform is-arm64"
+
+set -euo pipefail
+
+detect_os() {
+    case "$OSTYPE" in
+        darwin*)
+            echo "macos"
+            ;;
+        linux*)
+            if [[ -f /etc/arch-release ]]; then
+                echo "arch"
+            else
+                echo "linux"
+            fi
+            ;;
+        *)
+            echo "unknown"
+            ;;
+    esac
+}
+
+detect_arch() {
+    case "$(uname -m)" in
+        arm64|aarch64)
+            echo "arm64"
+            ;;
+        x86_64|amd64)
+            echo "x86_64"
+            ;;
+        *)
+            echo "unknown"
+            ;;
+    esac
+}
+
+main() {
+    local cmd="${1:-help}"
+    shift || true
+
+    case "$cmd" in
+        detect)
+            detect_os
+            ;;
+        arch)
+            detect_arch
+            ;;
+        is-macos)
+            [[ "$OSTYPE" =~ ^darwin ]]
+            ;;
+        is-arch)
+            [[ -f /etc/arch-release ]]
+            ;;
+        is-linux)
+            [[ "$OSTYPE" =~ ^linux ]]
+            ;;
+        is-arm64)
+            [[ "$(uname -m)" == "arm64" || "$(uname -m)" == "aarch64" ]]
+            ;;
+        has)
+            command -v "$1" >/dev/null 2>&1
+            ;;
+        run-if)
+            if command -v "$1" >/dev/null 2>&1; then
+                "$@"
+            fi
+            ;;
+        select)
+            # Usage: platform select <if-true> <if-false> <check-command>
+            local if_true="$1"
+            local if_false="$2"
+            shift 2
+            if eval "$@" 2>/dev/null; then
+                echo "$if_true"
+            else
+                echo "$if_false"
+            fi
+            ;;
+        help|--help|-h)
+            cat << 'EOF'
+platform - Unified platform detection utility
+
+Usage:
+  platform detect           Output: macos, arch, linux, or unknown
+  platform arch             Output: arm64, x86_64, or unknown
+  platform is-macos         Exit 0 if macOS, 1 otherwise
+  platform is-arch          Exit 0 if Arch Linux, 1 otherwise
+  platform is-linux         Exit 0 if Linux, 1 otherwise
+  platform is-arm64         Exit 0 if ARM64, 1 otherwise
+  platform has <cmd>        Exit 0 if command exists, 1 otherwise
+  platform run-if <cmd> ... Run command only if it exists
+  platform select <t> <f> <check>
+                            Output <t> if check passes, <f> otherwise
+
+Examples:
+  platform detect
+  platform is-macos && echo "Running on Mac"
+  platform has brew && brew update
+  platform select /opt/homebrew /usr/local "platform is-arm64"
+EOF
+            ;;
+        *)
+            echo "Unknown command: $cmd" >&2
+            echo "Run 'platform help' for usage" >&2
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"

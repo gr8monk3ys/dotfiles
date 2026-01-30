@@ -1,6 +1,6 @@
 DOTFILES_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-OS := $(shell bin/is-supported bin/is-macos macos $(shell bin/is-supported bin/is-arch arch linux))
-HOMEBREW_PREFIX := $(shell bin/is-supported bin/is-arm64 /opt/homebrew /usr/local)
+OS := $(shell bin/platform detect)
+HOMEBREW_PREFIX := $(shell bin/platform select /opt/homebrew /usr/local "bin/platform is-arm64")
 export N_PREFIX = $(HOME)/.n
 PATH := $(HOMEBREW_PREFIX)/bin:$(DOTFILES_DIR)/bin:$(N_PREFIX)/bin:$(PATH)
 SHELL := env PATH=$(PATH) /bin/bash
@@ -15,7 +15,8 @@ export ACCEPT_EULA=Y
         brew bash git npm packages-macos packages-arch core-macos core-arch \
         stow-arch stow-macos cask-apps vscode-extensions node-packages \
         rust-packages duti bun pacman-packages brew-packages secrets-init \
-        secrets-status template-list
+        secrets-status template-list nix nix-darwin nix-home nix-update help \
+        cli cli-install
 
 all: $(OS)
 
@@ -29,10 +30,10 @@ core-arch:
 	pacman -Syu --noconfirm
 
 stow-arch: core-arch
-	is-executable stow || pacman -S --noconfirm stow
+	bin/platform has stow || pacman -S --noconfirm stow
 
 stow-macos: brew
-	is-executable stow || brew install stow
+	bin/platform has stow || brew install stow
 
 sudo:
 ifndef GITHUB_ACTION
@@ -230,3 +231,121 @@ test-docker-interactive:
 	@echo "Starting interactive Ubuntu container..."
 	docker build -t dotfiles-test -f test/Dockerfile .
 	docker run -it --rm dotfiles-test /bin/zsh
+
+# ============================================================================
+# Nix - Reproducible System Configuration
+# ============================================================================
+
+## Install Nix package manager
+nix-install:
+	@if command -v nix >/dev/null 2>&1; then \
+		echo "✓ Nix already installed"; \
+	else \
+		echo "Installing Nix..."; \
+		curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install; \
+		echo "Please restart your shell and run 'make nix-darwin' or 'make nix-home'"; \
+	fi
+
+## Apply nix-darwin configuration (macOS full system)
+nix-darwin:
+	@echo "Applying nix-darwin configuration..."
+	@if command -v darwin-rebuild >/dev/null 2>&1; then \
+		darwin-rebuild switch --flake $(DOTFILES_DIR); \
+	else \
+		echo "First-time setup: bootstrapping nix-darwin..."; \
+		nix run nix-darwin -- switch --flake $(DOTFILES_DIR); \
+	fi
+	@echo "✓ nix-darwin configuration applied"
+
+## Apply Home Manager configuration (user environment only)
+nix-home:
+	@echo "Applying Home Manager configuration..."
+	@if command -v home-manager >/dev/null 2>&1; then \
+		home-manager switch --flake $(DOTFILES_DIR); \
+	else \
+		echo "First-time setup: bootstrapping Home Manager..."; \
+		nix run home-manager -- switch --flake $(DOTFILES_DIR); \
+	fi
+	@echo "✓ Home Manager configuration applied"
+
+## Alias for nix-darwin (primary macOS command)
+nix: nix-darwin
+
+## Update Nix flake inputs
+nix-update:
+	@echo "Updating Nix flake inputs..."
+	nix flake update $(DOTFILES_DIR)
+	@echo "✓ Flake inputs updated"
+	@echo "Run 'make nix' or 'make nix-home' to apply updates"
+
+## Check Nix flake for errors
+nix-check:
+	@echo "Checking Nix flake..."
+	nix flake check $(DOTFILES_DIR)
+
+## Garbage collect Nix store
+nix-gc:
+	@echo "Cleaning up Nix store..."
+	nix-collect-garbage -d
+	@if [ "$(OS)" = "macos" ]; then \
+		sudo nix-collect-garbage -d; \
+	fi
+	@echo "✓ Nix garbage collection complete"
+
+## Enter Nix development shell
+nix-shell:
+	nix develop $(DOTFILES_DIR)
+
+# ============================================================================
+# Go CLI
+# ============================================================================
+
+## Build the Go CLI installer
+cli:
+	@echo "Building dotfiles CLI..."
+	@cd $(DOTFILES_DIR)/cmd/dotfiles && go build -o dotfiles-cli .
+	@echo "✓ Built: cmd/dotfiles/dotfiles-cli"
+
+## Install the Go CLI to GOPATH/bin
+cli-install: cli
+	@echo "Installing dotfiles CLI..."
+	@cd $(DOTFILES_DIR)/cmd/dotfiles && go install .
+	@echo "✓ Installed to GOPATH/bin"
+
+# ============================================================================
+# Help
+# ============================================================================
+
+## Show available make targets
+help:
+	@echo "Lorenzo's Dotfiles - Available Commands"
+	@echo ""
+	@echo "Installation (Traditional):"
+	@echo "  make              - Full installation for detected OS"
+	@echo "  make macos        - macOS installation (Homebrew-based)"
+	@echo "  make arch         - Arch Linux installation"
+	@echo "  make link         - Create symlinks only"
+	@echo "  make unlink       - Remove symlinks"
+	@echo ""
+	@echo "Installation (Nix - Reproducible):"
+	@echo "  make nix-install  - Install Nix package manager"
+	@echo "  make nix          - Apply nix-darwin config (macOS)"
+	@echo "  make nix-darwin   - Apply nix-darwin config (macOS)"
+	@echo "  make nix-home     - Apply Home Manager config (cross-platform)"
+	@echo "  make nix-update   - Update Nix flake inputs"
+	@echo "  make nix-gc       - Garbage collect Nix store"
+	@echo ""
+	@echo "Packages:"
+	@echo "  make brew-packages    - Install Homebrew formulae"
+	@echo "  make cask-apps        - Install Homebrew casks"
+	@echo "  make node-packages    - Install npm packages"
+	@echo "  make rust-packages    - Install Cargo packages"
+	@echo ""
+	@echo "Maintenance:"
+	@echo "  make doctor       - Run health check"
+	@echo "  make update       - Update all packages"
+	@echo "  make backup       - Backup configurations"
+	@echo "  make clean        - Remove broken symlinks"
+	@echo "  make test         - Run test suite"
+	@echo ""
+	@echo "See README.md and MAKEFILE.md for full documentation."

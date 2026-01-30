@@ -22,12 +22,13 @@
 ╚═════╝  ╚═════╝    ╚═╝   ╚═╝     ╚═╝╚══════╝╚══════╝╚══════╝
 ```
 
-**A keyboard-driven development environment**
+**A keyboard-driven development environment with 100% reproducibility**
 
 [![Installation](https://img.shields.io/github/actions/workflow/status/gr8monk3ys/dotfiles/install.yml?label=install&style=flat-square&logo=github)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/install.yml)
 [![Tests](https://img.shields.io/github/actions/workflow/status/gr8monk3ys/dotfiles/test.yml?label=tests&style=flat-square&logo=github)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/test.yml)
 [![Lint](https://img.shields.io/github/actions/workflow/status/gr8monk3ys/dotfiles/lint.yml?label=lint&style=flat-square&logo=github)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/lint.yml)
 [![License](https://img.shields.io/badge/license-MIT-98c379?style=flat-square)](LICENSE)
+[![Nix](https://img.shields.io/badge/Nix-Flakes-5277C3?style=flat-square&logo=nixos)](flake.nix)
 [![Theme](https://img.shields.io/badge/theme-OneDark-61afef?style=flat-square)](#theme)
 
 [Installation](#-quick-start) •
@@ -42,14 +43,31 @@
 
 ## ⚡ Quick Start
 
-**One command to rule them all:**
+### Option 1: Traditional Installation (Homebrew-based)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/gr8monk3ys/dotfiles/main/install.sh | bash
 ```
 
+### Option 2: Nix Installation (100% Reproducible)
+
+```bash
+# Clone the repository
+git clone https://github.com/gr8monk3ys/dotfiles.git ~/.dotfiles
+cd ~/.dotfiles
+
+# Install Nix (if needed)
+make nix-install
+
+# Apply configuration (macOS)
+make nix
+
+# Or just user environment (any platform)
+make nix-home
+```
+
 <details>
-<summary>📋 <strong>Manual Installation</strong></summary>
+<summary>📋 <strong>Manual Installation (Traditional)</strong></summary>
 
 ```bash
 # Clone the repository
@@ -87,20 +105,23 @@ xcode-select --install
 - **Karabiner** - Keyboard customization
 
 ### 🐚 Terminal & Shell
-- **Kitty** - GPU-accelerated terminal
+- **Ghostty** - Zig-based GPU terminal (NEW)
 - **Zsh + Zinit** - Fast plugin manager
 - **Powerlevel10k** - Beautiful prompt
-- **Tmux** - Session management
+- **Zellij** - Modern multiplexer (NEW)
+- **Tmux** - Session management (backup)
 
 ### ✏️ Development
 - **Neovim** - Modern editor with LSP
+- **Jujutsu (jj)** - Next-gen Git (NEW)
 - **Lazygit** - Terminal Git UI
 - **VSCodium** - Open-source VS Code
 
 </td>
 <td width="50%">
 
-### 🛠️ Modern CLI Tools
+### 🛠️ Modern CLI Tools (Rust-powered)
+- **yazi** - Blazing fast file manager (NEW)
 - **eza** - Better `ls` with icons
 - **bat** - `cat` with syntax highlighting
 - **ripgrep** - Blazing fast grep
@@ -108,12 +129,15 @@ xcode-select --install
 - **zoxide** - Smarter `cd`
 - **delta** - Beautiful git diffs
 - **atuin** - Magical shell history
+- **broot** - Tree with fuzzy search (NEW)
+- **navi** - Interactive cheatsheets (NEW)
+- **ouch** - Universal archives (NEW)
 
 ### 📦 Package Management
+- **Nix Flakes** - 100% reproducible (NEW)
 - **Homebrew** - macOS packages
 - **mise** - Universal version manager
 - **Cargo** - Rust packages
-- **npm/pnpm** - Node packages
 
 </td>
 </tr>
@@ -135,7 +159,7 @@ These dotfiles use a consistent **OneDark** color scheme across all tools:
 | 🔵 Cyan | `#56b6c2` | Links, symlinks |
 | 🟠 Orange | `#d19a66` | Constants |
 
-**Themed tools:** Kitty, Neovim, bat, eza, git-delta, tmux, fzf
+**Themed tools:** Ghostty, Kitty, Neovim, Yazi, bat, eza, git-delta, tmux, zellij, fzf
 
 ---
 
@@ -145,29 +169,34 @@ These dotfiles use a consistent **OneDark** color scheme across all tools:
 ~/.dotfiles/
 ├── 📁 .config/              # XDG configurations
 │   ├── 📁 aerospace/        # Window manager
-│   ├── 📁 bat/              # Cat replacement (OneDark)
-│   ├── 📁 eza/              # Ls replacement (OneDark)
+│   ├── 📁 ghostty/          # Terminal emulator (NEW)
+│   ├── 📁 yazi/             # File manager (NEW)
+│   ├── 📁 jj/               # Jujutsu VCS (NEW)
+│   ├── 📁 zellij/           # Terminal multiplexer (NEW)
 │   ├── 📁 git/              # Git + Delta config
-│   ├── 📁 kitty/            # Terminal emulator
+│   ├── 📁 kitty/            # Terminal (backup)
 │   ├── 📁 nvim/             # Neovim editor
-│   ├── 📁 tmux/             # Terminal multiplexer
+│   ├── 📁 tmux/             # Tmux (backup)
 │   ├── 📁 zsh/              # Shell configuration
 │   └── 📄 .aliases          # Modern CLI aliases
+│
+├── 📁 nix/                  # Nix configuration (NEW)
+│   ├── 📄 home.nix          # Home Manager config
+│   └── 📄 darwin.nix        # macOS system config
 │
 ├── 📁 bin/                  # Utility scripts
 │   ├── 📄 dotfiles-doctor   # Health check
 │   ├── 📄 dotfiles-update   # Update packages
 │   ├── 📄 dotfiles-backup   # Backup configs
-│   ├── 📄 dotfiles-secrets  # Secret management
-│   └── 📄 dotfiles-template # Config templating
+│   └── 📄 dotfiles-secrets  # Secret management
 │
 ├── 📁 install/              # Package lists
 │   ├── 📄 Brewfile          # Homebrew formulae
 │   ├── 📄 Caskfile          # macOS applications
-│   ├── 📄 npmfile           # Node packages
 │   └── 📄 Rustfile          # Cargo packages
 │
 ├── 📁 test/                 # BATS test suite
+├── 📄 flake.nix             # Nix flake (NEW)
 ├── 📄 install.sh            # One-line installer
 └── 📄 Makefile              # Automation
 ```
@@ -176,7 +205,7 @@ These dotfiles use a consistent **OneDark** color scheme across all tools:
 
 ## 🔧 Commands
 
-### Installation
+### Traditional Installation (Homebrew)
 
 | Command | Description |
 |---------|-------------|
@@ -184,6 +213,16 @@ These dotfiles use a consistent **OneDark** color scheme across all tools:
 | `make link` | Create symlinks only |
 | `make link-dry-run` | Preview changes |
 | `make unlink` | Remove symlinks |
+
+### Nix Installation (Reproducible)
+
+| Command | Description |
+|---------|-------------|
+| `make nix-install` | Install Nix package manager |
+| `make nix` | Apply full nix-darwin config (macOS) |
+| `make nix-home` | Apply Home Manager config (any platform) |
+| `make nix-update` | Update flake inputs |
+| `make nix-gc` | Garbage collect Nix store |
 
 ### Maintenance
 
@@ -193,6 +232,7 @@ These dotfiles use a consistent **OneDark** color scheme across all tools:
 | `make update` | Update all packages |
 | `make backup` | Backup configurations |
 | `make clean` | Remove broken symlinks |
+| `make help` | Show all available commands |
 
 ### Testing
 
@@ -254,6 +294,10 @@ Available: `{{HOSTNAME}}`, `{{OS_TYPE}}`, `{{MACHINE_TYPE}}`, `{{USER}}`
 These aliases are automatically set when tools are installed:
 
 ```bash
+# File manager (yazi)
+y     → yazi (with cd-on-exit)
+fm    → yazi
+
 # File listing (eza)
 ls    → eza --icons --group-directories-first
 ll    → eza -la --icons --git
@@ -270,6 +314,22 @@ find  → fd
 du    → dust
 ps    → procs
 top   → btm
+
+# Jujutsu (next-gen git)
+j     → jj
+js    → jj status
+jl    → jj log
+
+# Terminal multiplexer (zellij)
+zj    → zellij
+zja   → zellij attach
+
+# Cheatsheets (navi)
+cheat → navi
+
+# Archives (ouch)
+extract   → ouch decompress
+compress  → ouch compress
 
 # History (atuin)
 hs    → atuin search
@@ -337,6 +397,54 @@ make link
 <summary><strong>Linux support?</strong></summary>
 
 Partial support for Arch Linux. See `install/pacmanfile`. Other distros need custom package lists.
+
+With Nix, you get full Linux support:
+```bash
+make nix-home  # Works on any Linux distro
+```
+
+</details>
+
+<details>
+<summary><strong>What's the difference between traditional and Nix installation?</strong></summary>
+
+| Aspect | Traditional | Nix |
+|--------|------------|-----|
+| Reproducibility | Partial | 100% |
+| Rollback | Manual | Built-in |
+| Cross-platform | macOS focus | Any platform |
+| Package versions | Latest | Locked |
+| Complexity | Simpler | Steeper learning curve |
+
+**Recommendation:** Start with traditional (`make`), migrate to Nix when ready for full reproducibility.
+
+</details>
+
+<details>
+<summary><strong>How do I switch from lf to yazi?</strong></summary>
+
+Yazi is pre-configured. Just use the `y` alias:
+```bash
+y           # Opens yazi with cd-on-exit
+```
+
+The lf configuration remains for backwards compatibility.
+
+</details>
+
+<details>
+<summary><strong>How do I use Jujutsu alongside Git?</strong></summary>
+
+Jujutsu is Git-compatible and can coexist:
+```bash
+# In a git repo, initialize jj
+jj git init --colocate
+
+# Use jj commands (git still works)
+jj status
+jj log
+git status  # Still works!
+```
 
 </details>
 

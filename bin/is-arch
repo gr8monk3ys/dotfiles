@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-# Check if running on Arch Linux
-# Usage: is-arch
-# Returns: exit code 0 if Arch Linux, 1 otherwise
-
-[[ -f /etc/arch-release ]] && exit 0 || exit 1

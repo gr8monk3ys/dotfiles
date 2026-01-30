@@ -44,6 +44,37 @@ jobs:
       - name: Run package validation tests
         run: bats test/test_packages.bats
 
+  go-cli:
+    name: Go CLI Build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+        go: ['1.22']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Build CLI
+        working-directory: cmd/dotfiles
+        run: |
+          go mod download
+          go build -v -o dotfiles-cli .
+
+      - name: Test CLI help
+        working-directory: cmd/dotfiles
+        run: ./dotfiles-cli --help
+
+      - name: Test CLI version detection
+        working-directory: cmd/dotfiles
+        run: ./dotfiles-cli install --help
+
   integration:
     name: Integration Tests
     runs-on: macos-latest
@@ -67,3 +98,28 @@ jobs:
 
       - name: Test clean target
         run: make clean
+
+  nix-check:
+    name: Nix Flake Check
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v26
+        with:
+          nix_path: nixpkgs=channel:nixpkgs-unstable
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Check flake
+        run: nix flake check --no-build
+        continue-on-error: true
+
+      - name: Show flake info
+        run: nix flake show

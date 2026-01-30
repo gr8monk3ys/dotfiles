@@ -13,7 +13,8 @@ cask "keycastr"                        # Keystroke visualizer for presentations
 # ============================================================================
 # Terminals & Terminal Tools
 # ============================================================================
-cask "kitty"                           # GPU-accelerated terminal emulator
+cask "ghostty"                         # Zig-based GPU-accelerated terminal (modern, fast)
+cask "kitty"                           # GPU-accelerated terminal emulator (backup)
 
 # ============================================================================
 # Web Browsers
@@ -84,8 +85,10 @@ cask "love"                            # LÖVE 2D game framework
 # ============================================================================
 # Fonts
 # ============================================================================
+cask "font-jetbrains-mono-nerd-font"   # JetBrains Mono Nerd Font (primary)
 cask "font-0xproto-nerd-font"          # 0xProto Nerd Font (programming font)
 cask "font-3270-nerd-font"             # IBM 3270 Nerd Font (terminal font)
 cask "font-agave-nerd-font"            # Agave Nerd Font (monospace font)
 cask "font-fira-code-nerd-font"        # Fira Code Nerd Font (ligature support)
+cask "font-hack-nerd-font"             # Hack Nerd Font (clean terminal font)
 cask "font-fontawesome"                # Font Awesome icon font
