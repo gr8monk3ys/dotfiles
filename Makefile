@@ -15,7 +15,8 @@ export ACCEPT_EULA=Y
         brew bash git npm packages-macos packages-arch core-macos core-arch \
         stow-arch stow-macos cask-apps vscode-extensions node-packages \
         rust-packages duti bun pacman-packages brew-packages secrets-init \
-        secrets-status template-list nix nix-darwin nix-home nix-update help
+        secrets-status template-list nix nix-darwin nix-home nix-update help \
+        cli cli-install
 
 all: $(OS)
 
@@ -294,6 +295,22 @@ nix-gc:
 ## Enter Nix development shell
 nix-shell:
 	nix develop $(DOTFILES_DIR)
+
+# ============================================================================
+# Go CLI
+# ============================================================================
+
+## Build the Go CLI installer
+cli:
+	@echo "Building dotfiles CLI..."
+	@cd $(DOTFILES_DIR)/cmd/dotfiles && go build -o dotfiles-cli .
+	@echo "✓ Built: cmd/dotfiles/dotfiles-cli"
+
+## Install the Go CLI to GOPATH/bin
+cli-install: cli
+	@echo "Installing dotfiles CLI..."
+	@cd $(DOTFILES_DIR)/cmd/dotfiles && go install .
+	@echo "✓ Installed to GOPATH/bin"
 
 # ============================================================================
 # Help
