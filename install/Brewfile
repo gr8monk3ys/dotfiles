@@ -139,6 +139,18 @@ brew "tokei"                           # Code statistics tool
 brew "watchexec"                       # File watcher for development
 
 # ============================================================================
+# Next-Gen Modern Tools (2024+)
+# ============================================================================
+brew "yazi"                            # Blazing fast file manager (replaces lf/ranger)
+brew "jj"                              # Jujutsu - next-gen Git-compatible VCS
+brew "zellij"                          # Modern terminal multiplexer (tmux alternative)
+brew "navi"                            # Interactive cheatsheet tool
+brew "broot"                           # Tree navigation with fuzzy search
+brew "tealdeer"                        # Fast tldr client (Rust)
+brew "gping"                           # Graphical ping with history
+brew "ouch"                            # Universal archive compress/decompress
+
+# ============================================================================
 # Shell History & Environment
 # ============================================================================
 brew "atuin"                           # Magical shell history with sync

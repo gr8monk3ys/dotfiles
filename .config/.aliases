@@ -245,6 +245,81 @@ if command -v watchexec &> /dev/null; then
 fi
 
 # ============================================================================
+# Next-Gen Modern Tools (2024+)
+# ============================================================================
+
+# Yazi - Terminal file manager (replaces lf/ranger)
+if command -v yazi &> /dev/null; then
+    # Shell wrapper to cd on exit
+    function y() {
+        local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
+        yazi "$@" --cwd-file="$tmp"
+        if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+            builtin cd -- "$cwd"
+        fi
+        rm -f -- "$tmp"
+    }
+    alias fm='y'  # file manager shortcut
+fi
+
+# Jujutsu (jj) - Modern Git alternative
+if command -v jj &> /dev/null; then
+    alias j='jj'
+    alias js='jj status'
+    alias jl='jj log'
+    alias jll='jj log -r "trunk()..@"'
+    alias jd='jj diff'
+    alias jds='jj diff --summary'
+    alias jn='jj new'
+    alias jdesc='jj describe'
+    alias jam='jj amend'
+    alias jsq='jj squash'
+    alias jgf='jj git fetch'
+    alias jgp='jj git push'
+fi
+
+# Zellij - Modern terminal multiplexer (tmux alternative)
+if command -v zellij &> /dev/null; then
+    alias zj='zellij'
+    alias zja='zellij attach'
+    alias zjl='zellij list-sessions'
+    alias zjk='zellij kill-session'
+    alias zjka='zellij kill-all-sessions'
+fi
+
+# Navi - Interactive cheatsheet
+if command -v navi &> /dev/null; then
+    alias cheat='navi'
+    alias nq='navi query'
+fi
+
+# Broot - Tree navigation with fuzzy search
+if command -v broot &> /dev/null; then
+    alias br='broot'
+    alias brs='broot --sizes'  # show sizes
+    alias brd='broot --dates'  # show dates
+fi
+
+# Tealdeer - Fast tldr client
+if command -v tldr &> /dev/null; then
+    alias help='tldr'
+    alias tldru='tldr --update'
+fi
+
+# Gping - Graphical ping
+if command -v gping &> /dev/null; then
+    alias ping='gping'
+fi
+
+# Ouch - Universal archive tool
+if command -v ouch &> /dev/null; then
+    alias compress='ouch compress'
+    alias decompress='ouch decompress'
+    alias extract='ouch decompress'
+    alias arc='ouch'
+fi
+
+# ============================================================================
 # Utility Aliases
 # ============================================================================
 
@@ -252,7 +327,25 @@ fi
 alias zshrc='${EDITOR:-nvim} ~/.config/zsh/.zshrc'
 alias aliases='${EDITOR:-nvim} ~/.config/.aliases'
 alias gitconfig='${EDITOR:-nvim} ~/.config/git/.gitconfig'
+alias ghosttyconf='${EDITOR:-nvim} ~/.config/ghostty/config'
+alias yaziconf='${EDITOR:-nvim} ~/.config/yazi/yazi.toml'
+alias jjconf='${EDITOR:-nvim} ~/.config/jj/config.toml'
 
 # Dotfiles management
 alias dots='cd ~/.dotfiles'
 alias dotsup='cd ~/.dotfiles && git pull && make link'
+
+# Nix shortcuts (when using Nix)
+if command -v darwin-rebuild &> /dev/null; then
+    alias nrs='darwin-rebuild switch --flake ~/.dotfiles'
+fi
+if command -v home-manager &> /dev/null; then
+    alias nhs='home-manager switch --flake ~/.dotfiles'
+fi
+alias nfu='nix flake update'
+alias nfc='nix flake check'
+alias ndev='nix develop'
+
+# Claude Code (AI assistant)
+alias claude='claude-code'
+alias cc='claude-code'

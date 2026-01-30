@@ -1,0 +1,130 @@
+# Ghostty Terminal Configuration
+# https://ghostty.org/docs/config
+
+# ============================================================================
+# Font Configuration
+# ============================================================================
+font-family = "JetBrainsMono Nerd Font"
+font-size = 14
+font-thicken = true
+adjust-cell-height = 2
+
+# Font features (ligatures)
+font-feature = calt
+font-feature = liga
+font-feature = dlig
+
+# ============================================================================
+# Theme & Colors (OneDark-inspired)
+# ============================================================================
+theme = "OneDark"
+
+# Background
+background = 282c34
+foreground = abb2bf
+selection-background = 3e4451
+selection-foreground = abb2bf
+
+# Cursor
+cursor-color = 528bff
+cursor-style = block
+cursor-style-blink = true
+
+# Normal colors (0-7)
+palette = 0=#282c34
+palette = 1=#e06c75
+palette = 2=#98c379
+palette = 3=#e5c07b
+palette = 4=#61afef
+palette = 5=#c678dd
+palette = 6=#56b6c2
+palette = 7=#abb2bf
+
+# Bright colors (8-15)
+palette = 8=#5c6370
+palette = 9=#e06c75
+palette = 10=#98c379
+palette = 11=#e5c07b
+palette = 12=#61afef
+palette = 13=#c678dd
+palette = 14=#56b6c2
+palette = 15=#ffffff
+
+# ============================================================================
+# Window Configuration
+# ============================================================================
+window-padding-x = 10
+window-padding-y = 10
+window-decoration = true
+window-theme = ghostty
+
+# macOS specific
+macos-titlebar-style = hidden
+macos-option-as-alt = true
+
+# ============================================================================
+# Shell Integration
+# ============================================================================
+shell-integration = zsh
+shell-integration-features = cursor,sudo,title
+
+# ============================================================================
+# Scrollback & Performance
+# ============================================================================
+scrollback-limit = 100000
+copy-on-select = clipboard
+
+# GPU rendering (Ghostty's main advantage)
+gtk-single-instance = true
+
+# ============================================================================
+# Keybindings
+# ============================================================================
+# Use super (cmd on macOS) as modifier
+
+# Pane management (built-in multiplexing)
+keybind = super+d=new_split:right
+keybind = super+shift+d=new_split:down
+keybind = super+w=close_surface
+keybind = super+h=goto_split:left
+keybind = super+j=goto_split:bottom
+keybind = super+k=goto_split:top
+keybind = super+l=goto_split:right
+
+# Tab management
+keybind = super+t=new_tab
+keybind = super+shift+left=previous_tab
+keybind = super+shift+right=next_tab
+keybind = super+1=goto_tab:1
+keybind = super+2=goto_tab:2
+keybind = super+3=goto_tab:3
+keybind = super+4=goto_tab:4
+keybind = super+5=goto_tab:5
+
+# Font size
+keybind = super+plus=increase_font_size:1
+keybind = super+minus=decrease_font_size:1
+keybind = super+0=reset_font_size
+
+# Clipboard
+keybind = super+c=copy_to_clipboard
+keybind = super+v=paste_from_clipboard
+
+# Scrolling
+keybind = super+up=scroll_page_up
+keybind = super+down=scroll_page_down
+keybind = super+home=scroll_to_top
+keybind = super+end=scroll_to_bottom
+
+# Quick actions
+keybind = super+f=toggle_fullscreen
+keybind = super+enter=toggle_split_zoom
+keybind = super+shift+c=open_config
+
+# ============================================================================
+# Misc
+# ============================================================================
+confirm-close-surface = false
+mouse-hide-while-typing = true
+focus-follows-mouse = false
+link-url = true

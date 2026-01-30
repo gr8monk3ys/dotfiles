@@ -5,15 +5,17 @@ This document provides context for AI assistants (like Claude) working with this
 ## Project Overview
 
 **Type:** Personal dotfiles repository
-**Primary Platform:** macOS (with partial Linux/Arch support)
+**Primary Platform:** macOS (with full Linux support via Nix)
 **Purpose:** Manage personal configuration files and automate system setup
-**Management Style:** Symlink-based using GNU Stow
-**Package Managers:** Homebrew, npm, Cargo, pacman
+**Management Style:** Symlink-based using GNU Stow OR declarative via Nix
+**Package Managers:** Nix (primary for reproducibility), Homebrew, Cargo
 
 ## Quick Reference
 
 ### Key Files
 - **Makefile** - Main automation script for installation and linking
+- **flake.nix** - Nix flake for 100% reproducible setup (NEW)
+- **nix/** - Nix configuration (home.nix, darwin.nix)
 - **.zshenv** - Root-level Zsh environment file (linked to home directory)
 - **.config/** - XDG Base Directory compliant configurations (managed by Stow)
 - **install/** - Package lists for various package managers
@@ -31,22 +33,32 @@ This document provides context for AI assistants (like Claude) working with this
 dotfiles/
 ├── .config/              # Application configurations (Stow managed)
 │   ├── aerospace/        # AeroSpace tiling window manager
+│   ├── claude/           # Claude Code integration notes (NEW)
 │   ├── curl/             # cURL defaults
 │   ├── firefox/          # Firefox user.js preferences
+│   ├── ghostty/          # Ghostty terminal (NEW - primary terminal)
 │   ├── git/              # Git configuration
-│   ├── kitty/            # Kitty terminal emulator
+│   ├── jj/               # Jujutsu VCS (NEW - next-gen git)
+│   ├── kitty/            # Kitty terminal emulator (backup)
 │   ├── latexmk/          # LaTeX build automation
-│   ├── lf/               # Terminal file manager
+│   ├── lf/               # Terminal file manager (legacy)
 │   ├── macos/            # macOS system defaults and dock scripts
 │   ├── mpd/              # Music Player Daemon
 │   ├── newsboat/         # RSS feed reader
 │   ├── nvim/             # Neovim editor
-│   ├── tmux/             # Terminal multiplexer
+│   ├── tmux/             # Terminal multiplexer (backup)
 │   ├── wget/             # Wget defaults
+│   ├── yazi/             # Yazi file manager (NEW - replaces lf)
 │   ├── zathura/          # Document viewer
+│   ├── zellij/           # Zellij multiplexer (NEW - modern tmux)
 │   ├── zsh/              # Zsh shell configuration
-│   ├── .aliases          # Shell aliases
-│   └── README.md         # Overview of configurations (All 15 dirs have READMEs)
+│   ├── .aliases          # Shell aliases (updated with new tools)
+│   └── README.md         # Overview of configurations
+│
+├── nix/                  # Nix configuration (NEW)
+│   ├── home.nix          # Home Manager config (cross-platform)
+│   ├── darwin.nix        # macOS system config (nix-darwin)
+│   └── README.md         # Nix documentation
 │
 ├── install/              # Package management (All files fully documented)
 │   ├── Brewfile          # Homebrew formulae - 110+ packages with categories
@@ -90,6 +102,8 @@ dotfiles/
 ├── .shellcheckrc         # ShellCheck linting configuration
 ├── .pre-commit-config.yaml   # Pre-commit hooks
 ├── .zshenv               # Root-level Zsh environment (linked to ~/)
+├── flake.nix             # Nix flake definition (NEW)
+├── flake.lock            # Locked Nix dependencies
 ├── Makefile              # Installation and linking automation
 ├── MAKEFILE.md           # Comprehensive Makefile documentation
 ├── README.md             # User-facing documentation (with CI badges, FAQ)
@@ -99,6 +113,39 @@ dotfiles/
 ├── CHANGELOG.md          # Version history (Keep a Changelog format)
 └── LICENSE               # MIT License
 ```
+
+## New Modern Tools (2024+)
+
+This dotfiles repo has been modernized with cutting-edge tools:
+
+### Terminal & Shell
+| Tool | Replaces | Description |
+|------|----------|-------------|
+| **Ghostty** | Kitty | Zig-based GPU terminal with built-in splits |
+| **Yazi** | lf/ranger | Async Rust file manager with image preview |
+| **Zellij** | tmux | Modern multiplexer with WebAssembly plugins |
+
+### Development
+| Tool | Alongside | Description |
+|------|-----------|-------------|
+| **Jujutsu (jj)** | Git | Git-compatible VCS with better UX |
+| **Claude Code** | - | AI-assisted development |
+
+### CLI Utilities
+| Tool | Replaces | Description |
+|------|----------|-------------|
+| **navi** | - | Interactive cheatsheet |
+| **broot** | tree | Fuzzy tree navigation |
+| **tealdeer** | tldr | Fast tldr client |
+| **gping** | ping | Graphical ping |
+| **ouch** | tar/zip | Universal archive tool |
+
+### Infrastructure
+| Tool | Provides | Description |
+|------|----------|-------------|
+| **Nix Flakes** | Reproducibility | 100% reproducible system setup |
+| **Home Manager** | User env | Declarative user environment |
+| **nix-darwin** | macOS config | Declarative macOS system |
 
 ## Critical Concepts
 
@@ -153,6 +200,15 @@ HOMEBREW_PREFIX := $(shell bin/is-supported bin/is-arm64 /opt/homebrew /usr/loca
 - `make duti` - Set default applications
 - `make bun` - Install Bun runtime
 
+**Nix targets (reproducible setup):**
+- `make nix-install` - Install Nix package manager
+- `make nix` or `make nix-darwin` - Apply full nix-darwin config (macOS)
+- `make nix-home` - Apply Home Manager config (any platform)
+- `make nix-update` - Update Nix flake inputs
+- `make nix-gc` - Garbage collect Nix store
+- `make nix-check` - Validate Nix flake
+- `make nix-shell` - Enter development shell
+
 **Utility targets:**
 - `make doctor` - Run comprehensive health check
 - `make update` - Update all packages and configurations
@@ -164,6 +220,7 @@ HOMEBREW_PREFIX := $(shell bin/is-supported bin/is-arm64 /opt/homebrew /usr/loca
 - `make brew-update` - Update Homebrew packages
 - `make brew-cleanup` - Clean Homebrew cache
 - `make test` - Run BATS test suite
+- `make help` - Show all available commands
 
 **See MAKEFILE.md for complete documentation with examples and dependency graph.**
 

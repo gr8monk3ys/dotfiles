@@ -1,0 +1,197 @@
+# Jujutsu (jj) Configuration
+# https://martinvonz.github.io/jj/latest/config/
+
+# ============================================================================
+# User Information
+# ============================================================================
+[user]
+name = "Lorenzo Scaturchio"
+email = "lorenozsca7@protonmail.ch"
+
+# ============================================================================
+# UI Settings
+# ============================================================================
+[ui]
+# Default command when running `jj` with no arguments
+default-command = "log"
+
+# Use delta for diffs (consistent with git config)
+pager = "delta"
+
+# Diff settings
+diff-editor = ":builtin"
+merge-editor = ":builtin"
+
+# Editor for commit messages
+editor = "nvim"
+
+# Color settings
+color = "always"
+
+# Diff format
+diff.format = "git"
+
+# ============================================================================
+# Git Integration
+# ============================================================================
+[git]
+# Automatically create local branches when importing from git remotes
+auto-local-branch = true
+
+# Push bookmarks (jj's branches) to git branches on push
+push-bookmark-prefix = ""
+
+# ============================================================================
+# Aliases
+# ============================================================================
+[aliases]
+# Common operations
+s = ["status"]
+l = ["log", "-r", "@-..@"]
+ll = ["log", "-r", "trunk()..@"]
+d = ["diff"]
+ds = ["diff", "--summary"]
+
+# Commit operations
+ci = ["commit"]
+cia = ["commit", "--all"]
+am = ["amend"]
+sp = ["split"]
+sq = ["squash"]
+
+# Branch/bookmark operations
+b = ["bookmark", "list"]
+bc = ["bookmark", "create"]
+bd = ["bookmark", "delete"]
+bm = ["bookmark", "move"]
+
+# Navigation
+n = ["new"]
+e = ["edit"]
+ab = ["abandon"]
+
+# Working with changes
+desc = ["describe"]
+show = ["show"]
+
+# Rebase operations
+rb = ["rebase"]
+rbd = ["rebase", "-d"]
+
+# Git operations
+gf = ["git", "fetch"]
+gp = ["git", "push"]
+gpb = ["git", "push", "-b"]
+gc = ["git", "clone"]
+
+# Resolve conflicts
+rs = ["resolve"]
+
+# Undo
+u = ["undo"]
+
+# ============================================================================
+# Templates (customize log output)
+# ============================================================================
+[templates]
+# Customize the log format
+log = '''
+concat(
+  separate(" ",
+    format_short_change_id_with_hidden_and_divergent_info(self),
+    if(author.email().domain() != "users.noreply.github.com",
+      author.username(),
+      author.name()
+    ),
+    format_timestamp(committer.timestamp().local()),
+    bookmarks,
+    tags,
+    working_copies,
+    if(conflict, label("conflict", "conflict")),
+    if(empty, label("empty", "(empty)")),
+    if(description,
+      description.first_line(),
+      label("description placeholder", "(no description set)")
+    ),
+  ) ++ "\n"
+)
+'''
+
+# ============================================================================
+# Colors (OneDark-inspired, consistent with other tools)
+# ============================================================================
+[colors]
+# Change IDs
+"change_id" = { fg = "blue" }
+"change_id prefix" = { fg = "blue", bold = true }
+"change_id rest" = { fg = "bright blue" }
+
+# Commit IDs
+"commit_id" = { fg = "yellow" }
+"commit_id prefix" = { fg = "yellow", bold = true }
+
+# Author/Committer
+"author" = { fg = "green" }
+"committer" = { fg = "green" }
+"timestamp" = { fg = "cyan" }
+
+# Branches/Bookmarks
+"bookmark" = { fg = "magenta", bold = true }
+"bookmark remote" = { fg = "magenta" }
+"tag" = { fg = "yellow", bold = true }
+
+# Working copy
+"working_copy" = { fg = "green", bold = true }
+"working_copy bookmark" = { fg = "green", bold = true }
+
+# Descriptions
+"description" = {}
+"description placeholder" = { fg = "bright black" }
+
+# Diff
+"diff added" = { fg = "green" }
+"diff removed" = { fg = "red" }
+"diff modified" = { fg = "yellow" }
+"diff header" = { fg = "blue", bold = true }
+
+# Status
+"empty" = { fg = "bright black" }
+"conflict" = { fg = "red", bold = true }
+"hidden" = { fg = "bright black" }
+"divergent" = { fg = "red" }
+
+# ============================================================================
+# Revsets (customize default revision selections)
+# ============================================================================
+[revsets]
+# Aliases for common revsets
+[revset-aliases]
+# All commits in the current branch since trunk
+"mine()" = "trunk()..@"
+
+# Recent work (last 7 days)
+"recent()" = 'committer_date(after:"7 days ago")'
+
+# Unfinished work
+"wip()" = 'description(glob:"WIP*") | description(glob:"wip*")'
+
+# ============================================================================
+# Snapshot settings
+# ============================================================================
+[snapshot]
+# Maximum file size for snapshots (100MB)
+max-new-file-size = "100MiB"
+
+# ============================================================================
+# Fix settings (auto-formatting)
+# ============================================================================
+[fix]
+# Enable auto-fix on commit (like git pre-commit hooks)
+# Uncomment and configure as needed:
+# [fix.tools.rustfmt]
+# command = ["rustfmt", "--emit", "stdout"]
+# patterns = ["glob:*.rs"]
+#
+# [fix.tools.prettier]
+# command = ["prettier", "--stdin-filepath", "$path"]
+# patterns = ["glob:*.{js,ts,jsx,tsx,json,md}"]
