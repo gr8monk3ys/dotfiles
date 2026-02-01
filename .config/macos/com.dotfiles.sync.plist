@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Service identifier -->
+    <key>Label</key>
+    <string>com.dotfiles.sync</string>
+
+    <!-- Script to execute -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/gr8monk3ys/.dotfiles/bin/dotfiles-sync</string>
+    </array>
+
+    <!-- Run daily at 10:00 AM -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>10</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <!-- Capture errors for debugging -->
+    <key>StandardErrorPath</key>
+    <string>/tmp/dotfiles-sync.err</string>
+
+    <!-- Don't run immediately when loaded, only at scheduled time -->
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

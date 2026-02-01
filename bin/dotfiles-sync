@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+# dotfiles-sync - Lightweight automated sync for launchd
+#
+# This script is designed for unattended execution via launchd.
+# For interactive updates, use dotfiles-update instead.
+#
+# Usage: dotfiles-sync
+#
+# Behavior:
+#   - Pulls git changes if available
+#   - Skips silently if uncommitted changes exist
+#   - Shows macOS notification only when something happens
+#   - Silent when already up to date
+
+set -euo pipefail
+
+readonly DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
+
+# Send macOS notification
+notify() {
+    local subtitle="$1"
+    local message="$2"
+    osascript -e "display notification \"$message\" with title \"Dotfiles\" subtitle \"$subtitle\""
+}
+
+# Main sync logic
+main() {
+    # Verify dotfiles directory exists
+    if [[ ! -d "$DOTFILES_DIR" ]]; then
+        notify "Error" "Dotfiles directory not found: $DOTFILES_DIR"
+        exit 1
+    fi
+
+    cd "$DOTFILES_DIR"
+
+    # Verify it's a git repository
+    if [[ ! -d ".git" ]]; then
+        notify "Error" "Not a git repository"
+        exit 1
+    fi
+
+    # Skip if there are uncommitted changes
+    if [[ -n $(git status --porcelain) ]]; then
+        notify "Skipped" "Uncommitted changes present"
+        exit 0
+    fi
+
+    # Fetch updates from remote
+    if ! git fetch origin 2>/dev/null; then
+        notify "Error" "Failed to fetch from remote"
+        exit 1
+    fi
+
+    # Compare local and remote
+    local LOCAL REMOTE
+    LOCAL=$(git rev-parse @)
+    REMOTE=$(git rev-parse @{u} 2>/dev/null || echo "$LOCAL")
+
+    # Already up to date - exit silently
+    if [[ "$LOCAL" = "$REMOTE" ]]; then
+        exit 0
+    fi
+
+    # Check if local is behind remote (safe to pull)
+    local BASE
+    BASE=$(git merge-base @ @{u} 2>/dev/null || echo "$LOCAL")
+
+    if [[ "$LOCAL" != "$BASE" ]]; then
+        notify "Warning" "Local and remote have diverged - manual merge required"
+        exit 1
+    fi
+
+    # Pull changes
+    if git pull --rebase 2>/dev/null; then
+        # Count commits pulled
+        local commits
+        commits=$(git rev-list --count "$LOCAL".."$REMOTE")
+        notify "Updated" "Pulled $commits commit(s) successfully"
+    else
+        notify "Error" "Failed to pull changes"
+        exit 1
+    fi
+}
+
+main "$@"

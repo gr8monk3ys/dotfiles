@@ -16,7 +16,7 @@ export ACCEPT_EULA=Y
         stow-arch stow-macos cask-apps vscode-extensions node-packages \
         rust-packages duti bun pacman-packages brew-packages secrets-init \
         secrets-status template-list nix nix-darwin nix-home nix-update help \
-        cli cli-install
+        cli cli-install sync-install sync-uninstall sync-status sync-run
 
 all: $(OS)
 
@@ -161,6 +161,44 @@ backup-compress:
 
 backup-cleanup:
 	@bin/dotfiles-backup --cleanup
+
+# ============================================================================
+# Automated Sync - Daily git pull via launchd
+# ============================================================================
+
+LAUNCH_AGENTS := $(HOME)/Library/LaunchAgents
+SYNC_PLIST := com.dotfiles.sync.plist
+
+## Install automated daily sync service (macOS only)
+sync-install:
+	@echo "Installing dotfiles sync service..."
+	@mkdir -p $(LAUNCH_AGENTS)
+	@sed "s|/Users/gr8monk3ys|$(HOME)|g" .config/macos/$(SYNC_PLIST) \
+	    > $(LAUNCH_AGENTS)/$(SYNC_PLIST)
+	@launchctl load $(LAUNCH_AGENTS)/$(SYNC_PLIST)
+	@echo "✓ Sync service installed (runs daily at 10:00 AM)"
+	@echo "  Run 'make sync-status' to verify"
+
+## Remove automated sync service
+sync-uninstall:
+	@echo "Removing dotfiles sync service..."
+	@launchctl unload $(LAUNCH_AGENTS)/$(SYNC_PLIST) 2>/dev/null || true
+	@rm -f $(LAUNCH_AGENTS)/$(SYNC_PLIST)
+	@echo "✓ Sync service removed"
+
+## Check sync service status
+sync-status:
+	@echo "Sync service status:"
+	@launchctl list | grep -E "PID|dotfiles.sync" || echo "  Service not loaded"
+	@echo ""
+	@if [ -f /tmp/dotfiles-sync.err ]; then \
+		echo "Recent errors (if any):"; \
+		tail -5 /tmp/dotfiles-sync.err 2>/dev/null || echo "  (none)"; \
+	fi
+
+## Run sync manually (for testing)
+sync-run:
+	@bin/dotfiles-sync
 
 clean:
 	@echo "Cleaning broken symlinks..."
@@ -347,5 +385,11 @@ help:
 	@echo "  make backup       - Backup configurations"
 	@echo "  make clean        - Remove broken symlinks"
 	@echo "  make test         - Run test suite"
+	@echo ""
+	@echo "Automated Sync (macOS):"
+	@echo "  make sync-install   - Enable daily auto-sync"
+	@echo "  make sync-uninstall - Disable auto-sync"
+	@echo "  make sync-status    - Check sync service status"
+	@echo "  make sync-run       - Run sync manually"
 	@echo ""
 	@echo "See README.md and MAKEFILE.md for full documentation."
