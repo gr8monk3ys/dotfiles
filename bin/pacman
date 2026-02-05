@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#
+# pacman - Wrapper to ensure pacman runs with sudo when needed.
+#
+
+set -euo pipefail
+
+PACMAN_BIN="/usr/bin/pacman"
+
+if [[ ! -x "$PACMAN_BIN" ]]; then
+    PACMAN_BIN="$(command -v pacman || true)"
+fi
+
+if [[ -z "$PACMAN_BIN" || "$PACMAN_BIN" == "$0" ]]; then
+    echo "pacman wrapper error: system pacman not found." >&2
+    exit 127
+fi
+
+if [[ "${EUID:-$(id -u)}" -ne 0 ]] && command -v sudo >/dev/null 2>&1; then
+    exec sudo "$PACMAN_BIN" "$@"
+fi
+
+exec "$PACMAN_BIN" "$@"

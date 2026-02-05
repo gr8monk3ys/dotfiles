@@ -120,6 +120,18 @@ dotfiles-secrets status                  # Show status
 
 **Requires:** `age` (`brew install age`)
 
+## Compatibility Helpers
+
+### [is-executable](is-executable)
+
+Legacy compatibility shim for older Makefile references. Returns success if a
+command exists on PATH.
+
+### [pacman](pacman)
+
+Wrapper that invokes `/usr/bin/pacman`, using `sudo` automatically when needed.
+Helps non-root installations on Arch Linux.
+
 ## Adding New Scripts
 
 1. Create script with shebang (`#!/usr/bin/env bash`)

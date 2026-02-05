@@ -97,6 +97,10 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+is_interactive() {
+    [[ -t 0 && -t 1 ]]
+}
+
 # ============================================================================
 # System Detection
 # ============================================================================
@@ -192,10 +196,20 @@ setup_repository() {
         print_warning "Dotfiles directory already exists"
         print_info "$DOTFILES_DIR"
         echo ""
-        read -p "    Update existing repository? [y/N] " -n 1 -r
-        echo ""
+        local update_repo="false"
+        if [[ -n "${DOTFILES_ASSUME_YES:-}" ]]; then
+            update_repo="true"
+        elif is_interactive; then
+            read -p "    Update existing repository? [y/N] " -n 1 -r
+            echo ""
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                update_repo="true"
+            fi
+        else
+            print_info "Non-interactive mode detected; skipping update prompt"
+        fi
 
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
+        if [[ "$update_repo" == "true" ]]; then
             print_substep "Updating repository..."
             cd "$DOTFILES_DIR"
             git fetch origin "$DOTFILES_BRANCH"
@@ -226,22 +240,29 @@ setup_machine_type() {
         return
     fi
 
-    echo ""
-    echo -e "    ${WHITE}What type of machine is this?${NC}"
-    echo ""
-    echo -e "    ${CYAN}1)${NC} personal  ${DIM}- Personal workstation${NC}"
-    echo -e "    ${CYAN}2)${NC} work      ${DIM}- Work/corporate machine${NC}"
-    echo -e "    ${CYAN}3)${NC} server    ${DIM}- Server/headless system${NC}"
-    echo ""
-    read -p "    Select [1-3, default: 1]: " -n 1 -r
-    echo ""
+    local machine_type="${DOTFILES_MACHINE_TYPE:-}"
+    if [[ -n "$machine_type" ]]; then
+        print_info "Using DOTFILES_MACHINE_TYPE=$machine_type"
+    elif ! is_interactive; then
+        machine_type="personal"
+        print_info "Non-interactive mode detected; defaulting to: $machine_type"
+    else
+        echo ""
+        echo -e "    ${WHITE}What type of machine is this?${NC}"
+        echo ""
+        echo -e "    ${CYAN}1)${NC} personal  ${DIM}- Personal workstation${NC}"
+        echo -e "    ${CYAN}2)${NC} work      ${DIM}- Work/corporate machine${NC}"
+        echo -e "    ${CYAN}3)${NC} server    ${DIM}- Server/headless system${NC}"
+        echo ""
+        read -p "    Select [1-3, default: 1]: " -n 1 -r
+        echo ""
 
-    local machine_type
-    case "$REPLY" in
-        2) machine_type="work" ;;
-        3) machine_type="server" ;;
-        *) machine_type="personal" ;;
-    esac
+        case "$REPLY" in
+            2) machine_type="work" ;;
+            3) machine_type="server" ;;
+            *) machine_type="personal" ;;
+        esac
+    fi
 
     echo "$machine_type" > "$machine_type_file"
     print_success "Profile set to: $machine_type"
@@ -270,6 +291,7 @@ run_installation() {
             ;;
         *)
             print_warning "Unknown OS - running symlink-only installation"
+            print_info "Package installation is not configured for this OS."
             make link
             ;;
     esac

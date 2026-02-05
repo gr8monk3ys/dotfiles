@@ -52,26 +52,21 @@ teardown() {
 }
 
 # Platform detection script tests
-@test "all platform detection scripts exist" {
-    [[ -f bin/is-macos ]]
-    [[ -f bin/is-arch ]]
-    [[ -f bin/is-arm64 ]]
+@test "platform detection helper exists" {
+    [[ -f bin/platform ]]
+}
+
+@test "platform detection helper is executable" {
+    [[ -x bin/platform ]]
+}
+
+@test "platform helper has proper shebang" {
+    head -n1 bin/platform | grep -q "^#!/"
+}
+
+@test "executable checker exists and is executable" {
     [[ -f bin/is-executable ]]
-    [[ -f bin/is-supported ]]
-}
-
-@test "all platform detection scripts are executable" {
-    [[ -x bin/is-macos ]]
-    [[ -x bin/is-arch ]]
-    [[ -x bin/is-arm64 ]]
     [[ -x bin/is-executable ]]
-    [[ -x bin/is-supported ]]
-}
-
-@test "platform detection scripts have proper shebangs" {
-    for script in bin/is-*; do
-        head -n1 "$script" | grep -q "^#!/"
-    done
 }
 
 # General script validation

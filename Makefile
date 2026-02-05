@@ -99,10 +99,18 @@ pacman-packages:
 	pacman -S --noconfirm - < $(DOTFILES_DIR)/install/pacmanfile
 
 brew-packages: brew
-	brew bundle --file=$(DOTFILES_DIR)/install/Brewfile || true
+	if [ -n "$(BREW_BUNDLE_STRICT)" ]; then \
+		brew bundle --file=$(DOTFILES_DIR)/install/Brewfile; \
+	else \
+		brew bundle --file=$(DOTFILES_DIR)/install/Brewfile || true; \
+	fi
 
 cask-apps: brew
-	brew bundle --file=$(DOTFILES_DIR)/install/Caskfile || true
+	if [ -n "$(BREW_BUNDLE_STRICT)" ]; then \
+		brew bundle --file=$(DOTFILES_DIR)/install/Caskfile; \
+	else \
+		brew bundle --file=$(DOTFILES_DIR)/install/Caskfile || true; \
+	fi
 
 vscode-extensions: cask-apps
 	@if command -v codium >/dev/null 2>&1; then \
