@@ -71,11 +71,8 @@ dotfiles/
 │   └── README.md         # Comprehensive package installation guide
 │
 ├── bin/                  # Utility scripts
-│   ├── is-arch           # Detect Arch Linux
-│   ├── is-arm64          # Detect ARM64 architecture
-│   ├── is-executable     # Check if command exists
-│   ├── is-macos          # Detect macOS
-│   ├── is-supported      # Execute command if available
+│   ├── platform          # Unified platform detection helper
+│   ├── is-executable     # Check if command exists (compatibility)
 │   ├── dotfiles-doctor   # Health check script (--help, --verbose)
 │   ├── dotfiles-update   # Update all packages (--help, skip options)
 │   ├── dotfiles-backup   # Backup configurations (--help, --compress, --cleanup)
@@ -168,16 +165,16 @@ stow -t ~/.config .config
 ### 2. Platform Detection
 
 The `bin/` scripts handle platform-specific logic:
-- `is-macos` - Returns 0 if macOS, 1 otherwise
-- `is-arch` - Returns 0 if Arch Linux, 1 otherwise
-- `is-arm64` - Returns 0 if ARM64/Apple Silicon, 1 otherwise
-- `is-supported` - Executes command only if it exists
+- `platform is-macos` - Returns 0 if macOS, 1 otherwise
+- `platform is-arch` - Returns 0 if Arch Linux, 1 otherwise
+- `platform is-arm64` - Returns 0 if ARM64/Apple Silicon, 1 otherwise
+- `platform has` - Returns 0 if command exists
 - `is-executable` - Checks if a command is available
 
 **Usage in Makefile:**
 ```makefile
-OS := $(shell bin/is-supported bin/is-macos macos $(shell bin/is-supported bin/is-arch arch linux))
-HOMEBREW_PREFIX := $(shell bin/is-supported bin/is-arm64 /opt/homebrew /usr/local)
+OS := $(shell bin/platform detect)
+HOMEBREW_PREFIX := $(shell bin/platform select /opt/homebrew /usr/local "bin/platform is-arm64")
 ```
 
 ### 3. Makefile Targets
@@ -348,7 +345,7 @@ target-name: dependencies
 ### 2. Homebrew Prefix
 - Apple Silicon uses `/opt/homebrew`
 - Intel Macs use `/usr/local`
-- Scripts use `is-arm64` to detect and set correctly
+- Scripts use `platform is-arm64` to detect and set correctly
 
 ### 3. Stow Behavior
 - Stow creates symlinks at the **file/directory level**
@@ -367,7 +364,7 @@ target-name: dependencies
 
 ### 6. Platform-Specific Code
 - Check which platform before using platform-specific commands
-- Use `bin/is-supported` wrapper for commands that may not exist
+- Use `bin/platform has` when commands may not exist
 - Test changes on target platform if possible
 
 ### 7. Empty Package Files
@@ -378,7 +375,7 @@ target-name: dependencies
 ## Working with This Repo as an AI
 
 ### When Reading Code
-1. Check platform-specific logic (is-macos, is-arch, etc.)
+1. Check platform-specific logic (platform is-macos, is-arch, etc.)
 2. Understand Stow's symlink behavior
 3. Know what directories are managed vs manual
 4. Check Makefile dependencies between targets

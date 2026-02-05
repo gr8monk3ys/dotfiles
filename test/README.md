@@ -63,7 +63,7 @@ bats test/test_symlinks.bats
 ### Run Specific Test
 
 ```bash
-bats test/test_bin_scripts.bats -f "is-macos"
+bats test/test_bin_scripts.bats -f "platform"
 ```
 
 ### Verbose Output
@@ -100,8 +100,8 @@ test/
 
 Tests for utility scripts in `bin/`:
 
-- Platform detection scripts (is-macos, is-arch, is-arm64)
-- Executable checker (is-executable, is-supported)
+- Platform detection helper (platform)
+- Executable checker (is-executable)
 - Utility scripts (dotfiles-doctor, dotfiles-update, dotfiles-backup)
 
 ### test_symlinks.bats
