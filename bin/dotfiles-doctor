@@ -127,7 +127,7 @@ check_symlinks() {
         check_pass ".config directory exists"
 
         # Check common config symlinks (including new modern tools)
-        local config_dirs=("zsh" "git" "nvim" "ghostty" "yazi" "zellij" "jj" "tmux" "kitty")
+        local config_dirs=("zsh" "git" "nvim" "ghostty" "yazi" "zellij" "jj" "tmux")
         for dir in "${config_dirs[@]}"; do
             if [[ -e "$HOME/.config/$dir" ]]; then
                 if [[ -L "$HOME/.config/$dir" ]] || [[ -L "$HOME/.config/$dir"/* ]] 2>/dev/null; then

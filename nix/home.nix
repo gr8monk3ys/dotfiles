@@ -35,7 +35,7 @@
         light = false;
         side-by-side = true;
         line-numbers = true;
-        syntax-theme = "OneHalfDark";
+        syntax-theme = "base16-onedark";
       };
     };
 
@@ -264,7 +264,7 @@
   programs.bat = {
     enable = true;
     config = {
-      theme = "OneHalfDark";
+      theme = "base16-onedark";
       style = "numbers,changes,header";
     };
   };

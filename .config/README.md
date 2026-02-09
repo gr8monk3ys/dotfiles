@@ -18,17 +18,20 @@ The `.config` directory centralizes application configurations in a single locat
 ├── aerospace/            # AeroSpace window manager
 ├── curl/                 # cURL HTTP client defaults
 ├── firefox/              # Firefox browser customization
+├── ghostty/              # Ghostty terminal emulator (primary)
 ├── git/                  # Git version control settings
-├── kitty/                # Kitty terminal emulator
+├── jj/                   # Jujutsu VCS (modern Git alternative)
 ├── latexmk/              # LaTeX build automation
-├── lf/                   # lf terminal file manager
+├── lf/                   # lf terminal file manager (legacy)
 ├── macos/                # macOS-specific configurations
 ├── mpd/                  # Music Player Daemon
 ├── newsboat/             # RSS/Atom feed reader
 ├── nvim/                 # Neovim text editor (has its own README)
-├── tmux/                 # Tmux terminal multiplexer
+├── tmux/                 # Tmux terminal multiplexer (backup)
 ├── wget/                 # Wget download utility
+├── yazi/                 # Yazi file manager (replaces lf)
 ├── zathura/              # Zathura document viewer
+├── zellij/               # Zellij multiplexer (modern tmux)
 └── zsh/                  # Zsh shell configuration
 ```
 
@@ -56,15 +59,19 @@ Each subdirectory contains a `README.md` with detailed information about its spe
 
 ### Terminal & Shell
 
-#### [kitty/](kitty/)
-**Kitty** - GPU-accelerated terminal emulator.
+#### [ghostty/](ghostty/)
+**Ghostty** - Zig-based GPU-accelerated terminal emulator (primary terminal).
 
 **Why chosen:**
-- Hardware acceleration for smooth rendering
-- Excellent font ligature support for coding
-- Image protocol support
-- Highly customizable with simple config
-- Fast performance with low latency
+- Built in Zig for maximum performance and minimal latency
+- Native GPU rendering with hardware acceleration
+- Built-in multiplexing (splits and tabs without tmux/zellij)
+- Native macOS integration with hidden titlebar
+- Font ligature support for programming fonts
+- Shell integration (cursor, sudo, title)
+- Modern codebase with cross-platform support
+
+**Theme:** OneDark color scheme for consistency across all tools.
 
 #### [tmux/](tmux/)
 **Tmux** - Terminal multiplexer for session management.

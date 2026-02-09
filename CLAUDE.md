@@ -36,10 +36,9 @@ dotfiles/
 │   ├── claude/           # Claude Code integration notes (NEW)
 │   ├── curl/             # cURL defaults
 │   ├── firefox/          # Firefox user.js preferences
-│   ├── ghostty/          # Ghostty terminal (NEW - primary terminal)
+│   ├── ghostty/          # Ghostty terminal (primary terminal)
 │   ├── git/              # Git configuration
-│   ├── jj/               # Jujutsu VCS (NEW - next-gen git)
-│   ├── kitty/            # Kitty terminal emulator (backup)
+│   ├── jj/               # Jujutsu VCS (next-gen git)
 │   ├── latexmk/          # LaTeX build automation
 │   ├── lf/               # Terminal file manager (legacy)
 │   ├── macos/            # macOS system defaults and dock scripts
@@ -118,7 +117,7 @@ This dotfiles repo has been modernized with cutting-edge tools:
 ### Terminal & Shell
 | Tool | Replaces | Description |
 |------|----------|-------------|
-| **Ghostty** | Kitty | Zig-based GPU terminal with built-in splits |
+| **Ghostty** | - | Zig-based GPU terminal with built-in splits (primary) |
 | **Yazi** | lf/ranger | Async Rust file manager with image preview |
 | **Zellij** | tmux | Modern multiplexer with WebAssembly plugins |
 

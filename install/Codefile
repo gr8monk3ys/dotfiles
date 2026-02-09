@@ -21,8 +21,7 @@ christian-kohler.path-intellisense
 yzhang.markdown-all-in-one
 
 # Themes
-github.github-vscode-theme
-catppuccin.catppuccin-vsc
+zhuangtongfa.material-theme
 
 # Docker & Containers (if needed)
 ms-azuretools.vscode-docker

@@ -36,7 +36,7 @@ Contains casks (graphical applications) installed via [Homebrew Cask](https://gi
 **Applications include:**
 - **Browsers**: firefox, brave-browser, zen, tor-browser
 - **Development**: vscodium, figma, godot
-- **Terminals**: kitty
+- **Terminals**: ghostty
 - **Productivity**: obsidian, raycast, karabiner-elements
 - **Security**: keepassxc, proton-drive, monero-wallet
 - **Media**: audacity, obs, tidal
@@ -91,7 +91,7 @@ Contains VSCodium/VS Code extension IDs for automated installation.
 - **Git Integration**: GitLens, Git Graph
 - **Utilities**: EditorConfig, Error Lens, Code Spell Checker, Path Intellisense
 - **Markdown**: Markdown All in One, Markdownlint
-- **Themes**: GitHub Theme, Catppuccin
+- **Themes**: One Dark Pro (Material Theme)
 - **Containers**: Docker support
 
 Install with: `make vscode-extensions`
@@ -347,7 +347,7 @@ brew bundle --file=~/dotfiles-backup/YYYYMMDD/Brewfile
 
 - **Karabiner-Elements** requires system permissions in Security & Privacy
 - **AeroSpace** requires Accessibility permissions
-- **Kitty** may require Font Book to install Nerd Fonts properly
+- **Ghostty** may require Font Book to install Nerd Fonts properly
 
 ### Linux (Arch)
 
