@@ -159,7 +159,7 @@ These dotfiles use a consistent **OneDark** color scheme across all tools:
 | 🔵 Cyan | `#56b6c2` | Links, symlinks |
 | 🟠 Orange | `#d19a66` | Constants |
 
-**Themed tools:** Ghostty, Kitty, Neovim, Yazi, bat, eza, git-delta, tmux, zellij, fzf
+**Themed tools:** Ghostty, Neovim, Yazi, bat, eza, git-delta, tmux, zellij, fzf
 
 ---
 
@@ -174,7 +174,6 @@ These dotfiles use a consistent **OneDark** color scheme across all tools:
 │   ├── 📁 jj/               # Jujutsu VCS (NEW)
 │   ├── 📁 zellij/           # Terminal multiplexer (NEW)
 │   ├── 📁 git/              # Git + Delta config
-│   ├── 📁 kitty/            # Terminal (backup)
 │   ├── 📁 nvim/             # Neovim editor
 │   ├── 📁 tmux/             # Tmux (backup)
 │   ├── 📁 zsh/              # Shell configuration

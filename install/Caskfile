@@ -13,8 +13,7 @@ cask "keycastr"                        # Keystroke visualizer for presentations
 # ============================================================================
 # Terminals & Terminal Tools
 # ============================================================================
-cask "ghostty"                         # Zig-based GPU-accelerated terminal (modern, fast)
-cask "kitty"                           # GPU-accelerated terminal emulator (backup)
+cask "ghostty"                         # Zig-based GPU-accelerated terminal (primary)
 
 # ============================================================================
 # Web Browsers

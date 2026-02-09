@@ -1,7 +1,7 @@
 # default apps
 export EDITOR="nvim"
 export VISUAL="nvim"
-export TERMINAL="foot"
+export TERMINAL="ghostty"
 export BROWSER="firefox"
 
 # default folders
@@ -20,7 +20,7 @@ export ZDOTDIR="$XDG_CONFIG_HOME/zsh"
 export _ZL_DATA="$XDG_CACHE_HOME/zsh/.zlua"
 
 # colors!
-export BAT_THEME="Catppuccin-mocha"
+export BAT_THEME="OneHalfDark"
 export MANPAGER="nvim +Man!"
 
 # set the localization
