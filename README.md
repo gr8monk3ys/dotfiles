@@ -255,6 +255,9 @@ cp ~/.config/zsh/zshrc.local.example ~/.config/zsh/zshrc.local
 
 # Git customizations (name, email, signing key)
 cp ~/.config/git/config.local.example ~/.config/git/config.local
+
+# SSH snippets are managed under ~/.config/ssh/config.d/
+# make link will ensure ~/.ssh/config includes that directory
 ```
 
 ### Machine Profiles

@@ -27,6 +27,7 @@ The `.config` directory centralizes application configurations in a single locat
 ├── mpd/                  # Music Player Daemon
 ├── newsboat/             # RSS/Atom feed reader
 ├── nvim/                 # Neovim text editor (has its own README)
+├── ssh/                  # OpenSSH host snippets (config.d includes)
 ├── tmux/                 # Tmux terminal multiplexer (backup)
 ├── wget/                 # Wget download utility
 ├── yazi/                 # Yazi file manager (replaces lf)
@@ -200,6 +201,15 @@ Each subdirectory contains a `README.md` with detailed information about its spe
 - Scriptable for batch operations
 - curl: Modern, flexible API client
 - wget: Recursive downloads, mirrors
+
+#### [ssh/](ssh/)
+**OpenSSH host snippets** - Shared SSH aliases and port-forward presets.
+
+**Why chosen:**
+- Keeps repeatable host aliases in dotfiles (`pi`, `pi-gw`)
+- Separates tracked host presets from private key material
+- Uses `Include ~/.config/ssh/config.d/*.conf` for modular config
+- Makes new machine setup consistent for remote operations
 
 ### Platform-Specific
 

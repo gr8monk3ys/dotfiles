@@ -52,6 +52,14 @@ link: stow-$(OS)
 	ln -sf $(DOTFILES_DIR)/.zshenv $(HOME)/.zshenv
 	# Link .config directory contents
 	stow -t "$(XDG_CONFIG_HOME)" .config
+	# Ensure OpenSSH includes dotfiles-managed host snippets
+	mkdir -p "$(HOME)/.ssh"
+	chmod 700 "$(HOME)/.ssh"
+	touch "$(HOME)/.ssh/config"
+	chmod 600 "$(HOME)/.ssh/config"
+	if ! grep -Eq '^[[:space:]]*Include[[:space:]]+~/.config/ssh/config.d/\\*\\.conf([[:space:]]|$$)' "$(HOME)/.ssh/config"; then \
+		printf "\n# Dotfiles managed SSH host snippets\nInclude ~/.config/ssh/config.d/*.conf\n" >> "$(HOME)/.ssh/config"; \
+	fi
 	mkdir -p $(HOME)/.local/runtime
 	chmod 700 $(HOME)/.local/runtime
 	@echo "Dotfiles linked successfully!"
@@ -248,6 +256,13 @@ link-dry-run: stow-$(OS)
 	@echo ""
 	@echo "==> .config symlinks (via stow):"
 	@stow -n -v -t "$(XDG_CONFIG_HOME)" .config 2>&1 | grep -E "^(LINK|UNLINK)" || echo "    (no changes needed)"
+	@echo ""
+	@echo "==> SSH include:"
+	@if grep -Eq '^[[:space:]]*Include[[:space:]]+~/.config/ssh/config.d/\*\.conf([[:space:]]|$$)' "$(HOME)/.ssh/config" 2>/dev/null; then \
+		echo "    Include already present in $(HOME)/.ssh/config"; \
+	else \
+		echo "    Would append: Include ~/.config/ssh/config.d/*.conf"; \
+	fi
 	@echo ""
 	@echo "Run 'make link' to apply these changes."
 
