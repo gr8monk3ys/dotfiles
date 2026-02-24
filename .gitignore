@@ -175,6 +175,8 @@ linux-*.deb
 .config/**/*.local
 *.local.sh
 *.local.zsh
+/.claude/settings.local.json
+.config/zsh/.zcompdump*
 
 ##
 # Machine profile
