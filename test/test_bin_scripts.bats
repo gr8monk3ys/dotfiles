@@ -51,6 +51,43 @@ teardown() {
     skip "Requires full system setup"
 }
 
+# dotfiles-restore tests
+@test "dotfiles-restore script exists and is executable" {
+    [[ -f bin/dotfiles-restore ]]
+    [[ -x bin/dotfiles-restore ]]
+}
+
+@test "dotfiles-restore accepts --help flag" {
+    run bin/dotfiles-restore --help
+    assert_success
+    assert_output --partial "Usage:"
+}
+
+@test "dotfiles-restore restores files from a backup snapshot" {
+    local backup_path="$TEST_TEMP_DIR/backups/20260101_010101"
+    mkdir -p "$backup_path/configs" "$backup_path/ssh" "$TEST_HOME/.ssh"
+    echo "export TEST_RESTORE=1" > "$backup_path/configs/.zshrc"
+    echo "Host github.com" > "$backup_path/ssh/config"
+
+    run env HOME="$TEST_HOME" BACKUP_DIR="$TEST_TEMP_DIR/backups" \
+        bin/dotfiles-restore "$backup_path"
+    assert_success
+    [[ -f "$TEST_HOME/.zshrc" ]]
+    [[ -f "$TEST_HOME/.ssh/config" ]]
+}
+
+# dotfiles-bench-shell tests
+@test "dotfiles-bench-shell script exists and is executable" {
+    [[ -f bin/dotfiles-bench-shell ]]
+    [[ -x bin/dotfiles-bench-shell ]]
+}
+
+@test "dotfiles-bench-shell accepts --help flag" {
+    run bin/dotfiles-bench-shell --help
+    assert_success
+    assert_output --partial "Usage:"
+}
+
 # dotfiles-worktree tests
 @test "dotfiles-worktree script exists and is executable" {
     [[ -f bin/dotfiles-worktree ]]

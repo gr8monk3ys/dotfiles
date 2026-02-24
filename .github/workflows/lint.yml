@@ -7,6 +7,22 @@ on:
     branches: [ main ]
 
 jobs:
+  gitleaks:
+    name: Gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Run gitleaks scan
+        run: |
+          docker run --rm \
+            -v "$PWD:/repo" \
+            ghcr.io/gitleaks/gitleaks:latest \
+            detect --source /repo --no-git --redact --verbose
+
   shellcheck:
     name: ShellCheck
     runs-on: ubuntu-latest

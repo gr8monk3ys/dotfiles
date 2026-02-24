@@ -29,6 +29,12 @@ repos:
         args: [--severity=warning]
         files: ^bin/.*$
 
+  # Gitleaks - Secret scanning
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.24.2
+    hooks:
+      - id: gitleaks
+
   # Markdownlint - Markdown linting
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.38.0

@@ -92,6 +92,30 @@ dotfiles-backup [--compress] [--cleanup]
 make backup
 ```
 
+### [dotfiles-restore](dotfiles-restore)
+
+Restore files from snapshots produced by `dotfiles-backup`.
+
+**Usage:**
+```bash
+dotfiles-restore                              # restore latest backup
+dotfiles-restore ~/dotfiles-backup/20260224_120000
+dotfiles-restore --dry-run
+# or
+make restore
+```
+
+### [dotfiles-bench-shell](dotfiles-bench-shell)
+
+Benchmark interactive zsh startup and enforce a maximum average startup budget.
+
+**Usage:**
+```bash
+dotfiles-bench-shell --runs 7 --budget-ms 900
+# or
+make bench-shell runs=7 budget=900
+```
+
 ### [dotfiles-worktree](dotfiles-worktree)
 
 Create isolated git worktrees/branches for parallel sessions (for example,
@@ -174,6 +198,8 @@ Helps non-root installations on Arch Linux.
 | dotfiles-doctor | ✓ | ✓ | ✓ |
 | dotfiles-update | ✓ | ✓ | ✓ |
 | dotfiles-backup | ✓ | ✓ | ✓ |
+| dotfiles-restore | ✓ | ✓ | ✓ |
+| dotfiles-bench-shell | ✓ | ✓ | ✓ |
 | dotfiles-worktree | ✓ | ✓ | ✓ |
 | dotfiles-template | ✓ | ✓ | ✓ |
 | dotfiles-secrets | ✓ | ✓ | ✓ |

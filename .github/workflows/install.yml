@@ -6,6 +6,22 @@ on:
     - cron: "0 17 * * 4" # Every Thursday 5:00PM
 
 jobs:
+  one-liner:
+    name: One-Liner Installer (Non-Interactive)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run installer one-liner
+        env:
+          DOTFILES_ASSUME_YES: "1"
+          DOTFILES_MACHINE_TYPE: "personal"
+          DOTFILES_FORCE_PROMPT_STYLE: "1"
+          DOTFILES_DIR: "${{ github.workspace }}/.dotfiles-install-test"
+          DOTFILES_BRANCH: "${{ github.ref_name }}"
+        run: |
+          curl -fsSL "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/install.sh" | bash
+          test -L "$HOME/.zshenv"
+          test -f "$HOME/.p10k.zsh"
+
   install:
     runs-on: ${{ matrix.os }}
     strategy:

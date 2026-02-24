@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+# dotfiles-bench-shell - Measure interactive zsh startup time against a budget.
+
+set -euo pipefail
+
+readonly SCRIPT_NAME="dotfiles-bench-shell"
+
+usage() {
+    cat << 'EOF'
+Usage: dotfiles-bench-shell [OPTIONS]
+
+Benchmark interactive zsh startup and fail if average exceeds budget.
+
+Options:
+  -r, --runs N         Number of measured runs (default: 7)
+  -b, --budget-ms N    Maximum allowed average startup in milliseconds (default: 900)
+  -h, --help           Show this help message
+
+Examples:
+  dotfiles-bench-shell
+  dotfiles-bench-shell --runs 10 --budget-ms 800
+EOF
+}
+
+die() {
+    echo "Error: $*" >&2
+    exit 1
+}
+
+measure_once_ms() {
+    local warn_on_nonzero="${1:-true}"
+    local output real status=0
+    set +e
+    output="$({ /usr/bin/time -p zsh -i -c 'exit' >/dev/null; } 2>&1)"
+    status=$?
+    set -e
+    if (( status != 0 )) && [[ "$warn_on_nonzero" == "true" ]]; then
+        echo "Warning: zsh exited with status ${status} during benchmark run" >&2
+    fi
+    real="$(echo "$output" | awk '/^real / {print $2}')"
+    [[ -n "$real" ]] || die "Failed to parse timing output: $output"
+    awk -v sec="$real" 'BEGIN { printf "%.0f", sec * 1000 }'
+}
+
+main() {
+    local runs=7
+    local budget_ms=900
+    local sum=0
+    local best=999999
+    local worst=0
+    local i ms avg
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -r|--runs)
+                [[ $# -ge 2 ]] || die "Missing value for $1"
+                runs="$2"
+                shift 2
+                ;;
+            -b|--budget-ms)
+                [[ $# -ge 2 ]] || die "Missing value for $1"
+                budget_ms="$2"
+                shift 2
+                ;;
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            *)
+                die "Unknown option: $1"
+                ;;
+        esac
+    done
+
+    [[ "$runs" =~ ^[0-9]+$ ]] || die "--runs must be an integer"
+    [[ "$budget_ms" =~ ^[0-9]+$ ]] || die "--budget-ms must be an integer"
+    (( runs >= 1 )) || die "--runs must be >= 1"
+    command -v zsh >/dev/null 2>&1 || die "zsh is not installed"
+    [[ -x /usr/bin/time ]] || die "/usr/bin/time is required"
+
+    echo "Benchmarking zsh interactive startup (${runs} runs, budget ${budget_ms}ms)..."
+
+    # Warmup run to reduce first-run noise.
+    measure_once_ms false >/dev/null
+
+    for (( i=1; i<=runs; i++ )); do
+        ms="$(measure_once_ms)"
+        echo "  run ${i}: ${ms}ms"
+        sum=$((sum + ms))
+        (( ms < best )) && best="$ms"
+        (( ms > worst )) && worst="$ms"
+    done
+
+    avg=$((sum / runs))
+    echo "Average: ${avg}ms (best: ${best}ms, worst: ${worst}ms)"
+
+    if (( avg > budget_ms )); then
+        echo "FAIL: average startup ${avg}ms exceeds budget ${budget_ms}ms"
+        exit 1
+    fi
+
+    echo "PASS: average startup ${avg}ms is within budget ${budget_ms}ms"
+}
+
+main "$@"

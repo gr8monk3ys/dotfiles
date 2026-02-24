@@ -14,7 +14,7 @@ export ACCEPT_EULA=Y
 .PHONY: all macos arch link unlink link-dry-run sudo test test-setup verify \
         verify-shell verify-stale-refs verify-doc-links verify-tests verify-nix \
         doctor update backup worktree-add worktree-list worktree-remove worktree-prune \
-        backup-compress backup-cleanup clean restore brew-update brew-cleanup \
+        backup-compress backup-cleanup bench-shell clean restore restore-zshenv brew-update brew-cleanup \
         brew bash git npm packages-macos packages-arch core-macos core-arch \
         stow-arch stow-macos cask-apps vscode-extensions node-packages \
         rust-packages duti bun pacman-packages brew-packages secrets-init \
@@ -244,6 +244,10 @@ update:
 backup:
 	@bin/dotfiles-backup
 
+## Benchmark interactive zsh startup against a performance budget
+bench-shell:
+	@bin/dotfiles-bench-shell --runs "$(if $(runs),$(runs),7)" --budget-ms "$(if $(budget),$(budget),900)"
+
 ## Create an isolated worktree for a parallel session
 worktree-add:
 	@if [ -z "$(name)" ]; then \
@@ -325,7 +329,12 @@ clean:
 	fi
 	@echo "✓ Cleanup complete"
 
+## Restore files from a dotfiles-backup snapshot (default: latest)
 restore:
+	@bin/dotfiles-restore $(if $(backup),$(backup),)
+
+## Restore legacy .zshenv backup created during link/unlink flow
+restore-zshenv:
 	@if [ -f "$(HOME)/.zshenv.bak" ]; then \
 		mv "$(HOME)/.zshenv.bak" "$(HOME)/.zshenv"; \
 		echo "✓ Restored .zshenv from backup"; \
@@ -506,6 +515,9 @@ help:
 	@echo "  make doctor       - Run health check"
 	@echo "  make update       - Update all packages"
 	@echo "  make backup       - Backup configurations"
+	@echo "  make restore [backup=/path] - Restore latest/specified backup snapshot"
+	@echo "  make restore-zshenv - Restore legacy .zshenv backup only"
+	@echo "  make bench-shell [runs=7] [budget=900] - Benchmark zsh startup budget"
 	@echo "  make worktree-add name=<task> [base=main] - New isolated worktree"
 	@echo "  make worktree-list - List worktrees"
 	@echo "  make worktree-remove name=<task> [force=1] - Remove worktree"

@@ -19,12 +19,13 @@ Tests the full installation process on multiple platforms.
 - Ubuntu (latest)
 
 **What it does:**
-1. Cleans up pre-installed software (macOS only)
-2. Clones the repository
-3. Runs full installation via `make`
-4. Verifies shell setup
-5. Runs health check via `make doctor`
-6. Installs BATS and runs test suite
+1. Runs installer one-liner in non-interactive mode on Ubuntu
+2. Cleans up pre-installed software (macOS only)
+3. Clones the repository
+4. Runs full installation via `make`
+5. Verifies shell setup
+6. Runs health check via `make doctor`
+7. Installs BATS and runs test suite
 
 **Badge:** [![Installation](https://github.com/gr8monk3ys/dotfiles/workflows/Dotfiles%20Installation/badge.svg)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/install.yml)
 
@@ -61,23 +62,40 @@ Validates code quality and format.
 
 **Jobs:**
 
-**1. ShellCheck**
+**1. Gitleaks**
+- Scans repository content for leaked secrets
+- Redacts sensitive output in logs
+
+**2. ShellCheck**
 - Lints all shell scripts in `bin/`
 - Uses .shellcheckrc configuration
 - Severity: warning level
 
-**2. Markdownlint**
+**3. Markdownlint**
 - Validates all Markdown files
 - Checks formatting consistency
 - Uses .markdownlint.json config (if present)
 
-**3. Package File Validation**
+**4. Package File Validation**
 - Validates Brewfile format
 - Validates npmfile format
 - Validates Rustfile format
 - Verifies all package files exist
 
 **Badge:** [![Lint](https://github.com/gr8monk3ys/dotfiles/workflows/Lint/badge.svg)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/lint.yml)
+
+### 🐧 [arch-smoke.yml](workflows/arch-smoke.yml)
+**Scheduled Arch Linux Smoke Workflow**
+
+Runs Arch Linux Docker smoke tests on a weekly schedule.
+
+**Triggers:**
+- Scheduled: Every Monday at 3:00 PM UTC
+- Manual dispatch
+
+**What it does:**
+1. Builds `test/Dockerfile.arch`
+2. Runs `make test && make link && make doctor` in Arch container
 
 ## Workflow Status
 
@@ -178,5 +196,4 @@ runs-on: ${{ matrix.os }}
 - [ ] Add dependency update automation (Dependabot)
 - [ ] Add broken link checker
 - [ ] Add documentation validation
-- [ ] Add security scanning
 - [ ] Add release automation
