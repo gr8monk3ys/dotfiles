@@ -14,7 +14,7 @@ export ACCEPT_EULA=Y
 .PHONY: all macos arch link unlink link-dry-run sudo test test-setup verify \
         verify-shell verify-stale-refs verify-doc-links verify-tests verify-nix \
         doctor update backup worktree-add worktree-list worktree-remove worktree-prune \
-        backup-compress backup-cleanup bench-shell clean restore restore-zshenv brew-update brew-cleanup \
+        backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
         brew bash git npm packages-macos packages-arch core-macos core-arch \
         stow-arch stow-macos cask-apps vscode-extensions node-packages \
         rust-packages duti bun pacman-packages brew-packages secrets-init \
@@ -234,6 +234,10 @@ verify-nix:
 	else \
 		echo "⚠️  nix not found; skipping flake check"; \
 	fi
+
+## Run core pre-push checks (fast local confidence loop)
+daily: verify-shell verify-doc-links verify-tests
+	@echo "✓ Daily checks passed"
 
 doctor:
 	@bin/dotfiles-doctor
@@ -518,6 +522,7 @@ help:
 	@echo "  make restore [backup=/path] - Restore latest/specified backup snapshot"
 	@echo "  make restore-zshenv - Restore legacy .zshenv backup only"
 	@echo "  make bench-shell [runs=7] [budget=900] - Benchmark zsh startup budget"
+	@echo "  make daily        - Run core pre-push checks (shell, docs, tests)"
 	@echo "  make worktree-add name=<task> [base=main] - New isolated worktree"
 	@echo "  make worktree-list - List worktrees"
 	@echo "  make worktree-remove name=<task> [force=1] - Remove worktree"
