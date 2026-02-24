@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CLAUDE.md - Comprehensive AI assistant guide for working with the repository
 - CONTRIBUTING.md - Contribution guidelines and development workflow
 - CHANGELOG.md - This file to track changes
-- LICENSE - MIT License for the project
+- LICENSE - GPL-3.0 License for the project
 - .gitattributes - Line ending and language detection configuration
 - .shellcheckrc - ShellCheck configuration for linting shell scripts
 - .pre-commit-config.yaml - Pre-commit hooks for automated linting and validation

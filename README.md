@@ -27,7 +27,7 @@
 [![Installation](https://img.shields.io/github/actions/workflow/status/gr8monk3ys/dotfiles/install.yml?label=install&style=flat-square&logo=github)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/install.yml)
 [![Tests](https://img.shields.io/github/actions/workflow/status/gr8monk3ys/dotfiles/test.yml?label=tests&style=flat-square&logo=github)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/test.yml)
 [![Lint](https://img.shields.io/github/actions/workflow/status/gr8monk3ys/dotfiles/lint.yml?label=lint&style=flat-square&logo=github)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/lint.yml)
-[![License](https://img.shields.io/badge/license-MIT-98c379?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/license-GPL--3.0-98c379?style=flat-square)](LICENSE)
 [![Nix](https://img.shields.io/badge/Nix-Flakes-5277C3?style=flat-square&logo=nixos)](flake.nix)
 [![Theme](https://img.shields.io/badge/theme-OneDark-61afef?style=flat-square)](#theme)
 
@@ -177,7 +177,7 @@ These dotfiles use a consistent **OneDark** color scheme across all tools:
 │   ├── 📁 nvim/             # Neovim editor
 │   ├── 📁 tmux/             # Tmux (backup)
 │   ├── 📁 zsh/              # Shell configuration
-│   └── 📄 .aliases          # Modern CLI aliases
+│   │   └── 📄 aliases.zsh   # Modern CLI aliases
 │
 ├── 📁 nix/                  # Nix configuration (NEW)
 │   ├── 📄 home.nix          # Home Manager config
@@ -344,10 +344,8 @@ hs    → atuin search
 | Document | Description |
 |----------|-------------|
 | [CLAUDE.md](CLAUDE.md) | AI assistant guide |
-| [MAKEFILE.md](MAKEFILE.md) | Makefile reference |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution guidelines |
 | [CHANGELOG.md](CHANGELOG.md) | Version history |
-| [CODE_QUALITY_REPORT.md](CODE_QUALITY_REPORT.md) | Quality analysis |
 
 Each `.config/` directory has its own README with detailed documentation.
 
@@ -430,7 +428,7 @@ Yazi is pre-configured. Just use the `y` alias:
 y           # Opens yazi with cd-on-exit
 ```
 
-The lf configuration remains for backwards compatibility.
+The lf configuration has been removed; yazi is the sole file manager.
 
 </details>
 

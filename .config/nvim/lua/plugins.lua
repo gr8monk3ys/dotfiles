@@ -5,11 +5,12 @@ return {
 
 	-- Colorschemes
 	{
-		"folke/tokyonight.nvim",
+		"navarasu/onedark.nvim",
 		lazy = false,
 		priority = 1000,
 		config = function()
-			vim.cmd([[colorscheme tokyonight]]) -- Set Tokyonight as the default colorscheme
+			require("onedark").setup({ style = "dark" })
+			require("onedark").load()
 		end,
 	},
 
@@ -182,7 +183,7 @@ return {
 		event = "VeryLazy",
 		config = function()
 			require("lualine").setup({
-				options = { theme = "tokyonight", section_separators = "", component_separators = "" },
+				options = { theme = "onedark", section_separators = "", component_separators = "" },
 				extensions = { "nvim-tree", "quickfix" },
 			})
 		end,

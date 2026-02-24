@@ -35,7 +35,7 @@ brew install claude-code
 
 ## Shell Integration
 
-Aliases are configured in `~/.config/.aliases`:
+Aliases are configured in `~/.config/zsh/aliases.zsh`:
 
 ```bash
 alias claude='claude-code'

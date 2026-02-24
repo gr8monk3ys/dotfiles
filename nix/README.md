@@ -49,10 +49,10 @@ nix run nix-darwin -- switch --flake .#macbook-intel
 cd ~/.dotfiles
 
 # Apply Home Manager configuration
-nix run home-manager -- switch --flake .#lorenzo@linux
+nix run home-manager -- switch --flake .#gr8monk3ys@linux
 
 # For ARM64
-nix run home-manager -- switch --flake .#lorenzo@linux-arm
+nix run home-manager -- switch --flake .#gr8monk3ys@linux-arm
 ```
 
 ### Daily Usage

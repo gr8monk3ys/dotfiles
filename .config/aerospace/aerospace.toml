@@ -52,8 +52,8 @@ alt-7 = 'workspace 7'
 alt-8 = 'workspace 8'
 alt-9 = 'workspace 9'
 
-# specific app config 
-# alt-a = 'workspace 1'                    # alacritty
+# specific app config
+# alt-a = 'workspace 1'                    # ghostty
 # alt-s = 'workspace 3'                    # spotify
 # alt-l = 'workspace 2'                    # firefox
 # alt-g = 'workspace G'                    # messages
@@ -143,7 +143,7 @@ alt-shift-tab = 'move-workspace-to-monitor --wrap-around next'
 
 
 [[on-window-detected]]
-if.app-id = 'org.alacritty'
+if.app-id = 'com.mitchellh.ghostty'
 run = 'move-node-to-workspace 1' # mnemonics T - Terminal
 
 [[on-window-detected]]

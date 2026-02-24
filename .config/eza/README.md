@@ -35,7 +35,7 @@ eza --tree --icons -L 2
 
 ## Aliases
 
-These aliases are configured in `~/.config/.aliases`:
+These aliases are configured in `~/.config/zsh/aliases.zsh`:
 
 ```bash
 alias ls='eza --icons --group-directories-first'

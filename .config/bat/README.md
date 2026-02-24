@@ -4,8 +4,8 @@ A `cat` clone with syntax highlighting and Git integration.
 
 ## Theme
 
-Configured to use `OneHalfDark` theme, which closely matches the OneDark
-color scheme used throughout these dotfiles.
+Configured to use `base16-onedark`, matching the OneDark color scheme
+used throughout these dotfiles.
 
 ## Features
 
@@ -18,7 +18,7 @@ color scheme used throughout these dotfiles.
 
 The config file at `~/.config/bat/config` sets:
 
-- Theme: OneHalfDark (OneDark-like)
+- Theme: base16-onedark
 - Style: numbers, changes, header
 - Tab width: 4 spaces
 - Custom syntax mappings for dotfiles
@@ -39,12 +39,12 @@ bat --plain file.txt
 bat --list-themes
 
 # Use a specific theme
-bat --theme="OneHalfDark" file.py
+bat --theme="base16-onedark" file.py
 ```
 
 ## Aliases
 
-These aliases are configured in `~/.config/.aliases`:
+These aliases are configured in `~/.config/zsh/aliases.zsh`:
 
 ```bash
 alias cat='bat --paging=never'

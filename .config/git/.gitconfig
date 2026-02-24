@@ -123,8 +123,8 @@
 	light = false
 	side-by-side = true
 	line-numbers = true
-	# OneDark-inspired theme
-	syntax-theme = OneHalfDark
+	# OneDark syntax theme (matches nvim/ghostty)
+	syntax-theme = base16-onedark
 	# OneDark colors for diff highlighting
 	plus-style = "syntax #2d3b2d"
 	plus-emph-style = "syntax #98c379"

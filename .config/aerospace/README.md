@@ -44,7 +44,7 @@ AeroSpace is an i3-like tiling window manager for macOS that provides:
 ### Automatic Window Placement
 
 The configuration automatically routes applications to specific workspaces:
-- **Workspace 1**: Alacritty (Terminal)
+- **Workspace 1**: Ghostty (Terminal)
 - **Workspace 2**: Firefox (Web Browser)
 - **Workspace 3**: Spotify (Music)
 - **Workspace K**: KeePassXC (Password Manager)

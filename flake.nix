@@ -32,8 +32,8 @@
       # User configuration
       user = {
         name = "Lorenzo Scaturchio";
-        email = "lorenozsca7@protonmail.ch";
-        username = "lorenzo";  # Change to your username
+        email = "lorenzosca7@protonmail.ch";
+        username = "gr8monk3ys";
         github = "gr8monk3ys";
       };
 
@@ -126,7 +126,7 @@
       # ========================================================================
       homeConfigurations = {
         # macOS (Apple Silicon)
-        "lorenzo@macbook" = home-manager.lib.homeManagerConfiguration {
+        "gr8monk3ys@macbook" = home-manager.lib.homeManagerConfiguration {
           pkgs = nixpkgs.legacyPackages.aarch64-darwin;
           extraSpecialArgs = { inherit inputs user; };
           modules = [
@@ -144,7 +144,7 @@
         };
 
         # macOS (Intel)
-        "lorenzo@macbook-intel" = home-manager.lib.homeManagerConfiguration {
+        "gr8monk3ys@macbook-intel" = home-manager.lib.homeManagerConfiguration {
           pkgs = nixpkgs.legacyPackages.x86_64-darwin;
           extraSpecialArgs = { inherit inputs user; };
           modules = [
@@ -162,7 +162,7 @@
         };
 
         # Linux (x86_64)
-        "lorenzo@linux" = home-manager.lib.homeManagerConfiguration {
+        "gr8monk3ys@linux" = home-manager.lib.homeManagerConfiguration {
           pkgs = nixpkgs.legacyPackages.x86_64-linux;
           extraSpecialArgs = { inherit inputs user; };
           modules = [
@@ -180,7 +180,7 @@
         };
 
         # Linux (ARM64)
-        "lorenzo@linux-arm" = home-manager.lib.homeManagerConfiguration {
+        "gr8monk3ys@linux-arm" = home-manager.lib.homeManagerConfiguration {
           pkgs = nixpkgs.legacyPackages.aarch64-linux;
           extraSpecialArgs = { inherit inputs user; };
           modules = [

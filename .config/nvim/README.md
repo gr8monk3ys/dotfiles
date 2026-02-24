@@ -106,7 +106,7 @@ The leader key is `,` (comma).
 | Plugin | Purpose |
 |--------|---------|
 | [lazy.nvim](https://github.com/folke/lazy.nvim) | Plugin manager with lazy-loading |
-| [tokyonight.nvim](https://github.com/folke/tokyonight.nvim) | Color scheme |
+| [onedark.nvim](https://github.com/navarasu/onedark.nvim) | Color scheme (OneDark) |
 | [which-key.nvim](https://github.com/folke/which-key.nvim) | Keybinding hints and discovery |
 
 ### File Navigation

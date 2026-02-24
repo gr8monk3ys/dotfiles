@@ -40,7 +40,6 @@ dotfiles/
 │   ├── git/              # Git configuration
 │   ├── jj/               # Jujutsu VCS (next-gen git)
 │   ├── latexmk/          # LaTeX build automation
-│   ├── lf/               # Terminal file manager (legacy)
 │   ├── macos/            # macOS system defaults and dock scripts
 │   ├── mpd/              # Music Player Daemon
 │   ├── newsboat/         # RSS feed reader
@@ -51,7 +50,7 @@ dotfiles/
 │   ├── zathura/          # Document viewer
 │   ├── zellij/           # Zellij multiplexer (NEW - modern tmux)
 │   ├── zsh/              # Zsh shell configuration
-│   ├── .aliases          # Shell aliases (updated with new tools)
+│   │   └── aliases.zsh   # Shell aliases (updated with new tools)
 │   └── README.md         # Overview of configurations
 │
 ├── nix/                  # Nix configuration (NEW)
@@ -61,7 +60,7 @@ dotfiles/
 │
 ├── install/              # Package management (All files fully documented)
 │   ├── Brewfile          # Homebrew formulae - 110+ packages with categories
-│   ├── Caskfile          # Homebrew casks - 32 apps with categories
+│   ├── Caskfile          # Homebrew casks - 34 apps with categories
 │   ├── Codefile          # VSCodium extensions - categorized and documented
 │   ├── npmfile           # npm packages - 18 packages with categories
 │   ├── Rustfile          # Cargo packages - 4 core + 12 optional tools
@@ -101,13 +100,11 @@ dotfiles/
 ├── flake.nix             # Nix flake definition (NEW)
 ├── flake.lock            # Locked Nix dependencies
 ├── Makefile              # Installation and linking automation
-├── MAKEFILE.md           # Comprehensive Makefile documentation
 ├── README.md             # User-facing documentation (with CI badges, FAQ)
-├── TODO.md               # Project roadmap (26+ completed tasks)
 ├── CLAUDE.md             # This file (AI assistant guide)
 ├── CONTRIBUTING.md       # Contribution guidelines
 ├── CHANGELOG.md          # Version history (Keep a Changelog format)
-└── LICENSE               # MIT License
+└── LICENSE               # GPL-3.0 License
 ```
 
 ## New Modern Tools (2024+)
@@ -218,7 +215,7 @@ HOMEBREW_PREFIX := $(shell bin/platform select /opt/homebrew /usr/local "bin/pla
 - `make test` - Run BATS test suite
 - `make help` - Show all available commands
 
-**See MAKEFILE.md for complete documentation with examples and dependency graph.**
+**Run `make help` for a quick reference of all available targets.**
 
 ### 4. XDG Base Directory Specification
 
@@ -366,10 +363,9 @@ target-name: dependencies
 - Use `bin/platform has` when commands may not exist
 - Test changes on target platform if possible
 
-### 7. Empty Package Files
-- `Codefile` is currently empty (VSCode extensions)
-- Either populate or remove reference in Makefile
-- Don't leave empty files if they're not used
+### 7. Package File Maintenance
+- Keep package lists in sync with actual installed packages
+- Don't leave empty or stale entries
 
 ## Working with This Repo as an AI
 
@@ -392,7 +388,7 @@ target-name: dependencies
 2. **Create README.md** explaining the feature
 3. **Update main README.md** if it's a major addition
 4. **Add Makefile target** if installation needed
-5. **Add to TODO.md** if incomplete
+5. **Record follow-up tasks** in CHANGELOG.md if incomplete
 6. **Test on target platform** if possible
 
 ### Common Pitfalls to Avoid
@@ -515,19 +511,18 @@ Three powerful maintenance scripts with professional UX:
 - **CLAUDE.md** - This file (AI assistant guide)
 - **CONTRIBUTING.md** - Contribution guidelines
 - **CHANGELOG.md** - Version history
-- **MAKEFILE.md** - Complete Makefile reference
-- **LICENSE** - MIT License
+- **LICENSE** - GPL-3.0 License
 - **.github/README.md** - CI/CD workflow documentation
 - **install/README.md** - Package installation guide
 - **test/README.md** - Testing guide
 
-All 15 .config/ directories have individual READMEs.
+All 21 .config/ directories have individual READMEs.
 
 ## Package Documentation
 
 All package files now have comprehensive comments:
 - **Brewfile**: 110+ packages organized by category
-- **Caskfile**: 32 applications organized by category
+- **Caskfile**: 34 applications organized by category
 - **npmfile**: 18 packages organized by category  
 - **Rustfile**: 4 core + 12 optional tools documented
 
@@ -546,4 +541,4 @@ This guide reflects the repository state after major improvements session (Octob
 - Complete CI/CD pipeline
 - Comprehensive documentation suite
 
-Last updated: October 24, 2025
+Last updated: February 23, 2026

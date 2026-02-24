@@ -2,9 +2,8 @@
 # Location: ~/.config/bat/config
 # Syntax: bat --help
 
-# Use OneDark-like theme
-# OneHalfDark is built-in and closely matches OneDark
---theme="OneHalfDark"
+# Use OneDark theme
+--theme="base16-onedark"
 
 # Show line numbers
 --style="numbers,changes,header"

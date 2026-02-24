@@ -415,4 +415,4 @@ help:
 	@echo "  make sync-status    - Check sync service status"
 	@echo "  make sync-run       - Run sync manually"
 	@echo ""
-	@echo "See README.md and MAKEFILE.md for full documentation."
+	@echo "See README.md for full documentation."

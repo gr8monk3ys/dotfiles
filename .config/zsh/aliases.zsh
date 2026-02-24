@@ -84,7 +84,7 @@ jscbin="/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Resources
 unset jscbin;
 
 # Trim new lines and copy to clipboard
-alias c="tr -d '\n' | pbcopy"
+alias copy="tr -d '\n' | pbcopy"
 
 # Recursively delete `.DS_Store` files
 alias cleanup="find . -type f -name '*.DS_Store' -ls -delete"
@@ -325,7 +325,7 @@ fi
 
 # Quick edit configs
 alias zshrc='${EDITOR:-nvim} ~/.config/zsh/.zshrc'
-alias aliases='${EDITOR:-nvim} ~/.config/.aliases'
+alias aliases='${EDITOR:-nvim} ~/.config/zsh/aliases.zsh'
 alias gitconfig='${EDITOR:-nvim} ~/.config/git/.gitconfig'
 alias ghosttyconf='${EDITOR:-nvim} ~/.config/ghostty/config'
 alias yaziconf='${EDITOR:-nvim} ~/.config/yazi/yazi.toml'

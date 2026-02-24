@@ -14,7 +14,6 @@ The `.config` directory centralizes application configurations in a single locat
 
 ```
 .config/
-├── .aliases              # Shell aliases for productivity
 ├── aerospace/            # AeroSpace window manager
 ├── curl/                 # cURL HTTP client defaults
 ├── firefox/              # Firefox browser customization
@@ -22,7 +21,6 @@ The `.config` directory centralizes application configurations in a single locat
 ├── git/                  # Git version control settings
 ├── jj/                   # Jujutsu VCS (modern Git alternative)
 ├── latexmk/              # LaTeX build automation
-├── lf/                   # lf terminal file manager (legacy)
 ├── macos/                # macOS-specific configurations
 ├── mpd/                  # Music Player Daemon
 ├── newsboat/             # RSS/Atom feed reader
@@ -34,6 +32,7 @@ The `.config` directory centralizes application configurations in a single locat
 ├── zathura/              # Zathura document viewer
 ├── zellij/               # Zellij multiplexer (modern tmux)
 └── zsh/                  # Zsh shell configuration
+    └── aliases.zsh       # Shell aliases and CLI shortcuts
 ```
 
 Each subdirectory contains a `README.md` with detailed information about its specific configuration.
@@ -117,17 +116,8 @@ Each subdirectory contains a `README.md` with detailed information about its spe
 
 ### File Management
 
-#### [lf/](lf/)
-**lf (list files)** - Terminal file manager.
 
-**Why chosen:**
-- Fast, lightweight written in Go
-- Vim-like keybindings for familiarity
-- Scriptable with shell commands
-- File preview support
-- Better performance than ranger
-
-#### [.aliases](.aliases)
+#### [zsh/aliases.zsh](zsh/aliases.zsh)
 **Shell Aliases** - Command shortcuts and utilities.
 
 **Why chosen:**
