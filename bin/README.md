@@ -92,6 +92,21 @@ dotfiles-backup [--compress] [--cleanup]
 make backup
 ```
 
+### [dotfiles-worktree](dotfiles-worktree)
+
+Create isolated git worktrees/branches for parallel sessions (for example,
+multiple AI terminals working the same repository).
+
+**Usage:**
+```bash
+dotfiles-worktree add ghostty-pass      # creates ../dotfiles-ghostty-pass on ai/ghostty-pass
+dotfiles-worktree list                  # show active worktrees
+dotfiles-worktree remove ghostty-pass   # remove by name
+dotfiles-worktree prune                 # cleanup stale metadata
+# or
+make worktree-add name=ghostty-pass
+```
+
 ### [dotfiles-template](dotfiles-template)
 
 Template processor for machine-specific configurations.
@@ -159,5 +174,6 @@ Helps non-root installations on Arch Linux.
 | dotfiles-doctor | ✓ | ✓ | ✓ |
 | dotfiles-update | ✓ | ✓ | ✓ |
 | dotfiles-backup | ✓ | ✓ | ✓ |
+| dotfiles-worktree | ✓ | ✓ | ✓ |
 | dotfiles-template | ✓ | ✓ | ✓ |
 | dotfiles-secrets | ✓ | ✓ | ✓ |

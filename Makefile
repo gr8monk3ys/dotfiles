@@ -13,7 +13,7 @@ export ACCEPT_EULA=Y
 
 .PHONY: all macos arch link unlink link-dry-run sudo test test-setup verify \
         verify-shell verify-stale-refs verify-doc-links verify-tests verify-nix \
-        doctor update backup \
+        doctor update backup worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup clean restore brew-update brew-cleanup \
         brew bash git npm packages-macos packages-arch core-macos core-arch \
         stow-arch stow-macos cask-apps vscode-extensions node-packages \
@@ -243,6 +243,34 @@ update:
 
 backup:
 	@bin/dotfiles-backup
+
+## Create an isolated worktree for a parallel session
+worktree-add:
+	@if [ -z "$(name)" ]; then \
+		echo "Usage: make worktree-add name=<task> [base=<branch>]"; \
+		exit 1; \
+	fi
+	@bin/dotfiles-worktree add "$(name)" "$(if $(base),$(base),main)"
+
+## List active worktrees
+worktree-list:
+	@bin/dotfiles-worktree list
+
+## Remove a worktree by name (or use path via script directly)
+worktree-remove:
+	@if [ -z "$(name)" ]; then \
+		echo "Usage: make worktree-remove name=<task> [force=1]"; \
+		exit 1; \
+	fi
+	@if [ -n "$(force)" ]; then \
+		bin/dotfiles-worktree remove --force "$(name)"; \
+	else \
+		bin/dotfiles-worktree remove "$(name)"; \
+	fi
+
+## Prune stale worktree metadata
+worktree-prune:
+	@bin/dotfiles-worktree prune
 
 backup-compress:
 	@bin/dotfiles-backup --compress
@@ -478,6 +506,10 @@ help:
 	@echo "  make doctor       - Run health check"
 	@echo "  make update       - Update all packages"
 	@echo "  make backup       - Backup configurations"
+	@echo "  make worktree-add name=<task> [base=main] - New isolated worktree"
+	@echo "  make worktree-list - List worktrees"
+	@echo "  make worktree-remove name=<task> [force=1] - Remove worktree"
+	@echo "  make worktree-prune - Prune stale worktree metadata"
 	@echo "  make clean        - Remove broken symlinks"
 	@echo "  make test-setup   - Install test dependencies (bats)"
 	@echo "  make test         - Run test suite"

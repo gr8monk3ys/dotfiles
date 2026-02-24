@@ -1,0 +1,181 @@
+#!/usr/bin/env bash
+# dotfiles-worktree - Manage isolated git worktrees for parallel sessions.
+
+set -euo pipefail
+
+usage() {
+    cat << 'EOF'
+Usage: dotfiles-worktree <command> [options]
+
+Commands:
+  add <name> [base]         Create a sibling worktree and branch (default base: main)
+  list                       List configured worktrees
+  remove [--force] <target> Remove a worktree by name or path
+  prune                      Prune stale worktree metadata
+  path <name>                Print computed sibling worktree path for a name
+  help                       Show this help
+
+Examples:
+  dotfiles-worktree add ghostty-pass
+  dotfiles-worktree add docs-pass main
+  dotfiles-worktree list
+  dotfiles-worktree remove ghostty-pass
+  dotfiles-worktree remove --force ../dotfiles-ghostty-pass
+
+Notes:
+  - Branches are created as: ai/<name>
+  - Worktrees are created as sibling dirs: ../<repo>-<name>
+EOF
+}
+
+die() {
+    echo "Error: $*" >&2
+    exit 1
+}
+
+repo_root() {
+    git rev-parse --show-toplevel 2>/dev/null || die "Not inside a git repository."
+}
+
+sanitize_name() {
+    local raw="${1:-}"
+    raw="$(echo "$raw" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')"
+    echo "$raw" | tr -cd '[:alnum:]._/-'
+}
+
+default_path_for_name() {
+    local root="$1"
+    local name="$2"
+    local parent repo safe_name
+    parent="$(cd "$root/.." && pwd)"
+    repo="$(basename "$root")"
+    safe_name="$(sanitize_name "$name")"
+    echo "${parent}/${repo}-${safe_name}"
+}
+
+branch_for_name() {
+    local name="$1"
+    echo "ai/$(sanitize_name "$name")"
+}
+
+command_add() {
+    local name="${1:-}"
+    local base="${2:-main}"
+    local root branch path
+
+    [[ -n "$name" ]] || die "Missing worktree name. Try: dotfiles-worktree add <name> [base]"
+
+    root="$(repo_root)"
+    branch="$(branch_for_name "$name")"
+    path="$(default_path_for_name "$root" "$name")"
+
+    [[ -n "$branch" ]] || die "Could not compute branch name from '$name'"
+    [[ -n "$path" ]] || die "Could not compute worktree path from '$name'"
+
+    if [[ -e "$path" ]]; then
+        die "Target path already exists: $path"
+    fi
+
+    if git -C "$root" show-ref --verify --quiet "refs/heads/$branch"; then
+        git -C "$root" worktree add "$path" "$branch"
+    else
+        git -C "$root" rev-parse --verify --quiet "${base}^{commit}" >/dev/null \
+            || die "Base branch/reference not found: $base"
+        git -C "$root" worktree add -b "$branch" "$path" "$base"
+    fi
+
+    echo "Created worktree:"
+    echo "  path: $path"
+    echo "  branch: $branch"
+}
+
+resolve_target_path() {
+    local root="$1"
+    local target="$2"
+
+    if [[ -d "$target" ]]; then
+        (cd "$target" && pwd)
+    else
+        default_path_for_name "$root" "$target"
+    fi
+}
+
+command_remove() {
+    local force="false"
+    local target="${1:-}"
+    local root path
+
+    if [[ "${target:-}" == "--force" || "${target:-}" == "-f" ]]; then
+        force="true"
+        shift || true
+        target="${1:-}"
+    fi
+
+    [[ -n "${target:-}" ]] || die "Missing target. Try: dotfiles-worktree remove [--force] <name|path>"
+
+    root="$(repo_root)"
+    path="$(resolve_target_path "$root" "$target")"
+
+    [[ -d "$path" ]] || die "Worktree path does not exist: $path"
+    [[ "$path" != "$root" ]] || die "Refusing to remove primary worktree: $root"
+
+    if [[ "$force" == "true" ]]; then
+        git -C "$root" worktree remove --force "$path"
+    else
+        git -C "$root" worktree remove "$path"
+    fi
+
+    echo "Removed worktree: $path"
+}
+
+command_list() {
+    local root
+    root="$(repo_root)"
+    git -C "$root" worktree list
+}
+
+command_prune() {
+    local root
+    root="$(repo_root)"
+    git -C "$root" worktree prune
+    echo "Pruned stale worktree metadata."
+}
+
+command_path() {
+    local name="${1:-}"
+    local root
+    [[ -n "$name" ]] || die "Missing name. Try: dotfiles-worktree path <name>"
+    root="$(repo_root)"
+    default_path_for_name "$root" "$name"
+}
+
+main() {
+    local cmd="${1:-help}"
+    shift || true
+
+    case "$cmd" in
+        add)
+            command_add "$@"
+            ;;
+        list)
+            command_list
+            ;;
+        remove|rm)
+            command_remove "$@"
+            ;;
+        prune)
+            command_prune
+            ;;
+        path)
+            command_path "$@"
+            ;;
+        help|--help|-h)
+            usage
+            ;;
+        *)
+            die "Unknown command: $cmd. Run 'dotfiles-worktree help'."
+            ;;
+    esac
+}
+
+main "$@"

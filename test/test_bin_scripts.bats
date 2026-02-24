@@ -51,6 +51,18 @@ teardown() {
     skip "Requires full system setup"
 }
 
+# dotfiles-worktree tests
+@test "dotfiles-worktree script exists and is executable" {
+    [[ -f bin/dotfiles-worktree ]]
+    [[ -x bin/dotfiles-worktree ]]
+}
+
+@test "dotfiles-worktree accepts --help flag" {
+    run bin/dotfiles-worktree --help
+    assert_success
+    assert_output --partial "Usage:"
+}
+
 # Platform detection script tests
 @test "platform detection helper exists" {
     [[ -f bin/platform ]]

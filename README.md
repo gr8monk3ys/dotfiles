@@ -237,6 +237,9 @@ These dotfiles use a consistent **OneDark** color scheme across all tools:
 | `make doctor` | Health check |
 | `make update` | Update all packages |
 | `make backup` | Backup configurations |
+| `make worktree-add name=<task>` | Create isolated worktree (`ai/<task>`) for parallel sessions |
+| `make worktree-list` | List active worktrees |
+| `make worktree-remove name=<task>` | Remove a worktree by task name |
 | `make clean` | Remove broken symlinks |
 | `make verify` | Run full repository verification |
 | `make help` | Show all available commands |
