@@ -48,7 +48,15 @@ brew install --cask ghostty
 
 ## Theme
 
-Using OneDark-inspired colors for consistency with Neovim and other tools.
+Using Ghostty's built-in **Atom One Dark** theme for OneDark consistency with Neovim and other tools.
+
+UI/UX profile in this repo:
+- Subtle glass effect (`background-opacity = 0.94`, `background-blur = 18`)
+- Comfortable spacing (`window-padding-x = 14`, balanced padding enabled)
+- Clean native chrome (`macos-titlebar-style = transparent`, `window-theme = auto`)
+
+On Linux, blur depends on compositor support.
+Popular theme alternatives right now: Catppuccin Mocha, Rose Pine Moon, TokyoNight Storm.
 
 ## Why Ghostty over Kitty?
 
@@ -68,6 +76,11 @@ Ghostty and Kitty have similar features. Main differences:
 ## Configuration
 
 Edit `~/.config/ghostty/config` to customize. Changes take effect on restart or with `Cmd+Shift+R`.
+
+Validate config:
+```bash
+ghostty +validate-config --config-file ~/.config/ghostty/config
+```
 
 ## Resources
 

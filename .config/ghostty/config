@@ -15,13 +15,21 @@ font-feature = liga
 font-feature = dlig
 
 # ============================================================================
-# Theme & Colors (OneDark-inspired)
+# Theme & Colors (OneDark family)
 # ============================================================================
-theme = "OneDark"
+# Ghostty's built-in OneDark-compatible theme name.
+theme = "Atom One Dark"
+# Popular alternatives:
+# theme = "Catppuccin Mocha"
+# theme = "Rose Pine Moon"
+# theme = "TokyoNight Storm"
 
-# Background
-background = 282c34
-foreground = abb2bf
+# Subtle glass effect (when compositor/platform supports it).
+background-opacity = 0.94
+background-blur = 18
+background-opacity-cells = false
+
+# Keep selection/highlight close to classic OneDark values.
 selection-background = 3e4451
 selection-foreground = abb2bf
 
@@ -30,36 +38,19 @@ cursor-color = 528bff
 cursor-style = block
 cursor-style-blink = true
 
-# Normal colors (0-7)
-palette = 0=#282c34
-palette = 1=#e06c75
-palette = 2=#98c379
-palette = 3=#e5c07b
-palette = 4=#61afef
-palette = 5=#c678dd
-palette = 6=#56b6c2
-palette = 7=#abb2bf
-
-# Bright colors (8-15)
-palette = 8=#5c6370
-palette = 9=#e06c75
-palette = 10=#98c379
-palette = 11=#e5c07b
-palette = 12=#61afef
-palette = 13=#c678dd
-palette = 14=#56b6c2
-palette = 15=#ffffff
-
 # ============================================================================
 # Window Configuration
 # ============================================================================
-window-padding-x = 10
+window-padding-x = 14
 window-padding-y = 10
-window-decoration = true
-window-theme = ghostty
+window-padding-balance = true
+window-padding-color = extend
+window-decoration = auto
+window-theme = auto
+unfocused-split-opacity = 0.92
 
 # macOS specific
-macos-titlebar-style = hidden
+macos-titlebar-style = transparent
 macos-option-as-alt = true
 
 # ============================================================================
