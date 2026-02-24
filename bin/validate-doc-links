@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# Validate local Markdown links resolve to existing files/directories.
+
+set -euo pipefail
+
+ROOT_DIR="${1:-.}"
+
+cd "$ROOT_DIR"
+
+status=0
+
+if command -v rg >/dev/null 2>&1; then
+	md_files_cmd=(rg --files -g '*.md')
+else
+	md_files_cmd=(find . -type f -name '*.md')
+fi
+
+while IFS= read -r markdown_file; do
+	# Ignore fenced code blocks to avoid false positives from examples/snippets.
+	while IFS= read -r raw_link; do
+		target="$(sed -E 's/^!?\[[^]]+\]\(([^)]*)\)$/\1/' <<< "$raw_link")"
+		target="${target%%[[:space:]]*}"
+		target="${target#<}"
+		target="${target%>}"
+
+		[[ -z "$target" ]] && continue
+
+		case "$target" in
+			\#*|http://*|https://*|mailto:*|tel:*|data:*)
+				continue
+				;;
+			*://*)
+				continue
+				;;
+		esac
+
+		target="${target%%#*}"
+		target="${target%%\?*}"
+		[[ -z "$target" ]] && continue
+
+		if [[ "$target" == /* ]]; then
+			link_path="${target#/}"
+		else
+			link_path="$(dirname "$markdown_file")/$target"
+		fi
+
+		if [[ ! -e "$link_path" ]]; then
+			echo "Broken markdown link: $markdown_file -> $target"
+			status=1
+		fi
+		done < <(awk '
+			BEGIN { in_fence = 0 }
+			/^```/ { in_fence = !in_fence; next }
+			!in_fence { print }
+		' "$markdown_file" | grep -oE '!?\[[^]]+\]\([^)]+\)' || true)
+done < <("${md_files_cmd[@]}" | sed 's|^\./||')
+
+if [[ "$status" -eq 0 ]]; then
+	echo "✓ Markdown links are valid."
+fi
+
+exit "$status"

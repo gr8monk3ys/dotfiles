@@ -35,14 +35,8 @@ jobs:
           sudo git clone https://github.com/bats-core/bats-support.git /usr/lib/bats/bats-support
           sudo git clone https://github.com/bats-core/bats-assert.git /usr/lib/bats/bats-assert
 
-      - name: Run platform detection tests
-        run: bats test/test_platform.bats
-
-      - name: Run bin script tests
-        run: bats test/test_bin_scripts.bats
-
-      - name: Run package validation tests
-        run: bats test/test_packages.bats
+      - name: Run test suite
+        run: make test
 
   go-cli:
     name: Go CLI Build

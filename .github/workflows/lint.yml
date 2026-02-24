@@ -76,3 +76,13 @@ jobs:
           test -f install/Codefile
           test -f install/pacmanfile
           test -f install/duti
+
+  validate-doc-links:
+    name: Validate Doc Links
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Validate markdown links
+        run: bin/validate-doc-links

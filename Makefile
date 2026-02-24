@@ -2,7 +2,8 @@ DOTFILES_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 OS := $(shell bin/platform detect)
 HOMEBREW_PREFIX := $(shell bin/platform select /opt/homebrew /usr/local "bin/platform is-arm64")
 export N_PREFIX = $(HOME)/.n
-PATH := $(HOMEBREW_PREFIX)/bin:$(DOTFILES_DIR)/bin:$(N_PREFIX)/bin:$(PATH)
+NIX_PROFILE_BIN := /nix/var/nix/profiles/default/bin
+PATH := $(HOMEBREW_PREFIX)/bin:$(NIX_PROFILE_BIN):$(DOTFILES_DIR)/bin:$(N_PREFIX)/bin:$(PATH)
 SHELL := env PATH=$(PATH) /bin/bash
 SHELLS := /private/etc/shells
 BIN := $(HOMEBREW_PREFIX)/bin
@@ -10,7 +11,9 @@ export XDG_CONFIG_HOME = $(HOME)/.config
 export STOW_DIR = $(DOTFILES_DIR)
 export ACCEPT_EULA=Y
 
-.PHONY: all macos arch link unlink link-dry-run sudo test doctor update backup \
+.PHONY: all macos arch link unlink link-dry-run sudo test test-setup verify \
+        verify-shell verify-stale-refs verify-doc-links verify-tests verify-nix \
+        doctor update backup \
         backup-compress backup-cleanup clean restore brew-update brew-cleanup \
         brew bash git npm packages-macos packages-arch core-macos core-arch \
         stow-arch stow-macos cask-apps vscode-extensions node-packages \
@@ -161,7 +164,76 @@ bun:
 	fi
 
 test:
+	@if ! command -v bats >/dev/null 2>&1; then \
+		echo "Error: bats is not installed."; \
+		echo "Run 'make test-setup' and then retry."; \
+		exit 1; \
+	fi
 	bats test
+
+test-setup:
+	@echo "Installing test dependencies (bats)..."
+	@if command -v bats >/dev/null 2>&1; then \
+		echo "✓ bats already installed"; \
+	elif command -v brew >/dev/null 2>&1; then \
+		brew install bats-core; \
+	elif command -v apt-get >/dev/null 2>&1; then \
+		sudo apt-get update && sudo apt-get install -y bats; \
+	elif command -v pacman >/dev/null 2>&1; then \
+		sudo pacman -Sy --noconfirm bats; \
+	else \
+		echo "Could not auto-install bats on this platform."; \
+		echo "Install bats manually and re-run 'make test'."; \
+		exit 1; \
+	fi
+
+verify: verify-shell verify-stale-refs verify-doc-links verify-tests verify-nix
+	@echo "✓ Verification complete"
+
+verify-shell:
+	@echo "Running shell syntax checks..."
+	@if command -v zsh >/dev/null 2>&1; then \
+		zsh -n .zshenv .config/zsh/.zshrc .config/zsh/aliases.zsh; \
+	else \
+		echo "⚠️  zsh not found; skipping zsh syntax checks"; \
+	fi
+	@for script in bin/*; do \
+		if [ -f "$$script" ] && head -n1 "$$script" | grep -q "bash"; then \
+			bash -n "$$script"; \
+		fi; \
+	done
+
+verify-stale-refs:
+	@echo "Checking for stale migration references..."
+	@PATTERN='OneHalfDark|\.config/\.aliases|org\.alacritty|tokyonight|LF_ICONS|CODE_QUALITY_REPORT|lorenozsca7'; \
+	if command -v rg >/dev/null 2>&1; then \
+		if rg -n "$$PATTERN" README.md CLAUDE.md .config nix .zshenv flake.nix >/dev/null; then \
+			echo "Found stale references:"; \
+			rg -n "$$PATTERN" README.md CLAUDE.md .config nix .zshenv flake.nix; \
+			exit 1; \
+		fi; \
+	else \
+		if grep -R -nE "$$PATTERN" README.md CLAUDE.md .config nix .zshenv flake.nix >/dev/null; then \
+			echo "Found stale references:"; \
+			grep -R -nE "$$PATTERN" README.md CLAUDE.md .config nix .zshenv flake.nix; \
+			exit 1; \
+		fi; \
+	fi
+
+verify-doc-links:
+	@echo "Validating markdown links..."
+	@bin/validate-doc-links
+
+verify-tests:
+	@$(MAKE) test
+
+verify-nix:
+	@echo "Checking Nix flake..."
+	@if command -v nix >/dev/null 2>&1; then \
+		nix flake check --no-build $(DOTFILES_DIR); \
+	else \
+		echo "⚠️  nix not found; skipping flake check"; \
+	fi
 
 doctor:
 	@bin/dotfiles-doctor
@@ -407,7 +479,9 @@ help:
 	@echo "  make update       - Update all packages"
 	@echo "  make backup       - Backup configurations"
 	@echo "  make clean        - Remove broken symlinks"
+	@echo "  make test-setup   - Install test dependencies (bats)"
 	@echo "  make test         - Run test suite"
+	@echo "  make verify       - Run full repository verification"
 	@echo ""
 	@echo "Automated Sync (macOS):"
 	@echo "  make sync-install   - Enable daily auto-sync"

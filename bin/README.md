@@ -120,6 +120,18 @@ dotfiles-secrets status                  # Show status
 
 **Requires:** `age` (`brew install age`)
 
+### [validate-doc-links](validate-doc-links)
+
+Validates local Markdown links across repository documentation.
+
+**Usage:**
+```bash
+validate-doc-links          # Validate links from current directory
+validate-doc-links /path    # Validate from specific repo path
+# or
+make verify-doc-links
+```
+
 ## Compatibility Helpers
 
 ### [is-executable](is-executable)

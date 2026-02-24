@@ -57,7 +57,7 @@ bats test
 
 ```bash
 bats test/test_bin_scripts.bats
-bats test/test_symlinks.bats
+bats test/test_regressions.bats
 ```
 
 ### Run Specific Test
@@ -84,8 +84,8 @@ bats test --formatter tap
 test/
 ├── README.md              # This file
 ├── test_bin_scripts.bats  # Tests for bin/ utility scripts
-├── test_symlinks.bats     # Tests for symlink creation/deletion
 ├── test_platform.bats     # Tests for platform detection
+├── test_regressions.bats  # Regression tests for known breakages
 ├── test_packages.bats     # Tests for package file validation
 └── test_helper/           # Test helpers and fixtures
     ├── common.bash        # Common test functions
@@ -104,14 +104,6 @@ Tests for utility scripts in `bin/`:
 - Executable checker (is-executable)
 - Utility scripts (dotfiles-doctor, dotfiles-update, dotfiles-backup)
 
-### test_symlinks.bats
-
-Tests for symlink management:
-
-- Link creation and deletion
-- Backup handling
-- Error conditions
-
 ### test_platform.bats
 
 Tests for platform-specific behavior:
@@ -119,6 +111,14 @@ Tests for platform-specific behavior:
 - macOS vs Linux detection
 - Architecture detection (ARM64 vs x86_64)
 - Homebrew prefix detection
+
+### test_regressions.bats
+
+Tests for previously-fixed regressions:
+
+- No GNU-only `find -printf` in shell configs
+- No duplicate core alias declarations
+- Theme consistency (`base16-onedark` / `onedark`)
 
 ### test_packages.bats
 
@@ -204,9 +204,9 @@ jobs:
 
 - [x] Platform detection scripts
 - [x] Utility script help flags
-- [ ] Symlink creation/deletion
+- [x] Package file validation
+- [x] Regression guards for known breakages
 - [ ] Makefile targets
-- [ ] Package file validation
 
 ### Coverage Goals
 

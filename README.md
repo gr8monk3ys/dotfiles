@@ -231,12 +231,14 @@ These dotfiles use a consistent **OneDark** color scheme across all tools:
 | `make update` | Update all packages |
 | `make backup` | Backup configurations |
 | `make clean` | Remove broken symlinks |
+| `make verify` | Run full repository verification |
 | `make help` | Show all available commands |
 
 ### Testing
 
 | Command | Description |
 |---------|-------------|
+| `make test-setup` | Install BATS if missing |
 | `make test` | Run BATS tests |
 | `make test-docker` | Test in Ubuntu container |
 | `make test-docker-arch` | Test in Arch container |
