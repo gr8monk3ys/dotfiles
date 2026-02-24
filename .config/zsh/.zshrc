@@ -46,8 +46,13 @@ autoload -Uz compinit && compinit
 
 zinit cdreplay -q
 
-# To customize prompt, run `p10k configure` or edit $ZDOTDIR/.p10k.zsh.
-[[ ! -f "${ZDOTDIR:-$HOME/.config/zsh}/.p10k.zsh" ]] || source "${ZDOTDIR:-$HOME/.config/zsh}/.p10k.zsh"
+# To customize prompt, run `p10k configure` and edit ~/.p10k.zsh.
+# Fallback to repo-managed config when no personal prompt config exists.
+if [[ -f "$HOME/.p10k.zsh" ]]; then
+  source "$HOME/.p10k.zsh"
+elif [[ -f "${ZDOTDIR:-$HOME/.config/zsh}/.p10k.zsh" ]]; then
+  source "${ZDOTDIR:-$HOME/.config/zsh}/.p10k.zsh"
+fi
 
 # Keybindings
 bindkey -e
@@ -93,10 +98,14 @@ alias c='clear'
 # ============================================================================
 
 # fzf - Fuzzy finder
-eval "$(fzf --zsh)"
+if command -v fzf &> /dev/null; then
+    eval "$(fzf --zsh)"
+fi
 
 # zoxide - Smart cd replacement
-eval "$(zoxide init --cmd cd zsh)"
+if command -v zoxide &> /dev/null; then
+    eval "$(zoxide init --cmd cd zsh)"
+fi
 
 # Atuin - Magical shell history (replaces ctrl-r)
 if command -v atuin &> /dev/null; then

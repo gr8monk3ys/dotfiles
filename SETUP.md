@@ -15,6 +15,10 @@ Best for: Quick setup, macOS-focused, simpler to understand
 ```bash
 # One command does everything
 curl -fsSL https://raw.githubusercontent.com/gr8monk3ys/dotfiles/main/install.sh | bash
+
+# Non-interactive and style-enforcing
+DOTFILES_ASSUME_YES=1 DOTFILES_MACHINE_TYPE=personal DOTFILES_FORCE_PROMPT_STYLE=1 \
+curl -fsSL https://raw.githubusercontent.com/gr8monk3ys/dotfiles/main/install.sh | bash
 ```
 
 **Pros:**

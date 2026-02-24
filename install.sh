@@ -32,6 +32,8 @@ readonly DIM='\033[2m'
 readonly DOTFILES_REPO="${DOTFILES_REPO:-https://github.com/gr8monk3ys/dotfiles.git}"
 readonly DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
 readonly DOTFILES_BRANCH="${DOTFILES_BRANCH:-main}"
+readonly DOTFILES_STRICT_PACKAGES="${DOTFILES_STRICT_PACKAGES:-1}"
+readonly DOTFILES_FORCE_PROMPT_STYLE="${DOTFILES_FORCE_PROMPT_STYLE:-0}"
 
 # ============================================================================
 # ASCII Art Banner
@@ -283,7 +285,12 @@ run_installation() {
         macos)
             print_substep "Detected macOS - running full installation"
             print_info "This may take a while..."
-            make macos
+            if [[ "$DOTFILES_STRICT_PACKAGES" == "1" ]]; then
+                print_info "Strict package mode enabled (installation fails on package errors)"
+                BREW_BUNDLE_STRICT=1 make macos
+            else
+                make macos
+            fi
             ;;
         arch)
             print_substep "Detected Arch Linux - running full installation"
@@ -295,6 +302,30 @@ run_installation() {
             make link
             ;;
     esac
+}
+
+# ============================================================================
+# Prompt Style Setup
+# ============================================================================
+setup_prompt_style() {
+    print_step "Applying prompt style"
+
+    local source_p10k="$DOTFILES_DIR/.config/zsh/.p10k.zsh"
+    local target_p10k="$HOME/.p10k.zsh"
+
+    if [[ ! -f "$source_p10k" ]]; then
+        print_warning "Default prompt style not found in repository"
+        return
+    fi
+
+    if [[ -f "$target_p10k" && "$DOTFILES_FORCE_PROMPT_STYLE" != "1" ]]; then
+        print_info "~/.p10k.zsh already exists; keeping current style"
+        print_info "Set DOTFILES_FORCE_PROMPT_STYLE=1 to overwrite it"
+        return
+    fi
+
+    cp "$source_p10k" "$target_p10k"
+    print_success "Prompt style installed at ~/.p10k.zsh"
 }
 
 # ============================================================================
@@ -322,8 +353,8 @@ EOF
     echo -e "    ${CYAN}1.${NC} Restart your terminal or run:"
     echo -e "       ${DIM}source ~/.zshenv${NC}"
     echo ""
-    echo -e "    ${CYAN}2.${NC} Configure your prompt:"
-    echo -e "       ${DIM}p10k configure${NC}"
+    echo -e "    ${CYAN}2.${NC} Prompt style is preconfigured"
+    echo -e "       ${DIM}(optional) run: p10k configure${NC}"
     echo ""
     echo -e "    ${CYAN}3.${NC} Verify installation:"
     echo -e "       ${DIM}make doctor${NC}"
@@ -359,6 +390,7 @@ main() {
     setup_repository
     setup_machine_type
     run_installation
+    setup_prompt_style
     print_post_install
 }
 

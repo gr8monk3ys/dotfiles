@@ -49,6 +49,13 @@
 curl -fsSL https://raw.githubusercontent.com/gr8monk3ys/dotfiles/main/install.sh | bash
 ```
 
+Non-interactive (installs packages, links dotfiles, applies prompt style):
+
+```bash
+DOTFILES_ASSUME_YES=1 DOTFILES_MACHINE_TYPE=personal DOTFILES_FORCE_PROMPT_STYLE=1 \
+curl -fsSL https://raw.githubusercontent.com/gr8monk3ys/dotfiles/main/install.sh | bash
+```
+
 ### Option 2: Nix Installation (100% Reproducible)
 
 ```bash
