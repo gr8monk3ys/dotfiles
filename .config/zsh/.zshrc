@@ -10,6 +10,11 @@ if [[ -f "/opt/homebrew/bin/brew" ]]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
 fi
 
+# Prefer user-local binaries before package manager shims.
+if [[ -d "$HOME/.local/bin" ]]; then
+  path=("$HOME/.local/bin" "${(@)path:#$HOME/.local/bin}")
+fi
+
 # Set the directory we want to store zinit and plugins
 ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 
@@ -92,6 +97,12 @@ alias c='clear'
 
 # Source aliases file (modern CLI replacements)
 [[ -f "${ZDOTDIR:-$HOME/.config/zsh}/aliases.zsh" ]] && source "${ZDOTDIR:-$HOME/.config/zsh}/aliases.zsh"
+
+# Keep Claude bound to the local installer binary.
+if [[ -x "$HOME/.local/bin/claude" ]]; then
+    alias claude="$HOME/.local/bin/claude"
+    alias claude-code="$HOME/.local/bin/claude"
+fi
 
 # ============================================================================
 # Shell integrations
