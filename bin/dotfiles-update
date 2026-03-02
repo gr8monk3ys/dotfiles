@@ -61,8 +61,8 @@ update_dotfiles() {
     if git fetch origin; then
         # Check if we're behind
         LOCAL=$(git rev-parse @)
-        REMOTE=$(git rev-parse @{u} 2>/dev/null || echo "$LOCAL")
-        BASE=$(git merge-base @ @{u} 2>/dev/null || echo "$LOCAL")
+        REMOTE=$(git rev-parse '@{u}' 2>/dev/null || echo "$LOCAL")
+        BASE=$(git merge-base @ '@{u}' 2>/dev/null || echo "$LOCAL")
 
         if [[ "$LOCAL" = "$REMOTE" ]]; then
             print_success "Already up to date"
