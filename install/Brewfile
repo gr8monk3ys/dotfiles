@@ -16,6 +16,7 @@ tap "psharma04/dorion"                 # Discord client
 tap "sylvanfranklin/local"             # Local development tools
 tap "sylvanfranklin/srhd"              # Simple hotkey daemon
 tap "vldmrkl/formulae"                 # Additional tools
+tap "dlvhdr/gh-dash"                   # GitHub dashboard extension
 
 # ============================================================================
 # Core System Dependencies
@@ -49,6 +50,8 @@ brew "xcodegen"                        # Xcode project generator
 ## Version Control & Git Tools
 brew "gh"                              # GitHub CLI
 brew "lazygit"                         # Terminal UI for git
+brew "lazydocker"                      # Terminal UI for Docker
+brew "dlvhdr/gh-dash/gh-dash"          # GitHub dashboard TUI
 
 ## Language Servers & Development Tools
 brew "rust-analyzer"                   # Rust language server
@@ -121,6 +124,7 @@ brew "fzy"                             # Fuzzy text selector
 brew "fd"                              # Fast find alternative
 brew "ripgrep"                         # Fast grep alternative (rg)
 brew "sk"                              # Fuzzy finder (skim)
+brew "jq"                              # JSON processor
 brew "tree"                            # Directory tree viewer
 
 # ============================================================================
@@ -150,6 +154,29 @@ brew "broot"                           # Tree navigation with fuzzy search
 brew "tealdeer"                        # Fast tldr client (Rust)
 brew "gping"                           # Graphical ping with history
 brew "ouch"                            # Universal archive compress/decompress
+
+# ============================================================================
+# Modern CLI Tools (2025+ additions)
+# ============================================================================
+
+## Data & JSON
+brew "jnv"                             # Interactive JSON navigator with jq
+brew "glow"                            # Terminal markdown renderer
+brew "csvlens"                         # Interactive CSV viewer
+brew "xsv"                             # Fast CSV toolkit (Rust)
+
+## System & Network
+brew "duf"                             # Modern df replacement (disk free)
+brew "doggo"                           # Modern DNS client (replaces dig)
+brew "bandwhich"                       # Network utilization by process
+brew "viddy"                           # Modern watch command with diffs
+brew "trippy"                          # Network diagnostic TUI (mtr/traceroute)
+
+## Developer Productivity
+brew "just"                            # Command runner (simpler make)
+brew "difftastic"                      # Structural/syntax-aware diffs
+brew "grex"                            # Generate regex from examples
+brew "topgrade"                        # Universal system updater
 
 # ============================================================================
 # Shell History & Environment

@@ -305,6 +305,73 @@ if command -v ouch &> /dev/null; then
     alias arc='ouch'
 fi
 
+# lazygit - Terminal UI for git
+if command -v lazygit &> /dev/null; then
+    alias lg='lazygit'
+    alias lgd='lazygit -p .'  # current directory
+fi
+
+# lazydocker - Terminal UI for Docker
+if command -v lazydocker &> /dev/null; then
+    alias lzd='lazydocker'
+fi
+
+# jq (use jq directly — it's already the standard)
+
+# jnv - Interactive JSON navigator
+if command -v jnv &> /dev/null; then
+    alias jqi='jnv'  # interactive jq
+fi
+
+# glow - Terminal markdown renderer
+if command -v glow &> /dev/null; then
+    alias md='glow'  # render markdown
+    alias mdp='glow -p'  # render with pager
+fi
+
+# csvlens - Interactive CSV viewer
+if command -v csvlens &> /dev/null; then
+    alias csv='csvlens'
+fi
+
+# duf - Modern df replacement (use duf directly, don't shadow df)
+# df is used in scripts — duf output is not parseable the same way
+
+# doggo - Modern DNS client (use doggo directly, don't shadow dig)
+# dig is scripted everywhere — doggo has different output format
+
+# bandwhich - Network utilization (needs sudo)
+if command -v bandwhich &> /dev/null; then
+    alias bw='sudo bandwhich'
+fi
+
+# viddy - Modern watch command
+if command -v viddy &> /dev/null; then
+    alias watch='viddy'
+    alias watchd='viddy -d'  # with diff highlighting
+fi
+
+# trippy - Network diagnostic TUI
+if command -v trip &> /dev/null; then
+    alias mtr='sudo trip'  # trippy replaces mtr
+fi
+
+# just - Command runner (use just directly, don't shadow make)
+# just has its own completions and workflow
+
+# difftastic - Structural diffs
+if command -v difft &> /dev/null; then
+    alias gdd='git -c diff.external=difft diff'  # git diff with difftastic
+fi
+
+# grex - Regex generator (use grex directly)
+
+# topgrade - Universal system updater
+if command -v topgrade &> /dev/null; then
+    alias tg='topgrade'
+    alias tgn='topgrade -n'  # dry run
+fi
+
 # ============================================================================
 # Utility Aliases
 # ============================================================================
