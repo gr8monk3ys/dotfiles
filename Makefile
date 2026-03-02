@@ -48,11 +48,11 @@ link: stow-$(OS)
 	@echo "Linking dotfiles..."
 	mkdir -p "$(XDG_CONFIG_HOME)"
 	# Backup existing .zshenv if it exists and is not a symlink
-	if [ -f $(HOME)/.zshenv -a ! -h $(HOME)/.zshenv ]; then \
-		mv -v $(HOME)/.zshenv $(HOME)/.zshenv.bak; \
+	if [ -f "$(HOME)/.zshenv" ] && [ ! -h "$(HOME)/.zshenv" ]; then \
+		mv -v "$(HOME)/.zshenv" "$(HOME)/.zshenv.bak"; \
 	fi
 	# Link .zshenv to home directory
-	ln -sf $(DOTFILES_DIR)/.zshenv $(HOME)/.zshenv
+	ln -sf "$(DOTFILES_DIR)/.zshenv" "$(HOME)/.zshenv"
 	# Link .config directory contents
 	stow -t "$(XDG_CONFIG_HOME)" .config
 	# Ensure OpenSSH includes dotfiles-managed host snippets
@@ -63,18 +63,18 @@ link: stow-$(OS)
 	if ! grep -Eq '^[[:space:]]*Include[[:space:]]+~/.config/ssh/config.d/\\*\\.conf([[:space:]]|$$)' "$(HOME)/.ssh/config"; then \
 		printf "\n# Dotfiles managed SSH host snippets\nInclude ~/.config/ssh/config.d/*.conf\n" >> "$(HOME)/.ssh/config"; \
 	fi
-	mkdir -p $(HOME)/.local/runtime
-	chmod 700 $(HOME)/.local/runtime
+	mkdir -p "$(HOME)/.local/runtime"
+	chmod 700 "$(HOME)/.local/runtime"
 	@echo "Dotfiles linked successfully!"
 
 unlink: stow-$(OS)
 	@echo "Unlinking dotfiles..."
 	stow --delete -t "$(XDG_CONFIG_HOME)" .config
 	# Remove .zshenv symlink
-	rm -f $(HOME)/.zshenv
+	rm -f "$(HOME)/.zshenv"
 	# Restore backup if it exists
-	if [ -f $(HOME)/.zshenv.bak ]; then \
-		mv -v $(HOME)/.zshenv.bak $(HOME)/.zshenv; \
+	if [ -f "$(HOME)/.zshenv.bak" ]; then \
+		mv -v "$(HOME)/.zshenv.bak" "$(HOME)/.zshenv"; \
 	fi
 	@echo "Dotfiles unlinked successfully!"
 
@@ -362,7 +362,7 @@ link-dry-run: stow-$(OS)
 	@echo "Dry run - the following symlinks would be created:"
 	@echo ""
 	@echo "==> .zshenv symlink:"
-	@if [ -f "$(HOME)/.zshenv" -a ! -h "$(HOME)/.zshenv" ]; then \
+	@if [ -f "$(HOME)/.zshenv" ] && [ ! -h "$(HOME)/.zshenv" ]; then \
 		echo "    Would backup: $(HOME)/.zshenv -> $(HOME)/.zshenv.bak"; \
 	fi
 	@echo "    Would create: $(HOME)/.zshenv -> $(DOTFILES_DIR)/.zshenv"

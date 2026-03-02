@@ -54,7 +54,7 @@ main() {
     # Compare local and remote
     local LOCAL REMOTE
     LOCAL=$(git rev-parse @)
-    REMOTE=$(git rev-parse @{u} 2>/dev/null || echo "$LOCAL")
+    REMOTE=$(git rev-parse '@{u}' 2>/dev/null || echo "$LOCAL")
 
     # Already up to date - exit silently
     if [[ "$LOCAL" = "$REMOTE" ]]; then
@@ -63,7 +63,7 @@ main() {
 
     # Check if local is behind remote (safe to pull)
     local BASE
-    BASE=$(git merge-base @ @{u} 2>/dev/null || echo "$LOCAL")
+    BASE=$(git merge-base @ '@{u}' 2>/dev/null || echo "$LOCAL")
 
     if [[ "$LOCAL" != "$BASE" ]]; then
         notify "Warning" "Local and remote have diverged - manual merge required"

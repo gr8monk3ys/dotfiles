@@ -130,7 +130,18 @@ check_symlinks() {
         local config_dirs=("zsh" "git" "nvim" "ghostty" "yazi" "zellij" "jj" "tmux")
         for dir in "${config_dirs[@]}"; do
             if [[ -e "$HOME/.config/$dir" ]]; then
-                if [[ -L "$HOME/.config/$dir" ]] || [[ -L "$HOME/.config/$dir"/* ]] 2>/dev/null; then
+                local is_linked=false
+                if [[ -L "$HOME/.config/$dir" ]]; then
+                    is_linked=true
+                else
+                    for f in "$HOME/.config/$dir"/*; do
+                        if [[ -L "$f" ]]; then
+                            is_linked=true
+                            break
+                        fi
+                    done
+                fi
+                if $is_linked; then
                     check_pass ".config/$dir linked"
                 else
                     check_warn ".config/$dir exists but may not be linked"
@@ -309,7 +320,8 @@ check_permissions() {
 
     # Check SSH directory
     if [[ -d "$HOME/.ssh" ]]; then
-        local ssh_perms=$(stat -f "%Lp" "$HOME/.ssh" 2>/dev/null || stat -c "%a" "$HOME/.ssh" 2>/dev/null)
+        local ssh_perms
+        ssh_perms=$(stat -f "%Lp" "$HOME/.ssh" 2>/dev/null || stat -c "%a" "$HOME/.ssh" 2>/dev/null)
         if [[ "$ssh_perms" == "700" ]]; then
             check_pass ".ssh directory permissions: 700"
         else
@@ -321,7 +333,8 @@ check_permissions() {
     if [[ -d "$HOME/.ssh" ]]; then
         while IFS= read -r key; do
             if [[ -f "$key" ]]; then
-                local key_perms=$(stat -f "%Lp" "$key" 2>/dev/null || stat -c "%a" "$key" 2>/dev/null)
+                local key_perms
+                key_perms=$(stat -f "%Lp" "$key" 2>/dev/null || stat -c "%a" "$key" 2>/dev/null)
                 if [[ "$key_perms" == "600" ]]; then
                     check_pass "$(basename "$key") permissions: 600"
                 else

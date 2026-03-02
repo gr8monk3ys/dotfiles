@@ -90,6 +90,7 @@ main() {
             local if_true="$1"
             local if_false="$2"
             shift 2
+            # shellcheck disable=SC2294 # eval needed: check-command arrives as a single string
             if eval "$@" 2>/dev/null; then
                 echo "$if_true"
             else

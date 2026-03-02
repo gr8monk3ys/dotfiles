@@ -4,7 +4,8 @@
 set -euo pipefail
 
 readonly BACKUP_DIR="${BACKUP_DIR:-$HOME/dotfiles-backup}"
-readonly TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+readonly TIMESTAMP
 readonly BACKUP_PATH="$BACKUP_DIR/$TIMESTAMP"
 readonly GREEN='\033[0;32m'
 readonly BLUE='\033[0;34m'
@@ -194,12 +195,14 @@ EOF
 
     # Add package counts
     if [[ -f "$BACKUP_PATH/Brewfile" ]]; then
-        local brew_count=$(grep -c '^brew' "$BACKUP_PATH/Brewfile" || echo "0")
+        local brew_count
+        brew_count=$(grep -c '^brew' "$BACKUP_PATH/Brewfile" || echo "0")
         echo "Homebrew Formulae: $brew_count" >> "$manifest"
     fi
 
     if [[ -f "$BACKUP_PATH/Caskfile" ]]; then
-        local cask_count=$(grep -c '^cask' "$BACKUP_PATH/Caskfile" || echo "0")
+        local cask_count
+        cask_count=$(grep -c '^cask' "$BACKUP_PATH/Caskfile" || echo "0")
         echo "Homebrew Casks: $cask_count" >> "$manifest"
     fi
 
@@ -220,8 +223,10 @@ compress_backup() {
         print_info "Original backup kept at: $BACKUP_PATH"
 
         # Calculate sizes
-        local orig_size=$(du -sh "$BACKUP_PATH" | cut -f1)
-        local comp_size=$(du -sh "$archive" | cut -f1)
+        local orig_size
+        orig_size=$(du -sh "$BACKUP_PATH" | cut -f1)
+        local comp_size
+        comp_size=$(du -sh "$archive" | cut -f1)
         print_info "Original size: $orig_size"
         print_info "Compressed size: $comp_size"
     fi
@@ -259,7 +264,8 @@ cleanup_old_backups() {
 
     print_header "Cleaning Up Old Backups"
 
-    local backup_count=$(find "$BACKUP_DIR" -maxdepth 1 -type d -name "20*" | wc -l)
+    local backup_count
+    backup_count=$(find "$BACKUP_DIR" -maxdepth 1 -type d -name "20*" | wc -l)
 
     if [[ $backup_count -gt $keep_count ]]; then
         print_info "Found $backup_count backups, keeping latest $keep_count"
