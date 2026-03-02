@@ -6,17 +6,13 @@
 # Taps (Third-party repositories)
 # ============================================================================
 tap "dominikbraun/timetrace"           # Time tracking
-tap "homebrew-zathura/borderless"      # Zathura document viewer
 tap "homebrew-zathura/zathura"         # Zathura plugins
-tap "homebrew/services"                # Background services management
 tap "koekeishiya/formulae"             # Window management tools
 tap "nikitabobko/tap"                  # AeroSpace window manager
 tap "oven-sh/bun"                      # Bun JavaScript runtime
 tap "psharma04/dorion"                 # Discord client
-tap "sylvanfranklin/local"             # Local development tools
 tap "sylvanfranklin/srhd"              # Simple hotkey daemon
 tap "vldmrkl/formulae"                 # Additional tools
-tap "dlvhdr/gh-dash"                   # GitHub dashboard extension
 tap "FelixKratz/formulae"              # SketchyBar status bar
 
 # ============================================================================
@@ -52,7 +48,7 @@ brew "xcodegen"                        # Xcode project generator
 brew "gh"                              # GitHub CLI
 brew "lazygit"                         # Terminal UI for git
 brew "lazydocker"                      # Terminal UI for Docker
-brew "dlvhdr/gh-dash/gh-dash"          # GitHub dashboard TUI
+# gh-dash is a gh CLI extension: gh extension install dlvhdr/gh-dash
 
 ## Language Servers & Development Tools
 brew "rust-analyzer"                   # Rust language server
