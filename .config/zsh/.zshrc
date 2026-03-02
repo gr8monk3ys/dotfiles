@@ -67,7 +67,8 @@ bindkey '^[w' kill-region
 
 # History
 HISTSIZE=5000
-HISTFILE=~/.zsh_history
+HISTFILE="${XDG_STATE_HOME:-$HOME/.local/state}/zsh/history"
+mkdir -p "${XDG_STATE_HOME:-$HOME/.local/state}/zsh"
 SAVEHIST=$HISTSIZE
 HISTDUP=erase
 setopt appendhistory
@@ -97,6 +98,9 @@ alias c='clear'
 
 # Source aliases file (modern CLI replacements)
 [[ -f "${ZDOTDIR:-$HOME/.config/zsh}/aliases.zsh" ]] && source "${ZDOTDIR:-$HOME/.config/zsh}/aliases.zsh"
+
+# Source functions file (fuzzy-finder productivity functions)
+[[ -f "${ZDOTDIR:-$HOME/.config/zsh}/functions.zsh" ]] && source "${ZDOTDIR:-$HOME/.config/zsh}/functions.zsh"
 
 # Keep Claude bound to the local installer binary.
 if [[ -x "$HOME/.local/bin/claude" ]]; then

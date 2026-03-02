@@ -13,7 +13,7 @@
 	di = !"d() { git diff --patch-with-stat HEAD~$1; }; git diff-index --quiet HEAD -- || clear; d"
 
 	# Pull in remote changes for the current repository and all its submodules
-	p = !"git pull; git submodule foreach git pull origin master"
+	p = !"git pull; git submodule foreach git pull origin main"
 
 	# Checkout a pull request from origin (of a github repository)
 	pr = !"pr() { git fetch origin pull/$1/head:pr-$1; git checkout pr-$1; }; pr"
@@ -77,7 +77,7 @@
 
 	# from seth vargo https://gist.github.com/sethvargo/6b2f7b592853381690bfe3bd00947e8f
 	unreleased = "!f() { git fetch --tags && git diff $(git tag | tail -n 1); }; f"
-	up = !git pull origin master && git remote prune origin && git submodule update --init --recursive
+	up = !git pull origin main && git remote prune origin && git submodule update --init --recursive
 	undo = !git reset HEAD~1 --mixed
 	top = !git log --format=format:%an | sort | uniq -c | sort -r | head -n 20
 

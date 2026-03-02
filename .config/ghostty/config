@@ -1,13 +1,16 @@
 # Ghostty Terminal Configuration
 # https://ghostty.org/docs/config
+# Visual style inspired by: https://kskroyal.com/beautiful-mac-terminal-ghostty/
 
 # ============================================================================
 # Font Configuration
 # ============================================================================
 font-family = "JetBrainsMono Nerd Font"
-font-size = 14
+font-size = 15
 font-thicken = true
-adjust-cell-height = 2
+
+# Generous line spacing for readability (article uses 35%, tuned down for splits)
+adjust-cell-height = 20%
 
 # Font features (ligatures)
 font-feature = calt
@@ -15,39 +18,32 @@ font-feature = liga
 font-feature = dlig
 
 # ============================================================================
-# Theme & Colors (OneDark family)
+# Theme & Colors
 # ============================================================================
-# Ghostty's built-in OneDark-compatible theme name.
-theme = "Atom One Dark"
-# Popular alternatives:
-# theme = "Catppuccin Mocha"
-# theme = "Rose Pine Moon"
-# theme = "TokyoNight Storm"
+# Adaptive light/dark theme — follows macOS appearance automatically
+theme = light:Horizon Bright,dark:Broadcast
 
-# Subtle glass effect (when compositor/platform supports it).
-background-opacity = 0.94
-background-blur = 18
-background-opacity-cells = false
+# Frosted glass effect
+background-opacity = 0.8
+background-blur = 90
 
-# Keep selection/highlight close to classic OneDark values.
-selection-background = 3e4451
-selection-foreground = abb2bf
+# Wide color gamut for richer colors on Apple displays
+window-colorspace = display-p3
 
 # Cursor
-cursor-color = 528bff
 cursor-style = block
 cursor-style-blink = true
 
 # ============================================================================
 # Window Configuration
 # ============================================================================
-window-padding-x = 14
+window-padding-x = 10
 window-padding-y = 10
 window-padding-balance = true
 window-padding-color = extend
-window-decoration = auto
-window-theme = auto
-unfocused-split-opacity = 0.92
+window-decoration = true
+window-save-state = always
+unfocused-split-opacity = 0.85
 
 # macOS specific
 macos-titlebar-style = transparent
@@ -64,25 +60,40 @@ shell-integration-features = cursor,sudo,title
 # ============================================================================
 scrollback-limit = 100000
 copy-on-select = clipboard
+mouse-scroll-multiplier = 2
 
 # GPU rendering (Ghostty's main advantage)
 gtk-single-instance = true
 
 # ============================================================================
-# Keybindings
+# Keybindings — optimized for multi-pane AI sessions
 # ============================================================================
 # Use super (cmd on macOS) as modifier
 
-# Pane management (built-in multiplexing)
+# --- Pane management (built-in multiplexing) ---
 keybind = super+d=new_split:right
 keybind = super+shift+d=new_split:down
 keybind = super+w=close_surface
+
+# Vim-style pane navigation (h/j/k/l)
 keybind = super+h=goto_split:left
 keybind = super+j=goto_split:bottom
 keybind = super+k=goto_split:top
 keybind = super+l=goto_split:right
 
-# Tab management
+# Pane resizing (critical for AI sessions — adjust output vs input panes)
+keybind = super+ctrl+h=resize_split:left,40
+keybind = super+ctrl+l=resize_split:right,40
+keybind = super+ctrl+k=resize_split:up,20
+keybind = super+ctrl+j=resize_split:down,20
+
+# Equalize splits after resizing
+keybind = super+shift+e=equalize_splits
+
+# Zoom into a single pane (like tmux prefix+z) — essential for reading AI output
+keybind = super+enter=toggle_split_zoom
+
+# --- Tab management ---
 keybind = super+t=new_tab
 keybind = super+shift+left=previous_tab
 keybind = super+shift+right=next_tab
@@ -92,24 +103,23 @@ keybind = super+3=goto_tab:3
 keybind = super+4=goto_tab:4
 keybind = super+5=goto_tab:5
 
-# Font size
+# --- Font size ---
 keybind = super+plus=increase_font_size:1
 keybind = super+minus=decrease_font_size:1
 keybind = super+0=reset_font_size
 
-# Clipboard
+# --- Clipboard ---
 keybind = super+c=copy_to_clipboard
 keybind = super+v=paste_from_clipboard
 
-# Scrolling
+# --- Scrolling ---
 keybind = super+up=scroll_page_up
 keybind = super+down=scroll_page_down
 keybind = super+home=scroll_to_top
 keybind = super+end=scroll_to_bottom
 
-# Quick actions
+# --- Quick actions ---
 keybind = super+f=toggle_fullscreen
-keybind = super+enter=toggle_split_zoom
 keybind = super+shift+c=open_config
 
 # ============================================================================

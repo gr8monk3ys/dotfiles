@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# SketchyBar Configuration
+# https://felixkratz.github.io/SketchyBar/
+# Floating macOS status bar with AeroSpace workspace indicators
+
+PLUGIN_DIR="$CONFIG_DIR/plugins"
+ITEM_DIR="$CONFIG_DIR/items"
+
+source "$CONFIG_DIR/colors.sh"
+source "$CONFIG_DIR/icons.sh"
+
+# ============================================================================
+# Bar Appearance
+# ============================================================================
+sketchybar --bar \
+    height=37 \
+    color=$BAR_COLOR \
+    border_color=$BAR_BORDER_COLOR \
+    border_width=2 \
+    shadow=on \
+    position=top \
+    sticky=on \
+    padding_right=10 \
+    padding_left=10 \
+    corner_radius=9 \
+    y_offset=10 \
+    margin=10 \
+    blur_radius=20 \
+    notch_width=188
+
+# ============================================================================
+# Default Values
+# ============================================================================
+sketchybar --default \
+    icon.font="SF Pro:Semibold:14.0" \
+    icon.color=$FOREGROUND \
+    label.font="SF Pro:Medium:13.0" \
+    label.color=$FOREGROUND \
+    background.color=$BACKGROUND \
+    background.corner_radius=5 \
+    background.height=24 \
+    padding_left=5 \
+    padding_right=5 \
+    label.padding_left=4 \
+    label.padding_right=10 \
+    icon.padding_left=10 \
+    icon.padding_right=4
+
+# ============================================================================
+# Load Items
+# ============================================================================
+
+# Left side
+source "$ITEM_DIR/apple.sh"
+source "$ITEM_DIR/spaces.sh"
+
+# Right side
+source "$ITEM_DIR/calendar.sh"
+
+# ============================================================================
+# Finalize
+# ============================================================================
+sketchybar --update

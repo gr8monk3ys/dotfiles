@@ -77,6 +77,7 @@
     brews = [
       # Tools not in nixpkgs or better via Homebrew
       "mas"                   # Mac App Store CLI
+      "sketchybar"            # Customizable macOS status bar
     ];
 
     # GUI applications
@@ -99,6 +100,9 @@
       "raycast"
       "keepassxc"
       "rectangle"             # Fallback window manager
+
+      # Keyboard remapping
+      "karabiner-elements"
 
       # Media
       "spotify"

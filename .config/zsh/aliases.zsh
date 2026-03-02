@@ -48,8 +48,8 @@ alias sudo='sudo '
 # Get week number
 alias week='date +%V'
 
-# Get macOS Software Updates, and update installed Ruby gems, Homebrew, npm, and their installed packages
-alias update='sudo softwareupdate -i -a; brew update; brew upgrade; brew cleanup; npm install npm -g; npm update -g; sudo gem update --system; sudo gem update; sudo gem cleanup'
+# System updates — use `make update` or `dotsup` (line 336) for full dotfiles update
+alias update='sudo softwareupdate -i -a'
 
 # Google Chrome
 alias chrome='/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome'
@@ -163,51 +163,42 @@ if command -v eza &> /dev/null; then
     alias tree='eza --tree --icons'
 fi
 
-# bat - Cat with syntax highlighting
+# bat - Cat with syntax highlighting (use bat directly, don't shadow cat)
+# cat is used idiomatically in pipes to strip colors — bat reverses that
 if command -v bat &> /dev/null; then
-    alias cat='bat --paging=never'
     alias catp='bat'  # cat with pager
     alias catl='bat --plain'  # cat without line numbers
 fi
 
-# Modern grep/find (ripgrep and fd are already faster)
+# ripgrep (use rg directly, don't shadow grep)
 if command -v rg &> /dev/null; then
-    alias grep='rg'
     alias rgi='rg -i'  # case insensitive
 fi
 
-if command -v fd &> /dev/null; then
-    alias find='fd'
-fi
+# fd (use fd directly, don't shadow find)
+# fd is not a drop-in replacement — different flags, ignores hidden files by default
 
-# dust - Modern du replacement
+# sd (use sd directly, don't shadow sed)
+# sd uses Rust regex syntax, no address ranges — not a sed replacement
+
+# dust - Modern du (use dust/dus directly, don't shadow du)
 if command -v dust &> /dev/null; then
-    alias du='dust'
     alias dus='dust -s'  # summary only
 fi
 
-# procs - Modern ps replacement
+# procs - Modern ps (use procs directly, don't shadow ps)
 if command -v procs &> /dev/null; then
-    alias ps='procs'
     alias psa='procs -a'  # all processes
     alias pst='procs --tree'  # process tree
 fi
 
-# bottom - Modern htop replacement
+# bottom - Modern system monitor (use btm directly, don't shadow top)
 if command -v btm &> /dev/null; then
-    alias top='btm'
     alias htop='btm'
 fi
 
-# sd - Modern sed replacement
-if command -v sd &> /dev/null; then
-    alias sed='sd'
-fi
-
-# Modern diff (delta is configured in git, but useful standalone too)
-if command -v delta &> /dev/null; then
-    alias diff='delta'
-fi
+# delta (configured in git; use delta directly, don't shadow diff)
+# delta is a pager/formatter — not a diff replacement (no -u, -q, wrong exit codes)
 
 # zoxide - Smart cd (already initialized in zshrc, adding convenience aliases)
 if command -v zoxide &> /dev/null; then
@@ -239,10 +230,8 @@ if command -v tokei &> /dev/null; then
     alias sloc='tokei -s lines'
 fi
 
-# File watching with watchexec
-if command -v watchexec &> /dev/null; then
-    alias watch='watchexec'
-fi
+# watchexec (use watchexec directly, don't shadow watch)
+# watchexec watches files for changes; watch repeats a command on interval — different tools
 
 # ============================================================================
 # Next-Gen Modern Tools (2024+)
@@ -300,16 +289,13 @@ if command -v broot &> /dev/null; then
     alias brd='broot --dates'  # show dates
 fi
 
-# Tealdeer - Fast tldr client
+# Tealdeer - Fast tldr client (don't shadow builtin help)
 if command -v tldr &> /dev/null; then
-    alias help='tldr'
     alias tldru='tldr --update'
 fi
 
-# Gping - Graphical ping
-if command -v gping &> /dev/null; then
-    alias ping='gping'
-fi
+# Gping - Graphical ping (use gping directly, don't shadow ping)
+# gping is a TUI graph tool, not flag-compatible with ping
 
 # Ouch - Universal archive tool
 if command -v ouch &> /dev/null; then
@@ -347,5 +333,4 @@ alias nfc='nix flake check'
 alias ndev='nix develop'
 
 # Claude Code (AI assistant)
-alias claude='claude-code'
-alias cc='claude-code'
+alias cc='claude'
