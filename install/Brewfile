@@ -17,6 +17,7 @@ tap "sylvanfranklin/local"             # Local development tools
 tap "sylvanfranklin/srhd"              # Simple hotkey daemon
 tap "vldmrkl/formulae"                 # Additional tools
 tap "dlvhdr/gh-dash"                   # GitHub dashboard extension
+tap "FelixKratz/formulae"              # SketchyBar status bar
 
 # ============================================================================
 # Core System Dependencies
@@ -277,7 +278,7 @@ brew "mysql@8.4"                       # MySQL 8.4
 # ============================================================================
 # Status Bar
 # ============================================================================
-brew "sketchybar"                      # Customizable macOS status bar
+brew "FelixKratz/formulae/sketchybar"  # Customizable macOS status bar
 
 # ============================================================================
 # AI & Machine Learning
