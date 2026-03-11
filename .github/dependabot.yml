@@ -7,3 +7,7 @@ updates:
       interval: "weekly"
     reviewers:
       - gr8monk3ys
+    ignore:
+      - dependency-name: "cachix/install-nix-action"
+        versions:
+          - "31.10.0"
