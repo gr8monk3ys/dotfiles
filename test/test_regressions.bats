@@ -46,3 +46,48 @@ teardown() {
 	run grep -E -n 'OneHalfDark|tokyonight' .zshenv .config/bat/config .config/git/.gitconfig .config/nvim/lua/plugins.lua
 	assert_failure
 }
+
+@test "dotfiles-backup completes when a single config file is present" {
+	mkdir -p "$TEST_TEMP_DIR/backups"
+	printf 'export TEST_BACKUP=1\n' > "$TEST_HOME/.zshrc"
+
+	run env HOME="$TEST_HOME" BACKUP_DIR="$TEST_TEMP_DIR/backups" \
+		PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
+		bash bin/dotfiles-backup
+	assert_success
+	assert_output --partial "Backup completed successfully!"
+
+	local backup_path
+	backup_path="$(find "$TEST_TEMP_DIR/backups" -maxdepth 1 -mindepth 1 -type d | head -n 1)"
+	[[ -n "$backup_path" ]]
+	[[ -f "$backup_path/MANIFEST.txt" ]]
+	[[ -f "$backup_path/configs/.zshrc" ]]
+}
+
+@test "dotfiles-backup cleanup keeps the latest five backups" {
+	mkdir -p \
+		"$TEST_TEMP_DIR/backups/20260101_000000" \
+		"$TEST_TEMP_DIR/backups/20260102_000000" \
+		"$TEST_TEMP_DIR/backups/20260103_000000" \
+		"$TEST_TEMP_DIR/backups/20260104_000000" \
+		"$TEST_TEMP_DIR/backups/20260105_000000" \
+		"$TEST_TEMP_DIR/backups/20260106_000000"
+
+	run env HOME="$TEST_HOME" BACKUP_DIR="$TEST_TEMP_DIR/backups" \
+		PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
+		bash bin/dotfiles-backup --cleanup
+	assert_success
+
+	local backup_count
+	backup_count="$(find "$TEST_TEMP_DIR/backups" -maxdepth 1 -mindepth 1 -type d -name '20*' | wc -l | tr -d '[:space:]')"
+	[[ "$backup_count" -eq 5 ]]
+}
+
+@test "dotfiles-doctor reaches the summary when issues are present" {
+	run env HOME="$TEST_HOME" DOTFILES_DIR="$TEST_HOME/.dotfiles" \
+		PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
+		bash bin/dotfiles-doctor
+	assert_failure
+	assert_output --partial "Summary"
+	assert_output --partial "issue(s) found"
+}

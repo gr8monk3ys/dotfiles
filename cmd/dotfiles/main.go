@@ -12,6 +12,7 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/termenv"
 	"github.com/spf13/cobra"
 )
 
@@ -232,7 +233,7 @@ func (m model) View() string {
 		if m.err != nil {
 			return errorStyle.Render(fmt.Sprintf("\n  Installation failed: %v\n\n", m.err))
 		}
-		return successStyle.Render("\n  " + "✓ Installation complete!\n\n") +
+		return successStyle.Render("\n  "+"✓ Installation complete!\n\n") +
 			dimStyle.Render("  Run 'source ~/.zshenv' or restart your terminal.\n\n")
 	}
 
@@ -343,7 +344,7 @@ func runInstallation(selected map[int]string) tea.Cmd {
 		}
 
 		cmd.Dir = dotfilesDir
-		cmd.Env = append(os.Environ(), "GITHUB_ACTION=1") // Skip interactive prompts
+		cmd.Env = makeEnv()
 
 		output, runErr := cmd.CombinedOutput()
 		if runErr != nil {
@@ -361,10 +362,14 @@ var rootCmd = &cobra.Command{
 	Short: "Lorenzo's Dotfiles CLI - A keyboard-driven development environment",
 	Long: `A CLI tool for installing and managing Lorenzo's dotfiles.
 
-Supports multiple installation methods:
-  - Traditional: Using Homebrew, npm, and cargo
-  - Nix: 100% reproducible using Nix flakes
-  - Minimal: Symlinks only, no package installation`,
+	Supports multiple installation methods:
+	  - Traditional: Using Homebrew, npm, and cargo
+	  - Nix: 100% reproducible using Nix flakes
+	  - Minimal: Symlinks only, no package installation`,
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		applyColorMode()
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		// If no subcommand, run interactive mode
 		runInteractive()
@@ -375,6 +380,9 @@ var installCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install dotfiles with specified options",
 	Long:  `Install dotfiles with the specified installation method and options.`,
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		return validateInstallFlags()
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		runNonInteractive()
 	},
@@ -422,16 +430,80 @@ func init() {
 	// Install flags
 	installCmd.Flags().StringVarP((*string)(&config.Method), "method", "m", "traditional", "Installation method: traditional, nix, minimal")
 	installCmd.Flags().StringVarP(&config.MachineType, "type", "t", "personal", "Machine type: personal, work, server")
-	installCmd.Flags().BoolVar(&config.SkipBrew, "skip-brew", false, "Skip Homebrew packages")
-	installCmd.Flags().BoolVar(&config.SkipCasks, "skip-casks", false, "Skip Homebrew casks")
-	installCmd.Flags().BoolVar(&config.SkipNpm, "skip-npm", false, "Skip npm packages")
-	installCmd.Flags().BoolVar(&config.SkipRust, "skip-rust", false, "Skip Rust/cargo packages")
+	installCmd.Flags().BoolVar(&config.SkipBrew, "skip-brew", false, "Skip Homebrew formula bundles on macOS traditional installs")
+	installCmd.Flags().BoolVar(&config.SkipCasks, "skip-casks", false, "Skip Homebrew casks on macOS traditional installs")
+	installCmd.Flags().BoolVar(&config.SkipNpm, "skip-npm", false, "Skip Node.js and global npm packages on macOS traditional installs")
+	installCmd.Flags().BoolVar(&config.SkipRust, "skip-rust", false, "Skip Cargo package installation on macOS traditional installs")
 
 	rootCmd.AddCommand(installCmd)
 	rootCmd.AddCommand(doctorCmd)
 	rootCmd.AddCommand(updateCmd)
 	rootCmd.AddCommand(linkCmd)
 	rootCmd.AddCommand(unlinkCmd)
+}
+
+func applyColorMode() {
+	if config.NoColor {
+		lipgloss.SetColorProfile(termenv.Ascii)
+	}
+}
+
+func hasPackageSkipFlags() bool {
+	return config.SkipBrew || config.SkipCasks || config.SkipNpm || config.SkipRust
+}
+
+func validateInstallFlags() error {
+	if !hasPackageSkipFlags() {
+		return nil
+	}
+
+	if config.Method != InstallTraditional {
+		return fmt.Errorf("package skip flags are only supported with --method traditional")
+	}
+
+	if detectSystem().OS != "macos" {
+		return fmt.Errorf("package skip flags are only supported on macOS traditional installs")
+	}
+
+	return nil
+}
+
+func makeEnv() []string {
+	env := append([]string{}, os.Environ()...)
+	env = append(env, "GITHUB_ACTION=1")
+
+	for _, assignment := range makeEnvAssignments() {
+		env = append(env, assignment)
+	}
+
+	return env
+}
+
+func makeEnvAssignments() []string {
+	var assignments []string
+
+	if config.NoColor {
+		assignments = append(assignments, "NO_COLOR=1")
+	}
+	if config.SkipBrew {
+		assignments = append(assignments, "SKIP_BREW=1")
+	}
+	if config.SkipCasks {
+		assignments = append(assignments, "SKIP_CASKS=1")
+	}
+	if config.SkipNpm {
+		assignments = append(assignments, "SKIP_NPM=1")
+	}
+	if config.SkipRust {
+		assignments = append(assignments, "SKIP_RUST=1")
+	}
+
+	return assignments
+}
+
+func makeInvocation(target string) string {
+	parts := append(makeEnvAssignments(), "make", target)
+	return strings.Join(parts, " ")
 }
 
 func runInteractive() {
@@ -469,7 +541,7 @@ func runNonInteractive() {
 
 	if config.DryRun {
 		fmt.Println(warningStyle.Render("  [DRY RUN] Would execute:"))
-		fmt.Printf("    make %s\n\n", getTargetForMethod())
+		fmt.Printf("    %s\n\n", makeInvocation(getTargetForMethod()))
 		return
 	}
 
@@ -481,13 +553,13 @@ func runNonInteractive() {
 
 	// Run installation
 	target := getTargetForMethod()
-	fmt.Printf("  %s Running: make %s\n\n", infoStyle.Render("▶"), target)
+	fmt.Printf("  %s Running: %s\n\n", infoStyle.Render("▶"), makeInvocation(target))
 
 	cmd := exec.Command("make", target)
 	cmd.Dir = config.DotfilesDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Env = append(os.Environ(), "GITHUB_ACTION=1")
+	cmd.Env = makeEnv()
 
 	if err := cmd.Run(); err != nil {
 		fmt.Printf("\n  %s Installation failed: %v\n", errorStyle.Render("✗"), err)

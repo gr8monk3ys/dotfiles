@@ -12,7 +12,7 @@ export STOW_DIR = $(DOTFILES_DIR)
 export ACCEPT_EULA=Y
 
 .PHONY: all macos arch link unlink link-dry-run sudo test test-setup verify \
-        verify-shell verify-stale-refs verify-doc-links verify-tests verify-nix \
+        verify-shell verify-stale-refs verify-doc-links verify-tests verify-go verify-nix \
         doctor update backup worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
         brew bash git npm packages-macos packages-arch core-macos core-arch \
@@ -27,7 +27,7 @@ macos: sudo core-macos packages-macos link duti bun
 
 arch: core-arch packages-arch link
 
-core-macos: brew bash git npm
+core-macos: brew bash git
 
 core-arch:
 	pacman -Syu --noconfirm
@@ -100,7 +100,11 @@ git: brew
 	brew install git git-extras
 
 npm: brew-packages
-	n install lts
+	@if [ -n "$(SKIP_NPM)" ]; then \
+		echo "Skipping Node.js runtime installation"; \
+	else \
+		n install lts; \
+	fi
 
 packages-macos: brew-packages cask-apps node-packages rust-packages
 
@@ -110,14 +114,18 @@ pacman-packages:
 	pacman -S --noconfirm - < $(DOTFILES_DIR)/install/pacmanfile
 
 brew-packages: brew
-	if [ -n "$(BREW_BUNDLE_STRICT)" ]; then \
+	if [ -n "$(SKIP_BREW)" ]; then \
+		echo "Skipping Homebrew formulae"; \
+	elif [ -n "$(BREW_BUNDLE_STRICT)" ]; then \
 		brew bundle --file=$(DOTFILES_DIR)/install/Brewfile; \
 	else \
 		brew bundle --file=$(DOTFILES_DIR)/install/Brewfile || true; \
 	fi
 
 cask-apps: brew
-	if [ -n "$(BREW_BUNDLE_STRICT)" ]; then \
+	if [ -n "$(SKIP_CASKS)" ]; then \
+		echo "Skipping Homebrew casks"; \
+	elif [ -n "$(BREW_BUNDLE_STRICT)" ]; then \
 		brew bundle --file=$(DOTFILES_DIR)/install/Caskfile; \
 	else \
 		brew bundle --file=$(DOTFILES_DIR)/install/Caskfile || true; \
@@ -141,10 +149,18 @@ vscode-extensions: cask-apps
 	fi
 
 node-packages: npm
-	$(N_PREFIX)/bin/npm install --force --location global $(shell cat install/npmfile)
+	@if [ -n "$(SKIP_NPM)" ]; then \
+		echo "Skipping npm packages"; \
+	else \
+		$(N_PREFIX)/bin/npm install --force --location global $(shell cat install/npmfile); \
+	fi
 
 rust-packages: brew-packages
-	cargo install $(shell cat install/Rustfile)
+	@if [ -n "$(SKIP_RUST)" ]; then \
+		echo "Skipping Rust packages"; \
+	else \
+		cargo install $(shell cat install/Rustfile); \
+	fi
 
 duti:
 	@if command -v duti >/dev/null 2>&1; then \
@@ -187,7 +203,7 @@ test-setup:
 		exit 1; \
 	fi
 
-verify: verify-shell verify-stale-refs verify-doc-links verify-tests verify-nix
+verify: verify-shell verify-stale-refs verify-doc-links verify-tests verify-go verify-nix
 	@echo "✓ Verification complete"
 
 verify-shell:
@@ -227,6 +243,14 @@ verify-doc-links:
 verify-tests:
 	@$(MAKE) test
 
+verify-go:
+	@echo "Checking Go CLI..."
+	@if command -v go >/dev/null 2>&1; then \
+		(cd $(DOTFILES_DIR)/cmd/dotfiles && go test ./...); \
+	else \
+		echo "⚠️  go not found; skipping CLI check"; \
+	fi
+
 verify-nix:
 	@echo "Checking Nix flake..."
 	@if command -v nix >/dev/null 2>&1; then \
@@ -236,7 +260,7 @@ verify-nix:
 	fi
 
 ## Run core pre-push checks (fast local confidence loop)
-daily: verify-shell verify-doc-links verify-tests
+daily: verify-shell verify-doc-links verify-tests verify-go
 	@echo "✓ Daily checks passed"
 
 doctor:

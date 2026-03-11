@@ -87,10 +87,10 @@ For scripting or CI/CD:
 |------|-------|-------------|
 | `--method` | `-m` | Installation method: traditional, nix, minimal |
 | `--type` | `-t` | Machine type: personal, work, server |
-| `--skip-brew` | | Skip Homebrew packages |
-| `--skip-casks` | | Skip Homebrew casks |
-| `--skip-npm` | | Skip npm packages |
-| `--skip-rust` | | Skip Rust/cargo packages |
+| `--skip-brew` | | Skip Homebrew formula bundles (traditional macOS install only) |
+| `--skip-casks` | | Skip Homebrew casks (traditional macOS install only) |
+| `--skip-npm` | | Skip Node.js and global npm packages (traditional macOS install only) |
+| `--skip-rust` | | Skip Cargo package installation (traditional macOS install only) |
 
 ## Examples
 
