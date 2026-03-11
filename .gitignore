@@ -119,6 +119,7 @@ tags
 
 # Fortran module files
 *.mod
+!**/go.mod
 
 # Compiled Static libraries
 *.lai
@@ -177,6 +178,7 @@ linux-*.deb
 *.local.zsh
 /.claude/settings.local.json
 .config/zsh/.zcompdump*
+.config/zsh/.zsh_sessions/
 
 ##
 # Machine profile

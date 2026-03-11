@@ -127,7 +127,7 @@ backup_configs() {
         if [[ -f "$HOME/$config" ]] && [[ ! -L "$HOME/$config" ]]; then
             cp "$HOME/$config" "$config_backup/"
             print_success "Backed up $config"
-            ((backed_up++))
+            ((++backed_up))
         fi
     done
 
@@ -261,20 +261,28 @@ generate_summary() {
 # Cleanup old backups
 cleanup_old_backups() {
     local keep_count=${1:-5}
+    local backups=()
+    local backup
+    local backup_count
+    local remove_count
+    local i
 
     print_header "Cleaning Up Old Backups"
 
-    local backup_count
-    backup_count=$(find "$BACKUP_DIR" -maxdepth 1 -type d -name "20*" | wc -l)
+    while IFS= read -r backup; do
+        backups+=("$backup")
+    done < <(find "$BACKUP_DIR" -maxdepth 1 -type d -name "20*" | sort)
+
+    backup_count=${#backups[@]}
 
     if [[ $backup_count -gt $keep_count ]]; then
         print_info "Found $backup_count backups, keeping latest $keep_count"
+        remove_count=$((backup_count - keep_count))
 
         # Remove oldest backups
-        find "$BACKUP_DIR" -maxdepth 1 -type d -name "20*" | \
-            sort | \
-            head -n -$keep_count | \
-            xargs rm -rf
+        for ((i = 0; i < remove_count; i++)); do
+            rm -rf "${backups[$i]}"
+        done
 
         print_success "Old backups removed"
     else
