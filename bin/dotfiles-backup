@@ -242,7 +242,7 @@ generate_summary() {
     print_info "Backup location: $BACKUP_PATH"
     print_info "View manifest: cat $BACKUP_PATH/MANIFEST.txt"
     echo ""
-    print_info "To restore from this backup, see CONTRIBUTING.md"
+    print_info "To restore from this backup, see OPERATING.md"
     echo ""
 
     # List backup contents
