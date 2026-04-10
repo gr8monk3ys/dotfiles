@@ -163,7 +163,8 @@ These dotfiles use a consistent **OneDark** color scheme across all tools:
 | 🔵 Cyan | `#56b6c2` | Links, symlinks |
 | 🟠 Orange | `#d19a66` | Constants |
 
-**Themed tools:** Ghostty, Neovim, Yazi, bat, eza, git-delta, tmux, zellij, fzf
+**Themed tools:** Neovim, Yazi, bat, eza, git-delta, zellij
+**Own theme:** Ghostty (adaptive Horizon Bright / Broadcast with frosted glass)
 
 ---
 
