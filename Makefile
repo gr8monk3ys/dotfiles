@@ -12,14 +12,14 @@ export STOW_DIR = $(DOTFILES_DIR)
 export ACCEPT_EULA=Y
 
 .PHONY: all macos arch link unlink link-dry-run sudo test test-setup verify \
-        verify-shell verify-stale-refs verify-doc-links verify-tests verify-go verify-nix \
+        verify-shell verify-stale-refs verify-doc-links verify-tests verify-nix \
         doctor update backup worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
         brew bash git npm packages-macos packages-arch core-macos core-arch \
         stow-arch stow-macos cask-apps vscode-extensions node-packages \
-        rust-packages duti bun pacman-packages brew-packages secrets-init \
-        secrets-status template-list nix nix-darwin nix-home nix-update help \
-        cli cli-install sync-install sync-uninstall sync-status sync-run
+        rust-packages duti bun pacman-packages brew-packages \
+        nix nix-install nix-darwin nix-home nix-update nix-check nix-gc nix-shell help \
+        sync-install sync-uninstall sync-status sync-run
 
 all: $(OS)
 
@@ -203,7 +203,7 @@ test-setup:
 		exit 1; \
 	fi
 
-verify: verify-shell verify-stale-refs verify-doc-links verify-tests verify-go verify-nix
+verify: verify-shell verify-stale-refs verify-doc-links verify-tests verify-nix
 	@echo "✓ Verification complete"
 
 verify-shell:
@@ -243,14 +243,6 @@ verify-doc-links:
 verify-tests:
 	@$(MAKE) test
 
-verify-go:
-	@echo "Checking Go CLI..."
-	@if command -v go >/dev/null 2>&1; then \
-		(cd $(DOTFILES_DIR)/cmd/dotfiles && go test ./...); \
-	else \
-		echo "⚠️  go not found; skipping CLI check"; \
-	fi
-
 verify-nix:
 	@echo "Checking Nix flake..."
 	@if command -v nix >/dev/null 2>&1; then \
@@ -260,7 +252,7 @@ verify-nix:
 	fi
 
 ## Run core pre-push checks (fast local confidence loop)
-daily: verify-shell verify-doc-links verify-tests verify-go
+daily: verify-shell verify-doc-links verify-tests
 	@echo "✓ Daily checks passed"
 
 doctor:
@@ -403,17 +395,6 @@ link-dry-run: stow-$(OS)
 	@echo ""
 	@echo "Run 'make link' to apply these changes."
 
-## Secret management
-secrets-init:
-	@bin/dotfiles-secrets init
-
-secrets-status:
-	@bin/dotfiles-secrets status
-
-## Template system
-template-list:
-	@bin/dotfiles-template --list
-
 ## Docker-based testing (clean environment)
 test-docker:
 	@echo "Building and running tests in Ubuntu container..."
@@ -431,84 +412,31 @@ test-docker-interactive:
 	docker run -it --rm dotfiles-test /bin/zsh
 
 # ============================================================================
-# Nix - Reproducible System Configuration
+# Nix - Optional Reproducible Configuration (delegates to bin/dotfiles-nix)
 # ============================================================================
 
-## Install Nix package manager
 nix-install:
-	@if command -v nix >/dev/null 2>&1; then \
-		echo "✓ Nix already installed"; \
-	else \
-		echo "Installing Nix..."; \
-		curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install; \
-		echo "Please restart your shell and run 'make nix-darwin' or 'make nix-home'"; \
-	fi
+	@bin/dotfiles-nix install
 
-## Apply nix-darwin configuration (macOS full system)
 nix-darwin:
-	@echo "Applying nix-darwin configuration..."
-	@if command -v darwin-rebuild >/dev/null 2>&1; then \
-		darwin-rebuild switch --flake $(DOTFILES_DIR); \
-	else \
-		echo "First-time setup: bootstrapping nix-darwin..."; \
-		nix run nix-darwin -- switch --flake $(DOTFILES_DIR); \
-	fi
-	@echo "✓ nix-darwin configuration applied"
+	@bin/dotfiles-nix darwin
 
-## Apply Home Manager configuration (user environment only)
 nix-home:
-	@echo "Applying Home Manager configuration..."
-	@if command -v home-manager >/dev/null 2>&1; then \
-		home-manager switch --flake $(DOTFILES_DIR); \
-	else \
-		echo "First-time setup: bootstrapping Home Manager..."; \
-		nix run home-manager -- switch --flake $(DOTFILES_DIR); \
-	fi
-	@echo "✓ Home Manager configuration applied"
+	@bin/dotfiles-nix home
 
-## Alias for nix-darwin (primary macOS command)
 nix: nix-darwin
 
-## Update Nix flake inputs
 nix-update:
-	@echo "Updating Nix flake inputs..."
-	nix flake update $(DOTFILES_DIR)
-	@echo "✓ Flake inputs updated"
-	@echo "Run 'make nix' or 'make nix-home' to apply updates"
+	@bin/dotfiles-nix update
 
-## Check Nix flake for errors
 nix-check:
-	@echo "Checking Nix flake..."
-	nix flake check $(DOTFILES_DIR)
+	@bin/dotfiles-nix check
 
-## Garbage collect Nix store
 nix-gc:
-	@echo "Cleaning up Nix store..."
-	nix-collect-garbage -d
-	@if [ "$(OS)" = "macos" ]; then \
-		sudo nix-collect-garbage -d; \
-	fi
-	@echo "✓ Nix garbage collection complete"
+	@bin/dotfiles-nix gc
 
-## Enter Nix development shell
 nix-shell:
-	nix develop $(DOTFILES_DIR)
-
-# ============================================================================
-# Go CLI
-# ============================================================================
-
-## Build the Go CLI installer
-cli:
-	@echo "Building dotfiles CLI..."
-	@cd $(DOTFILES_DIR)/cmd/dotfiles && go build -o dotfiles-cli .
-	@echo "✓ Built: cmd/dotfiles/dotfiles-cli"
-
-## Install the Go CLI to GOPATH/bin
-cli-install: cli
-	@echo "Installing dotfiles CLI..."
-	@cd $(DOTFILES_DIR)/cmd/dotfiles && go install .
-	@echo "✓ Installed to GOPATH/bin"
+	@bin/dotfiles-nix shell
 
 # ============================================================================
 # Help
@@ -525,12 +453,13 @@ help:
 	@echo "  make link         - Create symlinks only"
 	@echo "  make unlink       - Remove symlinks"
 	@echo ""
-	@echo "Installation (Nix - Reproducible):"
+	@echo "Installation (Nix - Optional):"
 	@echo "  make nix-install  - Install Nix package manager"
 	@echo "  make nix          - Apply nix-darwin config (macOS)"
 	@echo "  make nix-darwin   - Apply nix-darwin config (macOS)"
 	@echo "  make nix-home     - Apply Home Manager config (cross-platform)"
 	@echo "  make nix-update   - Update Nix flake inputs"
+	@echo "  make nix-check    - Check Nix flake for errors"
 	@echo "  make nix-gc       - Garbage collect Nix store"
 	@echo ""
 	@echo "Packages:"

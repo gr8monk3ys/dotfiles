@@ -17,8 +17,12 @@ teardown() {
     [[ -x bin/dotfiles-doctor ]]
 }
 
-@test "dotfiles-doctor runs without errors" {
-    skip "Requires full system setup"
+@test "dotfiles-doctor runs and reaches summary" {
+    run env HOME="$TEST_HOME" DOTFILES_DIR="$TEST_HOME/.dotfiles" \
+        PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
+        bash bin/dotfiles-doctor
+    # Mock env is incomplete so issues will be found, but it should reach summary
+    assert_output --partial "Summary"
 }
 
 # dotfiles-update tests
@@ -28,7 +32,11 @@ teardown() {
 }
 
 @test "dotfiles-update detects missing dotfiles directory" {
-    skip "Requires controlled environment"
+    run env HOME="$TEST_HOME" DOTFILES_DIR="$TEST_HOME/nonexistent" \
+        PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
+        bash bin/dotfiles-update
+    assert_failure
+    assert_output --partial "not found"
 }
 
 # dotfiles-backup tests
@@ -44,11 +52,21 @@ teardown() {
 }
 
 @test "dotfiles-backup accepts --compress flag" {
-    skip "Requires full system setup"
+    mkdir -p "$TEST_TEMP_DIR/backups"
+    printf 'export TEST=1\n' > "$TEST_HOME/.zshrc"
+    run env HOME="$TEST_HOME" BACKUP_DIR="$TEST_TEMP_DIR/backups" \
+        PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
+        bash bin/dotfiles-backup --compress
+    assert_success
+    assert_output --partial "Backup completed successfully!"
 }
 
 @test "dotfiles-backup accepts --cleanup flag" {
-    skip "Requires full system setup"
+    mkdir -p "$TEST_TEMP_DIR/backups/20260101_000000"
+    run env HOME="$TEST_HOME" BACKUP_DIR="$TEST_TEMP_DIR/backups" \
+        PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
+        bash bin/dotfiles-backup --cleanup
+    assert_success
 }
 
 # dotfiles-restore tests
@@ -131,7 +149,6 @@ teardown() {
 }
 
 @test "no bin scripts have syntax errors" {
-    skip_if_command_not_found bash
     for script in bin/*; do
         if [[ -f "$script" ]] && [[ "$script" != */README.md ]]; then
             if head -n1 "$script" | grep -q "bash"; then
@@ -142,4 +159,16 @@ teardown() {
             fi
         fi
     done
+}
+
+# dotfiles-nix tests
+@test "dotfiles-nix script exists and is executable" {
+    [[ -f bin/dotfiles-nix ]]
+    [[ -x bin/dotfiles-nix ]]
+}
+
+@test "dotfiles-nix accepts help subcommand" {
+    run bin/dotfiles-nix help
+    assert_success
+    assert_output --partial "Usage:"
 }
