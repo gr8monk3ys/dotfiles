@@ -70,7 +70,6 @@ brew "oven-sh/bun/bun"                 # Fast all-in-one JavaScript runtime
 ## Python
 brew "python@3.12"                     # Python 3.12
 brew "python@3.13"                     # Python 3.13 (latest)
-brew "pyenv"                           # Python version manager
 brew "poetry"                          # Python dependency management
 brew "pipx"                            # Install Python apps in isolation
 brew "uv"                              # Fast Python package installer
@@ -104,8 +103,6 @@ brew "docker-compose"                  # Multi-container Docker apps
 # ============================================================================
 # Text Editors & IDEs
 # ============================================================================
-brew "kakoune"                         # Modal text editor
-brew "bob"                             # Neovim version manager
 
 # ============================================================================
 # Shell & Terminal Tools
@@ -113,14 +110,12 @@ brew "bob"                             # Neovim version manager
 brew "tmux"                            # Terminal multiplexer
 brew "zsh-syntax-highlighting"         # Zsh syntax highlighting
 brew "fzf"                             # Fuzzy finder
-brew "fzy"                             # Fuzzy text selector
 
 # ============================================================================
 # File & Text Search
 # ============================================================================
 brew "fd"                              # Fast find alternative
 brew "ripgrep"                         # Fast grep alternative (rg)
-brew "sk"                              # Fuzzy finder (skim)
 brew "jq"                              # JSON processor
 brew "tree"                            # Directory tree viewer
 
@@ -187,10 +182,6 @@ brew "direnv"                          # Per-directory environment variables
 brew "mise"                            # Universal version manager (replaces asdf/pyenv/nvm)
 
 # ============================================================================
-# Security & Encryption
-# ============================================================================
-brew "age"                             # Modern encryption tool (for dotfiles-secrets)
-
 # ============================================================================
 # File Transfer & Download
 # ============================================================================
@@ -256,11 +247,9 @@ brew "gtop"                            # System monitoring
 brew "spotify_player"                  # Spotify TUI player
 
 ## Miscellaneous
-brew "tldr"                            # Simplified man pages
 brew "sl"                              # Steam Locomotive (fun)
 brew "telnet"                          # Telnet client
 brew "xh"                              # HTTPie alternative
-brew "lux"                             # Video downloader
 brew "typos-cli"                       # Source code spell checker
 brew "biome"                           # Web dev toolchain
 brew "cabin"                            # Package manager
@@ -268,7 +257,6 @@ brew "cabin"                            # Package manager
 # ============================================================================
 # Databases
 # ============================================================================
-brew "mysql"                           # MySQL database
 brew "mysql@8.4"                       # MySQL 8.4
 
 # ============================================================================

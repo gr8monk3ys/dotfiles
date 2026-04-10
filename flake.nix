@@ -30,6 +30,7 @@
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
 
       # User configuration
+      # FORK: Change these values to match your identity
       user = {
         name = "Lorenzo Scaturchio";
         email = "lorenzosca7@protonmail.ch";
