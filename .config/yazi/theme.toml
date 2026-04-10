@@ -1,6 +1,6 @@
 # Yazi Theme Configuration - OneDark
 # https://yazi-rs.github.io/docs/configuration/theme
-# Consistent with Neovim, Ghostty, and other tools
+# Consistent with Neovim, bat, eza, git-delta, and zellij
 
 [manager]
 # Active file/directory
