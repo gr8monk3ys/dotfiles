@@ -19,6 +19,11 @@ if [[ -d "$HOME/.local/bin" ]]; then
   done
 fi
 
+# Cargo installs binaries like `rustlings` here.
+if [[ -d "$HOME/.cargo/bin" ]] && [[ ":$PATH:" != *":$HOME/.cargo/bin:"* ]]; then
+  export PATH="$HOME/.cargo/bin:$PATH"
+fi
+
 # Add common Nix profile paths when Nix is installed
 for dir in "/nix/var/nix/profiles/default/bin" "$HOME/.nix-profile/bin"; do
   if [[ -d "$dir" ]] && [[ ":$PATH:" != *":$dir:"* ]]; then

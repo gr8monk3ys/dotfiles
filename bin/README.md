@@ -131,33 +131,22 @@ dotfiles-worktree prune                 # cleanup stale metadata
 make worktree-add name=ghostty-pass
 ```
 
-### [dotfiles-template](dotfiles-template)
+### [dotfiles-nix](dotfiles-nix)
 
-Template processor for machine-specific configurations.
-
-**Usage:**
-```bash
-dotfiles-template --list              # List variables
-dotfiles-template config.tmpl config  # Process template
-dotfiles-template --dry-run file.tmpl # Preview
-```
-
-**Variables:** `{{HOSTNAME}}`, `{{OS_TYPE}}`, `{{MACHINE_TYPE}}`, `{{USER}}`, `{{HOME}}`
-
-### [dotfiles-secrets](dotfiles-secrets)
-
-Secret management using age encryption.
+Manage Nix configuration (optional). Wraps all Nix operations.
 
 **Usage:**
 ```bash
-dotfiles-secrets init                    # Initialize
-dotfiles-secrets encrypt ~/.ssh/config   # Encrypt
-dotfiles-secrets decrypt file.age        # Decrypt
-dotfiles-secrets edit file.age           # Edit in-place
-dotfiles-secrets status                  # Show status
+dotfiles-nix install    # Install Nix package manager
+dotfiles-nix darwin     # Apply nix-darwin config (macOS)
+dotfiles-nix home       # Apply Home Manager config (any platform)
+dotfiles-nix update     # Update flake inputs
+dotfiles-nix check      # Check flake for errors
+dotfiles-nix gc         # Garbage collect Nix store
+dotfiles-nix shell      # Enter development shell
+# or
+make nix-install / make nix / make nix-home / etc.
 ```
-
-**Requires:** `age` (`brew install age`)
 
 ### [validate-doc-links](validate-doc-links)
 
@@ -201,5 +190,4 @@ Helps non-root installations on Arch Linux.
 | dotfiles-restore | ✓ | ✓ | ✓ |
 | dotfiles-bench-shell | ✓ | ✓ | ✓ |
 | dotfiles-worktree | ✓ | ✓ | ✓ |
-| dotfiles-template | ✓ | ✓ | ✓ |
-| dotfiles-secrets | ✓ | ✓ | ✓ |
+| dotfiles-nix | ✓ | ✓ | ✓ |

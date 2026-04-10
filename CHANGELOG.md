@@ -7,9 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- **Go CLI** (`cmd/dotfiles/`) - Interactive TUI installer; `make` targets are sufficient
+- **dotfiles-secrets** (`bin/dotfiles-secrets`) - age-based encryption tool (never operationally used)
+- **dotfiles-template** (`bin/dotfiles-template`) - Template processor (no templates existed in repo)
+- `age` from Brewfile (only needed for dotfiles-secrets)
+- Makefile targets: `cli`, `cli-install`, `secrets-init`, `secrets-status`, `template-list`, `verify-go`
+- Go CLI build job from CI test workflow
+- `SETUP.md` (content folded into `OPERATING.md`)
+- `CONTRIBUTING.md` (content folded into `AGENTS.md`)
+
+### Changed
+- Nix demoted from "primary" to "optional" in all documentation
+- Nix flake CI check is now blocking (was `continue-on-error`)
+- Nix Makefile targets delegate to `bin/dotfiles-nix` (thin Makefile, logic in script)
+- 5 previously-skipped tests now run with mocked environments
+- Consolidated top-level documentation. `CLAUDE.md` reduced to a pointer file. `AGENTS.md` absorbed `CONTRIBUTING.md`'s workflow and PR checklist, and gained a per-config README convention. `README.md` got an `OPERATING.md` signpost; all stale `NEW` tags removed.
+
 ### Added
+- **bin/dotfiles-nix** - Wrapper script for all Nix operations (install, darwin, home, update, check, gc, shell)
 - CLAUDE.md - Comprehensive AI assistant guide for working with the repository
 - CONTRIBUTING.md - Contribution guidelines and development workflow
+- `OPERATING.md`: single source of truth for operators and AI assistants (install paths, daily commands, making changes, repo map, current-state table, troubleshooting)
 - CHANGELOG.md - This file to track changes
 - LICENSE - GPL-3.0 License for the project
 - .gitattributes - Line ending and language detection configuration

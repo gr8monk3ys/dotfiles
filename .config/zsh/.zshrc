@@ -15,6 +15,11 @@ if [[ -d "$HOME/.local/bin" ]]; then
   path=("$HOME/.local/bin" "${(@)path:#$HOME/.local/bin}")
 fi
 
+# Cargo installs binaries like `rustlings` here.
+if [[ -d "$HOME/.cargo/bin" ]]; then
+  path=("$HOME/.cargo/bin" "${(@)path:#$HOME/.cargo/bin}")
+fi
+
 # Set the directory we want to store zinit and plugins
 ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 

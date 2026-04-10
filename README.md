@@ -22,13 +22,13 @@
 ╚═════╝  ╚═════╝    ╚═╝   ╚═╝     ╚═╝╚══════╝╚══════╝╚══════╝
 ```
 
-**A keyboard-driven development environment with 100% reproducibility**
+**A keyboard-driven development environment**
 
 [![Installation](https://img.shields.io/github/actions/workflow/status/gr8monk3ys/dotfiles/install.yml?label=install&style=flat-square&logo=github)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/install.yml)
 [![Tests](https://img.shields.io/github/actions/workflow/status/gr8monk3ys/dotfiles/test.yml?label=tests&style=flat-square&logo=github)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/test.yml)
 [![Lint](https://img.shields.io/github/actions/workflow/status/gr8monk3ys/dotfiles/lint.yml?label=lint&style=flat-square&logo=github)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/lint.yml)
 [![License](https://img.shields.io/badge/license-GPL--3.0-98c379?style=flat-square)](LICENSE)
-[![Nix](https://img.shields.io/badge/Nix-Flakes-5277C3?style=flat-square&logo=nixos)](flake.nix)
+[![Nix](https://img.shields.io/badge/Nix-Optional-5277C3?style=flat-square&logo=nixos)](flake.nix)
 [![Theme](https://img.shields.io/badge/theme-OneDark-61afef?style=flat-square)](#theme)
 
 [Installation](#-quick-start) •
@@ -56,7 +56,7 @@ DOTFILES_ASSUME_YES=1 DOTFILES_MACHINE_TYPE=personal DOTFILES_FORCE_PROMPT_STYLE
 curl -fsSL https://raw.githubusercontent.com/gr8monk3ys/dotfiles/main/install.sh | bash
 ```
 
-### Option 2: Nix Installation (100% Reproducible)
+### Option 2: Nix Installation (Optional)
 
 ```bash
 # Clone the repository
@@ -101,6 +101,10 @@ xcode-select --install
 
 ---
 
+> **Working on this repo?** If you're future-you on a new machine or an AI assistant needing to make changes, read **[OPERATING.md](OPERATING.md)** — install paths, daily commands, making changes, repo map, and troubleshooting. For conventions and style, see **[AGENTS.md](AGENTS.md)**.
+
+---
+
 ## ✨ Features
 
 <table>
@@ -112,36 +116,29 @@ xcode-select --install
 - **Karabiner** - Keyboard customization
 
 ### 🐚 Terminal & Shell
-- **Ghostty** - Zig-based GPU terminal (NEW)
-- **Zsh + Zinit** - Fast plugin manager
+- **Ghostty** - Zig-based GPU terminal- **Zsh + Zinit** - Fast plugin manager
 - **Powerlevel10k** - Beautiful prompt
-- **Zellij** - Modern multiplexer (NEW)
-- **Tmux** - Session management (backup)
+- **Zellij** - Modern multiplexer- **Tmux** - Session management (backup)
 
 ### ✏️ Development
 - **Neovim** - Modern editor with LSP
-- **Jujutsu (jj)** - Next-gen Git (NEW)
-- **Lazygit** - Terminal Git UI
+- **Jujutsu (jj)** - Next-gen Git- **Lazygit** - Terminal Git UI
 - **VSCodium** - Open-source VS Code
 
 </td>
 <td width="50%">
 
 ### 🛠️ Modern CLI Tools (Rust-powered)
-- **yazi** - Blazing fast file manager (NEW)
-- **eza** - Better `ls` with icons
+- **yazi** - Blazing fast file manager- **eza** - Better `ls` with icons
 - **bat** - `cat` with syntax highlighting
 - **ripgrep** - Blazing fast grep
 - **fd** - User-friendly find
 - **zoxide** - Smarter `cd`
 - **delta** - Beautiful git diffs
 - **atuin** - Magical shell history
-- **broot** - Tree with fuzzy search (NEW)
-- **navi** - Interactive cheatsheets (NEW)
-- **ouch** - Universal archives (NEW)
-
+- **broot** - Tree with fuzzy search- **navi** - Interactive cheatsheets- **ouch** - Universal archives
 ### 📦 Package Management
-- **Nix Flakes** - 100% reproducible (NEW)
+- **Nix Flakes** - Reproducible (optional)
 - **Homebrew** - macOS packages
 - **mise** - Universal version manager
 - **Cargo** - Rust packages
@@ -176,25 +173,19 @@ These dotfiles use a consistent **OneDark** color scheme across all tools:
 ~/.dotfiles/
 ├── 📁 .config/              # XDG configurations
 │   ├── 📁 aerospace/        # Window manager
-│   ├── 📁 ghostty/          # Terminal emulator (NEW)
-│   ├── 📁 yazi/             # File manager (NEW)
-│   ├── 📁 jj/               # Jujutsu VCS (NEW)
-│   ├── 📁 zellij/           # Terminal multiplexer (NEW)
-│   ├── 📁 git/              # Git + Delta config
+│   ├── 📁 ghostty/          # Terminal emulator│   ├── 📁 yazi/             # File manager│   ├── 📁 jj/               # Jujutsu VCS│   ├── 📁 zellij/           # Terminal multiplexer│   ├── 📁 git/              # Git + Delta config
 │   ├── 📁 nvim/             # Neovim editor
 │   ├── 📁 tmux/             # Tmux (backup)
 │   ├── 📁 zsh/              # Shell configuration
 │   │   └── 📄 aliases.zsh   # Modern CLI aliases
 │
-├── 📁 nix/                  # Nix configuration (NEW)
-│   ├── 📄 home.nix          # Home Manager config
+├── 📁 nix/                  # Nix configuration│   ├── 📄 home.nix          # Home Manager config
 │   └── 📄 darwin.nix        # macOS system config
 │
 ├── 📁 bin/                  # Utility scripts
 │   ├── 📄 dotfiles-doctor   # Health check
 │   ├── 📄 dotfiles-update   # Update packages
-│   ├── 📄 dotfiles-backup   # Backup configs
-│   └── 📄 dotfiles-secrets  # Secret management
+│   └── 📄 dotfiles-backup   # Backup configs
 │
 ├── 📁 install/              # Package lists
 │   ├── 📄 Brewfile          # Homebrew formulae
@@ -202,8 +193,7 @@ These dotfiles use a consistent **OneDark** color scheme across all tools:
 │   └── 📄 Rustfile          # Cargo packages
 │
 ├── 📁 test/                 # BATS test suite
-├── 📄 flake.nix             # Nix flake (NEW)
-├── 📄 install.sh            # One-line installer
+├── 📄 flake.nix             # Nix flake├── 📄 install.sh            # One-line installer
 └── 📄 Makefile              # Automation
 ```
 
@@ -283,27 +273,6 @@ Set your machine type for conditional configs:
 echo "personal" > ~/.machine_type  # or: work, server
 ```
 
-### Secret Management
-
-Encrypt sensitive files with `age`:
-
-```bash
-make secrets-init                         # Initialize encryption
-dotfiles-secrets encrypt ~/.ssh/config    # Encrypt a file
-dotfiles-secrets decrypt file.age         # Decrypt a file
-```
-
-### Templates
-
-Generate configs with machine-specific values:
-
-```bash
-make template-list                        # List variables
-dotfiles-template config.tmpl config      # Process template
-```
-
-Available: `{{HOSTNAME}}`, `{{OS_TYPE}}`, `{{MACHINE_TYPE}}`, `{{USER}}`
-
 ---
 
 ## 🛠️ Modern CLI Aliases
@@ -358,8 +327,8 @@ hs    → atuin search
 
 | Document | Description |
 |----------|-------------|
-| [CLAUDE.md](CLAUDE.md) | AI assistant guide |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution guidelines |
+| [OPERATING.md](OPERATING.md) | Install, daily ops, making changes, troubleshooting |
+| [AGENTS.md](AGENTS.md) | Conventions, style, testing, PR checklist |
 | [CHANGELOG.md](CHANGELOG.md) | Version history |
 
 Each `.config/` directory has its own README with detailed documentation.
@@ -425,13 +394,13 @@ make nix-home  # Works on any Linux distro
 
 | Aspect | Traditional | Nix |
 |--------|------------|-----|
-| Reproducibility | Partial | 100% |
+| Reproducibility | Partial | Pinned versions |
 | Rollback | Manual | Built-in |
 | Cross-platform | macOS focus | Any platform |
 | Package versions | Latest | Locked |
 | Complexity | Simpler | Steeper learning curve |
 
-**Recommendation:** Start with traditional (`make`), migrate to Nix when ready for full reproducibility.
+**Recommendation:** Start with traditional (`make`). Nix is optional for users who want pinned reproducibility.
 
 </details>
 

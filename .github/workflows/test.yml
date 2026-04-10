@@ -40,37 +40,6 @@ jobs:
       - name: Run test suite
         run: make test
 
-  go-cli:
-    name: Go CLI Build
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [macos-latest, ubuntu-latest]
-        go: ['1.22']
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-
-      - name: Set up Go
-        uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417
-        with:
-          go-version: ${{ matrix.go }}
-
-      - name: Build CLI
-        working-directory: cmd/dotfiles
-        run: |
-          go mod download
-          go build -v -o dotfiles-cli .
-
-      - name: Test CLI help
-        working-directory: cmd/dotfiles
-        run: ./dotfiles-cli --help
-
-      - name: Test CLI version detection
-        working-directory: cmd/dotfiles
-        run: ./dotfiles-cli install --help
-
   integration:
     name: Integration Tests
     runs-on: macos-latest
@@ -115,7 +84,6 @@ jobs:
 
       - name: Check flake
         run: nix flake check --no-build
-        continue-on-error: true
 
       - name: Show flake info
         run: nix flake show

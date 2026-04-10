@@ -297,6 +297,16 @@ fi
 # Gping - Graphical ping (use gping directly, don't shadow ping)
 # gping is a TUI graph tool, not flag-compatible with ping
 
+# doggo - Modern DNS client (replaces dig for interactive use)
+if command -v doggo &> /dev/null; then
+    alias dig='doggo'
+fi
+
+# duf - Modern df replacement (colored, human-readable by default)
+if command -v duf &> /dev/null; then
+    alias df='duf'
+fi
+
 # Ouch - Universal archive tool
 if command -v ouch &> /dev/null; then
     alias compress='ouch compress'
