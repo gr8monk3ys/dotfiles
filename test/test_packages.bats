@@ -97,7 +97,7 @@ teardown() {
         # Allow comments
         [[ "$line" =~ ^# ]] && continue
         # Should be a valid extension ID (publisher.extension)
-        [[ "$line" =~ ^[a-z0-9-]+\.[a-z0-9-]+$ ]] || {
+        [[ "$line" =~ ^[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+$ ]] || {
             echo "Invalid extension ID: $line"
             return 1
         }

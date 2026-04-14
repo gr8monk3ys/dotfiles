@@ -114,8 +114,6 @@ case "${1:-help}" in
     shell)   cmd_shell ;;
     help|-h|--help) usage ;;
     *)
-        die "Unknown command: $1"
-        echo ""
-        usage
+        die "Unknown command: $1. Run '$0 help' for usage."
         ;;
 esac

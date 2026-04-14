@@ -12,7 +12,7 @@ teardown() {
 }
 
 @test "shell configs do not use GNU-only find -printf" {
-	run grep -R -n --fixed-strings "-printf" .zshenv .config/zsh
+	run grep -R -n -F "-printf" .zshenv .config/zsh
 	assert_failure
 }
 

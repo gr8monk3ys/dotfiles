@@ -313,7 +313,7 @@ SYNC_PLIST := com.dotfiles.sync.plist
 sync-install:
 	@echo "Installing dotfiles sync service..."
 	@mkdir -p $(LAUNCH_AGENTS)
-	@sed "s|/Users/gr8monk3ys|$(HOME)|g" .config/macos/$(SYNC_PLIST) \
+	@sed "s|__DOTFILES_DIR__|$(DOTFILES_DIR)|g" .config/macos/$(SYNC_PLIST) \
 	    > $(LAUNCH_AGENTS)/$(SYNC_PLIST)
 	@launchctl load $(LAUNCH_AGENTS)/$(SYNC_PLIST)
 	@echo "✓ Sync service installed (runs daily at 10:00 AM)"
