@@ -63,9 +63,8 @@ brew "typescript"                      # TypeScript compiler
 ## JavaScript/TypeScript
 brew "node"                            # Node.js runtime
 brew "deno"                            # Secure TypeScript runtime
-brew "pnpm"                            # Fast npm alternative
-brew "yarn"                            # Package manager
 brew "oven-sh/bun/bun"                 # Fast all-in-one JavaScript runtime
+# pnpm and yarn installed via npmfile to avoid duplication
 
 ## Python
 brew "python@3.12"                     # Python 3.12
@@ -241,7 +240,7 @@ brew "dominikbraun/timetrace/timetrace"                  # Time tracking
 brew "timewarrior"                     # Time tracking
 
 ## System Monitoring
-brew "gtop"                            # System monitoring
+# gtop installed via npmfile to avoid duplication
 
 ## Music & Media
 brew "spotify_player"                  # Spotify TUI player

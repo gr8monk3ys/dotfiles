@@ -196,7 +196,7 @@ Set `~/.machine_type` to `personal`, `work`, or `server`. On shell startup, `.co
 
 Top-level directories, one sentence each.
 
-- **`.config/`** — XDG-compliant app configs (24 directories). Managed by Stow. Each has its own README.
+- **`.config/`** — XDG-compliant app configs (23 directories). Managed by Stow. Each has its own README.
 - **`bin/`** — Helper scripts: platform detection, `dotfiles-doctor/update/backup/restore/bench-shell/worktree/nix`, doc-link validator. See `bin/README.md`.
 - **`install/`** — Package manifests: `Brewfile`, `Caskfile`, `npmfile`, `Rustfile`, `pacmanfile`, `Codefile` (VSCodium extensions), `duti` (macOS file associations).
 - **`test/`** — BATS test suite. Run with `make test`. Pattern: `test_*.bats`, helpers in `test_helper/`.

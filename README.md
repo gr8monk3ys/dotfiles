@@ -293,9 +293,8 @@ tree  → eza --tree --icons
 # File viewing (bat)
 cat   → bat --paging=never
 
-# Search (ripgrep, fd)
-grep  → rg
-find  → fd
+# Search (use rg and fd directly — they are not aliased over grep/find)
+rgi   → rg -i (case-insensitive ripgrep)
 
 # System (dust, procs, bottom)
 du    → dust
