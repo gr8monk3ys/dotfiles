@@ -102,6 +102,7 @@ brew "docker-compose"                  # Multi-container Docker apps
 # ============================================================================
 # Text Editors & IDEs
 # ============================================================================
+brew "neovim"                          # Primary editor (LSP, treesitter, plugins)
 
 # ============================================================================
 # Shell & Terminal Tools

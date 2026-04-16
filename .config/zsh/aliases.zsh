@@ -125,10 +125,12 @@ alias airport='/System/Library/PrivateFrameworks/Apple80211.framework/Versions/C
 # find . -name .gitattributes | map dirname
 alias map="xargs -n1"
 
-# One of @janmoesen’s ProTip™s
-for method in GET HEAD POST PUT DELETE TRACE OPTIONS; do
-	alias "${method}"="lwp-request -m '${method}'"
-done
+# HTTP method aliases (requires lwp-request from libwww-perl)
+if command -v lwp-request &> /dev/null; then
+	for method in GET HEAD POST PUT DELETE TRACE OPTIONS; do
+		alias "${method}"="lwp-request -m ‘${method}’"
+	done
+fi
 
 # Stuff I never really use but cannot delete either because of http://xkcd.com/530/
 alias stfu="osascript -e 'set volume output muted true'"
