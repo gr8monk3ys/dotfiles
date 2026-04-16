@@ -63,7 +63,7 @@ copy-on-select = clipboard
 mouse-scroll-multiplier = 2
 
 # GPU rendering (Ghostty's main advantage)
-gtk-single-instance = true
+# gtk-single-instance = true  # Linux/GTK only — ignored on macOS
 
 # ============================================================================
 # Keybindings — optimized for multi-pane AI sessions

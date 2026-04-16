@@ -148,6 +148,27 @@ dotfiles-nix shell      # Enter development shell
 make nix-install / make nix / make nix-home / etc.
 ```
 
+### [dotfiles-sync](dotfiles-sync)
+
+Lightweight automated sync for launchd (macOS only). Designed for
+unattended execution — for interactive updates, use `dotfiles-update`.
+
+**Behavior:**
+- Pulls git changes if available
+- Skips silently if uncommitted changes exist
+- Shows macOS notification only when something happens
+- Silent when already up to date
+
+**Usage:**
+```bash
+dotfiles-sync            # Run manually (typically invoked by launchd)
+# or
+make sync-install        # Enable daily auto-sync (10:00 AM)
+make sync-uninstall      # Disable auto-sync
+make sync-status         # Check sync service status
+make sync-run            # Run sync manually
+```
+
 ### [validate-doc-links](validate-doc-links)
 
 Validates local Markdown links across repository documentation.
@@ -191,3 +212,4 @@ Helps non-root installations on Arch Linux.
 | dotfiles-bench-shell | ✓ | ✓ | ✓ |
 | dotfiles-worktree | ✓ | ✓ | ✓ |
 | dotfiles-nix | ✓ | ✓ | ✓ |
+| dotfiles-sync | ✓ | — | — |
