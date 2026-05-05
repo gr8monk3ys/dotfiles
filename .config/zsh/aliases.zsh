@@ -116,7 +116,9 @@ alias urlencode='python3 -c "import sys, urllib.parse; print(urllib.parse.quote_
 
 # Merge PDF files, preserving hyperlinks
 # Usage: `mergepdf input{1,2,3}.pdf`
-alias mergepdf='gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=_merged.pdf'
+if command -v gs &> /dev/null; then
+    alias mergepdf='gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=_merged.pdf'
+fi
 
 # Disable Spotlight
 alias spotoff="sudo mdutil -a -i off"
@@ -411,9 +413,13 @@ fi
 if command -v home-manager &> /dev/null; then
     alias nhs='home-manager switch --flake ~/.dotfiles'
 fi
-alias nfu='nix flake update'
-alias nfc='nix flake check'
-alias ndev='nix develop'
+if command -v nix &> /dev/null; then
+    alias nfu='nix flake update'
+    alias nfc='nix flake check'
+    alias ndev='nix develop'
+fi
 
-# Claude Code (AI assistant)
-alias cc='claude'
+# Claude Code (AI assistant, installed via Anthropic installer — not in Brewfile)
+if command -v claude &> /dev/null; then
+    alias cc='claude'
+fi

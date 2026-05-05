@@ -104,6 +104,9 @@ teardown() {
         tg          # topgrade block
         nrs         # darwin-rebuild block
         nhs         # home-manager block
+        nfu         # nix block
+        cc          # claude block
+        mergepdf    # gs (ghostscript) block
     )
 
     # Build a zsh script that:
