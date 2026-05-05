@@ -138,3 +138,11 @@ ZSH
         zsh -c "$check_script" -- "${sentinels[@]}"
     assert_success
 }
+
+# --- Integration: alias reference checker passes against real repo --------
+
+@test "shell-surface: bin/check-alias-references passes against current aliases.zsh" {
+    run bash "$DOTFILES_DIR/bin/check-alias-references"
+    assert_success
+    assert_output --partial "all aliases resolve"
+}
