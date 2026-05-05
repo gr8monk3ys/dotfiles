@@ -71,6 +71,7 @@ teardown() {
         # unconditional region (always defined)
         g           # alias g="git"
         # conditional blocks (defined only if guard succeeds)
+        mergepdf    # gs (ghostscript) block
         GET         # lwp-request block
         lt          # eza block
         catp        # bat block
@@ -106,7 +107,6 @@ teardown() {
         nhs         # home-manager block
         nfu         # nix block
         cc          # claude block
-        mergepdf    # gs (ghostscript) block
     )
 
     # Build a zsh script that:
