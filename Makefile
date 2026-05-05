@@ -12,7 +12,7 @@ export STOW_DIR = $(DOTFILES_DIR)
 export ACCEPT_EULA=Y
 
 .PHONY: all macos arch link unlink link-dry-run sudo test test-setup verify \
-        verify-shell verify-stale-refs verify-doc-links verify-tool-docs verify-tests verify-nix \
+        verify-shell verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-tests verify-nix \
         doctor update backup worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
         brew bash git npm packages-macos packages-arch core-macos core-arch \
@@ -204,7 +204,7 @@ test-setup:
 		exit 1; \
 	fi
 
-verify: verify-shell verify-stale-refs verify-doc-links verify-tool-docs verify-tests verify-nix
+verify: verify-shell verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-tests verify-nix
 	@echo "✓ Verification complete"
 
 verify-shell:
@@ -241,6 +241,10 @@ verify-stale-refs:
 verify-doc-links:
 	@echo "Validating markdown links..."
 	@bin/validate-doc-links
+
+verify-shell-surface:
+	@echo "Running shell-surface tests..."
+	@bats test/test_shell_surface.bats test/test_alias_checker.bats
 
 verify-tool-docs:
 	@echo "Validating tool catalog..."
