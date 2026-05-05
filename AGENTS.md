@@ -31,7 +31,7 @@ Follow `.editorconfig`:
 Prefer portable shell patterns (avoid GNU-only flags in scripts sourced on macOS). Name executables and helpers in kebab-case (example: `dotfiles-update`). Add new tests as `test/test_*.bats`.
 
 ## Testing Guidelines
-Testing is BATS-based (`test/*.bats`). Add or update tests whenever behavior changes, especially regression guards in `test/test_regressions.bats`. Run `make test` locally before opening a PR; use targeted runs like `bats test/test_regressions.bats -f "theme consistency"` when iterating.
+Testing is BATS-based (`test/*.bats`). Add or update tests whenever behavior changes, especially regression guards in `test/test_regressions.bats`. Run `make test` locally before opening a PR; use targeted runs like `bats test/test_regressions.bats -f "theme consistency"` when iterating. The suite includes shell-surface validation (`make verify-shell-surface`) which parses and sources `.zshenv`, `aliases.zsh`, and `functions.zsh`, asserts sentinel aliases per conditional block, and runs `bin/check-alias-references` to verify every unconditional alias references a known command.
 
 ## Commit & Pull Request Guidelines
 

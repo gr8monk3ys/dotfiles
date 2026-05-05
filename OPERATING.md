@@ -288,3 +288,13 @@ The validator (`bin/validate-doc-links`) reports the file + line of each bad lin
 ### First Nix build is extremely slow
 
 Expected — it downloads and builds everything from scratch. Subsequent builds use the binary cache and are fast.
+
+### `verify-shell-surface` fails with "alias references unresolved command"
+
+The alias references a command that is not a shell builtin, not in any install manifest, and not in `test/allowlist/system-tools.txt`. The error output names the offending alias's file:line and the unresolved command. Pick one fix:
+
+1. **Manifest the dependency.** Add the command to the appropriate `install/` file (`Brewfile` for Homebrew formulae, `Rustfile` for Cargo, `npmfile` for npm globals).
+2. **Guard the alias.** Wrap with `if command -v CMD &> /dev/null; then …; fi` — appropriate when the command is optional or not available on every supported platform.
+3. **Allowlist the command.** Only when the command is a base-OS tool (e.g., `osascript`, `pbcopy`) that should not be manifested. Add it to `test/allowlist/system-tools.txt` with a one-line comment.
+
+To iterate locally without committing, run `bin/check-alias-references` directly — it prints the same output as the BATS test.
