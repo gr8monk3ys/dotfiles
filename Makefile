@@ -210,7 +210,7 @@ verify: verify-shell verify-stale-refs verify-doc-links verify-tool-docs verify-
 verify-shell:
 	@echo "Running shell syntax checks..."
 	@if command -v zsh >/dev/null 2>&1; then \
-		zsh -n .zshenv .config/zsh/.zshrc .config/zsh/aliases.zsh; \
+		zsh -n .zshenv .config/zsh/.zshrc .config/zsh/aliases.zsh .config/zsh/functions.zsh; \
 	else \
 		echo "⚠️  zsh not found; skipping zsh syntax checks"; \
 	fi
