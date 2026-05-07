@@ -3,8 +3,8 @@
 #
 # Validate that every unconditional alias in .config/zsh/aliases.zsh
 # resolves to a known source: a shell builtin, an entry in an install
-# manifest (Brewfile/Caskfile/Rustfile/npmfile), an alias defined
-# elsewhere in the file, or an entry in test/allowlist/system-tools.txt.
+# manifest (Brewfile/Caskfile/Rustfile/npmfile), or an entry in
+# test/allowlist/system-tools.txt.
 #
 # Conditional blocks (`if command -v X &> /dev/null; then ...; fi`) are
 # exempt — the guard itself declares the dependency.
@@ -69,12 +69,6 @@ is_in_manifest_bare() {
     ' "$file" | grep -Fxq "$cmd"
 }
 
-is_alias_in_file() {
-    # Matches `alias NAME=` anywhere in aliases.zsh.
-    local cmd="$1"
-    grep -E "^[[:space:]]*alias[[:space:]]+${cmd}=" "$ALIASES_FILE" >/dev/null 2>&1
-}
-
 resolve() {
     local cmd="$1"
     is_builtin "$cmd" && return 0
@@ -83,7 +77,6 @@ resolve() {
     is_in_manifest_quoted "$INSTALL_DIR/Caskfile" "cask" "$cmd" && return 0
     is_in_manifest_bare "$INSTALL_DIR/Rustfile" "$cmd" && return 0
     is_in_manifest_bare "$INSTALL_DIR/npmfile" "$cmd" && return 0
-    is_alias_in_file "$cmd" && return 0
     return 1
 }
 

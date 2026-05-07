@@ -13,7 +13,11 @@
 
 # --- POSIX / Unix coreutils ---
 date             # POSIX date utility; ships with macOS and every Linux distro
+egrep            # POSIX extended grep; ships with macOS and every Linux distro
+fgrep            # POSIX fixed-string grep; ships with macOS and every Linux distro
 find             # POSIX find utility; ships with macOS and every Linux distro
+grep             # POSIX grep utility; ships with macOS and every Linux distro
+ls               # POSIX list utility; ships with macOS and every Linux distro
 rm               # POSIX remove utility; ships with macOS and every Linux distro
 tr               # POSIX translate characters; ships with macOS and every Linux distro
 xargs            # POSIX utility; ships with macOS and every Linux distro
@@ -21,6 +25,7 @@ ps               # POSIX process status; ships with macOS and every Linux distro
 
 # --- macOS-only system tools ---
 defaults         # macOS user defaults system; ships with macOS
+dig              # DNS lookup utility; ships with macOS (BIND tools)
 dscacheutil      # macOS Directory Service cache utility; ships with macOS
 ifconfig         # macOS/BSD network interface configuration; ships with macOS
 ipconfig         # macOS IP configuration utility; ships with macOS

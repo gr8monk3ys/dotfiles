@@ -173,8 +173,8 @@ make sync-run            # Run sync manually
 
 Validates that every unconditional alias in `.config/zsh/aliases.zsh` resolves
 to a known source: a shell builtin, an entry in `install/Brewfile`, `install/Caskfile`,
-`install/Rustfile`, or `install/npmfile`, an alias defined elsewhere in the file,
-or an entry in `test/allowlist/system-tools.txt`.
+`install/Rustfile`, or `install/npmfile`, or an entry in
+`test/allowlist/system-tools.txt`.
 
 Aliases inside `if command -v X &> /dev/null; then ... fi` blocks are exempt
 (the guard itself declares the dependency).
