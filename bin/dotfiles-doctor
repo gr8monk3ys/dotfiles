@@ -65,7 +65,7 @@ check_system() {
     fi
 
     check_info "Shell: $SHELL"
-    check_info "User: $USER"
+    check_info "User: ${USER:-$(id -un)}"
     check_info "Home: $HOME"
 }
 
@@ -306,11 +306,11 @@ check_shell_config() {
         check_warn "ZDOTDIR not set"
     fi
 
-    # Check Oh My Zsh
-    if [[ -d "$HOME/.oh-my-zsh" ]]; then
-        check_pass "Oh My Zsh installed"
+    # Check Zinit (plugin manager used by .zshrc; it self-installs on first run)
+    if [[ -d "${XDG_DATA_HOME:-$HOME/.local/share}/zinit/zinit.git" ]]; then
+        check_pass "Zinit installed"
     else
-        check_warn "Oh My Zsh not installed"
+        check_warn "Zinit not installed (will bootstrap on next zsh start)"
     fi
 }
 

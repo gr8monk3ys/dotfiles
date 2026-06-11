@@ -48,26 +48,29 @@ alias sudo='sudo '
 # Get week number
 alias week='date +%V'
 
-# System updates — use `make update` or `dotsup` (line 336) for full dotfiles update
-alias update='sudo softwareupdate -i -a'
+# macOS-only aliases — guarded so Linux keeps the real `ip` command and friends
+if [[ "$OSTYPE" == darwin* ]]; then
+    # System updates — use `make update` or `dotsup` (line 336) for full dotfiles update
+    alias update='sudo softwareupdate -i -a'
 
-# Google Chrome
-alias chrome='/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome'
-alias canary='/Applications/Google\ Chrome\ Canary.app/Contents/MacOS/Google\ Chrome\ Canary'
+    # Google Chrome
+    alias chrome='/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome'
+    alias canary='/Applications/Google\ Chrome\ Canary.app/Contents/MacOS/Google\ Chrome\ Canary'
 
-# IP addresses
-alias ip="dig +short myip.opendns.com @resolver1.opendns.com"
-alias localip="ipconfig getifaddr en0"
-alias ips="ifconfig -a | grep -o 'inet6\? \(addr:\)\?\s\?\(\(\([0-9]\+\.\)\{3\}[0-9]\+\)\|[a-fA-F0-9:]\+\)' | awk '{ sub(/inet6? (addr:)? ?/, \"\"); print }'"
+    # IP addresses
+    alias ip="dig +short myip.opendns.com @resolver1.opendns.com"
+    alias localip="ipconfig getifaddr en0"
+    alias ips="ifconfig -a | grep -o 'inet6\? \(addr:\)\?\s\?\(\(\([0-9]\+\.\)\{3\}[0-9]\+\)\|[a-fA-F0-9:]\+\)' | awk '{ sub(/inet6? (addr:)? ?/, \"\"); print }'"
 
-# Show active network interfaces
-alias ifactive="ifconfig | pcregrep -M -o '^[^\t:]+:([^\n]|\n\t)*status: active'"
+    # Show active network interfaces
+    alias ifactive="ifconfig | pcregrep -M -o '^[^\t:]+:([^\n]|\n\t)*status: active'"
 
-# Flush Directory Service cache
-alias flush="dscacheutil -flushcache && killall -HUP mDNSResponder"
+    # Flush Directory Service cache
+    alias flush="dscacheutil -flushcache && killall -HUP mDNSResponder"
 
-# Clean up LaunchServices to remove duplicates in the “Open With” menu
-alias lscleanup="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -kill -r -domain local -domain system -domain user && killall Finder"
+    # Clean up LaunchServices to remove duplicates in the “Open With” menu
+    alias lscleanup="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -kill -r -domain local -domain system -domain user && killall Finder"
+fi
 
 # Canonical hex dump; some systems have this symlinked
 command -v hd > /dev/null || alias hd="hexdump -C"
@@ -84,7 +87,13 @@ jscbin="/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Resources
 unset jscbin;
 
 # Trim new lines and copy to clipboard
-alias copy="tr -d '\n' | pbcopy"
+if command -v pbcopy &> /dev/null; then
+    alias copy="tr -d '\n' | pbcopy"
+elif command -v wl-copy &> /dev/null; then
+    alias copy="tr -d '\n' | wl-copy"
+elif command -v xclip &> /dev/null; then
+    alias copy="tr -d '\n' | xclip -selection clipboard"
+fi
 
 # Recursively delete `.DS_Store` files
 alias cleanup="find . -type f -name '*.DS_Store' -ls -delete"
@@ -298,16 +307,6 @@ fi
 
 # Gping - Graphical ping (use gping directly, don't shadow ping)
 # gping is a TUI graph tool, not flag-compatible with ping
-
-# doggo - Modern DNS client (replaces dig for interactive use)
-if command -v doggo &> /dev/null; then
-    alias dig='doggo'
-fi
-
-# duf - Modern df replacement (colored, human-readable by default)
-if command -v duf &> /dev/null; then
-    alias df='duf'
-fi
 
 # Ouch - Universal archive tool
 if command -v ouch &> /dev/null; then

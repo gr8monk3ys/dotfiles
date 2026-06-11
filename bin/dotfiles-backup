@@ -176,7 +176,7 @@ Dotfiles Backup Manifest
 
 Backup Date: $(date)
 Hostname: $(hostname)
-User: $USER
+User: ${USER:-$(id -un)}
 OS: $(uname -s)
 
 Backup Contents:

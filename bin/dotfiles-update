@@ -103,10 +103,11 @@ update_homebrew() {
 
     print_info "Running brew doctor..."
     if brew doctor; then
-        print_success "Homebrew updated successfully"
+        print_success "brew doctor reports no issues"
     else
-        print_error "Brew doctor found issues"
+        print_error "brew doctor found issues (update itself completed; see output above)"
     fi
+    print_success "Homebrew updated"
 }
 
 # Update npm packages
@@ -157,24 +158,6 @@ update_cargo() {
     cargo install-update -a
 
     print_success "Cargo packages updated"
-}
-
-# Update Oh My Zsh
-update_omz() {
-    print_header "Updating Oh My Zsh"
-
-    if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
-        print_info "Oh My Zsh not installed, skipping..."
-        return 0
-    fi
-
-    print_info "Updating Oh My Zsh..."
-    if [[ -f "$HOME/.oh-my-zsh/tools/upgrade.sh" ]]; then
-        env ZSH="$HOME/.oh-my-zsh" sh "$HOME/.oh-my-zsh/tools/upgrade.sh"
-        print_success "Oh My Zsh updated"
-    else
-        print_error "Oh My Zsh upgrade script not found"
-    fi
 }
 
 # Update Tmux plugins (if TPM is installed)
@@ -312,7 +295,6 @@ main() {
     [[ "$skip_cargo" == false ]] && update_cargo
 
     # Update shell and editor
-    update_omz
     update_tmux
     update_nvim
 

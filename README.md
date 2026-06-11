@@ -151,7 +151,7 @@ xcode-select --install
 
 ## 🎨 Theme
 
-These dotfiles use a consistent **OneDark** color scheme across all tools:
+These dotfiles use a consistent **OneDark** color scheme across the core CLI tools, with two intentional exceptions (Ghostty and SketchyBar):
 
 | Color | Hex | Usage |
 |-------|-----|-------|
@@ -164,7 +164,8 @@ These dotfiles use a consistent **OneDark** color scheme across all tools:
 | 🟠 Orange | `#d19a66` | Constants |
 
 **Themed tools:** Neovim, Yazi, bat, eza, git-delta, zellij
-**Own theme:** Ghostty (adaptive Horizon Bright / Broadcast with frosted glass)
+**Own theme:** Ghostty (adaptive Horizon Bright / Broadcast with frosted glass),
+SketchyBar (Catppuccin Mocha)
 
 ---
 
@@ -174,13 +175,18 @@ These dotfiles use a consistent **OneDark** color scheme across all tools:
 ~/.dotfiles/
 ├── 📁 .config/              # XDG configurations
 │   ├── 📁 aerospace/        # Window manager
-│   ├── 📁 ghostty/          # Terminal emulator│   ├── 📁 yazi/             # File manager│   ├── 📁 jj/               # Jujutsu VCS│   ├── 📁 zellij/           # Terminal multiplexer│   ├── 📁 git/              # Git + Delta config
+│   ├── 📁 ghostty/          # Terminal emulator
+│   ├── 📁 yazi/             # File manager
+│   ├── 📁 jj/               # Jujutsu VCS
+│   ├── 📁 zellij/           # Terminal multiplexer
+│   ├── 📁 git/              # Git + Delta config
 │   ├── 📁 nvim/             # Neovim editor
 │   ├── 📁 tmux/             # Tmux (backup)
 │   ├── 📁 zsh/              # Shell configuration
 │   │   └── 📄 aliases.zsh   # Modern CLI aliases
 │
-├── 📁 nix/                  # Nix configuration│   ├── 📄 home.nix          # Home Manager config
+├── 📁 nix/                  # Nix configuration
+│   ├── 📄 home.nix          # Home Manager config
 │   └── 📄 darwin.nix        # macOS system config
 │
 ├── 📁 bin/                  # Utility scripts
@@ -194,7 +200,8 @@ These dotfiles use a consistent **OneDark** color scheme across all tools:
 │   └── 📄 Rustfile          # Cargo packages
 │
 ├── 📁 test/                 # BATS test suite
-├── 📄 flake.nix             # Nix flake├── 📄 install.sh            # One-line installer
+├── 📄 flake.nix             # Nix flake
+├── 📄 install.sh            # One-line installer
 └── 📄 Makefile              # Automation
 ```
 

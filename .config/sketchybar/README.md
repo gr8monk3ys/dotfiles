@@ -6,12 +6,12 @@ Floating macOS status bar with AeroSpace workspace integration.
 
 - **Workspace indicators** — shows AeroSpace workspaces (1-9), highlights active
 - **Calendar** — date and time display (right side)
-- **Apple menu** — popup with System Preferences, Activity Monitor, Lock Screen
+- **Apple menu** — popup with System Settings, Activity Monitor, Lock Screen
 
 ## Design
 
 - **Position:** Top, floating with rounded corners
-- **Colors:** Catppuccin Mocha palette (matches Ghostty/Neovim)
+- **Colors:** Catppuccin Mocha palette (intentional exception to the repo-wide OneDark theme)
 - **Font:** SF Pro (ships with macOS)
 
 ## File Structure

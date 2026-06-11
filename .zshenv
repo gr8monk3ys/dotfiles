@@ -11,9 +11,10 @@ export XDG_STATE_HOME="$HOME/.local/state"
 export XDG_CACHE_HOME="$HOME/.cache"
 export XDG_SCREENSHOTS_DIR="$HOME/Pictures/screenshots"
 
-# add ~/.local/bin and first-level subfolders to PATH (portable on macOS/Linux)
+# add ~/.local/bin (prepended, matching .zshrc priority) and its
+# first-level subfolders to PATH (portable on macOS/Linux)
 if [[ -d "$HOME/.local/bin" ]]; then
-  export PATH="$PATH:$HOME/.local/bin"
+  export PATH="$HOME/.local/bin:$PATH"
   for dir in "$HOME/.local/bin"/*(/N); do
     export PATH="$PATH:$dir"
   done

@@ -75,7 +75,6 @@ HISTSIZE=5000
 HISTFILE="${XDG_STATE_HOME:-$HOME/.local/state}/zsh/history"
 mkdir -p "${XDG_STATE_HOME:-$HOME/.local/state}/zsh"
 SAVEHIST=$HISTSIZE
-HISTDUP=erase
 setopt appendhistory
 setopt sharehistory
 setopt hist_ignore_space

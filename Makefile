@@ -19,7 +19,8 @@ export ACCEPT_EULA=Y
         stow-arch stow-macos cask-apps vscode-extensions node-packages \
         rust-packages duti bun pacman-packages brew-packages \
         nix nix-install nix-darwin nix-home nix-update nix-check nix-gc nix-shell help \
-        sync-install sync-uninstall sync-status sync-run
+        sync-install sync-uninstall sync-status sync-run \
+        test-docker test-docker-arch test-docker-interactive
 
 all: $(OS)
 

@@ -173,6 +173,9 @@ linux-*.deb
 # Local overrides (machine-specific, not committed)
 ##
 *.local
+# `*.local` also matches the `.local/` directory itself; re-include it so
+# tracked scripts under .local/bin/ show up in git status
+!.local/
 .config/**/*.local
 *.local.sh
 *.local.zsh
@@ -198,6 +201,8 @@ secrets/
 .env
 .env.*
 !.env.example
+# tracked macOS defaults env file (matched by .env.* above)
+!.config/macos/.env.macos
 credentials.json
 *.credential
 *.secret
