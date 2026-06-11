@@ -291,12 +291,10 @@
   };
 
   # ============================================================================
-  # Starship prompt (optional - can use p10k instead)
+  # Starship prompt — the binary comes from the Brewfile (macOS); prompt init
+  # lives in the stowed .config/zsh/.zshrc (with p10k fallback). Do NOT enable
+  # programs.starship here: enableZshIntegration would double-init the prompt.
   # ============================================================================
-  # programs.starship = {
-  #   enable = true;
-  #   enableZshIntegration = true;
-  # };
 
   # ============================================================================
   # GPG

@@ -33,6 +33,7 @@ The `.config` directory centralizes application configurations in a single locat
 ├── nvim/                 # Neovim text editor (has its own README)
 ├── sketchybar/           # SketchyBar status bar
 ├── ssh/                  # OpenSSH host snippets (config.d includes)
+├── starship/             # Starship prompt (default; p10k fallback)
 ├── tmux/                 # Tmux terminal multiplexer (backup)
 ├── wget/                 # Wget download utility
 ├── yazi/                 # Yazi file manager (replaces lf)

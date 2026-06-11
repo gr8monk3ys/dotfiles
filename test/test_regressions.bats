@@ -91,3 +91,14 @@ teardown() {
 	assert_output --partial "Summary"
 	assert_output --partial "issue(s) found"
 }
+
+@test "prompt system: starship default with p10k fallback wiring" {
+	grep -q 'DOTFILES_PROMPT' .config/zsh/.zshrc
+	grep -q 'starship init zsh' .config/zsh/.zshrc
+	grep -q 'prompt.local' .config/zsh/.zshrc
+	# fallback guard exists for machines without the starship binary
+	grep -q 'command -v starship' .config/zsh/.zshrc
+	[[ -f .config/starship/starship.toml ]]
+	# p10k stays loadable for the fallback path
+	grep -q 'romkatv/powerlevel10k' .config/zsh/.zshrc
+}

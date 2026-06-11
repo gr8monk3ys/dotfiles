@@ -109,6 +109,7 @@ brew "neovim"                          # Primary editor (LSP, treesitter, plugin
 # ============================================================================
 brew "tmux"                            # Terminal multiplexer
 brew "zsh-syntax-highlighting"         # Zsh syntax highlighting
+brew "starship"                        # Cross-shell prompt (default; p10k is the fallback)
 brew "fzf"                             # Fuzzy finder
 
 # ============================================================================

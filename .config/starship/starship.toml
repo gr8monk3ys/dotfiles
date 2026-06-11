@@ -1,0 +1,55 @@
+# Starship prompt — OneDark, replicating the repo's lean Powerlevel10k
+# layout: `user@host dir git duration` on line 1, `venv ❯` on line 2.
+# Selected from .config/zsh/.zshrc; p10k remains the fallback
+# (echo p10k > ~/.config/zsh/prompt.local to switch back per machine).
+"$schema" = 'https://starship.rs/config-schema.json'
+
+# Blank line between prompts, like POWERLEVEL9K_PROMPT_ADD_NEWLINE.
+add_newline = true
+
+format = """
+$username$hostname$directory$git_branch$git_status$cmd_duration
+$python$character"""
+
+# user@host only over SSH or as root, matching p10k's lean context segment.
+[username]
+format = '[$user]($style)[@](fg:#5c6370)'
+style_user = '#e5c07b'
+style_root = 'bold #e06c75'
+
+[hostname]
+ssh_only = true
+format = '[$hostname]($style) '
+style = '#e5c07b'
+
+[directory]
+style = '#61afef'
+truncation_length = 4
+truncate_to_repo = false
+
+[git_branch]
+format = '[$branch]($style) '
+style = '#98c379'
+
+[git_status]
+format = '([$all_status$ahead_behind]($style) )'
+style = '#e5c07b'
+
+# Show duration of commands slower than 3s (p10k's default threshold).
+[cmd_duration]
+min_time = 3000
+format = '[$duration]($style) '
+style = '#d19a66'
+
+# Active virtualenv only (no interpreter version noise), like p10k's
+# virtualenv segment on line 2.
+[python]
+format = '[(\($virtualenv\) )]($style)'
+style = '#56b6c2'
+detect_extensions = []
+detect_files = []
+detect_folders = []
+
+[character]
+success_symbol = '[❯](#c678dd)'
+error_symbol = '[❯](#e06c75)'

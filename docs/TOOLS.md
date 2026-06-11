@@ -224,8 +224,14 @@ install manifests (`install/Brewfile`, `Caskfile`, `npmfile`, `Rustfile`,
 - **Config:** [`.config/tmux/`](../.config/tmux/)
 
 ### zsh-syntax-highlighting
-- **Why:** Zsh syntax highlighting.
+- **Why:** Zsh syntax highlighting (also loaded via zinit); styled with an OneDark `ZSH_HIGHLIGHT_STYLES` palette in `.zshrc`.
 - **Installed via:** Brewfile
+
+### starship
+- **Why:** Default shell prompt: fast single binary, one TOML config, actively developed (Powerlevel10k is in maintenance mode). `.zshrc` falls back to p10k automatically when starship isn't installed; pin p10k per machine with `echo p10k > ~/.config/zsh/prompt.local`.
+- **Alternatives:** powerlevel10k (kept as fallback), oh-my-posh, pure
+- **Installed via:** Brewfile
+- **Config:** [`.config/starship/`](../.config/starship/)
 
 ### fzf
 - **Why:** Fuzzy finder powering ctrl-r/ctrl-t, fzf-tab completion menus, and the f/fv helper functions; OneDark-themed via FZF_DEFAULT_OPTS.
