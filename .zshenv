@@ -35,7 +35,6 @@ done
 # cleaning up the home folder
 export LESSHISTFILE="-"
 export ZDOTDIR="$XDG_CONFIG_HOME/zsh"
-export _ZL_DATA="$XDG_CACHE_HOME/zsh/.zlua"
 
 # colors!
 export BAT_THEME="base16-onedark"
