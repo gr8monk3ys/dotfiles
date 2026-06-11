@@ -117,6 +117,15 @@ fi
 # ============================================================================
 
 # fzf - Fuzzy finder
+# OneDark palette (matches the README theme table); bg:-1 keeps the
+# terminal's own background so Ghostty's frosted glass shows through.
+# Inherited by fzf-tab, ctrl-r/ctrl-t, and fzf-based scripts (dotfiles-why).
+export FZF_DEFAULT_OPTS="
+  --height=60% --layout=reverse --border=rounded --info=inline
+  --color=bg:-1,fg:#abb2bf,hl:#61afef
+  --color=bg+:#3e4451,fg+:#e6efff,hl+:#61afef
+  --color=prompt:#98c379,pointer:#c678dd,marker:#98c379
+  --color=info:#e5c07b,spinner:#56b6c2,header:#56b6c2,border:#5c6370"
 if command -v fzf &> /dev/null; then
     eval "$(fzf --zsh)"
 fi

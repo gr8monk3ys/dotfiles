@@ -63,3 +63,12 @@ Every `.config/<app>/` directory should contain a `README.md` that documents:
 - A link to the upstream docs or project page.
 
 This is aspirational for existing configs and required for new ones. When adding a `.config/<app>/` directory, create its README in the same commit.
+
+## Tool Catalog Convention
+
+Every package in the install manifests must have an entry in
+[docs/TOOLS.md](docs/TOOLS.md) explaining why it is part of the stack
+(`bin/validate-tool-docs`, run by `make verify`, enforces this in both
+directions — undocumented packages and stale entries fail verification).
+When adding or removing a package, update the catalog in the same commit.
+Browse it interactively with `dotfiles-why`.

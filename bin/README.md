@@ -181,6 +181,31 @@ validate-doc-links /path    # Validate from specific repo path
 make verify-doc-links
 ```
 
+### [validate-tool-docs](validate-tool-docs)
+
+Keeps [docs/TOOLS.md](../docs/TOOLS.md) in sync with the install manifests:
+every package needs a catalog entry, and every entry must still be installed
+by a manifest (entries under "Not installed by manifests" are exempt).
+
+**Usage:**
+```bash
+validate-tool-docs          # Validate from current directory
+# or
+make verify-tool-docs
+```
+
+### [dotfiles-why](dotfiles-why)
+
+Explains why a tool is part of these dotfiles, backed by
+[docs/TOOLS.md](../docs/TOOLS.md).
+
+**Usage:**
+```bash
+dotfiles-why                # fzf browser with entry preview
+dotfiles-why ripgrep        # print one tool's entry
+dotfiles-why --list         # list all documented tools
+```
+
 ## Compatibility Helpers
 
 ### [is-executable](is-executable)

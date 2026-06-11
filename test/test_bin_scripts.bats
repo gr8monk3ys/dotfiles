@@ -172,3 +172,33 @@ teardown() {
     assert_success
     assert_output --partial "Usage:"
 }
+
+# Tool catalog tests
+@test "validate-tool-docs passes on current catalog" {
+    run bin/validate-tool-docs
+    assert_success
+    assert_output --partial "in sync"
+}
+
+@test "validate-tool-docs fails on undocumented package" {
+    cp -r install "$TEST_TEMP_DIR/install"
+    mkdir -p "$TEST_TEMP_DIR/docs" "$TEST_TEMP_DIR/bin"
+    cp docs/TOOLS.md "$TEST_TEMP_DIR/docs/"
+    echo 'brew "made-up-tool"' >> "$TEST_TEMP_DIR/install/Brewfile"
+    run bin/validate-tool-docs "$TEST_TEMP_DIR"
+    assert_failure
+    assert_output --partial "made-up-tool"
+}
+
+@test "dotfiles-why prints a known tool entry" {
+    run bin/dotfiles-why ripgrep
+    assert_success
+    assert_output --partial "### ripgrep"
+    assert_output --partial "Why:"
+}
+
+@test "dotfiles-why fails cleanly on unknown tool" {
+    run bin/dotfiles-why this-tool-does-not-exist
+    assert_failure
+    assert_output --partial "No catalog entry"
+}

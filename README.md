@@ -200,10 +200,26 @@ SketchyBar (Catppuccin Mocha)
 │   └── 📄 Rustfile          # Cargo packages
 │
 ├── 📁 test/                 # BATS test suite
+├── 📁 docs/                 # TOOLS.md tool catalog + plans
 ├── 📄 flake.nix             # Nix flake
 ├── 📄 install.sh            # One-line installer
 └── 📄 Makefile              # Automation
 ```
+
+### 🔎 Why is that tool here?
+
+Every package has a rationale entry in [docs/TOOLS.md](docs/TOOLS.md) —
+what it is, why it was chosen, and what the alternatives were. Browse it
+from the terminal:
+
+```bash
+dotfiles-why            # fzf browser with live preview
+dotfiles-why ripgrep    # print one tool's entry
+```
+
+`make verify` keeps the catalog honest: adding a package without
+documenting it (or documenting a tool that is no longer installed) fails
+verification.
 
 ---
 

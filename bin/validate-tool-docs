@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# Validate that docs/TOOLS.md documents every package in the install
+# manifests, and that every documented entry is still installed somewhere.
+#
+# Coverage rules:
+#   - Brewfile `brew` lines (tap-qualified names match on the last segment)
+#   - Caskfile `cask` lines, except `font-*` (covered by the Fonts section)
+#   - npmfile / Rustfile / pacmanfile non-comment lines
+#   - Entries under "## Not installed by manifests" are exempt from the
+#     reverse check (they document deliberate gaps and system tools).
+
+set -euo pipefail
+
+ROOT_DIR="${1:-.}"
+cd "$ROOT_DIR"
+
+CATALOG="docs/TOOLS.md"
+status=0
+
+if [[ ! -f "$CATALOG" ]]; then
+    echo "Missing $CATALOG"
+    exit 1
+fi
+
+manifest_tools() {
+    sed -nE 's|^brew "([^"]+)".*|\1|p' install/Brewfile | awk -F/ '{print $NF}'
+    sed -nE 's|^cask "([^"]+)".*|\1|p' install/Caskfile | grep -v '^font-'
+    grep -hvE '^[[:space:]]*(#|$)' install/npmfile install/Rustfile install/pacmanfile
+}
+
+catalog_entries() {
+    sed -nE 's/^### (.+)$/\1/p' "$CATALOG"
+}
+
+# Entries in the exempt section (system tools / documented gaps).
+exempt_entries() {
+    awk '/^## Not installed by manifests/{flag=1; next} /^## /{flag=0} flag' "$CATALOG" \
+        | sed -nE 's/^### (.+)$/\1/p'
+}
+
+tools="$(manifest_tools | sort -u)"
+entries="$(catalog_entries | sort)"
+exempt="$(exempt_entries | sort -u)"
+
+# Duplicate entries are documentation bugs too.
+dupes="$(printf '%s\n' "$entries" | uniq -d)"
+if [[ -n "$dupes" ]]; then
+    while IFS= read -r name; do
+        echo "Duplicate entry in $CATALOG: $name"
+    done <<< "$dupes"
+    status=1
+fi
+entries="$(printf '%s\n' "$entries" | uniq)"
+
+# Forward check: every manifest package has a catalog entry.
+missing="$(comm -23 <(printf '%s\n' "$tools") <(printf '%s\n' "$entries"))"
+if [[ -n "$missing" ]]; then
+    while IFS= read -r name; do
+        echo "Undocumented tool (add an entry to $CATALOG): $name"
+    done <<< "$missing"
+    status=1
+fi
+
+# Reverse check: every non-exempt entry is still in a manifest.
+stale="$(comm -13 <(printf '%s\n' "$tools") <(printf '%s\n' "$entries") \
+    | comm -23 - <(printf '%s\n' "$exempt"))"
+if [[ -n "$stale" ]]; then
+    while IFS= read -r name; do
+        echo "Stale entry (tool no longer in any manifest): $name"
+    done <<< "$stale"
+    status=1
+fi
+
+if [[ "$status" -eq 0 ]]; then
+    echo "✓ Tool catalog is in sync with install manifests."
+fi
+
+exit "$status"
