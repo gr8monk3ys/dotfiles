@@ -169,6 +169,8 @@ brew "just"                            # Command runner (simpler make)
 brew "difftastic"                      # Structural/syntax-aware diffs
 brew "grex"                            # Generate regex from examples
 brew "topgrade"                        # Universal system updater
+brew "gum"                             # Styled prompts/spinners for shell scripts
+brew "fastfetch"                       # Fast system info splash (neofetch successor)
 
 # ============================================================================
 # Shell History & Environment

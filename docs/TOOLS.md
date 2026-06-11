@@ -419,12 +419,24 @@ install manifests (`install/Brewfile`, `Caskfile`, `npmfile`, `Rustfile`,
 - **Alternatives:** dotfiles-update (repo script)
 - **Installed via:** Brewfile
 
+### gum
+- **Why:** Styled headers, prompts, and spinners for shell scripts; `bin/lib/ui.sh` upgrades script output with it when present (plain ANSI fallback keeps tests/CI stable).
+- **Alternatives:** hand-rolled ANSI escapes (the fallback)
+- **Installed via:** Brewfile
+
+### fastfetch
+- **Why:** Fast, maintained neofetch successor for a system-info splash; run on demand via the `ff` alias rather than on shell start to protect startup time.
+- **Alternatives:** neofetch (unmaintained), macchina
+- **Installed via:** Brewfile
+- **Config:** [`.config/fastfetch/`](../.config/fastfetch/)
+
 ## Shell History & Environment
 
 ### atuin
-- **Why:** SQLite-backed shell history with fuzzy search and optional sync; replaces plain ctrl-r.
+- **Why:** SQLite-backed shell history with fuzzy search and optional sync; replaces plain ctrl-r. OneDark-themed via a custom theme file.
 - **Alternatives:** mcfly, plain HISTFILE (still kept as fallback)
 - **Installed via:** Brewfile
+- **Config:** [`.config/atuin/`](../.config/atuin/)
 
 ### direnv
 - **Why:** Per-directory env vars; pairs with Nix flakes for per-project dev shells.

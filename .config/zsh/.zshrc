@@ -56,6 +56,24 @@ autoload -Uz compinit && compinit
 
 zinit cdreplay -q
 
+# OneDark palette for zsh-syntax-highlighting (same hexes as the README
+# theme table): valid commands green, errors red, paths underlined, etc.
+typeset -A ZSH_HIGHLIGHT_STYLES
+ZSH_HIGHLIGHT_STYLES[command]='fg=#98c379'
+ZSH_HIGHLIGHT_STYLES[builtin]='fg=#98c379'
+ZSH_HIGHLIGHT_STYLES[function]='fg=#98c379'
+ZSH_HIGHLIGHT_STYLES[alias]='fg=#98c379'
+ZSH_HIGHLIGHT_STYLES[precommand]='fg=#98c379,italic'
+ZSH_HIGHLIGHT_STYLES[reserved-word]='fg=#c678dd'
+ZSH_HIGHLIGHT_STYLES[unknown-token]='fg=#e06c75'
+ZSH_HIGHLIGHT_STYLES[path]='fg=#61afef,underline'
+ZSH_HIGHLIGHT_STYLES[globbing]='fg=#56b6c2'
+ZSH_HIGHLIGHT_STYLES[single-quoted-argument]='fg=#e5c07b'
+ZSH_HIGHLIGHT_STYLES[double-quoted-argument]='fg=#e5c07b'
+ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]='fg=#d19a66'
+ZSH_HIGHLIGHT_STYLES[comment]='fg=#5c6370,italic'
+ZSH_HIGHLIGHT_STYLES[redirection]='fg=#c678dd'
+
 # To customize prompt, run `p10k configure` and edit ~/.p10k.zsh.
 # Fallback to repo-managed config when no personal prompt config exists.
 if [[ -f "$HOME/.p10k.zsh" ]]; then

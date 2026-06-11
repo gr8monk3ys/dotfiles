@@ -308,6 +308,11 @@ fi
 # Gping - Graphical ping (use gping directly, don't shadow ping)
 # gping is a TUI graph tool, not flag-compatible with ping
 
+# fastfetch - System info splash (on demand; not run at shell startup)
+if command -v fastfetch &> /dev/null; then
+    alias ff='fastfetch'
+fi
+
 # Ouch - Universal archive tool
 if command -v ouch &> /dev/null; then
     alias compress='ouch compress'

@@ -206,6 +206,20 @@ dotfiles-why ripgrep        # print one tool's entry
 dotfiles-why --list         # list all documented tools
 ```
 
+### [lib/ui.sh](lib/ui.sh)
+
+Shared terminal UI helpers (`print_header`, `print_success`, `print_info`,
+`print_warn`, `print_error`) sourced by the dotfiles-* scripts. Plain ANSI
+output by default (stable for tests/CI); headers upgrade to styled
+[gum](https://github.com/charmbracelet/gum) boxes when gum is installed and
+stdout is a terminal.
+
+**Usage (inside a script):**
+```bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/ui.sh"
+```
+
 ## Compatibility Helpers
 
 ### [is-executable](is-executable)
