@@ -4,22 +4,14 @@
 set -euo pipefail
 
 readonly DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
-readonly RED='\033[0;31m'
-readonly GREEN='\033[0;32m'
-readonly YELLOW='\033[1;33m'
-readonly BLUE='\033[0;34m'
-readonly NC='\033[0m' # No Color
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/ui.sh
+source "$SCRIPT_DIR/lib/ui.sh"
 
 # Track overall health
 ISSUES=0
 WARNINGS=0
-
-print_header() {
-    echo ""
-    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${BLUE}  $1${NC}"
-    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-}
 
 check_pass() {
     echo -e "${GREEN}✓${NC} $1"
@@ -65,7 +57,7 @@ check_system() {
     fi
 
     check_info "Shell: $SHELL"
-    check_info "User: $USER"
+    check_info "User: ${USER:-$(id -un)}"
     check_info "Home: $HOME"
 }
 
@@ -306,11 +298,11 @@ check_shell_config() {
         check_warn "ZDOTDIR not set"
     fi
 
-    # Check Oh My Zsh
-    if [[ -d "$HOME/.oh-my-zsh" ]]; then
-        check_pass "Oh My Zsh installed"
+    # Check Zinit (plugin manager used by .zshrc; it self-installs on first run)
+    if [[ -d "${XDG_DATA_HOME:-$HOME/.local/share}/zinit/zinit.git" ]]; then
+        check_pass "Zinit installed"
     else
-        check_warn "Oh My Zsh not installed"
+        check_warn "Zinit not installed (will bootstrap on next zsh start)"
     fi
 }
 

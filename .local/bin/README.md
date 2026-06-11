@@ -225,8 +225,8 @@ Slack package manager integration or Slack-related utilities.
 
 ### Installation
 
-#### [install.sh](install.sh)
-Installation script for setting up the dotfiles or related tools.
+#### [install.sh](../../install.sh)
+Installation script (repo root) for setting up the dotfiles or related tools.
 
 **Platform:** Linux/macOS
 
@@ -237,7 +237,12 @@ Installation script for setting up the dotfiles or related tools.
 These scripts are automatically added to PATH via `.zshenv`:
 
 ```bash
-export PATH="$PATH:${$(find ~/.local/bin -maxdepth 1 -type d -printf %p:)%%:}"
+if [[ -d "$HOME/.local/bin" ]]; then
+  export PATH="$HOME/.local/bin:$PATH"
+  for dir in "$HOME/.local/bin"/*(/N); do
+    export PATH="$PATH:$dir"
+  done
+fi
 ```
 
 ## Making Scripts Executable

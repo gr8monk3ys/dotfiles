@@ -181,6 +181,45 @@ validate-doc-links /path    # Validate from specific repo path
 make verify-doc-links
 ```
 
+### [validate-tool-docs](validate-tool-docs)
+
+Keeps [docs/TOOLS.md](../docs/TOOLS.md) in sync with the install manifests:
+every package needs a catalog entry, and every entry must still be installed
+by a manifest (entries under "Not installed by manifests" are exempt).
+
+**Usage:**
+```bash
+validate-tool-docs          # Validate from current directory
+# or
+make verify-tool-docs
+```
+
+### [dotfiles-why](dotfiles-why)
+
+Explains why a tool is part of these dotfiles, backed by
+[docs/TOOLS.md](../docs/TOOLS.md).
+
+**Usage:**
+```bash
+dotfiles-why                # fzf browser with entry preview
+dotfiles-why ripgrep        # print one tool's entry
+dotfiles-why --list         # list all documented tools
+```
+
+### [lib/ui.sh](lib/ui.sh)
+
+Shared terminal UI helpers (`print_header`, `print_success`, `print_info`,
+`print_warn`, `print_error`) sourced by the dotfiles-* scripts. Plain ANSI
+output by default (stable for tests/CI); headers upgrade to styled
+[gum](https://github.com/charmbracelet/gum) boxes when gum is installed and
+stdout is a terminal.
+
+**Usage (inside a script):**
+```bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/ui.sh"
+```
+
 ## Compatibility Helpers
 
 ### [is-executable](is-executable)

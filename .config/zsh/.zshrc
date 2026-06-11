@@ -1,7 +1,15 @@
+# Prompt selection: starship (default) or p10k.
+# Pin per machine with:  echo p10k > ~/.config/zsh/prompt.local  (gitignored)
+DOTFILES_PROMPT="${DOTFILES_PROMPT:-$(cat "${ZDOTDIR:-$HOME/.config/zsh}/prompt.local" 2>/dev/null || echo starship)}"
+# Fall back to p10k when the starship binary isn't installed.
+if [[ "$DOTFILES_PROMPT" == "starship" ]] && ! command -v starship &> /dev/null; then
+  DOTFILES_PROMPT="p10k"
+fi
+
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+if [[ "$DOTFILES_PROMPT" == "p10k" && -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
@@ -32,8 +40,10 @@ fi
 # Source/Load zinit
 source "${ZINIT_HOME}/zinit.zsh"
 
-# Add in Powerlevel10k
-zinit ice depth=1; zinit light romkatv/powerlevel10k
+# Add in Powerlevel10k (fallback prompt; starship is the default)
+if [[ "$DOTFILES_PROMPT" == "p10k" ]]; then
+  zinit ice depth=1; zinit light romkatv/powerlevel10k
+fi
 
 # Add in zsh plugins
 zinit light zsh-users/zsh-syntax-highlighting
@@ -56,12 +66,36 @@ autoload -Uz compinit && compinit
 
 zinit cdreplay -q
 
-# To customize prompt, run `p10k configure` and edit ~/.p10k.zsh.
-# Fallback to repo-managed config when no personal prompt config exists.
-if [[ -f "$HOME/.p10k.zsh" ]]; then
-  source "$HOME/.p10k.zsh"
-elif [[ -f "${ZDOTDIR:-$HOME/.config/zsh}/.p10k.zsh" ]]; then
-  source "${ZDOTDIR:-$HOME/.config/zsh}/.p10k.zsh"
+# OneDark palette for zsh-syntax-highlighting (same hexes as the README
+# theme table): valid commands green, errors red, paths underlined, etc.
+typeset -A ZSH_HIGHLIGHT_STYLES
+ZSH_HIGHLIGHT_STYLES[command]='fg=#98c379'
+ZSH_HIGHLIGHT_STYLES[builtin]='fg=#98c379'
+ZSH_HIGHLIGHT_STYLES[function]='fg=#98c379'
+ZSH_HIGHLIGHT_STYLES[alias]='fg=#98c379'
+ZSH_HIGHLIGHT_STYLES[precommand]='fg=#98c379,italic'
+ZSH_HIGHLIGHT_STYLES[reserved-word]='fg=#c678dd'
+ZSH_HIGHLIGHT_STYLES[unknown-token]='fg=#e06c75'
+ZSH_HIGHLIGHT_STYLES[path]='fg=#61afef,underline'
+ZSH_HIGHLIGHT_STYLES[globbing]='fg=#56b6c2'
+ZSH_HIGHLIGHT_STYLES[single-quoted-argument]='fg=#e5c07b'
+ZSH_HIGHLIGHT_STYLES[double-quoted-argument]='fg=#e5c07b'
+ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]='fg=#d19a66'
+ZSH_HIGHLIGHT_STYLES[comment]='fg=#5c6370,italic'
+ZSH_HIGHLIGHT_STYLES[redirection]='fg=#c678dd'
+
+# Initialize the selected prompt.
+if [[ "$DOTFILES_PROMPT" == "starship" ]]; then
+  export STARSHIP_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/starship/starship.toml"
+  eval "$(starship init zsh)"
+else
+  # To customize prompt, run `p10k configure` and edit ~/.p10k.zsh.
+  # Fallback to repo-managed config when no personal prompt config exists.
+  if [[ -f "$HOME/.p10k.zsh" ]]; then
+    source "$HOME/.p10k.zsh"
+  elif [[ -f "${ZDOTDIR:-$HOME/.config/zsh}/.p10k.zsh" ]]; then
+    source "${ZDOTDIR:-$HOME/.config/zsh}/.p10k.zsh"
+  fi
 fi
 
 # Keybindings
@@ -75,7 +109,6 @@ HISTSIZE=5000
 HISTFILE="${XDG_STATE_HOME:-$HOME/.local/state}/zsh/history"
 mkdir -p "${XDG_STATE_HOME:-$HOME/.local/state}/zsh"
 SAVEHIST=$HISTSIZE
-HISTDUP=erase
 setopt appendhistory
 setopt sharehistory
 setopt hist_ignore_space
@@ -118,6 +151,15 @@ fi
 # ============================================================================
 
 # fzf - Fuzzy finder
+# OneDark palette (matches the README theme table); bg:-1 keeps the
+# terminal's own background so Ghostty's frosted glass shows through.
+# Inherited by fzf-tab, ctrl-r/ctrl-t, and fzf-based scripts (dotfiles-why).
+export FZF_DEFAULT_OPTS="
+  --height=60% --layout=reverse --border=rounded --info=inline
+  --color=bg:-1,fg:#abb2bf,hl:#61afef
+  --color=bg+:#3e4451,fg+:#e6efff,hl+:#61afef
+  --color=prompt:#98c379,pointer:#c678dd,marker:#98c379
+  --color=info:#e5c07b,spinner:#56b6c2,header:#56b6c2,border:#5c6370"
 if command -v fzf &> /dev/null; then
     eval "$(fzf --zsh)"
 fi

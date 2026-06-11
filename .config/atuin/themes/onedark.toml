@@ -1,0 +1,14 @@
+# OneDark theme for Atuin's search UI.
+# Hexes match the repo theme table in the root README.
+[theme]
+name = "onedark"
+
+[colors]
+Base = "#abb2bf"
+Title = "#61afef"
+Annotation = "#56b6c2"
+Guidance = "#5c6370"
+Important = "#c678dd"
+AlertInfo = "#98c379"
+AlertWarn = "#e5c07b"
+AlertError = "#e06c75"

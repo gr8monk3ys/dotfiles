@@ -14,7 +14,18 @@ if command -v fzf &> /dev/null; then
     # f - fuzzy-find a file and copy its path to clipboard
     f() {
         local file
-        file="$(find . -type f -not -path '*/.*' | fzf)" && echo "$file" | pbcopy && echo "Copied: $file"
+        file="$(find . -type f -not -path '*/.*' | fzf)" || return
+        if command -v pbcopy &> /dev/null; then
+            printf '%s' "$file" | pbcopy
+        elif command -v wl-copy &> /dev/null; then
+            printf '%s' "$file" | wl-copy
+        elif command -v xclip &> /dev/null; then
+            printf '%s' "$file" | xclip -selection clipboard
+        else
+            echo "$file"
+            return
+        fi
+        echo "Copied: $file"
     }
 
     # fv - fuzzy-find a file and open in editor

@@ -10,6 +10,11 @@
 #     email = your.email@example.com
 #     signingkey = YOUR_GPG_KEY_ID
 
+# The main config enables GPG-signed commits. On machines without a GPG key,
+# disable signing here (otherwise every commit fails):
+# [commit]
+#     gpgsign = false
+
 # Work-specific configuration
 # [user]
 #     email = your.name@company.com

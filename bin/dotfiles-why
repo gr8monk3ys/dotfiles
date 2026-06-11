@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# dotfiles-why - Explain why a tool is part of these dotfiles.
+#
+# Usage:
+#   dotfiles-why              Interactive fzf browser over the tool catalog
+#   dotfiles-why <tool>       Print the catalog entry for <tool>
+#   dotfiles-why --list       List all documented tools
+#
+# Entries live in docs/TOOLS.md; `bin/validate-tool-docs` keeps that file in
+# sync with the install manifests.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CATALOG="${DOTFILES_TOOLS_MD:-$SCRIPT_DIR/../docs/TOOLS.md}"
+
+if [[ ! -f "$CATALOG" ]]; then
+    echo "Tool catalog not found: $CATALOG" >&2
+    exit 1
+fi
+
+list_tools() {
+    sed -nE 's/^### (.+)$/\1/p' "$CATALOG"
+}
+
+# Print one entry: from its "### name" heading to the next heading.
+show_tool() {
+    local name="$1"
+    awk -v name="$1" '
+        $0 == "### " name { found = 1; print; next }
+        found && /^##/ { exit }
+        found { print }
+    ' "$CATALOG"
+}
+
+render() {
+    if command -v bat > /dev/null 2>&1; then
+        bat --language=markdown --style=plain --color=always --paging=never
+    else
+        cat
+    fi
+}
+
+case "${1:-}" in
+    --list)
+        list_tools
+        ;;
+    --show)
+        # Internal: used as the fzf preview command.
+        show_tool "${2:?--show requires a tool name}" | render
+        ;;
+    "")
+        if ! command -v fzf > /dev/null 2>&1; then
+            echo "fzf not found — run 'dotfiles-why --list' or 'dotfiles-why <tool>'" >&2
+            exit 1
+        fi
+        selection="$(list_tools | fzf \
+            --prompt='why ' \
+            --header='Why is this tool in the dotfiles? (enter to print)' \
+            --preview="'${BASH_SOURCE[0]}' --show {}" \
+            --preview-window=right:65%:wrap)" || exit 0
+        show_tool "$selection" | render
+        ;;
+    *)
+        entry="$(show_tool "$1")"
+        if [[ -z "$entry" ]]; then
+            echo "No catalog entry for '$1'." >&2
+            echo "Closest matches:" >&2
+            list_tools | grep -i -- "$1" >&2 || echo "  (none)" >&2
+            exit 1
+        fi
+        printf '%s\n' "$entry" | render
+        ;;
+esac

@@ -1,0 +1,7 @@
+# Atuin configuration — https://docs.atuin.sh/configuration/config/
+# Only deviations from defaults are set; sync stays opt-in per machine
+# (run `atuin register`/`atuin login` manually if wanted).
+
+# Match the repo-wide OneDark theme (themes/onedark.toml).
+[theme]
+name = "onedark"

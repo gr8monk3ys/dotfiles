@@ -15,17 +15,25 @@ The `.config` directory centralizes application configurations in a single locat
 ```
 .config/
 ├── aerospace/            # AeroSpace window manager
+├── atuin/                # Atuin shell history (OneDark theme)
+├── bat/                  # bat pager/cat theme
+├── claude/               # Claude Code notes
 ├── curl/                 # cURL HTTP client defaults
+├── eza/                  # eza ls-replacement theme
+├── fastfetch/            # Fastfetch system info splash
 ├── firefox/              # Firefox browser customization
 ├── ghostty/              # Ghostty terminal emulator (primary)
 ├── git/                  # Git version control settings
 ├── jj/                   # Jujutsu VCS (modern Git alternative)
+├── karabiner/            # Karabiner-Elements key remapping
 ├── latexmk/              # LaTeX build automation
 ├── macos/                # macOS-specific configurations
 ├── mpd/                  # Music Player Daemon
 ├── newsboat/             # RSS/Atom feed reader
 ├── nvim/                 # Neovim text editor (has its own README)
+├── sketchybar/           # SketchyBar status bar
 ├── ssh/                  # OpenSSH host snippets (config.d includes)
+├── starship/             # Starship prompt (default; p10k fallback)
 ├── tmux/                 # Tmux terminal multiplexer (backup)
 ├── wget/                 # Wget download utility
 ├── yazi/                 # Yazi file manager (replaces lf)
