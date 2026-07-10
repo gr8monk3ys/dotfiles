@@ -7,3 +7,8 @@ updates:
       interval: "weekly"
     reviewers:
       - gr8monk3ys
+    ignore:
+      # Same-owner reusable workflows live in the PRIVATE gr8monk3ys/github
+      # repo; Dependabot cannot reach it (git_dependencies_not_reachable)
+      # and fails every weekly run. They are pinned manually, not versioned.
+      - dependency-name: "gr8monk3ys/*"
