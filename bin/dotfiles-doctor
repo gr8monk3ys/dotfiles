@@ -182,8 +182,9 @@ check_package_managers() {
         check_warn "Cargo not installed"
     fi
 
-    # pacman (Linux)
-    if command_exists pacman; then
+    # pacman (Linux only; the repo ships a bin/pacman sudo wrapper that
+    # would satisfy a bare command_exists check on macOS via make's PATH)
+    if [[ "$OSTYPE" == "linux-gnu"* ]] && command_exists pacman; then
         check_pass "pacman installed"
     fi
 }
