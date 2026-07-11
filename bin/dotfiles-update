@@ -122,7 +122,9 @@ update_npm() {
     npm install -g npm@latest
 
     print_info "Checking for outdated packages..."
-    outdated=$(npm outdated -g --depth=0 | tail -n +2 | wc -l)
+    # npm outdated exits 1 when packages are outdated; without the
+    # || true, set -e would abort exactly when there is work to do.
+    outdated=$(npm outdated -g --depth=0 | tail -n +2 | wc -l | tr -d '[:space:]') || true
 
     if [[ "$outdated" -gt 0 ]]; then
         print_info "Updating $outdated global packages..."

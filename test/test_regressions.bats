@@ -123,6 +123,31 @@ teardown() {
 	[[ ! -h "$TEST_HOME/.config/broken-link" ]]
 }
 
+@test "dotfiles-update npm check survives outdated packages under set -e" {
+	# Minimal clean git repo so update_dotfiles passes
+	git -C "$TEST_HOME" init -q -b main dotfiles-repo
+	git -C "$TEST_HOME/dotfiles-repo" -c user.email=t@t.t -c user.name=t \
+		commit -q --allow-empty -m init
+	git -C "$TEST_HOME/dotfiles-repo" remote add origin "$TEST_HOME/dotfiles-repo"
+
+	# Stub npm: like the real one, outdated exits 1 when packages are stale
+	mkdir -p "$TEST_TEMP_DIR/bin"
+	cat > "$TEST_TEMP_DIR/bin/npm" <<'EOS'
+#!/usr/bin/env bash
+case "${1:-}" in
+	outdated) printf 'Package Current Wanted\nfoo 1.0.0 2.0.0\n'; exit 1 ;;
+	*) exit 0 ;;
+esac
+EOS
+	chmod +x "$TEST_TEMP_DIR/bin/npm"
+
+	run env HOME="$TEST_HOME" DOTFILES_DIR="$TEST_HOME/dotfiles-repo" \
+		PATH="$TEST_TEMP_DIR/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
+		bash bin/dotfiles-update --skip-brew --skip-cargo
+	assert_success
+	assert_output --partial "npm packages updated"
+}
+
 @test "dotfiles-doctor does not report pacman on macOS" {
 	skip_if_not_macos
 
