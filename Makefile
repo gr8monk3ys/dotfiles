@@ -347,7 +347,7 @@ sync-run:
 
 clean:
 	@echo "Cleaning broken symlinks..."
-	@find "$(HOME)/.config" -xtype l -delete 2>/dev/null || true
+	@find "$(HOME)/.config" -type l ! -exec test -e {} \; -delete 2>/dev/null || true
 	@if [ -h "$(HOME)/.zshenv" ] && [ ! -e "$(HOME)/.zshenv" ]; then \
 		rm -f "$(HOME)/.zshenv"; \
 		echo "Removed broken .zshenv symlink"; \

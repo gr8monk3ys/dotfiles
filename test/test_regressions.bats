@@ -102,3 +102,23 @@ teardown() {
 	# p10k stays loadable for the fallback path
 	grep -q 'romkatv/powerlevel10k' .config/zsh/.zshrc
 }
+
+@test "Makefile does not use GNU-only find -xtype" {
+	run grep -n -- "-xtype" Makefile
+	assert_failure
+}
+
+@test "make clean removes broken symlinks on BSD and GNU find" {
+	mkdir -p "$TEST_HOME/.config"
+	printf 'keep\n' > "$TEST_HOME/.config/real-file"
+	ln -s "$TEST_HOME/.config/real-file" "$TEST_HOME/.config/valid-link"
+	ln -s "$TEST_HOME/does-not-exist" "$TEST_HOME/.config/broken-link"
+
+	run env HOME="$TEST_HOME" PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
+		make clean
+	assert_success
+
+	[[ -f "$TEST_HOME/.config/real-file" ]]
+	[[ -h "$TEST_HOME/.config/valid-link" ]]
+	[[ ! -h "$TEST_HOME/.config/broken-link" ]]
+}
