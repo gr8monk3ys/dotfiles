@@ -1,3 +1,11 @@
+# Homebrew must be on PATH before prompt selection: cold-start shells
+# (e.g. a terminal launched from the Dock) get the bare launchd PATH,
+# and the starship binary lives in the Homebrew prefix. brew shellenv
+# prints nothing, so it is safe above the p10k instant-prompt block.
+if [[ -f "/opt/homebrew/bin/brew" ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
+
 # Prompt selection: starship (default) or p10k.
 # Pin per machine with:  echo p10k > ~/.config/zsh/prompt.local  (gitignored)
 DOTFILES_PROMPT="${DOTFILES_PROMPT:-$(cat "${ZDOTDIR:-$HOME/.config/zsh}/prompt.local" 2>/dev/null || echo starship)}"
@@ -11,11 +19,6 @@ fi
 # confirmations, etc.) must go above this block; everything else may go below.
 if [[ "$DOTFILES_PROMPT" == "p10k" && -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
-
-if [[ -f "/opt/homebrew/bin/brew" ]]; then
-  # If you're using macOS, you'll want this enabled
-  eval "$(/opt/homebrew/bin/brew shellenv)"
 fi
 
 # Prefer user-local binaries before package manager shims.
