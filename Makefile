@@ -222,17 +222,18 @@ verify-shell:
 
 verify-stale-refs:
 	@echo "Checking for stale migration references..."
-	@PATTERN='OneHalfDark|\.config/\.aliases|org\.alacritty|tokyonight|LF_ICONS|CODE_QUALITY_REPORT|lorenozsca7'; \
+	@PATTERN='OneHalfDark|\.config/\.aliases|org\.alacritty|tokyonight|LF_ICONS|CODE_QUALITY_REPORT|lorenozsca7|oh-my-zsh|Oh My Zsh'; \
+	SCAN_PATHS='README.md OPERATING.md CLAUDE.md .config bin nix .zshenv flake.nix'; \
 	if command -v rg >/dev/null 2>&1; then \
-		if rg -n "$$PATTERN" README.md CLAUDE.md .config nix .zshenv flake.nix >/dev/null; then \
+		if rg -n "$$PATTERN" $$SCAN_PATHS >/dev/null; then \
 			echo "Found stale references:"; \
-			rg -n "$$PATTERN" README.md CLAUDE.md .config nix .zshenv flake.nix; \
+			rg -n "$$PATTERN" $$SCAN_PATHS; \
 			exit 1; \
 		fi; \
 	else \
-		if grep -R -nE "$$PATTERN" README.md CLAUDE.md .config nix .zshenv flake.nix >/dev/null; then \
+		if grep -R -nE "$$PATTERN" $$SCAN_PATHS >/dev/null; then \
 			echo "Found stale references:"; \
-			grep -R -nE "$$PATTERN" README.md CLAUDE.md .config nix .zshenv flake.nix; \
+			grep -R -nE "$$PATTERN" $$SCAN_PATHS; \
 			exit 1; \
 		fi; \
 	fi
@@ -347,7 +348,7 @@ sync-run:
 
 clean:
 	@echo "Cleaning broken symlinks..."
-	@find "$(HOME)/.config" -xtype l -delete 2>/dev/null || true
+	@find "$(HOME)/.config" -type l ! -exec test -e {} \; -delete 2>/dev/null || true
 	@if [ -h "$(HOME)/.zshenv" ] && [ ! -e "$(HOME)/.zshenv" ]; then \
 		rm -f "$(HOME)/.zshenv"; \
 		echo "Removed broken .zshenv symlink"; \

@@ -96,9 +96,9 @@ Each subdirectory contains a `README.md` with detailed information about its spe
 
 **Why chosen:**
 - Superior auto-completion compared to Bash
-- Rich plugin ecosystem (Oh My Zsh)
+- Rich plugin ecosystem (managed by Zinit)
 - Better globbing and scripting capabilities
-- Powerlevel10k for informative, beautiful prompts
+- Starship prompt by default, with Powerlevel10k as fallback
 - Shared history and correction features
 
 ### Development Tools

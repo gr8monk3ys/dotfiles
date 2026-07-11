@@ -92,7 +92,7 @@ Commands you re-run routinely.
 | `make link` | Create/refresh all symlinks via Stow. Safe to re-run. |
 | `make link-dry-run` | Preview symlink changes without applying. |
 | `make doctor` | Comprehensive health check (symlinks, package managers, shell config, tool presence). |
-| `make update` | Update all packages (Homebrew, npm, Cargo, Oh My Zsh, plugins). |
+| `make update` | Update all packages (Homebrew, npm, Cargo, Zinit plugins). |
 | `make backup` | Snapshot configs + package lists. `backup-compress` / `backup-cleanup` variants exist. |
 | `make bench-shell` | Benchmark interactive zsh startup against a budget (default 900ms). |
 | `make daily` | Fast pre-push check: shell syntax + doc links + tests. |

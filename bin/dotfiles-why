@@ -35,7 +35,7 @@ show_tool() {
 
 render() {
     if command -v bat > /dev/null 2>&1; then
-        bat --language=markdown --style=plain --color=always --paging=never
+        bat --language=markdown --style=plain --color=auto --paging=never
     else
         cat
     fi
