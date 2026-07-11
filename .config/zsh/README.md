@@ -37,7 +37,7 @@ Plugins are managed by [zinit](https://github.com/zdharma-continuum/zinit)
 (self-bootstraps on first shell start): powerlevel10k (fallback mode only),
 zsh-syntax-highlighting (OneDark `ZSH_HIGHLIGHT_STYLES` palette),
 zsh-completions, zsh-autosuggestions, fzf-tab, plus a few OMZ snippets
-(git, sudo, aws, kubectl, …). Oh My Zsh itself is **not** used.
+(git, sudo, aws, kubectl, …). OMZ itself is **not** installed.
 
 ## Tool integrations
 
