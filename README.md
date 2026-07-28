@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/hero.png" alt="dotfiles preview" width="640">
+</p>
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/gr8monk3ys/dotfiles/main/.github/assets/banner-dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/gr8monk3ys/dotfiles/main/.github/assets/banner-light.svg">
