@@ -1,19 +1,24 @@
 # Homebrew must be on PATH before prompt selection: cold-start shells
 # (e.g. a terminal launched from the Dock) get the bare launchd PATH,
 # and the starship binary lives in the Homebrew prefix.
-if [[ -f "/opt/homebrew/bin/brew" ]]; then
-  eval "$(/opt/homebrew/bin/brew shellenv)"
-fi
+# Apple Silicon, Intel, Linuxbrew — first prefix found wins.
+for _brew in /opt/homebrew/bin/brew /usr/local/bin/brew /home/linuxbrew/.linuxbrew/bin/brew; do
+  if [[ -x "$_brew" ]]; then
+    eval "$("$_brew" shellenv)"
+    break
+  fi
+done
+unset _brew
 
-# Prefer user-local binaries before package manager shims.
-if [[ -d "$HOME/.local/bin" ]]; then
-  path=("$HOME/.local/bin" "${(@)path:#$HOME/.local/bin}")
-fi
-
-# Cargo installs binaries like `rustlings` here.
-if [[ -d "$HOME/.cargo/bin" ]]; then
-  path=("$HOME/.cargo/bin" "${(@)path:#$HOME/.cargo/bin}")
-fi
+# .zshenv already put ~/.local/bin and ~/.cargo/bin first, but on macOS
+# /etc/zprofile runs path_helper, which rebuilds PATH with the system dirs
+# in front for login shells; brew shellenv above also prepends its prefix.
+# Re-prepend once here so user-local binaries beat package-manager shims.
+# `typeset -U path` (set in .zshenv) drops the earlier duplicates.
+for _dir in "$HOME/.cargo/bin" "$HOME/.local/bin"; do
+  [[ -d "$_dir" ]] && path=("$_dir" $path)
+done
+unset _dir
 
 # Set the directory we want to store zinit and plugins
 ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
@@ -27,11 +32,9 @@ fi
 # Source/Load zinit
 source "${ZINIT_HOME}/zinit.zsh"
 
-# Add in zsh plugins
-zinit light zsh-users/zsh-syntax-highlighting
+# Completion definitions only; the widgets that must come after compinit
+# (fzf-tab, autosuggestions, syntax-highlighting) are loaded below.
 zinit light zsh-users/zsh-completions
-zinit light zsh-users/zsh-autosuggestions
-zinit light Aloxaf/fzf-tab
 
 # Add in snippets
 zinit snippet OMZL::git.zsh
@@ -60,6 +63,12 @@ fi
 unset _zcompdump _zcompdump_stale
 
 zinit cdreplay -q
+
+# Order matters (per fzf-tab's README): fzf-tab after compinit and before
+# the widget-wrapping plugins; syntax-highlighting must be last.
+zinit light Aloxaf/fzf-tab
+zinit light zsh-users/zsh-autosuggestions
+zinit light zsh-users/zsh-syntax-highlighting
 
 # OneDark palette for zsh-syntax-highlighting (same hexes as the README
 # theme table): valid commands green, errors red, paths underlined, etc.
@@ -94,17 +103,15 @@ bindkey '^p' history-search-backward
 bindkey '^n' history-search-forward
 bindkey '^[w' kill-region
 
-# History
-HISTSIZE=5000
-HISTFILE="${XDG_STATE_HOME:-$HOME/.local/state}/zsh/history"
-mkdir -p "${XDG_STATE_HOME:-$HOME/.local/state}/zsh"
+# History (atuin is the primary store; this is the plain-zsh fallback)
+HISTSIZE=50000
 SAVEHIST=$HISTSIZE
-setopt appendhistory
-setopt sharehistory
+HISTFILE="${XDG_STATE_HOME:-$HOME/.local/state}/zsh/history"
+mkdir -p "${HISTFILE:h}"
+setopt sharehistory        # implies incremental append across sessions
 setopt hist_ignore_space
 setopt hist_ignore_all_dups
 setopt hist_save_no_dups
-setopt hist_ignore_dups
 setopt hist_find_no_dups
 
 # Completion styling
@@ -174,8 +181,13 @@ if command -v mise &> /dev/null; then
     eval "$(mise activate zsh)"
 fi
 
-# Machine type detection (personal, work, server)
-export MACHINE_TYPE="${MACHINE_TYPE:-$(cat ~/.machine_type 2>/dev/null || echo 'personal')}"
+# Machine type detection (personal, work, server). $(<file) is read by
+# zsh itself — no fork, unlike $(cat ...).
+if [[ -z "$MACHINE_TYPE" ]]; then
+  MACHINE_TYPE="$(<~/.machine_type)" 2>/dev/null
+  MACHINE_TYPE="${MACHINE_TYPE:-personal}"
+fi
+export MACHINE_TYPE
 
 # Load local overrides (not tracked in git)
 # Create ~/.config/zsh/zshrc.local for machine-specific settings, and

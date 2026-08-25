@@ -8,11 +8,9 @@ repo-root `.zshenv`), so everything zsh loads lives in this directory.
 
 - `.zshrc` — main interactive-shell config: prompt selection, zinit
   plugins, history, completion styling, tool integrations
-- `.zprofile` — login-shell setup
 - `aliases.zsh` — aliases (modern CLI replacements, macOS-only block,
   utility shortcuts); sourced by `.zshrc`
 - `functions.zsh` — fzf-powered helper functions (`f`, `fv`, `cx`, …)
-- `.inputrc` — readline behavior for non-zsh tools
 - `zshrc.local.example` — template for machine-local overrides
 
 ## Prompt
