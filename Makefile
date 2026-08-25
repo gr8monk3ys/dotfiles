@@ -15,7 +15,7 @@ export ACCEPT_EULA=Y
         doctor update backup worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
         brew bash git npm packages-macos packages-arch core-macos core-arch \
-        stow-arch stow-macos cask-apps vscode-extensions node-packages \
+        stow-arch stow-macos stow-linux linux cask-apps vscode-extensions node-packages \
         rust-packages duti bun pacman-packages brew-packages \
         help \
         sync-install sync-uninstall sync-status sync-run \
@@ -27,6 +27,9 @@ macos: sudo core-macos packages-macos link duti bun
 
 arch: core-arch packages-arch link
 
+# Generic Linux (Debian, Fedora, …): no package manifests here; link only.
+linux: link
+
 core-macos: brew bash git
 
 core-arch:
@@ -37,6 +40,9 @@ stow-arch: core-arch
 
 stow-macos: brew
 	bin/platform has stow || brew install stow
+
+stow-linux:
+	@bin/platform has stow || { echo "stow not found: install it with your package manager (apt/dnf install stow)"; exit 1; }
 
 sudo:
 ifndef GITHUB_ACTION

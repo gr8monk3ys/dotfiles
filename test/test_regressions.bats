@@ -186,3 +186,11 @@ EOS
     [[ "$output" != *"cargo install # Rust"* ]]
     [[ "$output" == *"install/Rustfile"* ]]
 }
+
+# Regression: `link: stow-$(OS)` had no stow-linux target, so `make link`
+# on any non-Arch Linux failed with "No rule to make target 'stow-linux'".
+@test "make link has a rule for generic linux" {
+	run make -n OS=linux link
+	assert_success
+	[[ "$output" == *"stow -t"* ]]
+}

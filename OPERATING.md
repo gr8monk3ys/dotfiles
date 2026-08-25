@@ -167,7 +167,7 @@ Top-level directories, one sentence each.
 - **`bin/`** — Helper scripts: platform detection, `dotfiles-doctor/update/backup/restore/bench-shell/worktree`, doc-link validator. See `bin/README.md`.
 - **`install/`** — Package manifests: `Brewfile`, `Caskfile`, `npmfile`, `Rustfile`, `pacmanfile`, `Codefile` (VSCodium extensions), `duti` (macOS file associations).
 - **`test/`** — BATS test suite. Run with `make test`. Pattern: `test_*.bats`, helpers in `test_helper/`.
-- **`.github/`** — CI workflows (`install.yml`, `test.yml`, `lint.yml`).
+- **`.github/`** — `CODEOWNERS` only. There is no CI: the repo is private and GitHub Actions is disabled (no minutes). `make verify` before pushing is the gate.
 - **`docs/`** — Plans and specs for non-trivial changes.
 
 The Stow target is `~/.config/`. The only exception is `.zshenv`, which is manually symlinked from the repo root to `~/.zshenv` because Zsh must find it in `$HOME`.
