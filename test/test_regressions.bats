@@ -240,3 +240,14 @@ EOS
 	assert_success
 	[[ "$output" == *"stow -t"* ]]
 }
+
+# Regression: Homebrew >= 5 refuses third-party taps until `brew trust`ed,
+# so `brew bundle` on a fresh Mac died on the first tapped cask (aerospace).
+@test "brew-packages and cask-apps trust the Brewfile taps first" {
+	run make -n brew-packages
+	assert_success
+	[[ "$output" == *"brew trust"* ]]
+	run make -n cask-apps
+	assert_success
+	[[ "$output" == *"brew trust"* ]]
+}

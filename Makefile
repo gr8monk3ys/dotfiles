@@ -16,7 +16,7 @@ export ACCEPT_EULA=Y
         doctor update backup worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
         brew git packages-macos packages-arch core-macos core-arch \
-        stow-arch stow-macos stow-linux linux cask-apps vscode-extensions node-packages \
+        stow-arch stow-macos stow-linux linux brew-taps cask-apps vscode-extensions node-packages \
         rust-packages duti bun pacman-packages brew-packages \
         help \
         sync-install sync-uninstall sync-status sync-run \
@@ -99,7 +99,16 @@ packages-arch: pacman-packages
 pacman-packages:
 	pacman -S --noconfirm - < $(DOTFILES_DIR)/install/pacmanfile
 
-brew-packages: brew
+# Homebrew >= 5 refuses to install from third-party taps until they are
+# trusted ("Refusing to load cask … from untrusted tap"). Trust exactly the
+# taps the Brewfile declares; a no-op on Homebrew versions without `trust`.
+brew-taps: brew
+	@if [ -z "$(SKIP_BREW)" ] && brew help trust >/dev/null 2>&1; then \
+		grep -oE '^tap "[^"]+"' $(DOTFILES_DIR)/install/Brewfile | cut -d'"' -f2 | \
+			while read -r tap; do brew trust "$$tap" >/dev/null 2>&1 || brew trust "$$tap"; done; \
+	fi
+
+brew-packages: brew brew-taps
 	if [ -n "$(SKIP_BREW)" ]; then \
 		echo "Skipping Homebrew formulae"; \
 	elif [ -n "$(BREW_BUNDLE_STRICT)" ]; then \
@@ -108,7 +117,7 @@ brew-packages: brew
 		brew bundle --file=$(DOTFILES_DIR)/install/Brewfile || true; \
 	fi
 
-cask-apps: brew
+cask-apps: brew brew-taps
 	if [ -n "$(SKIP_CASKS)" ]; then \
 		echo "Skipping Homebrew casks"; \
 	elif [ -n "$(BREW_BUNDLE_STRICT)" ]; then \
