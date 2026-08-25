@@ -12,32 +12,23 @@ repo-root `.zshenv`), so everything zsh loads lives in this directory.
 - `aliases.zsh` — aliases (modern CLI replacements, macOS-only block,
   utility shortcuts); sourced by `.zshrc`
 - `functions.zsh` — fzf-powered helper functions (`f`, `fv`, `cx`, …)
-- `.p10k.zsh` — Powerlevel10k config (fallback prompt, see below)
 - `.inputrc` — readline behavior for non-zsh tools
 - `zshrc.local.example` — template for machine-local overrides
 
 ## Prompt
 
-[Starship](https://starship.rs) is the default prompt
-(config: [`../starship/starship.toml`](../starship/starship.toml), OneDark,
-replicating the previous lean p10k layout). Powerlevel10k is the
-**automatic fallback** whenever the `starship` binary is missing, and can
-be pinned per machine:
-
-```bash
-echo p10k > ~/.config/zsh/prompt.local   # gitignored; delete to undo
-```
-
-p10k is in maintenance mode upstream, which is why it is no longer the
-default; its config is kept for the fallback path and rollback.
+[Starship](https://starship.rs) (config:
+[`../starship/starship.toml`](../starship/starship.toml), OneDark). If the
+`starship` binary is missing, `.zshrc` sets a plain two-line prompt until
+`make brew-packages` installs it.
 
 ## Plugin manager
 
 Plugins are managed by [zinit](https://github.com/zdharma-continuum/zinit)
-(self-bootstraps on first shell start): powerlevel10k (fallback mode only),
-zsh-syntax-highlighting (OneDark `ZSH_HIGHLIGHT_STYLES` palette),
+(self-bootstraps on first shell start): zsh-syntax-highlighting (OneDark `ZSH_HIGHLIGHT_STYLES` palette),
 zsh-completions, zsh-autosuggestions, fzf-tab, plus a few OMZ snippets
-(git, sudo, aws, kubectl, …). OMZ itself is **not** installed.
+(git, sudo, command-not-found; aws/kubectl/archlinux only when the tool
+exists). OMZ itself is **not** installed.
 
 ## Tool integrations
 
@@ -69,4 +60,3 @@ dotfiles-bench-shell   # measure startup time
 - [Zsh Documentation](https://zsh.sourceforge.io/Doc/)
 - [zinit](https://github.com/zdharma-continuum/zinit)
 - [Starship](https://starship.rs)
-- [Powerlevel10k](https://github.com/romkatv/powerlevel10k)

@@ -15,8 +15,8 @@
 # export OPENAI_API_KEY="your-key-here"
 # export GITHUB_TOKEN="your-token-here"
 
-# Example: Custom prompt modifications
-# POWERLEVEL9K_LEFT_PROMPT_ELEMENTS+=(custom_machine_type)
+# Example: point starship at a per-machine config
+# export STARSHIP_CONFIG="$HOME/.config/starship/work.toml"
 
 # Example: Conditional configurations based on machine type
 # case "$MACHINE_TYPE" in

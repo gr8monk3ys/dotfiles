@@ -5,3 +5,9 @@
 # Match the repo-wide OneDark theme (themes/onedark.toml).
 [theme]
 name = "onedark"
+
+# Enter runs the selected command immediately; Tab only pastes it.
+enter_accept = true
+
+[sync]
+records = true

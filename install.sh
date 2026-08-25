@@ -33,7 +33,6 @@ readonly DOTFILES_REPO="${DOTFILES_REPO:-https://github.com/gr8monk3ys/dotfiles.
 readonly DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
 readonly DOTFILES_BRANCH="${DOTFILES_BRANCH:-main}"
 readonly DOTFILES_STRICT_PACKAGES="${DOTFILES_STRICT_PACKAGES:-1}"
-readonly DOTFILES_FORCE_PROMPT_STYLE="${DOTFILES_FORCE_PROMPT_STYLE:-0}"
 
 # ============================================================================
 # ASCII Art Banner
@@ -305,30 +304,6 @@ run_installation() {
 }
 
 # ============================================================================
-# Prompt Style Setup
-# ============================================================================
-setup_prompt_style() {
-    print_step "Applying prompt style"
-
-    local source_p10k="$DOTFILES_DIR/.config/zsh/.p10k.zsh"
-    local target_p10k="$HOME/.p10k.zsh"
-
-    if [[ ! -f "$source_p10k" ]]; then
-        print_warning "Default prompt style not found in repository"
-        return
-    fi
-
-    if [[ -f "$target_p10k" && "$DOTFILES_FORCE_PROMPT_STYLE" != "1" ]]; then
-        print_info "~/.p10k.zsh already exists; keeping current style"
-        print_info "Set DOTFILES_FORCE_PROMPT_STYLE=1 to overwrite it"
-        return
-    fi
-
-    cp "$source_p10k" "$target_p10k"
-    print_success "Prompt style installed at ~/.p10k.zsh"
-}
-
-# ============================================================================
 # Post-Installation
 # ============================================================================
 print_post_install() {
@@ -353,8 +328,7 @@ EOF
     echo -e "    ${CYAN}1.${NC} Restart your terminal or run:"
     echo -e "       ${DIM}source ~/.zshenv${NC}"
     echo ""
-    echo -e "    ${CYAN}2.${NC} Prompt style is preconfigured"
-    echo -e "       ${DIM}(optional) run: p10k configure${NC}"
+    echo -e "    ${CYAN}2.${NC} Prompt is Starship (config: ~/.config/starship/starship.toml)"
     echo ""
     echo -e "    ${CYAN}3.${NC} Verify installation:"
     echo -e "       ${DIM}make doctor${NC}"
@@ -390,7 +364,6 @@ main() {
     setup_repository
     setup_machine_type
     run_installation
-    setup_prompt_style
     print_post_install
 }
 
