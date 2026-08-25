@@ -30,7 +30,8 @@ alias l="ls -lF ${colorflag}"
 # List all files colorized in long format, excluding . and ..
 alias la="ls -lAF ${colorflag}"
 
-# List only directories
+# List only directories (redefined as `eza -lD` below when eza is present,
+# because eza's long format doesn't start lines with 'd')
 alias lsd="ls -lF ${colorflag} | grep --color=never '^d'"
 
 # Always use color output for `ls`
@@ -168,6 +169,7 @@ alias path='echo -e ${PATH//:/\\n}'
 # eza - Modern ls replacement with icons and git integration
 if command -v eza &> /dev/null; then
     alias ls='eza --icons --group-directories-first'
+    alias lsd='eza -lD --icons'
     alias l='eza -l --icons --git --group-directories-first'
     alias la='eza -la --icons --git --group-directories-first'
     alias ll='eza -la --icons --git --group-directories-first'
@@ -212,11 +214,6 @@ fi
 
 # delta (configured in git; use delta directly, don't shadow diff)
 # delta is a pager/formatter — not a diff replacement (no -u, -q, wrong exit codes)
-
-# zoxide - Smart cd (already initialized in zshrc, adding convenience aliases)
-if command -v zoxide &> /dev/null; then
-    alias zi='zoxide query -i'  # interactive selection
-fi
 
 # Atuin - Shell history (convenience aliases)
 if command -v atuin &> /dev/null; then
