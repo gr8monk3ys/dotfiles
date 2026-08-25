@@ -228,8 +228,8 @@ install manifests (`install/Brewfile`, `Caskfile`, `npmfile`, `Rustfile`,
 - **Installed via:** Brewfile
 
 ### starship
-- **Why:** Default shell prompt: fast single binary, one TOML config, actively developed (Powerlevel10k is in maintenance mode). `.zshrc` falls back to p10k automatically when starship isn't installed; pin p10k per machine with `echo p10k > ~/.config/zsh/prompt.local`.
-- **Alternatives:** powerlevel10k (kept as fallback), oh-my-posh, pure
+- **Why:** Shell prompt: fast single binary, one TOML config, actively developed (Powerlevel10k, the previous prompt, is in maintenance mode).
+- **Alternatives:** powerlevel10k, oh-my-posh, pure
 - **Installed via:** Brewfile
 - **Config:** [`.config/starship/`](../.config/starship/)
 

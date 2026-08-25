@@ -24,9 +24,6 @@
 
 **A keyboard-driven development environment**
 
-[![Installation](https://img.shields.io/github/actions/workflow/status/gr8monk3ys/dotfiles/install.yml?label=install&style=flat-square&logo=github)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/install.yml)
-[![Tests](https://img.shields.io/github/actions/workflow/status/gr8monk3ys/dotfiles/test.yml?label=tests&style=flat-square&logo=github)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/test.yml)
-[![Lint](https://img.shields.io/github/actions/workflow/status/gr8monk3ys/dotfiles/lint.yml?label=lint&style=flat-square&logo=github)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/lint.yml)
 [![License](https://img.shields.io/badge/license-GPL--3.0-98c379?style=flat-square)](LICENSE)
 [![Nix](https://img.shields.io/badge/Nix-Optional-5277C3?style=flat-square&logo=nixos)](flake.nix)
 [![Theme](https://img.shields.io/badge/theme-OneDark-61afef?style=flat-square)](#theme)
@@ -52,7 +49,7 @@ curl -fsSL https://raw.githubusercontent.com/gr8monk3ys/dotfiles/main/install.sh
 Non-interactive (installs packages, links dotfiles, applies prompt style):
 
 ```bash
-DOTFILES_ASSUME_YES=1 DOTFILES_MACHINE_TYPE=personal DOTFILES_FORCE_PROMPT_STYLE=1 \
+DOTFILES_ASSUME_YES=1 DOTFILES_MACHINE_TYPE=personal \
 curl -fsSL https://raw.githubusercontent.com/gr8monk3ys/dotfiles/main/install.sh | bash
 ```
 
@@ -117,7 +114,7 @@ xcode-select --install
 
 ### 🐚 Terminal & Shell
 - **Ghostty** - Zig-based GPU terminal- **Zsh + Zinit** - Fast plugin manager
-- **Powerlevel10k** - Beautiful prompt
+- **Starship** - Fast, single-binary prompt
 - **Zellij** - Modern multiplexer- **Tmux** - Session management (backup)
 
 ### ✏️ Development
@@ -319,10 +316,11 @@ cat   → bat --paging=never
 # Search (use rg and fd directly — they are not aliased over grep/find)
 rgi   → rg -i (case-insensitive ripgrep)
 
-# System (dust, procs, bottom)
-du    → dust
-ps    → procs
-top   → btm
+# System (dust, procs, bottom — du/ps/top are deliberately NOT shadowed)
+dus   → dust -s
+psa   → procs -a
+pst   → procs --tree
+htop  → btm
 
 # Jujutsu (next-gen git)
 j     → jj

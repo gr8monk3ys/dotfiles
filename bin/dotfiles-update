@@ -177,7 +177,7 @@ update_zinit() {
     print_info "Updating Zinit and plugins..."
     # Source zinit.zsh directly in a non-interactive zsh: zinit update
     # works from the on-disk plugin store, and skipping .zshrc avoids
-    # loading the full interactive setup (p10k instant prompt, atuin).
+    # loading the full interactive setup (starship, atuin).
     if env ZINIT_HOME="$zinit_home" zsh -c \
         'source "$ZINIT_HOME/zinit.zsh" && zinit self-update && zinit update --all'; then
         print_success "Zinit and plugins updated"

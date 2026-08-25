@@ -1,24 +1,8 @@
 # Homebrew must be on PATH before prompt selection: cold-start shells
 # (e.g. a terminal launched from the Dock) get the bare launchd PATH,
-# and the starship binary lives in the Homebrew prefix. brew shellenv
-# prints nothing, so it is safe above the p10k instant-prompt block.
+# and the starship binary lives in the Homebrew prefix.
 if [[ -f "/opt/homebrew/bin/brew" ]]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
-fi
-
-# Prompt selection: starship (default) or p10k.
-# Pin per machine with:  echo p10k > ~/.config/zsh/prompt.local  (gitignored)
-DOTFILES_PROMPT="${DOTFILES_PROMPT:-$(cat "${ZDOTDIR:-$HOME/.config/zsh}/prompt.local" 2>/dev/null || echo starship)}"
-# Fall back to p10k when the starship binary isn't installed.
-if [[ "$DOTFILES_PROMPT" == "starship" ]] && ! command -v starship &> /dev/null; then
-  DOTFILES_PROMPT="p10k"
-fi
-
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
-if [[ "$DOTFILES_PROMPT" == "p10k" && -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
 # Prefer user-local binaries before package manager shims.
@@ -42,11 +26,6 @@ fi
 
 # Source/Load zinit
 source "${ZINIT_HOME}/zinit.zsh"
-
-# Add in Powerlevel10k (fallback prompt; starship is the default)
-if [[ "$DOTFILES_PROMPT" == "p10k" ]]; then
-  zinit ice depth=1; zinit light romkatv/powerlevel10k
-fi
 
 # Add in zsh plugins
 zinit light zsh-users/zsh-syntax-highlighting
@@ -100,18 +79,13 @@ ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]='fg=#d19a66'
 ZSH_HIGHLIGHT_STYLES[comment]='fg=#5c6370,italic'
 ZSH_HIGHLIGHT_STYLES[redirection]='fg=#c678dd'
 
-# Initialize the selected prompt.
-if [[ "$DOTFILES_PROMPT" == "starship" ]]; then
+# Prompt: starship (install/Brewfile). Until it is installed, a plain
+# two-line prompt so the shell is still usable.
+if command -v starship &> /dev/null; then
   export STARSHIP_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/starship/starship.toml"
   eval "$(starship init zsh)"
 else
-  # To customize prompt, run `p10k configure` and edit ~/.p10k.zsh.
-  # Fallback to repo-managed config when no personal prompt config exists.
-  if [[ -f "$HOME/.p10k.zsh" ]]; then
-    source "$HOME/.p10k.zsh"
-  elif [[ -f "${ZDOTDIR:-$HOME/.config/zsh}/.p10k.zsh" ]]; then
-    source "${ZDOTDIR:-$HOME/.config/zsh}/.p10k.zsh"
-  fi
+  PROMPT='%F{blue}%~%f'$'\n''%F{green}❯%f '
 fi
 
 # Keybindings

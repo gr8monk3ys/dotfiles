@@ -33,7 +33,7 @@ The `.config` directory centralizes application configurations in a single locat
 ├── nvim/                 # Neovim text editor (has its own README)
 ├── sketchybar/           # SketchyBar status bar
 ├── ssh/                  # OpenSSH host snippets (config.d includes)
-├── starship/             # Starship prompt (default; p10k fallback)
+├── starship/             # Starship prompt
 ├── tmux/                 # Tmux terminal multiplexer (backup)
 ├── wget/                 # Wget download utility
 ├── yazi/                 # Yazi file manager (replaces lf)
@@ -98,7 +98,7 @@ Each subdirectory contains a `README.md` with detailed information about its spe
 - Superior auto-completion compared to Bash
 - Rich plugin ecosystem (managed by Zinit)
 - Better globbing and scripting capabilities
-- Starship prompt by default, with Powerlevel10k as fallback
+- Starship prompt
 - Shared history and correction features
 
 ### Development Tools

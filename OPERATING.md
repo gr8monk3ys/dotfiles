@@ -44,7 +44,7 @@ curl -fsSL https://raw.githubusercontent.com/gr8monk3ys/dotfiles/main/install.sh
 Non-interactive (CI / repeatable):
 
 ```bash
-DOTFILES_ASSUME_YES=1 DOTFILES_MACHINE_TYPE=personal DOTFILES_FORCE_PROMPT_STYLE=1 \
+DOTFILES_ASSUME_YES=1 DOTFILES_MACHINE_TYPE=personal \
   curl -fsSL https://raw.githubusercontent.com/gr8monk3ys/dotfiles/main/install.sh | bash
 ```
 
@@ -217,7 +217,7 @@ Which tools are actually in use right now. Update this table when you swap tools
 | Terminal | Ghostty | — | Zig-based GPU terminal |
 | Multiplexer | Zellij | tmux | tmux config kept for SSH/legacy contexts |
 | File manager | Yazi | — | lf has been removed |
-| Shell | Zsh (+ Zinit) | — | Plugin manager: Zinit; prompt: Powerlevel10k |
+| Shell | Zsh (+ Zinit) | — | Plugin manager: Zinit; prompt: Starship |
 | VCS | Jujutsu (`jj`) + Git | Git alone | `jj git init --colocate` for hybrid repos |
 | Editor | Neovim | VSCodium | VSCodium for GUI/extension-heavy work |
 | Window manager | AeroSpace | — | i3-like tiling for macOS |
