@@ -161,18 +161,6 @@ teardown() {
     done
 }
 
-# dotfiles-nix tests
-@test "dotfiles-nix script exists and is executable" {
-    [[ -f bin/dotfiles-nix ]]
-    [[ -x bin/dotfiles-nix ]]
-}
-
-@test "dotfiles-nix accepts help subcommand" {
-    run bin/dotfiles-nix help
-    assert_success
-    assert_output --partial "Usage:"
-}
-
 # Tool catalog tests
 @test "validate-tool-docs passes on current catalog" {
     run bin/validate-tool-docs

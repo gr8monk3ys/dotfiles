@@ -2,8 +2,7 @@ DOTFILES_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 OS := $(shell bin/platform detect)
 HOMEBREW_PREFIX := $(shell bin/platform select /opt/homebrew /usr/local "bin/platform is-arm64")
 export N_PREFIX = $(HOME)/.n
-NIX_PROFILE_BIN := /nix/var/nix/profiles/default/bin
-PATH := $(HOMEBREW_PREFIX)/bin:$(NIX_PROFILE_BIN):$(DOTFILES_DIR)/bin:$(N_PREFIX)/bin:$(PATH)
+PATH := $(HOMEBREW_PREFIX)/bin:$(DOTFILES_DIR)/bin:$(N_PREFIX)/bin:$(PATH)
 SHELL := env PATH=$(PATH) /bin/bash
 SHELLS := /private/etc/shells
 BIN := $(HOMEBREW_PREFIX)/bin
@@ -12,13 +11,13 @@ export STOW_DIR = $(DOTFILES_DIR)
 export ACCEPT_EULA=Y
 
 .PHONY: all macos arch link unlink link-dry-run sudo test test-setup verify \
-        verify-shell verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-tests verify-nix \
+        verify-shell verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-tests \
         doctor update backup worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
         brew bash git npm packages-macos packages-arch core-macos core-arch \
         stow-arch stow-macos cask-apps vscode-extensions node-packages \
         rust-packages duti bun pacman-packages brew-packages \
-        nix nix-install nix-darwin nix-home nix-update nix-check nix-gc nix-shell help \
+        help \
         sync-install sync-uninstall sync-status sync-run \
         test-docker test-docker-arch test-docker-interactive
 
@@ -204,7 +203,7 @@ test-setup:
 		exit 1; \
 	fi
 
-verify: verify-shell verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-tests verify-nix
+verify: verify-shell verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-tests
 	@echo "✓ Verification complete"
 
 verify-shell:
@@ -223,7 +222,7 @@ verify-shell:
 verify-stale-refs:
 	@echo "Checking for stale migration references..."
 	@PATTERN='OneHalfDark|\.config/\.aliases|org\.alacritty|tokyonight|LF_ICONS|CODE_QUALITY_REPORT|lorenozsca7|oh-my-zsh|Oh My Zsh'; \
-	SCAN_PATHS='README.md OPERATING.md CLAUDE.md .config bin nix .zshenv flake.nix'; \
+	SCAN_PATHS='README.md OPERATING.md CLAUDE.md .config bin .zshenv'; \
 	if command -v rg >/dev/null 2>&1; then \
 		if rg -n "$$PATTERN" $$SCAN_PATHS >/dev/null; then \
 			echo "Found stale references:"; \
@@ -252,14 +251,6 @@ verify-tool-docs:
 
 verify-tests:
 	@$(MAKE) test
-
-verify-nix:
-	@echo "Checking Nix flake..."
-	@if command -v nix >/dev/null 2>&1; then \
-		nix flake check --no-build $(DOTFILES_DIR); \
-	else \
-		echo "⚠️  nix not found; skipping flake check"; \
-	fi
 
 ## Run core pre-push checks (fast local confidence loop)
 daily: verify-shell verify-doc-links verify-tests
@@ -422,33 +413,6 @@ test-docker-interactive:
 	docker run -it --rm dotfiles-test /bin/zsh
 
 # ============================================================================
-# Nix - Optional Reproducible Configuration (delegates to bin/dotfiles-nix)
-# ============================================================================
-
-nix-install:
-	@bin/dotfiles-nix install
-
-nix-darwin:
-	@bin/dotfiles-nix darwin
-
-nix-home:
-	@bin/dotfiles-nix home
-
-nix: nix-darwin
-
-nix-update:
-	@bin/dotfiles-nix update
-
-nix-check:
-	@bin/dotfiles-nix check
-
-nix-gc:
-	@bin/dotfiles-nix gc
-
-nix-shell:
-	@bin/dotfiles-nix shell
-
-# ============================================================================
 # Help
 # ============================================================================
 
@@ -462,15 +426,6 @@ help:
 	@echo "  make arch         - Arch Linux installation"
 	@echo "  make link         - Create symlinks only"
 	@echo "  make unlink       - Remove symlinks"
-	@echo ""
-	@echo "Installation (Nix - Optional):"
-	@echo "  make nix-install  - Install Nix package manager"
-	@echo "  make nix          - Apply nix-darwin config (macOS)"
-	@echo "  make nix-darwin   - Apply nix-darwin config (macOS)"
-	@echo "  make nix-home     - Apply Home Manager config (cross-platform)"
-	@echo "  make nix-update   - Update Nix flake inputs"
-	@echo "  make nix-check    - Check Nix flake for errors"
-	@echo "  make nix-gc       - Garbage collect Nix store"
 	@echo ""
 	@echo "Packages:"
 	@echo "  make brew-packages    - Install Homebrew formulae"

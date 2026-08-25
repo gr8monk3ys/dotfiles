@@ -210,7 +210,7 @@ install manifests (`install/Brewfile`, `Caskfile`, `npmfile`, `Rustfile`,
 ## Text Editors & IDEs
 
 ### neovim
-- **Why:** Primary editor. Lua config with lazy.nvim, LSP, treesitter, conform formatting; also built reproducibly via its own Nix flake.
+- **Why:** Primary editor. Lua config with lazy.nvim, LSP, treesitter, conform formatting.
 - **Alternatives:** vim, helix, vscodium (GUI fallback)
 - **Installed via:** Brewfile
 - **Config:** [`.config/nvim/`](../.config/nvim/)
@@ -445,7 +445,7 @@ install manifests (`install/Brewfile`, `Caskfile`, `npmfile`, `Rustfile`,
 - **Config:** [`.config/atuin/`](../.config/atuin/)
 
 ### direnv
-- **Why:** Per-directory env vars; pairs with Nix flakes for per-project dev shells.
+- **Why:** Per-directory env vars; loads per-project dev environments from `.envrc`.
 - **Alternatives:** shadowenv
 - **Installed via:** Brewfile
 

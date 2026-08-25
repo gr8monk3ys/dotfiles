@@ -241,48 +241,6 @@ check_modern_tools() {
     done
 }
 
-# Check Nix installation
-check_nix() {
-    print_header "Nix (Reproducible Setup)"
-
-    if command_exists nix; then
-        check_pass "Nix installed ($(nix --version 2>/dev/null | head -n1))"
-
-        # Check for flakes support
-        if nix flake --help &>/dev/null; then
-            check_pass "Nix flakes enabled"
-        else
-            check_warn "Nix flakes not enabled"
-        fi
-
-        # Check for darwin-rebuild (macOS)
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            if command_exists darwin-rebuild; then
-                check_pass "nix-darwin installed"
-            else
-                check_info "nix-darwin not installed (optional)"
-            fi
-        fi
-
-        # Check for home-manager
-        if command_exists home-manager; then
-            check_pass "Home Manager installed"
-        else
-            check_info "Home Manager not installed (optional)"
-        fi
-
-        # Check flake.nix exists
-        if [[ -f "$DOTFILES_DIR/flake.nix" ]]; then
-            check_pass "flake.nix found"
-        else
-            check_warn "flake.nix not found"
-        fi
-    else
-        check_info "Nix not installed (optional for reproducible setup)"
-        check_info "  Install with: make nix-install"
-    fi
-}
-
 # Check shell configuration
 check_shell_config() {
     print_header "Shell Configuration"
@@ -424,7 +382,6 @@ main() {
     check_package_managers
     check_core_tools
     check_modern_tools
-    check_nix
     check_shell_config
     check_permissions
     print_summary

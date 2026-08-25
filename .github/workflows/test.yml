@@ -64,26 +64,3 @@ jobs:
       - name: Test clean target
         run: make clean
 
-  nix-check:
-    name: Nix Flake Check
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [macos-latest, ubuntu-latest]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-
-      - name: Install Nix
-        uses: cachix/install-nix-action@1ca7d21a94afc7c957383a2d217460d980de4934
-        with:
-          nix_path: nixpkgs=channel:nixpkgs-unstable
-          extra_nix_config: |
-            experimental-features = nix-command flakes
-
-      - name: Check flake
-        run: nix flake check --no-build
-
-      - name: Show flake info
-        run: nix flake show

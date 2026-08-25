@@ -403,13 +403,7 @@ alias jjconf='${EDITOR:-nvim} ~/.config/jj/config.toml'
 alias dots='cd ~/.dotfiles'
 alias dotsup='cd ~/.dotfiles && git pull && make link'
 
-# Nix shortcuts (when using Nix)
-if command -v darwin-rebuild &> /dev/null; then
-    alias nrs='darwin-rebuild switch --flake ~/.dotfiles'
-fi
-if command -v home-manager &> /dev/null; then
-    alias nhs='home-manager switch --flake ~/.dotfiles'
-fi
+# Nix shortcuts (generic; nix is installed for other repos)
 if command -v nix &> /dev/null; then
     alias nfu='nix flake update'
     alias nfc='nix flake check'

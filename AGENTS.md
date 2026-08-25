@@ -8,7 +8,6 @@ This repository is organized by responsibility:
 - `bin/` holds portable helper scripts (health checks, backup, sync, templating, secrets, link validation).
 - `install/` stores package manifests (`Brewfile`, `Caskfile`, `npmfile`, `Rustfile`, `pacmanfile`, `Codefile`, `duti`).
 - `test/` contains BATS tests and helpers (`test_helper/common.bash`).
-- `nix/` plus `flake.nix`/`flake.lock` define reproducible Nix setups.
 
 
 ## Build, Test, and Development Commands
@@ -18,8 +17,7 @@ Use `make help` to see all targets. Core commands:
 - `make link-dry-run` - preview stow changes safely.
 - `make test-setup` - install BATS dependencies.
 - `make test` - run BATS suite.
-- `make verify` - run shell checks, stale-reference checks, doc-link checks, tests, and Nix checks.
-- `make nix`, `make nix-home`, `make nix-update` - apply/update Nix configs.
+- `make verify` - run shell checks, stale-reference checks, doc-link checks, and tests.
 
 ## Coding Style & Naming Conventions
 Follow `.editorconfig`:
