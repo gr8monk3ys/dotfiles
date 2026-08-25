@@ -10,6 +10,7 @@ This directory contains the configuration for [Newsboat](https://newsboat.org/),
 ## What is Newsboat?
 
 Newsboat is a fork of Newsbeuter, providing:
+
 - Fast, keyboard-driven RSS feed reading
 - Offline reading support
 - Podcast support
@@ -27,6 +28,7 @@ The `config` file controls Newsboat's behavior using key-value pairs.
 #### Common Settings
 
 **Appearance**
+
 ```
 color background white black
 color listnormal white black
@@ -35,24 +37,27 @@ color info yellow black bold
 ```
 
 **Behavior**
+
 ```
 auto-reload yes
 reload-time 60
-browser "firefox %u"
+browser "$BROWSER %u"
 download-path "~/Downloads"
 max-items 100
 ```
 
 **Keybindings**
+
 ```
 bind-key j down
 bind-key k up
-bind-key J next-feed
-bind-key K prev-feed
+bind-key L next-feed
+bind-key H prev-feed
 bind-key o open-in-browser
 ```
 
 **Macros**
+
 - Define custom actions
 - Pipe articles to external programs
 - Integration with read-it-later services
@@ -72,6 +77,7 @@ Format: `URL ["Title"] ["Tags"]`
 #### Organizing Feeds
 
 Use tags to organize feeds:
+
 ```
 https://feed1.com/rss "~Tech News"
 https://feed2.com/rss "~Tech News"
@@ -83,6 +89,7 @@ Tags starting with `~` create collapsible categories.
 ## Usage
 
 Launch Newsboat with:
+
 ```bash
 newsboat
 ```
@@ -114,6 +121,7 @@ newsboat
 ### Podcast Support
 
 Newsboat can handle podcast feeds:
+
 - Download episodes
 - Queue management
 - Integration with media players
@@ -121,6 +129,7 @@ Newsboat can handle podcast feeds:
 ### Tagging System
 
 Organize feeds with tags for better management:
+
 ```
 https://feed.com/rss "Site Name" "tag1" "tag2"
 ```
@@ -128,13 +137,15 @@ https://feed.com/rss "Site Name" "tag1" "tag2"
 ### Macros
 
 Create custom actions:
+
 ```
-macro y set browser "mpv %u"; open-in-browser ; set browser "firefox %u"
+macro y set browser "mpv %u"; open-in-browser ; set browser "$BROWSER %u"
 ```
 
 ### External Integration
 
 Pipe articles to external programs:
+
 - Save to read-it-later services (Pocket, Instapaper)
 - Share on social media
 - Process with custom scripts

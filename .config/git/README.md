@@ -5,10 +5,13 @@ This directory contains the global configuration for [Git](https://git-scm.com/)
 ## Files
 
 - `.gitconfig` - Global Git configuration file
+- `ignore` - Global ignore patterns
+- `config.local.example` - Template for the git-ignored `config.local` (name, email, signing key)
 
 ## What is .gitconfig?
 
 The `.gitconfig` file defines global settings for Git that apply to all repositories on your system. It allows you to customize:
+
 - User identity (name and email)
 - Default behaviors and preferences
 - Command aliases
@@ -21,7 +24,9 @@ The `.gitconfig` file defines global settings for Git that apply to all reposito
 The file is organized into sections:
 
 ### [user]
+
 Defines your identity for commits:
+
 ```ini
 [user]
     name = Your Name
@@ -29,23 +34,28 @@ Defines your identity for commits:
 ```
 
 ### [core]
+
 Core Git settings like default editor, line endings, and exclusions
 
 ### [alias]
+
 Custom shortcuts for Git commands, making complex operations simpler
 
 ### [color]
+
 Color output settings for better readability in terminal
 
 ### [merge] / [diff]
+
 Configure merge strategies and diff tools
 
 ### [push] / [pull]
+
 Default behaviors for push and pull operations
 
 ## Usage
 
-Git automatically reads this file from `~/.gitconfig` (or `$XDG_CONFIG_HOME/git/.gitconfig`). Settings here apply globally unless overridden by repository-specific configurations.
+`make link` symlinks this directory to `~/.config/git/`; Git's XDG config path is `$XDG_CONFIG_HOME/git/config`. Settings here apply globally unless overridden by repository-specific configurations.
 
 ### Viewing Configuration
 
@@ -71,13 +81,14 @@ git config --global alias.st status
 
 ## Common Aliases
 
-Typical aliases include:
-- `st` → `status`
-- `co` → `checkout`
-- `br` → `branch`
-- `ci` → `commit`
-- `unstage` → `reset HEAD --`
-- `last` → `log -1 HEAD`
+Defined in the `[alias]` block of `.gitconfig`, for example:
+
+- `l` → graph log of the last 20 commits
+- `s` → `status -s`
+- `d` → diff with stat against HEAD
+- `di N` → diff against `HEAD~N`
+
+Run `git config --get-regexp '^alias\.'` for the full list.
 
 ## Best Practices
 

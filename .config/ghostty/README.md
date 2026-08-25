@@ -23,8 +23,9 @@ brew install --cask ghostty
 ## Key Bindings
 
 ### Splits (Built-in Multiplexing)
+
 | Key | Action |
-|-----|--------|
+| ----- | -------- |
 | `Cmd+D` | Split right |
 | `Cmd+Shift+D` | Split down |
 | `Cmd+W` | Close split |
@@ -32,15 +33,17 @@ brew install --cask ghostty
 | `Cmd+Enter` | Toggle split zoom |
 
 ### Tabs
+
 | Key | Action |
-|-----|--------|
+| ----- | -------- |
 | `Cmd+T` | New tab |
 | `Cmd+1-5` | Go to tab 1-5 |
 | `Cmd+Shift+Left/Right` | Previous/Next tab |
 
 ### General
+
 | Key | Action |
-|-----|--------|
+| ----- | -------- |
 | `Cmd+F` | Toggle fullscreen |
 | `Cmd++/-` | Increase/Decrease font size |
 | `Cmd+0` | Reset font size |
@@ -48,12 +51,13 @@ brew install --cask ghostty
 
 ## Theme
 
-Using Ghostty's built-in **Atom One Dark** theme for OneDark consistency with Neovim and other tools.
+`theme = Atom One Dark` matches the repo-wide OneDark palette (verify names with `ghostty +list-themes`).
 
 UI/UX profile in this repo:
-- Subtle glass effect (`background-opacity = 0.94`, `background-blur = 18`)
-- Comfortable spacing (`window-padding-x = 14`, balanced padding enabled)
-- Clean native chrome (`macos-titlebar-style = transparent`, `window-theme = auto`)
+
+- Frosted-glass effect (`background-opacity = 0.8`, `background-blur = 90`)
+- Comfortable spacing (`window-padding-x = 10`, balanced padding enabled)
+- Clean native chrome (`macos-titlebar-style = transparent`)
 
 On Linux, blur depends on compositor support.
 Popular theme alternatives right now: Catppuccin Mocha, Rose Pine Moon, TokyoNight Storm.
@@ -69,15 +73,17 @@ Popular theme alternatives right now: Catppuccin Mocha, Rose Pine Moon, TokyoNig
 ## Migration from Kitty
 
 Ghostty and Kitty have similar features. Main differences:
+
 - Ghostty uses `=` for config assignments (not spaces)
 - Keybindings use `keybind =` prefix
 - Built-in splits use different terminology
 
 ## Configuration
 
-Edit `~/.config/ghostty/config` to customize. Changes take effect on restart or with `Cmd+Shift+R`.
+Edit `~/.config/ghostty/config` to customize. Changes take effect on restart; `Cmd+Shift+C` opens the config file.
 
 Validate config:
+
 ```bash
 ghostty +validate-config --config-file ~/.config/ghostty/config
 ```

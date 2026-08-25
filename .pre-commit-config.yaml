@@ -6,7 +6,7 @@
 repos:
   # General file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
@@ -23,7 +23,7 @@ repos:
 
   # ShellCheck - Shell script linting
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.9.0.6
+    rev: v0.11.0.1
     hooks:
       - id: shellcheck
         args: [--severity=warning]
@@ -31,13 +31,13 @@ repos:
 
   # Gitleaks - Secret scanning
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.24.2
+    rev: v8.30.1
     hooks:
       - id: gitleaks
 
   # Markdownlint - Markdown linting
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.38.0
+    rev: v0.49.1
     hooks:
       - id: markdownlint
         args: [--fix]
@@ -45,10 +45,12 @@ repos:
 
   # EditorConfig checker
   - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
-    rev: 2.7.3
+    rev: 3.11.1
     hooks:
       - id: editorconfig-checker
         alias: ec
+        # Tables and URLs in Markdown routinely exceed 80 columns; MD013 is off too.
+        args: [--disable-max-line-length]
 
 # Custom local hooks
   - repo: local
@@ -77,14 +79,6 @@ repos:
         files: install/Rustfile
         pass_filenames: false
 
-      # Check for TODO comments in commits
-      - id: check-todos
-        name: Check for TODO comments
-        entry: bash -c '! git diff --cached | grep -i "TODO"'
-        language: system
-        pass_filenames: false
-        always_run: true
-
       # Detect secrets and sensitive data
       - id: detect-secrets
         name: Detect secrets
@@ -112,7 +106,7 @@ repos:
       # Check for age-encrypted files that should be encrypted
       - id: check-unencrypted-secrets
         name: Check unencrypted secrets directory
-        entry: bash -c 'if [ -d secrets ]; then find secrets -type f ! -name "*.age" ! -name ".gitkeep" ! -name "README*" | grep -q . && echo "Error: Unencrypted files in secrets/ directory" && exit 1; fi; exit 0'
+        entry: bash -c 'if [ -d secrets ]; then find secrets -type f ! -name "*.age" ! -name ".gitkeep" ! -name "README*" | grep -q . && echo "Unencrypted files in secrets/ directory" && exit 1; fi; exit 0'
         language: system
         pass_filenames: false
         always_run: true

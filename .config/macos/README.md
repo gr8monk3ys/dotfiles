@@ -8,10 +8,11 @@ hand on a new machine after `brew bundle`.
 - `defaults.sh` - user-level `defaults write` settings (no sudo)
 - `dock.sh` - rebuilds the Dock from the daily apps in `install/Caskfile`
 - `com.dotfiles.sync.plist` - LaunchAgent for the periodic dotfiles sync
+- `.env.macos`, `.screenrc` - macOS-only shell environment and `screen` settings
 
 ## defaults.sh
 
-About 40 settings, all in user preference domains, all idempotent, verified
+About 30 settings, all in user preference domains, all idempotent, verified
 against macOS 26. What it sets:
 
 - **Keyboard**: fastest key repeat, short initial delay, hold-to-repeat instead

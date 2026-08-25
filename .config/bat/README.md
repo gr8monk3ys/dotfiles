@@ -47,7 +47,7 @@ bat --theme="base16-onedark" file.py
 These aliases are configured in `~/.config/zsh/aliases.zsh`:
 
 ```bash
-alias cat='bat --paging=never'
+# cat itself is left alone; use bat directly or:
 alias catp='bat'                 # with pager
 alias catl='bat --plain'         # plain (no line numbers)
 ```
