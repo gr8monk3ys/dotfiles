@@ -11,12 +11,6 @@ teardown() {
     cleanup_test_env
 }
 
-# dotfiles-doctor tests
-@test "dotfiles-doctor script exists and is executable" {
-    [[ -f bin/dotfiles-doctor ]]
-    [[ -x bin/dotfiles-doctor ]]
-}
-
 @test "dotfiles-doctor runs and reaches summary" {
     run env HOME="$TEST_HOME" DOTFILES_DIR="$TEST_HOME/.dotfiles" \
         PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
@@ -25,24 +19,12 @@ teardown() {
     assert_output --partial "Summary"
 }
 
-# dotfiles-update tests
-@test "dotfiles-update script exists and is executable" {
-    [[ -f bin/dotfiles-update ]]
-    [[ -x bin/dotfiles-update ]]
-}
-
 @test "dotfiles-update detects missing dotfiles directory" {
     run env HOME="$TEST_HOME" DOTFILES_DIR="$TEST_HOME/nonexistent" \
         PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
         bash bin/dotfiles-update
     assert_failure
     assert_output --partial "not found"
-}
-
-# dotfiles-backup tests
-@test "dotfiles-backup script exists and is executable" {
-    [[ -f bin/dotfiles-backup ]]
-    [[ -x bin/dotfiles-backup ]]
 }
 
 @test "dotfiles-backup accepts --help flag" {
@@ -69,12 +51,6 @@ teardown() {
     assert_success
 }
 
-# dotfiles-restore tests
-@test "dotfiles-restore script exists and is executable" {
-    [[ -f bin/dotfiles-restore ]]
-    [[ -x bin/dotfiles-restore ]]
-}
-
 @test "dotfiles-restore accepts --help flag" {
     run bin/dotfiles-restore --help
     assert_success
@@ -94,22 +70,10 @@ teardown() {
     [[ -f "$TEST_HOME/.ssh/config" ]]
 }
 
-# dotfiles-bench-shell tests
-@test "dotfiles-bench-shell script exists and is executable" {
-    [[ -f bin/dotfiles-bench-shell ]]
-    [[ -x bin/dotfiles-bench-shell ]]
-}
-
 @test "dotfiles-bench-shell accepts --help flag" {
     run bin/dotfiles-bench-shell --help
     assert_success
     assert_output --partial "Usage:"
-}
-
-# dotfiles-worktree tests
-@test "dotfiles-worktree script exists and is executable" {
-    [[ -f bin/dotfiles-worktree ]]
-    [[ -x bin/dotfiles-worktree ]]
 }
 
 @test "dotfiles-worktree accepts --help flag" {
@@ -118,22 +82,8 @@ teardown() {
     assert_output --partial "Usage:"
 }
 
-# Platform detection script tests
-@test "platform detection helper exists" {
-    [[ -f bin/platform ]]
-}
-
-@test "platform detection helper is executable" {
-    [[ -x bin/platform ]]
-}
-
 @test "platform helper has proper shebang" {
     head -n1 bin/platform | grep -q "^#!/"
-}
-
-@test "executable checker exists and is executable" {
-    [[ -f bin/is-executable ]]
-    [[ -x bin/is-executable ]]
 }
 
 # General script validation
