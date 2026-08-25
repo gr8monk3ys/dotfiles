@@ -64,50 +64,70 @@ teardown() {
 # representative alias.
 
 @test "shell-surface: every conditional block in aliases.zsh defines its sentinel" {
-    # Each entry: representative alias name from one conditional block.
-    # When updating aliases.zsh, add/remove an entry here for each
-    # `if command -v X &> /dev/null` block.
-    local sentinels=(
-        # unconditional region (always defined)
-        g           # alias g="git"
-        # conditional blocks (defined only if guard succeeds)
-        mergepdf    # gs (ghostscript) block
-        GET         # lwp-request block
-        lt          # eza block
-        catp        # bat block
-        rgi         # rg block
-        dus         # dust block
-        psa         # procs block
-        htop        # btm block
-        zi          # zoxide block
-        hs          # atuin block
-        mi          # mise block
-        bench       # hyperfine block
-        loc         # tokei block
-        fm          # yazi block
-        j           # jj block
-        zj          # zellij block
-        cheat       # navi block
-        br          # broot block
-        tldru       # tldr block
-        dig         # doggo block
-        df          # duf block
-        compress    # ouch block
-        lg          # lazygit block
-        lzd         # lazydocker block
-        jqi         # jnv block
-        md          # glow block
-        csv         # csvlens block
-        bw          # bandwhich block
-        watch       # viddy block
-        mtr         # trip block
-        gdd         # difft block
-        tg          # topgrade block
-        nrs         # darwin-rebuild block
-        nhs         # home-manager block
-        nfu         # nix block
-        cc          # claude block
-    )
+    local aliases_file="$DOTFILES_DIR/.config/zsh/aliases.zsh"
+
+    # Sentinels = `g` (unconditional) + the first literal-name alias inside
+    # each `if command -v X` block. Auto-deriving from the file avoids the
+    # drift hazard of a hand-curated list — when a new conditional block is
+    # added to aliases.zsh, this test automatically gains coverage.
+    #
+    # Dynamic alias names (quoted, variable-expansion, dash-prefixed) are
+    # skipped because we cannot statically resolve them. The `lwp-request`
+    # block uses `alias "${method}"=` and so has no static sentinel; that
+    # block is the only one intentionally uncovered.
+    local sentinels=(g)
+    while IFS= read -r derived; do
+        [[ -n "$derived" ]] && sentinels+=("$derived")
+    done < <(awk '
+        # Two-pass walk over aliases.zsh.
+        #
+        # Pass 1 (NR == FNR): count occurrences of each alias name across
+        # the whole file. Names appearing more than once mean an alias
+        # inside a conditional block shadows an unconditional definition
+        # of the same name — those make BAD sentinels (they remain
+        # defined even when the block is silently skipped).
+        #
+        # Pass 2: walk again, emit the first unique-name alias inside each
+        # `if c… -v` block. The c-prefixed regex catches `command` plus
+        # likely typos (`commnd`, `commad`, `comand`, `cmd`). Typos that
+        # do not start with `c` go undetected — an accepted limitation.
+        # Nested non-cmdv `if/fi` pairs inside a cmdv block (e.g., the
+        # yazi function body) must not close the outer block, so we track
+        # the cmdv block by its entry-depth.
+        NR == FNR {
+            if ($0 ~ /^[[:space:]]*alias[[:space:]]+[^=]+=/) {
+                line = $0
+                sub(/^[[:space:]]*alias[[:space:]]+/, "", line)
+                sub(/=.*/, "", line)
+                if (line !~ /^[-"$]/) count[line]++
+            }
+            next
+        }
+        /^[[:space:]]*if[[:space:]]/ {
+            depth++
+            if (cmdv_entry_depth < 0 && $0 ~ /^[[:space:]]*if[[:space:]]+c[a-zA-Z_]+[[:space:]]+-v/) {
+                cmdv_entry_depth = depth
+                captured = 0
+            }
+            next
+        }
+        /^[[:space:]]*fi[[:space:]]*$/ {
+            if (depth == cmdv_entry_depth) cmdv_entry_depth = -1
+            if (depth > 0) depth--
+            next
+        }
+        /^[[:space:]]*alias[[:space:]]+[^=]+=/ {
+            if (cmdv_entry_depth < 0 || captured) next
+            line = $0
+            sub(/^[[:space:]]*alias[[:space:]]+/, "", line)
+            sub(/=.*/, "", line)
+            if (line ~ /^[-"$]/) next
+            if (count[line] == 1) {
+                print line
+                captured = 1
+            }
+        }
+    ' "$aliases_file" "$aliases_file")
 
     # Build a zsh script that:
     #   1. Shadows `command` so `command -v X` always returns success.
@@ -134,7 +154,7 @@ fi
 ZSH
 )
 
-    run env ALIASES_FILE="$DOTFILES_DIR/.config/zsh/aliases.zsh" \
+    run env ALIASES_FILE="$aliases_file" \
         zsh -c "$check_script" -- "${sentinels[@]}"
     assert_success
 }
