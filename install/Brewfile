@@ -112,6 +112,7 @@ brew "zsh-syntax-highlighting"         # Zsh syntax highlighting
 brew "starship"                        # Cross-shell prompt
 brew "fzf"                             # Fuzzy finder
 brew "dockutil"                        # Scripted Dock layout (.config/macos/dock.sh)
+brew "duti"                            # Default-app associations from install/duti (make duti)
 
 # ============================================================================
 # File & Text Search

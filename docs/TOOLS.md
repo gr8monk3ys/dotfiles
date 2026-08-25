@@ -242,6 +242,10 @@ install manifests (`install/Brewfile`, `Caskfile`, `npmfile`, `Rustfile`,
 - **Why:** Rebuilds the Dock from a script (`.config/macos/dock.sh`) instead of dragging icons on every new machine.
 - **Installed via:** Brewfile
 
+### duti
+- **Why:** Applies the file-type → app associations in `install/duti` (`make duti`) so a fresh machine opens code, markdown and media in the intended apps without clicking through Finder.
+- **Installed via:** Brewfile
+
 ## File & Text Search
 
 ### fd
