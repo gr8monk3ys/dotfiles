@@ -7,8 +7,10 @@
 
 FROM archlinux:latest@sha256:bb1e5dd58eb79755e736ac530292074f4408572c0fbc4306cd62b431fdf356f0
 
-# Update system and install dependencies
-RUN pacman -Syu --noconfirm && \
+# Update system and install dependencies. pacman's seccomp sandbox cannot
+# start under amd64 emulation on Apple Silicon, so disable it for the build.
+RUN sed -i '/^\[options\]/a DisableSandbox' /etc/pacman.conf && \
+    pacman -Syu --noconfirm && \
     pacman -S --noconfirm \
     git \
     curl \
@@ -17,7 +19,7 @@ RUN pacman -Syu --noconfirm && \
     zsh \
     sudo \
     make \
-    bash-bats \
+    bats \
     && pacman -Scc --noconfirm
 
 # Create a non-root user for testing

@@ -322,11 +322,6 @@ install manifests (`install/Brewfile`, `Caskfile`, `npmfile`, `Rustfile`,
 
 ## Next-Gen Modern Tools (2024+)
 
-### n
-- **Why:** Minimal node version manager used by the Makefile bootstrap before mise is available.
-- **Alternatives:** mise (primary), nvm
-- **Installed via:** Brewfile
-
 ### yazi
 - **Why:** Primary terminal file manager: async, image previews, OneDark theme.
 - **Alternatives:** ranger, lf, nnn, broot (kept for tree-jumps)
@@ -413,7 +408,7 @@ install manifests (`install/Brewfile`, `Caskfile`, `npmfile`, `Rustfile`,
 ### just
 - **Why:** Ergonomic command runner for project-local recipes; make stays for this repo itself.
 - **Alternatives:** make, task
-- **Installed via:** Brewfile, Rustfile
+- **Installed via:** Brewfile
 
 ### difftastic
 - **Why:** Structural, syntax-aware diffs for review; delta covers day-to-day paging.

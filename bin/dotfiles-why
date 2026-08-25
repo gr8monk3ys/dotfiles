@@ -50,6 +50,13 @@ case "${1:-}" in
         show_tool "${2:?--show requires a tool name}" | render
         ;;
     "")
+        # The fzf browser needs a terminal on both ends; without one it would
+        # hang waiting for input (e.g. when run from a script or with </dev/null).
+        if [[ ! -t 0 || ! -t 1 ]]; then
+            echo "Usage: dotfiles-why <tool> | dotfiles-why --list" >&2
+            echo "(interactive browser requires a terminal)" >&2
+            exit 1
+        fi
         if ! command -v fzf > /dev/null 2>&1; then
             echo "fzf not found — run 'dotfiles-why --list' or 'dotfiles-why <tool>'" >&2
             exit 1

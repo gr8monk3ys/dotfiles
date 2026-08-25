@@ -1,20 +1,21 @@
 DOTFILES_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 OS := $(shell bin/platform detect)
 HOMEBREW_PREFIX := $(shell bin/platform select /opt/homebrew /usr/local "bin/platform is-arm64")
-export N_PREFIX = $(HOME)/.n
-PATH := $(HOMEBREW_PREFIX)/bin:$(DOTFILES_DIR)/bin:$(N_PREFIX)/bin:$(PATH)
+PATH := $(HOMEBREW_PREFIX)/bin:$(DOTFILES_DIR)/bin:$(PATH)
 SHELL := env PATH=$(PATH) /bin/bash
-SHELLS := /private/etc/shells
+# Evaluated at parse time so `make -n link` shows exactly what would run:
+# nothing extra when stow is present, the Homebrew bootstrap when it is not.
+HAVE_STOW := $(shell bin/platform has stow && echo yes)
 BIN := $(HOMEBREW_PREFIX)/bin
 export XDG_CONFIG_HOME = $(HOME)/.config
 export STOW_DIR = $(DOTFILES_DIR)
 export ACCEPT_EULA=Y
 
-.PHONY: all macos arch link unlink link-dry-run sudo test test-setup verify \
+.PHONY: all macos arch link unlink link-dry-run test test-setup verify \
         verify-shell verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-tests \
         doctor update backup worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
-        brew bash git npm packages-macos packages-arch core-macos core-arch \
+        brew git packages-macos packages-arch core-macos core-arch \
         stow-arch stow-macos stow-linux linux cask-apps vscode-extensions node-packages \
         rust-packages duti bun pacman-packages brew-packages \
         help \
@@ -23,14 +24,14 @@ export ACCEPT_EULA=Y
 
 all: $(OS)
 
-macos: sudo core-macos packages-macos link duti bun
+macos: core-macos packages-macos link vscode-extensions duti bun
 
 arch: core-arch packages-arch link
 
 # Generic Linux (Debian, Fedora, …): no package manifests here; link only.
 linux: link
 
-core-macos: brew bash git
+core-macos: brew git
 
 core-arch:
 	pacman -Syu --noconfirm
@@ -38,17 +39,18 @@ core-arch:
 stow-arch: core-arch
 	bin/platform has stow || pacman -S --noconfirm stow
 
+# Only pull in the Homebrew bootstrap when stow is actually missing, so
+# `make link` on a machine that already has stow touches nothing else.
+ifeq ($(HAVE_STOW),yes)
+stow-macos:
+	@true
+else
 stow-macos: brew
-	bin/platform has stow || brew install stow
+	brew install stow
+endif
 
 stow-linux:
 	@bin/platform has stow || { echo "stow not found: install it with your package manager (apt/dnf install stow)"; exit 1; }
-
-sudo:
-ifndef GITHUB_ACTION
-	sudo -v
-	while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
-endif
 
 link: stow-$(OS)
 	@echo "Linking dotfiles..."
@@ -87,30 +89,8 @@ unlink: stow-$(OS)
 brew:
 	is-executable brew || curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh | bash
 
-bash: brew
-ifdef GITHUB_ACTION
-	if ! grep -q bash $(SHELLS); then \
-		brew install bash bash-completion@2 pcre && \
-		echo $(shell which bash) | sudo tee -a $(SHELLS) && \
-		sudo chsh -s $(shell which bash); \
-	fi
-else
-	if ! grep -q bash $(SHELLS); then \
-		brew install bash bash-completion@2 pcre && \
-		echo $(shell which bash) | sudo tee -a $(SHELLS) && \
-		chsh -s $(shell which bash); \
-	fi
-endif
-
 git: brew
 	brew install git git-extras
-
-npm: brew-packages
-	@if [ -n "$(SKIP_NPM)" ]; then \
-		echo "Skipping Node.js runtime installation"; \
-	else \
-		n install lts; \
-	fi
 
 packages-macos: brew-packages cask-apps node-packages rust-packages
 
@@ -154,11 +134,12 @@ vscode-extensions: cask-apps
 		echo "⚠️  Neither code nor codium found. Skipping extension installation."; \
 	fi
 
-node-packages: npm
+# Node itself comes from the Brewfile (`brew "node"`), so npm is on PATH.
+node-packages: brew-packages
 	@if [ -n "$(SKIP_NPM)" ]; then \
 		echo "Skipping npm packages"; \
 	else \
-		grep -Ev '^\s*(#|$$)' install/npmfile | xargs $(N_PREFIX)/bin/npm install --force --location global; \
+		grep -Ev '^\s*(#|$$)' install/npmfile | xargs npm install --force --location global; \
 	fi
 
 rust-packages: brew-packages
@@ -315,13 +296,15 @@ backup-cleanup:
 
 LAUNCH_AGENTS := $(HOME)/Library/LaunchAgents
 SYNC_PLIST := com.dotfiles.sync.plist
+SYNC_LOG := $(HOME)/Library/Logs/dotfiles-sync.log
 
 ## Install automated daily sync service (macOS only)
 sync-install:
 	@echo "Installing dotfiles sync service..."
-	@mkdir -p $(LAUNCH_AGENTS)
-	@sed "s|__DOTFILES_DIR__|$(DOTFILES_DIR)|g" .config/macos/$(SYNC_PLIST) \
-	    > $(LAUNCH_AGENTS)/$(SYNC_PLIST)
+	@mkdir -p $(LAUNCH_AGENTS) $(HOME)/Library/Logs
+	@sed -e "s|__DOTFILES_DIR__|$(DOTFILES_DIR)|g" -e "s|__SYNC_LOG__|$(SYNC_LOG)|g" \
+	    .config/macos/$(SYNC_PLIST) > $(LAUNCH_AGENTS)/$(SYNC_PLIST)
+	@plutil -lint $(LAUNCH_AGENTS)/$(SYNC_PLIST)
 	@launchctl load $(LAUNCH_AGENTS)/$(SYNC_PLIST)
 	@echo "✓ Sync service installed (runs daily at 10:00 AM)"
 	@echo "  Run 'make sync-status' to verify"
@@ -338,18 +321,31 @@ sync-status:
 	@echo "Sync service status:"
 	@launchctl list | grep -E "PID|dotfiles.sync" || echo "  Service not loaded"
 	@echo ""
-	@if [ -f /tmp/dotfiles-sync.err ]; then \
-		echo "Recent errors (if any):"; \
-		tail -5 /tmp/dotfiles-sync.err 2>/dev/null || echo "  (none)"; \
+	@if [ -s "$(SYNC_LOG)" ]; then \
+		echo "Recent log ($(SYNC_LOG)):"; \
+		tail -5 "$(SYNC_LOG)"; \
+	else \
+		echo "No log output yet ($(SYNC_LOG))"; \
 	fi
 
 ## Run sync manually (for testing)
 sync-run:
 	@bin/dotfiles-sync
 
+# Only removes broken links that pointed into this checkout; broken links
+# owned by other tools under ~/.config are left alone. Targets are resolved
+# lexically (readlink + ../ collapsing) because a broken link's target
+# cannot be canonicalised on disk.
 clean:
 	@echo "Cleaning broken symlinks..."
-	@find "$(HOME)/.config" -type l ! -exec test -e {} \; -delete 2>/dev/null || true
+	@find "$(HOME)/.config" -type l ! -exec test -e {} \; -print 2>/dev/null | while IFS= read -r link; do \
+		target="$$(readlink "$$link")"; \
+		[ "$${target#/}" = "$$target" ] && target="$$(dirname "$$link")/$$target"; \
+		norm=""; IFS=/; for part in $$target; do \
+			case "$$part" in ''|.) ;; ..) norm="$${norm%/*}" ;; *) norm="$$norm/$$part" ;; esac; \
+		done; unset IFS; \
+		case "$$norm" in "$(DOTFILES_DIR)"/*) rm -f "$$link"; echo "Removed $$link" ;; esac; \
+	done
 	@if [ -h "$(HOME)/.zshenv" ] && [ ! -e "$(HOME)/.zshenv" ]; then \
 		rm -f "$(HOME)/.zshenv"; \
 		echo "Removed broken .zshenv symlink"; \
@@ -410,8 +406,8 @@ test-docker:
 
 test-docker-arch:
 	@echo "Building and running tests in Arch Linux container..."
-	docker build -t dotfiles-test-arch -f test/Dockerfile.arch .
-	docker run --rm dotfiles-test-arch
+	docker build --platform linux/amd64 -t dotfiles-test-arch -f test/Dockerfile.arch .
+	docker run --platform linux/amd64 --rm dotfiles-test-arch
 
 test-docker-interactive:
 	@echo "Starting interactive Ubuntu container..."
@@ -431,6 +427,7 @@ help:
 	@echo "  make macos        - macOS installation (Homebrew-based)"
 	@echo "  make arch         - Arch Linux installation"
 	@echo "  make link         - Create symlinks only"
+	@echo "  make link-dry-run - Show what link would do without changing anything"
 	@echo "  make unlink       - Remove symlinks"
 	@echo ""
 	@echo "Packages:"
@@ -438,6 +435,8 @@ help:
 	@echo "  make cask-apps        - Install Homebrew casks"
 	@echo "  make node-packages    - Install npm packages"
 	@echo "  make rust-packages    - Install Cargo packages"
+	@echo "  make vscode-extensions - Install Codefile extensions (VSCodium/VS Code)"
+	@echo "  make duti             - Set macOS default apps from install/duti"
 	@echo ""
 	@echo "Maintenance:"
 	@echo "  make doctor       - Run health check"
@@ -454,6 +453,8 @@ help:
 	@echo "  make clean        - Remove broken symlinks"
 	@echo "  make test-setup   - Install test dependencies (bats)"
 	@echo "  make test         - Run test suite"
+	@echo "  make test-docker  - Run test suite in an Ubuntu container"
+	@echo "  make test-docker-arch - Run test suite in an Arch container"
 	@echo "  make verify       - Run full repository verification"
 	@echo ""
 	@echo "Automated Sync (macOS):"

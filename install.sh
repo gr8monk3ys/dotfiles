@@ -39,16 +39,6 @@ readonly DOTFILES_STRICT_PACKAGES="${DOTFILES_STRICT_PACKAGES:-1}"
 # ============================================================================
 print_banner() {
     echo ""
-    echo -e "${BLUE}${BOLD}"
-    cat << 'EOF'
-    ██╗      ██████╗ ██████╗ ███████╗███╗   ██╗███████╗ ██████╗ ███████╗
-    ██║     ██╔═══██╗██╔══██╗██╔════╝████╗  ██║╚══███╔╝██╔═══██╗██╔════╝
-    ██║     ██║   ██║██████╔╝█████╗  ██╔██╗ ██║  ███╔╝ ██║   ██║███████╗
-    ██║     ██║   ██║██╔══██╗██╔══╝  ██║╚██╗██║ ███╔╝  ██║   ██║╚════██║
-    ███████╗╚██████╔╝██║  ██║███████╗██║ ╚████║███████╗╚██████╔╝███████║
-    ╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝╚══════╝ ╚═════╝ ╚══════╝
-EOF
-    echo -e "${NC}"
     echo -e "${MAGENTA}${BOLD}"
     cat << 'EOF'
     ██████╗  ██████╗ ████████╗███████╗██╗██╗     ███████╗███████╗
@@ -213,9 +203,15 @@ setup_repository() {
         if [[ "$update_repo" == "true" ]]; then
             print_substep "Updating repository..."
             cd "$DOTFILES_DIR"
-            git fetch origin "$DOTFILES_BRANCH"
-            git reset --hard "origin/$DOTFILES_BRANCH"
-            print_success "Repository updated"
+            # Fast-forward only: never discard local commits or edits.
+            if git pull --ff-only origin "$DOTFILES_BRANCH"; then
+                print_success "Repository updated"
+            else
+                print_error "Could not fast-forward $DOTFILES_DIR to origin/$DOTFILES_BRANCH"
+                print_info "Local commits or uncommitted changes are in the way."
+                print_info "Resolve by hand (git status / git rebase origin/$DOTFILES_BRANCH), then re-run."
+                exit 1
+            fi
         else
             print_info "Using existing repository"
         fi
@@ -308,20 +304,8 @@ run_installation() {
 # ============================================================================
 print_post_install() {
     echo ""
-    echo -e "${GREEN}${BOLD}"
-    cat << 'EOF'
-    ╔═══════════════════════════════════════════════════════════════════╗
-    ║                                                                   ║
-    ║   ██████╗  ██████╗ ███╗   ██╗███████╗██╗                          ║
-    ║   ██╔══██╗██╔═══██╗████╗  ██║██╔════╝██║                          ║
-    ║   ██║  ██║██║   ██║██╔██╗ ██║█████╗  ██║                          ║
-    ║   ██║  ██║██║   ██║██║╚██╗██║██╔══╝  ╚═╝                          ║
-    ║   ██████╔╝╚██████╔╝██║ ╚████║███████╗██╗                          ║
-    ║   ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝╚══════╝╚═╝                          ║
-    ║                                                                   ║
-    ╚═══════════════════════════════════════════════════════════════════╝
-EOF
-    echo -e "${NC}"
+    echo -e "${GREEN}${BOLD}    ✓ Installation complete${NC}"
+    echo ""
 
     echo -e "    ${WHITE}${BOLD}Next Steps:${NC}"
     echo ""

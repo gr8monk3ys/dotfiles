@@ -168,9 +168,11 @@ Backup Contents:
 EOF
 
     # List all backed up files
-    echo "" >> "$manifest"
-    echo "Files:" >> "$manifest"
-    find "$BACKUP_PATH" -type f | sed "s|$BACKUP_PATH/||" | sort >> "$manifest"
+    {
+        echo ""
+        echo "Files:"
+        find "$BACKUP_PATH" -type f | sed "s|$BACKUP_PATH/||" | sort
+    } >> "$manifest"
 
     # Add system info
     if [[ "$OSTYPE" == "darwin"* ]]; then

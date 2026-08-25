@@ -241,7 +241,7 @@ brew doctor
 **Solution:**
 
 ```bash
-# Use n version manager (already in npmfile)
+# Node comes from Homebrew (brew "node"); its global prefix is user-writable.
 # Or configure npm to use a different directory
 mkdir ~/.npm-global
 npm config set prefix '~/.npm-global'

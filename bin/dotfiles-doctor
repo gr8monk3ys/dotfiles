@@ -53,7 +53,11 @@ check_system() {
         fi
     elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
         check_pass "Operating System: Linux"
-        check_info "Distribution: $(lsb_release -d 2>/dev/null | cut -f2 || echo 'Unknown')"
+        local distro="Unknown"
+        if [[ -r /etc/os-release ]]; then
+            distro="$(. /etc/os-release && echo "${PRETTY_NAME:-${NAME:-Unknown}}")"
+        fi
+        check_info "Distribution: $distro"
     else
         check_warn "Operating System: $OSTYPE (Limited support)"
     fi
@@ -120,31 +124,49 @@ check_symlinks() {
     if [[ -d "$HOME/.config" ]]; then
         check_pass ".config directory exists"
 
+        # Physical path of the checkout, so link targets compare cleanly
+        local repo_config
+        repo_config="$(cd "$DOTFILES_DIR/.config" 2>/dev/null && pwd -P || true)"
+
         # Check common config symlinks (including new modern tools)
         local config_dirs=("zsh" "git" "nvim" "ghostty" "yazi" "zellij" "jj" "tmux")
         for dir in "${config_dirs[@]}"; do
-            if [[ -e "$HOME/.config/$dir" ]]; then
-                local is_linked=false
-                if [[ -L "$HOME/.config/$dir" ]]; then
-                    is_linked=true
-                else
-                    for f in "$HOME/.config/$dir"/*; do
-                        if [[ -L "$f" ]]; then
-                            is_linked=true
-                            break
-                        fi
-                    done
-                fi
-                if $is_linked; then
+            # Only judge dirs this checkout actually ships
+            [[ -n "$repo_config" && -d "$repo_config/$dir" ]] || continue
+            if [[ -L "$HOME/.config/$dir" ]]; then
+                # Folded: the dir itself is a link into the repo
+                if links_into_repo "$HOME/.config/$dir" "$repo_config/$dir"; then
                     check_pass ".config/$dir linked"
                 else
-                    check_warn ".config/$dir exists but may not be linked"
+                    check_fail ".config/$dir is a symlink but does not resolve into $DOTFILES_DIR"
                 fi
+            elif [[ -d "$HOME/.config/$dir" ]]; then
+                # Unfolded: every file the repo ships must be a link into it
+                local missing=0 f
+                while IFS= read -r f; do
+                    links_into_repo "$HOME/.config/$dir/${f#"$repo_config/$dir/"}" "$f" || ((++missing))
+                done < <(find "$repo_config/$dir" -type f)
+                if [[ $missing -eq 0 ]]; then
+                    check_pass ".config/$dir linked"
+                else
+                    check_fail ".config/$dir: $missing file(s) not linked into $DOTFILES_DIR (run 'make link')"
+                fi
+            else
+                check_fail ".config/$dir not linked (run 'make link')"
             fi
         done
     else
         check_fail ".config directory not found"
     fi
+}
+
+# links_into_repo <path> <expected> — true if <path> is a symlink that
+# resolves to the physical path <expected>.
+links_into_repo() {
+    local path="$1" expected="$2" resolved
+    [[ -L "$path" ]] || return 1
+    resolved="$(readlink -f "$path" 2>/dev/null)" || return 1
+    [[ "$resolved" == "$expected" ]]
 }
 
 # Check package managers
@@ -156,7 +178,8 @@ check_package_managers() {
         check_pass "Homebrew installed ($(brew --version | head -n1))"
 
         # Check for outdated packages
-        outdated=$(brew outdated | wc -l | tr -d ' ')
+        # No auto-update: a bare `brew outdated` first refreshes every tap (>60s)
+        outdated=$(HOMEBREW_NO_AUTO_UPDATE=1 brew outdated | wc -l | tr -d ' ')
         if [[ "$outdated" -gt 0 ]]; then
             check_warn "$outdated Homebrew packages need updating"
         else
@@ -184,14 +207,17 @@ check_package_managers() {
         check_warn "Cargo not installed"
     fi
 
-    # pacman (Linux only; the repo ships a bin/pacman sudo wrapper that
-    # would satisfy a bare command_exists check on macOS via make's PATH)
-    if [[ "$OSTYPE" == "linux-gnu"* ]] && command_exists pacman; then
+    # pacman: the repo ships a bin/pacman sudo wrapper that satisfies a bare
+    # command_exists on any OS via make's PATH, so only count a real one.
+    local pacman_bin
+    pacman_bin="$(command -v pacman 2>/dev/null || true)"
+    if [[ -n "$pacman_bin" && "$pacman_bin" != "$DOTFILES_DIR/bin/pacman" && -f /etc/arch-release ]]; then
         check_pass "pacman installed"
     fi
 }
 
-# Check core tools
+# Check core tools. Missing tools are warnings, not issues: `make link`
+# installs nothing, so a freshly linked box must still be able to pass.
 check_core_tools() {
     print_header "Core Tools"
 
@@ -201,7 +227,7 @@ check_core_tools() {
         if command_exists "$tool"; then
             check_pass "$tool installed"
         else
-            check_fail "$tool not installed"
+            check_warn "$tool not installed"
         fi
     done
 }
@@ -267,6 +293,16 @@ check_shell_config() {
     fi
 }
 
+# Octal mode of a path. BSD stat is `-f FORMAT`; on GNU `-f` means
+# "filesystem status" and succeeds, so an `||` fallback never fires.
+file_mode() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        stat -f "%Lp" "$1" 2>/dev/null
+    else
+        stat -c "%a" "$1" 2>/dev/null
+    fi
+}
+
 # Check file permissions
 check_permissions() {
     print_header "File Permissions"
@@ -274,7 +310,7 @@ check_permissions() {
     # Check SSH directory
     if [[ -d "$HOME/.ssh" ]]; then
         local ssh_perms
-        ssh_perms=$(stat -f "%Lp" "$HOME/.ssh" 2>/dev/null || stat -c "%a" "$HOME/.ssh" 2>/dev/null)
+        ssh_perms=$(file_mode "$HOME/.ssh")
         if [[ "$ssh_perms" == "700" ]]; then
             check_pass ".ssh directory permissions: 700"
         else
@@ -287,7 +323,7 @@ check_permissions() {
         while IFS= read -r key; do
             if [[ -f "$key" ]]; then
                 local key_perms
-                key_perms=$(stat -f "%Lp" "$key" 2>/dev/null || stat -c "%a" "$key" 2>/dev/null)
+                key_perms=$(file_mode "$key")
                 if [[ "$key_perms" == "600" ]]; then
                     check_pass "$(basename "$key") permissions: 600"
                 else
