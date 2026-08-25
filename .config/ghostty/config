@@ -20,8 +20,8 @@ font-feature = dlig
 # ============================================================================
 # Theme & Colors
 # ============================================================================
-# Adaptive light/dark theme — follows macOS appearance automatically
-theme = light:Horizon Bright,dark:Broadcast
+# OneDark everywhere (matches zsh-syntax-highlighting, fzf, bat, starship)
+theme = Atom One Dark
 
 # Frosted glass effect
 background-opacity = 0.8
