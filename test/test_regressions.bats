@@ -169,3 +169,21 @@ EOS
 	assert_output --partial "Zinit installed"
 	[[ "$output" != *"Oh My Zsh"* ]]
 }
+
+# Regression: Makefile used $(shell cat install/npmfile), which flattens the
+# file onto one line so the leading "# comment" turned every package name
+# into a shell comment. `make node-packages` installed nothing and
+# `make rust-packages` ran a bare `cargo install`.
+@test "make node-packages expands real package names, not a comment" {
+    run make -n node-packages SKIP_BREW=1
+    assert_success
+    [[ "$output" == *"install/npmfile"* ]]
+    [[ "$output" != *"global # npm"* ]]
+}
+
+@test "make rust-packages does not run a bare cargo install" {
+    run make -n rust-packages SKIP_BREW=1
+    assert_success
+    [[ "$output" != *"cargo install # Rust"* ]]
+    [[ "$output" == *"install/Rustfile"* ]]
+}
