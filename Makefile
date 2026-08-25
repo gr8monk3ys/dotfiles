@@ -153,14 +153,14 @@ node-packages: npm
 	@if [ -n "$(SKIP_NPM)" ]; then \
 		echo "Skipping npm packages"; \
 	else \
-		$(N_PREFIX)/bin/npm install --force --location global $(shell cat install/npmfile); \
+		grep -Ev '^\s*(#|$$)' install/npmfile | xargs $(N_PREFIX)/bin/npm install --force --location global; \
 	fi
 
 rust-packages: brew-packages
 	@if [ -n "$(SKIP_RUST)" ]; then \
 		echo "Skipping Rust packages"; \
 	else \
-		cargo install $(shell cat install/Rustfile); \
+		grep -Ev '^\s*(#|$$)' install/Rustfile | xargs -n1 cargo install; \
 	fi
 
 duti:

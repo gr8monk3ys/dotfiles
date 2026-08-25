@@ -1,6 +1,6 @@
 # npm Global Packages
 # Global npm packages installed system-wide
-# Install with: cat install/npmfile | xargs npm install -g
+# Install with: grep -Ev '^\s*(#|$)' install/npmfile | xargs npm install -g
 
 # ============================================================================
 # Package Managers

@@ -1,6 +1,6 @@
 # Rust/Cargo Packages
 # Rust packages installed via Cargo
-# Install with: cat install/Rustfile | xargs -n1 cargo install
+# Install with: grep -Ev '^\s*(#|$)' install/Rustfile | xargs -n1 cargo install
 
 # ============================================================================
 # Cargo Utilities
