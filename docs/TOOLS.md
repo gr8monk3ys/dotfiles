@@ -238,6 +238,10 @@ install manifests (`install/Brewfile`, `Caskfile`, `npmfile`, `Rustfile`,
 - **Alternatives:** skim, peco
 - **Installed via:** Brewfile, pacmanfile
 
+### dockutil
+- **Why:** Rebuilds the Dock from a script (`.config/macos/dock.sh`) instead of dragging icons on every new machine.
+- **Installed via:** Brewfile
+
 ## File & Text Search
 
 ### fd

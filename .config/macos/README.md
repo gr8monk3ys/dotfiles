@@ -1,133 +1,62 @@
 # macOS Configuration
 
-This directory contains macOS-specific system configurations and settings.
+macOS-specific scripts and settings. Nothing here runs automatically; apply by
+hand on a new machine after `brew bundle`.
 
 ## Files
 
-- `defaults.sh` - Script to configure macOS system preferences via defaults command
-- `dock.sh` - Script to configure macOS Dock settings
-- `.env.macos` - Environment variables for macOS
-- `.screenrc` - GNU Screen configuration
+- `defaults.sh` - user-level `defaults write` settings (no sudo)
+- `dock.sh` - rebuilds the Dock from the daily apps in `install/Caskfile`
+- `com.dotfiles.sync.plist` - LaunchAgent for the periodic dotfiles sync
 
-## What These Files Do
+## defaults.sh
 
-### defaults.sh
+About 40 settings, all in user preference domains, all idempotent, verified
+against macOS 26. What it sets:
 
-The `defaults.sh` script uses the macOS `defaults` command to programmatically set system preferences. This allows you to:
-- Configure system settings that aren't easily accessible through GUI
-- Ensure consistent settings across macOS installations
-- Version control your system preferences
-- Quickly apply preferred settings on a new machine
+- **Keyboard**: fastest key repeat, short initial delay, hold-to-repeat instead
+  of the accent popup, no auto-capitalisation / smart quotes / smart dashes /
+  auto-period / spelling correction.
+- **Trackpad**: tap to click (built-in and Bluetooth trackpads).
+- **Finder**: show all extensions, path bar, status bar, list view by default,
+  search the current folder, no "change extension?" warning, folders first,
+  no `.DS_Store` on network shares or USB volumes.
+- **Dock**: auto-hide with no delay and a fast animation, no recent apps,
+  minimise into the app icon, scale effect.
+- **Screenshots**: PNG, no window shadow, saved to `~/Pictures/screenshots`
+  (created if missing).
 
-Common settings include:
-- **Finder**: Show hidden files, file extensions, path bar
-- **Dock**: Auto-hide behavior, icon size, animation speed
-- **Keyboard**: Key repeat rates, function key behavior
-- **Trackpad**: Tracking speed, gestures
-- **Mission Control**: Hot corners, spaces behavior
-- **Security**: Require password after sleep
-- **UI**: Appearance, dark mode, menu bar items
-
-### dock.sh
-
-The `dock.sh` script specifically manages Dock configuration:
-- Add/remove applications from the Dock
-- Set Dock position (left, bottom, right)
-- Configure Dock size and magnification
-- Set up persistent applications
-- Clear and rebuild Dock from scratch
-
-This ensures a consistent Dock setup across machines.
-
-### .env.macos
-
-Environment variables specific to macOS:
-- macOS-specific paths
-- Homebrew configuration
-- Application preferences
-- System-specific settings
-
-Typically sourced by shell configuration files when running on macOS.
-
-### .screenrc
-
-Configuration for [GNU Screen](https://www.gnu.org/software/screen/), a terminal multiplexer:
-- Key bindings
-- Status bar configuration
-- Window management
-- Session behavior
-
-While tmux is more commonly used today, Screen is a lighter alternative available on many systems by default.
-
-## Usage
-
-### Applying System Preferences
+It does not touch scroll direction, locale, timezone, hot corners or anything
+that needs `sudo`.
 
 ```bash
-# Review the script first
-cat defaults.sh
-
-# Make executable
-chmod +x defaults.sh
-
-# Run the script
-./defaults.sh
-
-# Some settings require a restart
-sudo shutdown -r now
+DRY_RUN=1 ~/.config/macos/defaults.sh   # print every defaults write, change nothing
+~/.config/macos/defaults.sh             # apply; restarts Finder, Dock, SystemUIServer
 ```
 
-### Configuring the Dock
+Keyboard and trackpad settings take effect after logging out and back in.
+
+## dock.sh
+
+Requires `dockutil` (`brew install dockutil`; it is in `install/Brewfile`) and
+exits with an install hint if it is missing. Clears the Dock and pins, in
+order: Ghostty, Zen, Firefox, Brave, VSCodium, Obsidian, KeePassXC, TIDAL,
+System Settings. Apps that are not installed are skipped with a note rather
+than failing. Restarts the Dock at the end.
 
 ```bash
-# Make executable
-chmod +x dock.sh
-
-# Run the script
-./dock.sh
-
-# Dock will restart automatically
+~/.config/macos/dock.sh
 ```
 
-### Environment Variables
-
-The `.env.macos` file is typically sourced in your shell configuration:
+## Discovering settings
 
 ```bash
-# In .zshrc or .bash_profile
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    source ~/.config/macos/.env.macos
-fi
+defaults domains                     # list all domains
+defaults read com.apple.dock         # dump one domain
+defaults read com.apple.finder KEY   # read one key (errors if it was never set)
 ```
 
-## Important Notes
-
-1. **Backup First**: These scripts modify system settings. Review them before running.
-2. **Restart Required**: Many settings require logout or system restart to take effect.
-3. **Test Carefully**: Some settings can affect system stability or accessibility.
-4. **Version-Specific**: Some commands may vary between macOS versions.
-
-## Discovering Settings
-
-To find `defaults` commands for specific preferences:
-
-```bash
-# List all domains
-defaults domains
-
-# Read all settings for a domain
-defaults read com.apple.dock
-
-# Monitor changes (run before and after changing a setting in GUI)
-defaults read > before.txt
-# Change setting in System Preferences
-defaults read > after.txt
-diff before.txt after.txt
-```
-
-## Resources
-
-- [macOS defaults List](https://macos-defaults.com/)
-- [Mathias Bynens' dotfiles](https://github.com/mathiasbynens/dotfiles)
-- [GNU Screen Manual](https://www.gnu.org/software/screen/manual/)
-- [defaults Command Reference](https://ss64.com/osx/defaults.html)
+Most keys only appear in a domain after they have been written once, so a
+missing key does not mean it is unsupported. Check
+[macos-defaults.com](https://macos-defaults.com/) for what current macOS still
+honours before adding anything.
