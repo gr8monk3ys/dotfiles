@@ -26,8 +26,7 @@ nvim/
 │       ├── autocmds.lua     # Autocommands
 │       ├── filetypes.lua    # Filetype-specific settings
 │       └── format.lua       # Auto-formatting configuration
-├── flake.nix                # Nix flake for reproducible builds
-└── Makefile                 # Build automation
+└── lazy-lock.json           # Pinned plugin versions
 ```
 
 ## Key Bindings
@@ -235,15 +234,6 @@ nix-env -iA nixpkgs.alejandra
 
 # YAML
 go install github.com/google/yamlfmt/cmd/yamlfmt@latest
-```
-
-## Nix Support
-
-This configuration includes a Nix flake (`flake.nix`) for reproducible builds. To use:
-
-```bash
-nix develop  # Enter development shell
-nix build    # Build the configuration
 ```
 
 ## Troubleshooting
