@@ -169,6 +169,29 @@ make sync-status         # Check sync service status
 make sync-run            # Run sync manually
 ```
 
+### [check-alias-references](check-alias-references)
+
+Validates that every unconditional alias in `.config/zsh/aliases.zsh` resolves
+to a known source: a shell builtin, an entry in `install/Brewfile`, `install/Caskfile`,
+`install/Rustfile`, or `install/npmfile`, or an entry in
+`test/allowlist/system-tools.txt`.
+
+Aliases inside `if command -v X &> /dev/null; then ... fi` blocks are exempt
+(the guard itself declares the dependency).
+
+**Usage:**
+```bash
+check-alias-references  # Validate all unconditional aliases
+# or
+make verify-shell-surface
+```
+
+**On failure:** Prints the offending alias's file:line, the unresolved command, and
+three suggested fixes:
+1. Add the command to a package manifest (Brewfile, etc.)
+2. Wrap the alias with a guard condition
+3. Add the command to `test/allowlist/system-tools.txt` if it's a base system tool
+
 ### [validate-doc-links](validate-doc-links)
 
 Validates local Markdown links across repository documentation.

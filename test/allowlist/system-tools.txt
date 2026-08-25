@@ -1,0 +1,43 @@
+# test/allowlist/system-tools.txt
+#
+# Commands assumed always-present on supported platforms (macOS or
+# CI-tested Linux). Entries here are NOT tracked by any install manifest
+# because they ship with the base OS or with Xcode Command Line Tools.
+#
+# Format: one command per line. '#' starts a comment (line-comments only).
+# Each entry has a one-line justification.
+#
+# When adding an entry, prefer guarding the alias with
+# `if command -v X &> /dev/null` if X might not be present on every
+# supported platform.
+
+# --- POSIX / Unix coreutils ---
+date             # POSIX date utility; ships with macOS and every Linux distro
+egrep            # POSIX extended grep; ships with macOS and every Linux distro
+fgrep            # POSIX fixed-string grep; ships with macOS and every Linux distro
+find             # POSIX find utility; ships with macOS and every Linux distro
+grep             # POSIX grep utility; ships with macOS and every Linux distro
+ls               # POSIX list utility; ships with macOS and every Linux distro
+rm               # POSIX remove utility; ships with macOS and every Linux distro
+tr               # POSIX translate characters; ships with macOS and every Linux distro
+xargs            # POSIX utility; ships with macOS and every Linux distro
+ps               # POSIX process status; ships with macOS and every Linux distro
+
+# --- macOS-only system tools ---
+defaults         # macOS user defaults system; ships with macOS
+dig              # DNS lookup utility; ships with macOS (BIND tools)
+dscacheutil      # macOS Directory Service cache utility; ships with macOS
+ifconfig         # macOS/BSD network interface configuration; ships with macOS
+ipconfig         # macOS IP configuration utility; ships with macOS
+mdutil           # macOS Spotlight indexing control; ships with macOS
+osascript        # macOS AppleScript/JXA runner; ships with macOS
+softwareupdate   # macOS software update CLI; ships with macOS
+
+# --- Xcode Command Line Tools ---
+git              # Git; ships via Xcode CLT (macOS) or base OS package (Linux)
+python3          # Python 3 interpreter; /usr/bin/python3 ships with Xcode CLT
+
+# --- BSD utilities (present on macOS, common on Linux) ---
+hexdump          # Hex dump utility; ships with macOS and most Linux distros
+md5              # MD5 hash utility (macOS); used as fallback when md5sum absent
+shasum           # SHA checksum utility; ships with macOS and Perl on Linux

@@ -1,0 +1,206 @@
+#!/usr/bin/env bash
+# bin/check-alias-references
+#
+# Validate that every unconditional alias in .config/zsh/aliases.zsh
+# resolves to a known source: a shell builtin, an entry in an install
+# manifest (Brewfile/Caskfile/Rustfile/npmfile), or an entry in
+# test/allowlist/system-tools.txt.
+#
+# Conditional blocks (`if command -v X &> /dev/null; then ...; fi`) are
+# exempt — the guard itself declares the dependency.
+#
+# Override the input file by setting ALIASES_FILE; defaults to
+# $DOTFILES_DIR/.config/zsh/aliases.zsh.
+#
+# Exit code: 0 if all aliases resolve, 1 if any violation is found.
+
+set -euo pipefail
+
+DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+ALIASES_FILE="${ALIASES_FILE:-$DOTFILES_DIR/.config/zsh/aliases.zsh}"
+ALLOWLIST_FILE="$DOTFILES_DIR/test/allowlist/system-tools.txt"
+INSTALL_DIR="$DOTFILES_DIR/install"
+
+# Hardcoded list of POSIX/zsh shell builtins.
+BUILTINS=(
+    cd echo exec type command builtin eval exit export return set source .
+    test alias unalias history jobs fg bg pwd read shift trap umask wait
+    true false printf time times kill ulimit
+)
+
+is_builtin() {
+    local cmd="$1"
+    local b
+    for b in "${BUILTINS[@]}"; do
+        [[ "$b" == "$cmd" ]] && return 0
+    done
+    return 1
+}
+
+is_in_allowlist() {
+    local cmd="$1"
+    [[ -f "$ALLOWLIST_FILE" ]] || return 1
+    awk '
+        /^[[:space:]]*#/ { next }
+        /^[[:space:]]*$/ { next }
+        { print $1 }
+    ' "$ALLOWLIST_FILE" | grep -Fxq "$cmd"
+}
+
+is_in_manifest_quoted() {
+    # Matches Brewfile/Caskfile lines like: brew "name" or cask 'name'
+    local file="$1"
+    local keyword="$2"
+    local cmd="$3"
+    [[ -f "$file" ]] || return 1
+    sed -nE 's/^[[:space:]]*'"$keyword"'[[:space:]]+["'"'"']([^"'"'"']+)["'"'"'].*/\1/p' "$file" \
+        | grep -Fxq "$cmd"
+}
+
+is_in_manifest_bare() {
+    # Matches Rustfile/npmfile bare-name lines, ignoring comments and blanks.
+    local file="$1"
+    local cmd="$2"
+    [[ -f "$file" ]] || return 1
+    awk '
+        /^[[:space:]]*#/ { next }
+        /^[[:space:]]*$/ { next }
+        { print $1 }
+    ' "$file" | grep -Fxq "$cmd"
+}
+
+resolve() {
+    local cmd="$1"
+    is_builtin "$cmd" && return 0
+    is_in_allowlist "$cmd" && return 0
+    is_in_manifest_quoted "$INSTALL_DIR/Brewfile" "brew" "$cmd" && return 0
+    is_in_manifest_quoted "$INSTALL_DIR/Caskfile" "cask" "$cmd" && return 0
+    is_in_manifest_bare "$INSTALL_DIR/Rustfile" "$cmd" && return 0
+    is_in_manifest_bare "$INSTALL_DIR/npmfile" "$cmd" && return 0
+    return 1
+}
+
+# Walk aliases.zsh: track conditional-block depth, emit (line_num, full_line)
+# for every alias defined at depth 0.
+extract_unconditional_aliases() {
+    # The depth counter exempts ALL `if` blocks, not just `if command -v` guards.
+    # This is intentional: any aliases inside any conditional are presumed to
+    # have a non-trivial reason for being conditional, and we do not want false
+    # positives. The tradeoff is that future OS-conditional blocks (e.g.,
+    # `if [[ $OSTYPE == darwin* ]]; then alias X=Y; fi`) will skip the alias
+    # check too. If that becomes a problem, narrow the regex to only count
+    # `if command -v` blocks toward depth.
+    awk '
+        BEGIN { depth = 0 }
+        /^[[:space:]]*if[[:space:]]/  { depth++; next }
+        /^[[:space:]]*fi[[:space:]]*$/ { if (depth > 0) depth--; next }
+        /^[[:space:]]*alias[[:space:]]+[^=]+=/ {
+            if (depth == 0) printf "%d\t%s\n", NR, $0
+            next
+        }
+        # Fallback pattern: command -v X > /dev/null || alias Y=...
+        # The fallback BODY is what runs when X is missing, so it must resolve.
+        /command -v .* \|\| alias[[:space:]]+[^=]+=/ {
+            if (depth == 0) printf "%d\t%s\n", NR, $0
+            next
+        }
+    ' "$ALIASES_FILE"
+}
+
+# Extract the alias name and the first word of the body from a raw line.
+# Echoes "<name>\t<first_word>" or nothing if the line should be skipped.
+parse_alias_line() {
+    local line="$1"
+
+    # Fallback form: `command -v X > /dev/null || alias Y=BODY`
+    if [[ "$line" =~ command[[:space:]]+-v.*\|\|[[:space:]]+alias[[:space:]]+([^=]+)=(.*)$ ]]; then
+        local name="${BASH_REMATCH[1]}"
+        local body="${BASH_REMATCH[2]}"
+        emit_first_word "$name" "$body"
+        return
+    fi
+
+    # Standard form: `alias NAME=BODY`
+    if [[ "$line" =~ ^[[:space:]]*alias[[:space:]]+([^=]+)=(.*)$ ]]; then
+        local name="${BASH_REMATCH[1]}"
+        local body="${BASH_REMATCH[2]}"
+        emit_first_word "$name" "$body"
+    fi
+}
+
+emit_first_word() {
+    local name="$1"
+    local body="$2"
+
+    # Strip surrounding single or double quotes from the body.
+    body="${body#\'}"; body="${body%\'}"
+    body="${body#\"}"; body="${body%\"}"
+
+    # First whitespace-separated token.
+    local first="${body%%[[:space:]]*}"
+
+    # Unwrap wrappers.
+    case "$first" in
+        sudo|command|nohup|exec)
+            local rest="${body#"$first"}"
+            rest="${rest#"${rest%%[![:space:]]*}"}"   # ltrim
+            first="${rest%%[[:space:]]*}"
+            ;;
+    esac
+
+    # Skip empty, absolute paths, and variable expansions.
+    case "$first" in
+        '' | /* | \$* | '${'* ) return ;;
+    esac
+
+    printf '%s\t%s\n' "$name" "$first"
+}
+
+# Main loop: process every unconditional alias, collect violations.
+violations=0
+violation_log="$(mktemp)"
+trap 'rm -f "$violation_log"' EXIT
+
+while IFS=$'\t' read -r line_num line; do
+    [[ -z "$line_num" ]] && continue
+    parsed="$(parse_alias_line "$line" || true)"
+    [[ -z "$parsed" ]] && continue
+    alias_name="${parsed%%$'\t'*}"
+    first_word="${parsed##*$'\t'}"
+
+    if ! resolve "$first_word"; then
+        {
+            echo "  $ALIASES_FILE:$line_num"
+            echo "    alias '$alias_name' references '$first_word'"
+            echo "    '$first_word' is not in:"
+            echo "      - shell builtins"
+            echo "      - test/allowlist/system-tools.txt"
+            echo "      - install/Brewfile, install/Caskfile, install/Rustfile, install/npmfile"
+            echo ""
+        } >> "$violation_log"
+        violations=$((violations + 1))
+    fi
+done < <(extract_unconditional_aliases)
+
+if (( violations > 0 )); then
+    echo "check-alias-references: $violations violation(s) found"
+    echo ""
+    cat "$violation_log"
+    cat <<'FIX'
+Fix one of:
+  1. Add the command to install/Brewfile (or appropriate manifest)
+  2. Wrap the alias with a guard:
+       if command -v CMD &> /dev/null; then
+           alias NAME='CMD ...'
+       fi
+  3. If CMD is a base system tool that should not be manifested
+     (e.g., 'osascript', 'pbcopy'), add it to
+     test/allowlist/system-tools.txt with a one-line comment.
+
+Run 'bin/check-alias-references' locally to iterate.
+FIX
+    exit 1
+fi
+
+echo "check-alias-references: all aliases resolve"
+exit 0
