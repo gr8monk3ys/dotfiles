@@ -181,22 +181,10 @@ teardown() {
 
 ## Continuous Integration
 
-Tests are automatically run in CI/CD pipelines:
-
-```yaml
-# .github/workflows/test.yml
-name: Tests
-on: [push, pull_request]
-jobs:
-  test:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install BATS
-        run: brew install bats-core
-      - name: Run tests
-        run: make test
-```
+There is none. GitHub Actions is disabled on this private repo, so `make verify`
+(shell lint, shell-surface checks, doc-link and tool-doc validators, and this
+suite) is the pre-push gate. `make test-docker` / `make test-docker-arch` run
+the same suite in Linux containers locally.
 
 ## Test Coverage
 
