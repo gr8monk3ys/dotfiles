@@ -6,11 +6,18 @@
     <key>Label</key>
     <string>com.dotfiles.sync</string>
 
-    <!-- Script to execute -->
+    <!-- Script to execute; __DOTFILES_DIR__ / __SYNC_LOG__ are filled in by `make sync-install` -->
     <key>ProgramArguments</key>
     <array>
         <string>__DOTFILES_DIR__/bin/dotfiles-sync</string>
     </array>
+
+    <!-- launchd starts jobs with a bare PATH; make sure Homebrew git/gh are found -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
 
     <!-- Run daily at 10:00 AM -->
     <key>StartCalendarInterval</key>
@@ -21,9 +28,11 @@
         <integer>0</integer>
     </dict>
 
-    <!-- Capture errors for debugging -->
+    <!-- Persistent log (macOS purges /tmp); `make sync-status` tails it -->
+    <key>StandardOutPath</key>
+    <string>__SYNC_LOG__</string>
     <key>StandardErrorPath</key>
-    <string>/tmp/dotfiles-sync.err</string>
+    <string>__SYNC_LOG__</string>
 
     <!-- Don't run immediately when loaded, only at scheduled time -->
     <key>RunAtLoad</key>
