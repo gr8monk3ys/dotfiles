@@ -13,8 +13,10 @@ SQLite-backed shell history with fuzzy search — replaces plain `ctrl-r`.
 
 ## Configuration choices
 
-- `config.toml` keeps defaults except the theme; **sync is not enabled** —
-  run `atuin register` / `atuin login` per machine if you want it.
+- `config.toml` sets the theme, `enter_accept = true` (Enter runs the
+  selection, Tab pastes it) and `sync.records = true`; **no account is
+  configured** — run `atuin register` / `atuin login` per machine if you
+  want sync to actually happen.
 - `themes/onedark.toml` matches the repo-wide OneDark palette (same hexes
   as the README theme table and `FZF_DEFAULT_OPTS`).
 

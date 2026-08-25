@@ -9,6 +9,7 @@ This directory contains the configuration for [tmux](https://github.com/tmux/tmu
 ## What is Tmux?
 
 Tmux is a terminal multiplexer that allows you to:
+
 - Run multiple terminal sessions in a single window
 - Split terminal into multiple panes
 - Detach and reattach sessions
@@ -23,25 +24,28 @@ The `tmux.conf` file customizes tmux's behavior, appearance, and keybindings.
 ### Common Settings
 
 #### Prefix Key
+
 ```
-# Change prefix from Ctrl-b to Ctrl-a
-set -g prefix C-a
-unbind C-b
-bind C-a send-prefix
+# Prefix is Ctrl-Space (not the default Ctrl-b)
+set -g prefix C-Space
+bind C-Space send-prefix
 ```
 
 #### Mouse Support
+
 ```
 set -g mouse on
 ```
 
 #### Colors and Appearance
+
 ```
 set -g default-terminal "tmux-256color"
-set -g status-style bg=black,fg=white
+set -g status-interval 5
 ```
 
 #### Window and Pane Management
+
 ```
 # Split panes with | and -
 bind | split-window -h
@@ -55,10 +59,10 @@ bind l select-pane -R
 ```
 
 #### Status Bar
+
 ```
-set -g status-position bottom
-set -g status-left '[#S] '
-set -g status-right '%H:%M %d-%b-%y'
+setw -g automatic-rename-format "#P #{pane_current_path}  #{pane_current_command}"
+set -g status-right ''
 ```
 
 ## Usage
@@ -81,40 +85,45 @@ tmux ls
 
 ### Basic Commands
 
-With default prefix (Ctrl-b):
+With this config's prefix (Ctrl-Space); `prefix r` reloads the config and `Shift-←/→` moves between panes without the prefix:
 
 **Sessions**
-- `Ctrl-b d` - Detach from session
-- `Ctrl-b s` - List sessions
-- `Ctrl-b $` - Rename session
+
+- `Ctrl-Space d` - Detach from session
+- `Ctrl-Space s` - List sessions
+- `Ctrl-Space $` - Rename session
 
 **Windows**
-- `Ctrl-b c` - Create new window
-- `Ctrl-b ,` - Rename window
-- `Ctrl-b n` - Next window
-- `Ctrl-b p` - Previous window
-- `Ctrl-b 0-9` - Switch to window by number
-- `Ctrl-b &` - Kill window
+
+- `Ctrl-Space c` - Create new window
+- `Ctrl-Space ,` - Rename window
+- `Ctrl-Space n` - Next window
+- `Ctrl-Space p` - Previous window
+- `Ctrl-Space 0-9` - Switch to window by number
+- `Ctrl-Space &` - Kill window
 
 **Panes**
-- `Ctrl-b %` - Split vertically
-- `Ctrl-b "` - Split horizontally
-- `Ctrl-b arrow` - Navigate panes
-- `Ctrl-b x` - Kill pane
-- `Ctrl-b z` - Toggle pane zoom
-- `Ctrl-b {` - Move pane left
-- `Ctrl-b }` - Move pane right
+
+- `Ctrl-Space |` - Split vertically
+- `Ctrl-Space -` or `_` - Split horizontally
+- `Ctrl-Space arrow` - Navigate panes
+- `Ctrl-Space x` - Kill pane
+- `Ctrl-Space z` - Toggle pane zoom
+- `Ctrl-Space {` - Move pane left
+- `Ctrl-Space }` - Move pane right
 
 **Other**
-- `Ctrl-b :` - Command prompt
-- `Ctrl-b ?` - List keybindings
-- `Ctrl-b [` - Enter copy mode
+
+- `Ctrl-Space :` - Command prompt
+- `Ctrl-Space ?` - List keybindings
+- `Ctrl-Space [` - Enter copy mode
 
 ## Features
 
 ### Copy Mode
 
-Enter scrollback/copy mode with `Ctrl-b [`
+Enter scrollback/copy mode with `Ctrl-Space [`
+
 - Navigate with arrow keys or Vim bindings
 - `Space` - Start selection
 - `Enter` - Copy selection
@@ -123,6 +132,7 @@ Enter scrollback/copy mode with `Ctrl-b [`
 ### Plugins
 
 Popular tmux plugins via [TPM](https://github.com/tmux-plugins/tpm):
+
 - **tmux-resurrect**: Save and restore sessions
 - **tmux-continuum**: Automatic session saving
 - **tmux-yank**: Better clipboard integration
@@ -143,6 +153,7 @@ tmux list-windows > layout.txt
 ### Scripting
 
 Automate tmux with scripts:
+
 ```bash
 #!/bin/bash
 tmux new-session -d -s mysession
@@ -163,6 +174,7 @@ tmux attach-session -t mysession
 ## Integration
 
 Works well with:
+
 - **Shell**: Zsh, Bash with custom prompts
 - **Editors**: Vim, Neovim for seamless integration
 - **SSH**: Maintain sessions on remote servers

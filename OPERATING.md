@@ -23,6 +23,11 @@ xcode-select --install
 
 ### Install (Homebrew)
 
+`make` picks a target from `bin/platform detect`: **macOS** installs
+Homebrew packages, casks, npm/Cargo globals and links; **Arch** installs
+`install/pacmanfile` and links; **other Linux** only links (`make link`
+needs `stow` on PATH and stops with a hint if it is missing).
+
 One-liner (interactive):
 
 ```bash
@@ -48,15 +53,17 @@ make
 
 After installation completes:
 
-1. **Set machine type:** `echo personal > ~/.machine_type` (or `work` / `server`).
-2. **Create local override files** (git-ignored, machine-specific):
-   ```bash
-   cp ~/.config/zsh/zshrc.local.example ~/.config/zsh/zshrc.local
-   cp ~/.config/git/config.local.example ~/.config/git/config.local
-   ```
-3. **SSH config:** drop any machine-specific snippets into `~/.config/ssh/config.d/`. `make link` ensures `~/.ssh/config` includes that directory.
-4. **Run health check:** `make doctor`.
-5. **Verify:** `make verify` should pass end-to-end.
+- **Set machine type:** `echo personal > ~/.machine_type` (or `work` / `server`).
+- **Create local override files** (git-ignored, machine-specific):
+
+  ```bash
+  cp ~/.config/zsh/zshrc.local.example ~/.config/zsh/zshrc.local
+  cp ~/.config/git/config.local.example ~/.config/git/config.local
+  ```
+
+- **SSH config:** drop any machine-specific snippets into `~/.config/ssh/config.d/`. `make link` ensures `~/.ssh/config` includes that directory.
+- **Run health check:** `make doctor`.
+- **Verify:** `make verify` should pass end-to-end.
 
 ---
 
@@ -65,7 +72,7 @@ After installation completes:
 Commands you re-run routinely.
 
 | Command | What it does |
-|---|---|
+| --- | --- |
 | `make link` | Create/refresh all symlinks via Stow. Safe to re-run. |
 | `make link-dry-run` | Preview symlink changes without applying. |
 | `make doctor` | Comprehensive health check (symlinks, package managers, shell config, tool presence). |
@@ -75,6 +82,44 @@ Commands you re-run routinely.
 | `make daily` | Fast pre-push check: shell syntax + doc links + tests. |
 | `make verify` | Full repo verification: shell syntax + stale-ref check + doc links + tests. |
 | `make clean` | Remove broken symlinks in `~/.config/`. |
+| `make restore [backup=/path]` | Restore the latest (or a named) `dotfiles-backup` snapshot. |
+| `make help` | List every target with its one-line description. |
+
+`make <target>` wraps the matching `bin/dotfiles-*` script, which also runs standalone
+(`dotfiles-doctor --verbose`, `dotfiles-update --skip-brew`, `dotfiles-restore --dry-run`).
+See `bin/README.md` for flags.
+
+### Testing and verification
+
+| Command | What it does |
+| --- | --- |
+| `make test-setup` | Install BATS if missing. |
+| `make test` | Run the BATS suite (`test/test_*.bats`). |
+| `make verify-shell` | Syntax-check zsh/bash files. |
+| `make verify-shell-surface` | Source `.zshenv`/aliases/functions and check every alias resolves. |
+| `make verify-stale-refs` | Grep for strings left over from past migrations. |
+| `make verify-doc-links` | Validate local Markdown links (`bin/validate-doc-links`). |
+| `make verify-tool-docs` | Check `docs/TOOLS.md` against the install manifests (`bin/validate-tool-docs`). |
+| `make test-docker` / `make test-docker-arch` | Run the install in an Ubuntu / Arch container. |
+
+### Package-level targets
+
+`make brew-packages`, `make cask-apps`, `make node-packages`, `make rust-packages`,
+`make vscode-extensions`, `make duti` (macOS file associations) and
+`make pacman-packages` (Arch) each install one manifest from `install/`.
+`make brew-update` / `make brew-cleanup` maintain Homebrew alone.
+
+### Automated sync (macOS)
+
+A LaunchAgent can `git pull` the repo daily at 10:00 and notify only when
+something changed (skips silently if the tree is dirty):
+
+```bash
+make sync-install     # load .config/macos/com.dotfiles.sync.plist
+make sync-status      # is it loaded?
+make sync-run         # run bin/dotfiles-sync once, now
+make sync-uninstall
+```
 
 ### Worktree flow (parallel sessions)
 
@@ -85,6 +130,13 @@ make worktree-add name=<task>         # creates ../dotfiles-<task> on branch ai/
 make worktree-list                    # list active worktrees
 make worktree-remove name=<task>      # remove worktree by name
 make worktree-prune                   # clean up stale metadata
+```
+
+### Update and uninstall
+
+```bash
+cd ~/.dotfiles && git pull && make link   # or the alias: dotsup
+make unlink                               # remove all symlinks
 ```
 
 ---
@@ -151,7 +203,8 @@ Edit `.config/zsh/aliases.zsh` (~400 lines, organized by tool). Find the relevan
 - `~/.config/git/config.local` — user name/email, signing key.
 - `~/.config/ssh/config.d/*.conf` — host-specific SSH snippets.
 
-Both `zshrc.local.example` and `config.local.example` exist as templates.
+Templates: `.config/zsh/zshrc.local.example` and `.config/git/config.local.example`
+(the `cp` commands are in the fresh-laptop checklist above).
 
 ### Machine profiles
 
@@ -163,12 +216,12 @@ Set `~/.machine_type` to `personal`, `work`, or `server`. On shell startup, `.co
 
 Top-level directories, one sentence each.
 
-- **`.config/`** — XDG-compliant app configs (23 directories). Managed by Stow. Each has its own README.
-- **`bin/`** — Helper scripts: platform detection, `dotfiles-doctor/update/backup/restore/bench-shell/worktree`, doc-link validator. See `bin/README.md`.
+- **`.config/`** — XDG-compliant app configs (26 directories). Managed by Stow. Each has its own README.
+- **`bin/`** — Helper scripts: platform detection, `dotfiles-doctor/update/backup/restore/bench-shell/worktree/sync/why`, and the validators `validate-doc-links`, `validate-tool-docs`, `check-alias-references`. See `bin/README.md`.
 - **`install/`** — Package manifests: `Brewfile`, `Caskfile`, `npmfile`, `Rustfile`, `pacmanfile`, `Codefile` (VSCodium extensions), `duti` (macOS file associations).
 - **`test/`** — BATS test suite. Run with `make test`. Pattern: `test_*.bats`, helpers in `test_helper/`.
-- **`.github/`** — `CODEOWNERS` only. There is no CI: the repo is private and GitHub Actions is disabled (no minutes). `make verify` before pushing is the gate.
-- **`docs/`** — Plans and specs for non-trivial changes.
+- **`.github/`** — `CODEOWNERS` only. There is no CI; `make verify` before pushing is the gate. `.pre-commit-config.yaml` is available for local hooks (`pre-commit install`).
+- **`docs/`** — `TOOLS.md` (the tool catalog) plus `superpowers/plans/` and `superpowers/specs/` for non-trivial changes.
 
 The Stow target is `~/.config/`. The only exception is `.zshenv`, which is manually symlinked from the repo root to `~/.zshenv` because Zsh must find it in `$HOME`.
 
@@ -179,7 +232,7 @@ The Stow target is `~/.config/`. The only exception is `.zshenv`, which is manua
 Which tools are actually in use right now. Update this table when you swap tools.
 
 | Category | Primary | Backup / transitional | Notes |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Terminal | Ghostty | — | Zig-based GPU terminal |
 | Multiplexer | Zellij | tmux | tmux config kept for SSH/legacy contexts |
 | File manager | Yazi | — | lf has been removed |

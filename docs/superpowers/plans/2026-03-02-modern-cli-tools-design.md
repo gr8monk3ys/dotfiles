@@ -10,9 +10,12 @@
 
 ---
 
+## Tasks
+
 ### Task 1: Fix untracked .config/git/ignore
 
 **Files:**
+
 - Commit: `.config/git/ignore` (already exists, just untracked)
 
 **Step 1: Stage and commit the git ignore file**
@@ -27,11 +30,13 @@ git commit -m "chore: track global gitignore for claude settings"
 ### Task 2: Add new tap and tools to Brewfile
 
 **Files:**
+
 - Modify: `install/Brewfile`
 
 **Step 1: Add gh-dash tap after line 18 (vldmrkl tap)**
 
 After `tap "vldmrkl/formulae"`, add:
+
 ```
 tap "dlvhdr/gh-dash"                   # GitHub dashboard extension
 ```
@@ -39,6 +44,7 @@ tap "dlvhdr/gh-dash"                   # GitHub dashboard extension
 **Step 2: Add lazydocker and gh-dash to Git/DevOps section**
 
 After line 51 (`brew "lazygit"`), add:
+
 ```
 brew "lazydocker"                      # Terminal UI for Docker
 brew "dlvhdr/gh-dash/gh-dash"          # GitHub dashboard TUI
@@ -47,6 +53,7 @@ brew "dlvhdr/gh-dash/gh-dash"          # GitHub dashboard TUI
 **Step 3: Add jq to File & Text Search section**
 
 After line 123 (`brew "sk"`), add:
+
 ```
 brew "jq"                              # JSON processor
 ```
@@ -98,6 +105,7 @@ Add tools across four categories:
 ### Task 3: Add lazygit and new tool aliases to aliases.zsh
 
 **Files:**
+
 - Modify: `.config/zsh/aliases.zsh`
 
 **Step 1: Add lazygit aliases**

@@ -3,24 +3,23 @@
 For install, daily operations, and troubleshooting, see [OPERATING.md](OPERATING.md). This file covers style, testing, and contribution conventions.
 
 ## Project Structure & Module Organization
+
 This repository is organized by responsibility:
+
 - `.config/` contains XDG app configs (`ghostty/`, `nvim/`, `zsh/`, `git/`, `aerospace/`, etc.). Keep tool-specific changes inside the matching directory.
-- `bin/` holds portable helper scripts (health checks, backup, sync, templating, secrets, link validation).
+- `bin/` holds portable helper scripts (health checks, update, backup/restore, sync, worktrees, doc and tool-catalog validators).
 - `install/` stores package manifests (`Brewfile`, `Caskfile`, `npmfile`, `Rustfile`, `pacmanfile`, `Codefile`, `duti`).
 - `test/` contains BATS tests and helpers (`test_helper/common.bash`).
-
+- `docs/` holds `TOOLS.md` and `superpowers/{plans,specs}/` design documents.
 
 ## Build, Test, and Development Commands
-Use `make help` to see all targets. Core commands:
-- `make` - full install for detected OS.
-- `make link` / `make unlink` - create/remove symlinks.
-- `make link-dry-run` - preview stow changes safely.
-- `make test-setup` - install BATS dependencies.
-- `make test` - run BATS suite.
-- `make verify` - run shell checks, stale-reference checks, doc-link checks, and tests.
+
+The full command reference is in [OPERATING.md](OPERATING.md#daily-operations); `make help` lists every target. The two you need before a PR are `make test` and `make verify`.
 
 ## Coding Style & Naming Conventions
+
 Follow `.editorconfig`:
+
 - UTF-8, LF, final newline, no trailing whitespace.
 - Default indentation: 2 spaces.
 - Shell scripts: 4 spaces.
@@ -29,6 +28,7 @@ Follow `.editorconfig`:
 Prefer portable shell patterns (avoid GNU-only flags in scripts sourced on macOS). Name executables and helpers in kebab-case (example: `dotfiles-update`). Add new tests as `test/test_*.bats`.
 
 ## Testing Guidelines
+
 Testing is BATS-based (`test/*.bats`). Add or update tests whenever behavior changes, especially regression guards in `test/test_regressions.bats`. Run `make test` locally before opening a PR; use targeted runs like `bats test/test_regressions.bats -f "theme consistency"` when iterating. The suite includes shell-surface validation (`make verify-shell-surface`) which parses and sources `.zshenv`, `aliases.zsh`, and `functions.zsh`, asserts sentinel aliases per conditional block, and runs `bin/check-alias-references` to verify every unconditional alias references a known command.
 
 ## Commit & Pull Request Guidelines
@@ -50,6 +50,7 @@ Commit style in history is Conventional Commit-like (`feat:`, `fix:`, `chore:`, 
 - No secrets or credentials committed
 
 ## Security & Local Overrides
+
 Never commit secrets. Keep machine-specific overrides in local files (for example, `~/.config/zsh/zshrc.local`, `~/.config/git/config.local`).
 
 ## Per-Config README Convention

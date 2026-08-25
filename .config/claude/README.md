@@ -5,6 +5,7 @@ This directory contains references and integration notes for [Claude Code](https
 ## Overview
 
 Claude Code is an AI-powered CLI tool that helps with:
+
 - Code generation and modification
 - Debugging and error analysis
 - Documentation writing
@@ -18,6 +19,7 @@ My Claude Code skills, workflows, and custom configurations are maintained in a 
 **Repository:** [https://github.com/gr8monk3ys/lorenzos-claude-code](https://github.com/gr8monk3ys/lorenzos-claude-code)
 
 This includes:
+
 - Custom skills and workflows
 - Project-specific CLAUDE.md files
 - Best practices and patterns
@@ -38,19 +40,20 @@ brew install claude-code
 Aliases are configured in `~/.config/zsh/aliases.zsh`:
 
 ```bash
-alias claude='claude-code'
-alias cc='claude-code'
+alias cc='claude'
 ```
 
 ## Project Configuration
 
 Each project can have a `CLAUDE.md` file at the root that provides context to Claude about:
+
 - Project structure
 - Coding conventions
 - Important files and patterns
 - Development workflows
 
 Example structure:
+
 ```markdown
 # CLAUDE.md
 
@@ -70,21 +73,24 @@ Brief description of the project...
 ## Usage Tips
 
 ### Starting a Session
+
 ```bash
 # In project directory
-claude-code
+claude
 
 # Or with specific task
-claude-code "fix the failing tests"
+claude "fix the failing tests"
 ```
 
 ### Effective Prompts
+
 - Be specific about what you want
 - Reference file paths when relevant
 - Describe the expected behavior
 - Mention constraints or preferences
 
 ### Best Practices
+
 1. **Keep CLAUDE.md updated** - Good context improves responses
 2. **Review changes** - Always review AI-generated code
 3. **Iterate** - Refine requests based on results
@@ -93,6 +99,7 @@ claude-code "fix the failing tests"
 ## Integration with Dotfiles
 
 This dotfiles repo includes a comprehensive `CLAUDE.md` at the root that helps Claude understand:
+
 - Repository structure
 - Configuration patterns
 - XDG conventions used

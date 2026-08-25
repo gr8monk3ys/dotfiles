@@ -19,6 +19,7 @@ Implement automated daily sync for dotfiles using macOS launchd, with native not
 ### 1. Sync Script (`bin/dotfiles-sync`)
 
 Lightweight script optimized for automated runs:
+
 - Pulls git changes only
 - Handles uncommitted changes gracefully (skips with notification)
 - Sends macOS notifications via osascript
@@ -28,6 +29,7 @@ Lightweight script optimized for automated runs:
 ### 2. LaunchAgent Plist (`.config/macos/com.dotfiles.sync.plist`)
 
 Stored in dotfiles, symlinked to `~/Library/LaunchAgents/`:
+
 - Runs daily at 10:00 AM using StartCalendarInterval
 - Catches up if Mac was asleep at scheduled time
 - Errors logged to `/tmp/dotfiles-sync.err`
@@ -35,6 +37,7 @@ Stored in dotfiles, symlinked to `~/Library/LaunchAgents/`:
 ### 3. Makefile Integration
 
 New targets:
+
 - `make sync-install` - Enable automated sync
 - `make sync-uninstall` - Disable automated sync
 - `make sync-status` - Check if service is running
@@ -43,7 +46,7 @@ New targets:
 ## File Locations
 
 | File | Location |
-|------|----------|
+| ------ | ---------- |
 | Sync script | `bin/dotfiles-sync` |
 | Plist template | `.config/macos/com.dotfiles.sync.plist` |
 | Installed plist | `~/Library/LaunchAgents/com.dotfiles.sync.plist` |
