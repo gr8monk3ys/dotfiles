@@ -11,7 +11,7 @@ System-wide Vim-style navigation for macOS.
 
 ## Caps Lock
 
-Caps Lock is remapped to Control via `nix-darwin` (`system.keyboard.remapCapsLockToControl`),
+Caps Lock is remapped to Control in macOS System Settings (Keyboard → Modifier Keys),
 **not** in Karabiner, to avoid conflicts. This means Caps Lock + hjkl gives you
 arrow keys everywhere.
 
@@ -19,7 +19,6 @@ arrow keys everywhere.
 
 ```bash
 brew install --cask karabiner-elements
-# or via nix-darwin (already in darwin.nix casks)
 ```
 
 Karabiner reads from `~/.config/karabiner/karabiner.json` by default (XDG-compliant).

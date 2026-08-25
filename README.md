@@ -25,7 +25,6 @@
 **A keyboard-driven development environment**
 
 [![License](https://img.shields.io/badge/license-GPL--3.0-98c379?style=flat-square)](LICENSE)
-[![Nix](https://img.shields.io/badge/Nix-Optional-5277C3?style=flat-square&logo=nixos)](flake.nix)
 [![Theme](https://img.shields.io/badge/theme-OneDark-61afef?style=flat-square)](#theme)
 
 [Installation](#-quick-start) •
@@ -40,7 +39,7 @@
 
 ## ⚡ Quick Start
 
-### Option 1: Traditional Installation (Homebrew-based)
+### Installation (Homebrew-based)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/gr8monk3ys/dotfiles/main/install.sh | bash
@@ -51,23 +50,6 @@ Non-interactive (installs packages, links dotfiles, applies prompt style):
 ```bash
 DOTFILES_ASSUME_YES=1 DOTFILES_MACHINE_TYPE=personal \
 curl -fsSL https://raw.githubusercontent.com/gr8monk3ys/dotfiles/main/install.sh | bash
-```
-
-### Option 2: Nix Installation (Optional)
-
-```bash
-# Clone the repository
-git clone https://github.com/gr8monk3ys/dotfiles.git ~/.dotfiles
-cd ~/.dotfiles
-
-# Install Nix (if needed)
-make nix-install
-
-# Apply configuration (macOS)
-make nix
-
-# Or just user environment (any platform)
-make nix-home
 ```
 
 <details>
@@ -135,7 +117,6 @@ xcode-select --install
 - **atuin** - Magical shell history
 - **broot** - Tree with fuzzy search- **navi** - Interactive cheatsheets- **ouch** - Universal archives
 ### 📦 Package Management
-- **Nix Flakes** - Reproducible (optional)
 - **Homebrew** - macOS packages
 - **mise** - Universal version manager
 - **Cargo** - Rust packages
@@ -182,10 +163,6 @@ SketchyBar (Catppuccin Mocha)
 │   ├── 📁 zsh/              # Shell configuration
 │   │   └── 📄 aliases.zsh   # Modern CLI aliases
 │
-├── 📁 nix/                  # Nix configuration
-│   ├── 📄 home.nix          # Home Manager config
-│   └── 📄 darwin.nix        # macOS system config
-│
 ├── 📁 bin/                  # Utility scripts
 │   ├── 📄 dotfiles-doctor   # Health check
 │   ├── 📄 dotfiles-update   # Update packages
@@ -198,7 +175,6 @@ SketchyBar (Catppuccin Mocha)
 │
 ├── 📁 test/                 # BATS test suite
 ├── 📁 docs/                 # TOOLS.md tool catalog + plans
-├── 📄 flake.nix             # Nix flake
 ├── 📄 install.sh            # One-line installer
 └── 📄 Makefile              # Automation
 ```
@@ -230,16 +206,6 @@ verification.
 | `make link` | Create symlinks only |
 | `make link-dry-run` | Preview changes |
 | `make unlink` | Remove symlinks |
-
-### Nix Installation (Reproducible)
-
-| Command | Description |
-|---------|-------------|
-| `make nix-install` | Install Nix package manager |
-| `make nix` | Apply full nix-darwin config (macOS) |
-| `make nix-home` | Apply Home Manager config (any platform) |
-| `make nix-update` | Update flake inputs |
-| `make nix-gc` | Garbage collect Nix store |
 
 ### Maintenance
 
@@ -402,26 +368,6 @@ make link
 <summary><strong>Linux support?</strong></summary>
 
 Partial support for Arch Linux. See `install/pacmanfile`. Other distros need custom package lists.
-
-With Nix, you get full Linux support:
-```bash
-make nix-home  # Works on any Linux distro
-```
-
-</details>
-
-<details>
-<summary><strong>What's the difference between traditional and Nix installation?</strong></summary>
-
-| Aspect | Traditional | Nix |
-|--------|------------|-----|
-| Reproducibility | Partial | Pinned versions |
-| Rollback | Manual | Built-in |
-| Cross-platform | macOS focus | Any platform |
-| Package versions | Latest | Locked |
-| Complexity | Simpler | Steeper learning curve |
-
-**Recommendation:** Start with traditional (`make`). Nix is optional for users who want pinned reproducibility.
 
 </details>
 

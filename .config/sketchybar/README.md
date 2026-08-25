@@ -38,7 +38,6 @@ AeroSpace triggers SketchyBar updates via `exec-on-workspace-change` in
 
 ```bash
 brew install sketchybar
-# or via nix-darwin (already in darwin.nix)
 ```
 
 ## Extending

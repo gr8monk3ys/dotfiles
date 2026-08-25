@@ -21,19 +21,7 @@ For a public-facing overview (what this repo is and why), see [README.md](README
 xcode-select --install
 ```
 
-### Pick a path
-
-| | Traditional (Homebrew) | Nix |
-|---|---|---|
-| Reproducibility | Partial — latest versions | Pinned via `flake.lock` |
-| Rollback | Manual | Built-in (generations) |
-| Cross-platform | macOS focus | Any platform |
-| Learning curve | Lower | Higher |
-| First-build speed | Faster | Slower (downloads everything) |
-
-**Default recommendation:** Traditional for day-one bootstrap speed; add Nix later if you want version-pinning.
-
-### Path A — Traditional (Homebrew)
+### Install (Homebrew)
 
 One-liner (interactive):
 
@@ -56,20 +44,9 @@ cd ~/.dotfiles
 make
 ```
 
-### Path B — Nix
-
-```bash
-git clone https://github.com/gr8monk3ys/dotfiles.git ~/.dotfiles
-cd ~/.dotfiles
-make nix-install     # installs Nix; restart terminal after
-make nix             # applies nix-darwin on macOS
-# or:
-make nix-home        # applies Home Manager on any platform
-```
-
 ### Fresh-laptop checklist
 
-After either path completes:
+After installation completes:
 
 1. **Set machine type:** `echo personal > ~/.machine_type` (or `work` / `server`).
 2. **Create local override files** (git-ignored, machine-specific):
@@ -96,7 +73,7 @@ Commands you re-run routinely.
 | `make backup` | Snapshot configs + package lists. `backup-compress` / `backup-cleanup` variants exist. |
 | `make bench-shell` | Benchmark interactive zsh startup against a budget (default 900ms). |
 | `make daily` | Fast pre-push check: shell syntax + doc links + tests. |
-| `make verify` | Full repo verification: shell syntax + stale-ref check + doc links + tests + nix flake check. |
+| `make verify` | Full repo verification: shell syntax + stale-ref check + doc links + tests. |
 | `make clean` | Remove broken symlinks in `~/.config/`. |
 
 ### Worktree flow (parallel sessions)
@@ -108,16 +85,6 @@ make worktree-add name=<task>         # creates ../dotfiles-<task> on branch ai/
 make worktree-list                    # list active worktrees
 make worktree-remove name=<task>      # remove worktree by name
 make worktree-prune                   # clean up stale metadata
-```
-
-### Nix maintenance
-
-```bash
-make nix-update   # update flake inputs to latest
-make nix          # re-apply (macOS) after updating
-make nix-home     # re-apply (any platform) after updating
-make nix-gc       # garbage-collect old generations
-make nix-check    # validate flake without building
 ```
 
 ---
@@ -197,10 +164,9 @@ Set `~/.machine_type` to `personal`, `work`, or `server`. On shell startup, `.co
 Top-level directories, one sentence each.
 
 - **`.config/`** — XDG-compliant app configs (23 directories). Managed by Stow. Each has its own README.
-- **`bin/`** — Helper scripts: platform detection, `dotfiles-doctor/update/backup/restore/bench-shell/worktree/nix`, doc-link validator. See `bin/README.md`.
+- **`bin/`** — Helper scripts: platform detection, `dotfiles-doctor/update/backup/restore/bench-shell/worktree`, doc-link validator. See `bin/README.md`.
 - **`install/`** — Package manifests: `Brewfile`, `Caskfile`, `npmfile`, `Rustfile`, `pacmanfile`, `Codefile` (VSCodium extensions), `duti` (macOS file associations).
 - **`test/`** — BATS test suite. Run with `make test`. Pattern: `test_*.bats`, helpers in `test_helper/`.
-- **`nix/`** — Nix configs (`home.nix`, `darwin.nix`). Paired with `flake.nix` / `flake.lock` at repo root.
 - **`.github/`** — CI workflows (`install.yml`, `test.yml`, `lint.yml`).
 - **`docs/`** — Plans and specs for non-trivial changes.
 
@@ -256,13 +222,6 @@ make restore-zshenv
 
 The `bin/platform is-arm64` helper detects this. Scripts should use `$(bin/platform select /opt/homebrew /usr/local "bin/platform is-arm64")`, never hardcode.
 
-### Nix `experimental-features` error
-
-```bash
-mkdir -p ~/.config/nix
-echo "experimental-features = nix-command flakes" >> ~/.config/nix/nix.conf
-```
-
 ### Shell not loading config
 
 ```bash
@@ -284,10 +243,6 @@ The validator (`bin/validate-doc-links`) reports the file + line of each bad lin
 ### Stale reference check fails (`make verify-stale-refs`)
 
 `make verify-stale-refs` scans for strings left over from past migrations (old theme names, removed file paths, typos). When it fires, grep for the reported pattern and either update or remove it.
-
-### First Nix build is extremely slow
-
-Expected — it downloads and builds everything from scratch. Subsequent builds use the binary cache and are fast.
 
 ### `verify-shell-surface` fails with "alias references unresolved command"
 
