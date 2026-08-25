@@ -58,14 +58,27 @@ zinit light Aloxaf/fzf-tab
 zinit snippet OMZL::git.zsh
 zinit snippet OMZP::git
 zinit snippet OMZP::sudo
-zinit snippet OMZP::archlinux
-zinit snippet OMZP::aws
-zinit snippet OMZP::kubectl
-zinit snippet OMZP::kubectx
 zinit snippet OMZP::command-not-found
+# Tool-specific snippets only when the tool exists (archlinux alone adds 21
+# sudo-pacman aliases; aws costs ~20ms probing for a binary that isn't there).
+[[ "$OSTYPE" == linux* ]] && command -v pacman &> /dev/null && zinit snippet OMZP::archlinux
+command -v aws     &> /dev/null && zinit snippet OMZP::aws
+command -v kubectl &> /dev/null && zinit snippet OMZP::kubectl
+command -v kubectx &> /dev/null && zinit snippet OMZP::kubectx
 
-# Load completions
-autoload -Uz compinit && compinit
+# Load completions. Only re-scan fpath once a day; otherwise trust the dump
+# (-C). A full scan costs ~300ms and a single dangling completion symlink
+# makes it happen on every start.
+autoload -Uz compinit
+_zcompdump="${ZDOTDIR:-$HOME}/.zcompdump"
+_zcompdump_stale=( ${_zcompdump}(N.mh+24) )   # N: empty if absent; mh+24: older than a day
+if [[ ! -f "$_zcompdump" || ${#_zcompdump_stale} -gt 0 ]]; then
+  compinit -d "$_zcompdump"
+  touch "$_zcompdump"   # compinit leaves a still-valid dump untouched; reset the day timer
+else
+  compinit -C -d "$_zcompdump"
+fi
+unset _zcompdump _zcompdump_stale
 
 zinit cdreplay -q
 
@@ -191,8 +204,12 @@ fi
 export MACHINE_TYPE="${MACHINE_TYPE:-$(cat ~/.machine_type 2>/dev/null || echo 'personal')}"
 
 # Load local overrides (not tracked in git)
-# Create ~/.config/zsh/zshrc.local for machine-specific settings
-[[ -f "${ZDOTDIR:-$HOME/.config/zsh}/zshrc.local" ]] && source "${ZDOTDIR:-$HOME/.config/zsh}/zshrc.local"
-
-# Load machine-type specific config if it exists
-[[ -f "${ZDOTDIR:-$HOME/.config/zsh}/zshrc.${MACHINE_TYPE}" ]] && source "${ZDOTDIR:-$HOME/.config/zsh}/zshrc.${MACHINE_TYPE}"
+# Create ~/.config/zsh/zshrc.local for machine-specific settings, and
+# zshrc.<machine-type> for per-role settings. Written as `if` rather than
+# `[[ ]] &&` so an absent file doesn't leave the shell's exit status at 1.
+for _local in zshrc.local "zshrc.${MACHINE_TYPE}"; do
+  if [[ -f "${ZDOTDIR:-$HOME/.config/zsh}/${_local}" ]]; then
+    source "${ZDOTDIR:-$HOME/.config/zsh}/${_local}"
+  fi
+done
+unset _local

@@ -14,7 +14,9 @@
 
 set -euo pipefail
 
-readonly DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
+# Default to the checkout this script lives in (works through symlinks), so
+# running bin/dotfiles-* from any clone operates on that clone.
+readonly DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)}"
 
 # Send macOS notification
 notify() {
