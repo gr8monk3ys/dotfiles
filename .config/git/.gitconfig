@@ -222,9 +222,8 @@
 	gpgsign = true
 [pull]
 	rebase = true
-[user]
-	name = Lorenzo Scaturchio
-	email = lorenzosca7@protonmail.ch
+# [user] name/email/signingkey live in ~/.config/git/config.local (gitignored,
+# included at the bottom of this file) so the tracked config carries no identity.
 [github]
 	user = gr8monk3ys
 [filter "lfs"]

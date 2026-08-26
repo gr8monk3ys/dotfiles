@@ -4,7 +4,8 @@ This directory stores OpenSSH host snippets tracked by dotfiles.
 
 ## Layout
 
-- `config.d/*.conf` — host entries and connection presets
+- `config.d/*.conf.example` — tracked templates
+- `config.d/*.conf` — your real host entries (gitignored; copy from an `.example`)
 
 ## Activation
 

@@ -308,6 +308,12 @@ check_permissions() {
     print_header "File Permissions"
 
     # Check SSH directory
+    if [[ -n "$(git config --global user.email 2>/dev/null)" ]]; then
+        check_pass "git identity set ($(git config --global user.email))"
+    else
+        check_warn "git identity not set: copy .config/git/config.local.example to config.local and fill [user]"
+    fi
+
     if [[ -d "$HOME/.ssh" ]]; then
         local ssh_perms
         ssh_perms=$(file_mode "$HOME/.ssh")

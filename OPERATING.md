@@ -201,7 +201,7 @@ Edit `.config/zsh/aliases.zsh` (~400 lines, organized by tool). Find the relevan
 
 - `~/.config/zsh/zshrc.local` — extra env vars, work-only PATH entries, secrets-shaped config.
 - `~/.config/git/config.local` — user name/email, signing key.
-- `~/.config/ssh/config.d/*.conf` — host-specific SSH snippets.
+- `~/.config/ssh/config.d/*.conf` — host-specific SSH snippets (gitignored; `pi-lab.conf.example` is the template).
 
 Templates: `.config/zsh/zshrc.local.example` and `.config/git/config.local.example`
 (the `cp` commands are in the fresh-laptop checklist above).

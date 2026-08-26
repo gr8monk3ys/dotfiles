@@ -173,6 +173,8 @@ linux-*.deb
 # Local overrides (machine-specific, not committed)
 ##
 *.local
+# Real SSH host snippets stay local; only *.conf.example is tracked
+.config/ssh/config.d/*.conf
 .config/**/*.local
 *.local.sh
 *.local.zsh
