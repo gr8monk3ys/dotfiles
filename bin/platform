@@ -7,6 +7,7 @@
 #   platform arch             # Output: arm64, x86_64, or unknown
 #   platform is-macos         # Exit 0 if macOS, 1 otherwise
 #   platform is-arch          # Exit 0 if Arch Linux, 1 otherwise
+#   platform is-omarchy       # Exit 0 if Omarchy (Arch + Hyprland), 1 otherwise
 #   platform is-linux         # Exit 0 if Linux, 1 otherwise
 #   platform is-arm64         # Exit 0 if ARM64, 1 otherwise
 #   platform has <cmd>        # Exit 0 if command exists, 1 otherwise
@@ -40,6 +41,14 @@ detect_os() {
     esac
 }
 
+# Omarchy (basecamp/omarchy) is Arch + Hyprland. It does not write its own
+# /etc/os-release; its marker is the checkout it installs into. `detect`
+# still says "arch" on it on purpose: `make arch` is the right path.
+is_omarchy() {
+    [[ -d "$HOME/.local/share/omarchy" ]] ||
+        { [[ -r /etc/os-release ]] && grep -qi '^\(ID\|NAME\)=.*omarchy' /etc/os-release; }
+}
+
 detect_arch() {
     case "$(uname -m)" in
         arm64|aarch64)
@@ -70,6 +79,9 @@ main() {
             ;;
         is-arch)
             [[ -f /etc/arch-release ]]
+            ;;
+        is-omarchy)
+            is_omarchy
             ;;
         is-linux)
             [[ "$OSTYPE" =~ ^linux ]]
@@ -106,6 +118,7 @@ Usage:
   platform arch             Output: arm64, x86_64, or unknown
   platform is-macos         Exit 0 if macOS, 1 otherwise
   platform is-arch          Exit 0 if Arch Linux, 1 otherwise
+  platform is-omarchy       Exit 0 if Omarchy (~/.local/share/omarchy), 1 otherwise
   platform is-linux         Exit 0 if Linux, 1 otherwise
   platform is-arm64         Exit 0 if ARM64, 1 otherwise
   platform has <cmd>        Exit 0 if command exists, 1 otherwise

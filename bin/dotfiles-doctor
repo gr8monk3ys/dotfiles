@@ -58,6 +58,9 @@ check_system() {
             distro="$(. /etc/os-release && echo "${PRETTY_NAME:-${NAME:-Unknown}}")"
         fi
         check_info "Distribution: $distro"
+        if "$DOTFILES_DIR/bin/platform" is-omarchy; then
+            check_info "Omarchy detected (~/.local/share/omarchy) — see OPERATING.md § Omarchy"
+        fi
     else
         check_warn "Operating System: $OSTYPE (Limited support)"
     fi
@@ -271,11 +274,20 @@ check_modern_tools() {
 check_shell_config() {
     print_header "Shell Configuration"
 
-    # Check if zsh is default shell
-    if [[ "$SHELL" == *"zsh"* ]]; then
-        check_pass "Zsh is default shell"
+    # Check if zsh is the login shell. Prefer the passwd entry over $SHELL:
+    # a terminal launched with `command = zsh` sets neither.
+    local login_shell
+    login_shell="$(getent passwd "${USER:-$(id -un)}" 2>/dev/null | cut -d: -f7 || true)"
+    login_shell="${login_shell:-$SHELL}"
+    if [[ "$login_shell" == *"zsh"* ]]; then
+        check_pass "Zsh is login shell"
+    elif "$DOTFILES_DIR/bin/platform" is-omarchy; then
+        # Omarchy ships bash as login shell and its boot chain (SDDM session,
+        # ~/.bashrc, omarchy-* helpers) assumes it. Upstream advises against
+        # chsh; point the terminal at zsh instead. Details in OPERATING.md.
+        check_warn "Login shell is $login_shell, not zsh. On Omarchy set 'command = $(command -v zsh || echo /usr/bin/zsh)' in ~/.config/ghostty/config (upstream discourages chsh -s \$(which zsh))"
     else
-        check_warn "Default shell is not zsh: $SHELL"
+        check_warn "Login shell is $login_shell, not zsh (run: chsh -s \$(which zsh))"
     fi
 
     # Check ZDOTDIR

@@ -9,7 +9,7 @@ Two audiences:
 - **Future-you on a fresh machine.** You have full mental context about why things are set up this way, but no muscle memory for which commands to run. This doc is your runbook.
 - **AI assistants opening the repo.** You have zero context. This doc gives you orientation, current-state truth, and canonical recipes for changes.
 
-For a public-facing overview (what this repo is and why), see [README.md](README.md). For contributing conventions and style, see [AGENTS.md](AGENTS.md).
+For a public-facing overview (what this repo is and why), see [README.md](README.md). Contributing conventions and style are at the end of this file: [Contributing and conventions](#contributing-and-conventions). `AGENTS.md` and `CLAUDE.md` are pointer files for agent tools and carry no content of their own.
 
 ---
 
@@ -48,6 +48,54 @@ git clone https://github.com/gr8monk3ys/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 make
 ```
+
+### Arch: Omarchy
+
+[Omarchy](https://github.com/basecamp/omarchy) is Arch + Hyprland. `bin/platform detect`
+still says `arch` on it (`bin/platform is-omarchy` distinguishes it; the marker is the
+`~/.local/share/omarchy` checkout — Omarchy does not write its own `/etc/os-release`),
+so the install path is `make arch`: `pacman -Syu` via `bin/pacman` (sudo wrapper),
+then `install/pacmanfile`, then `make link`. Facts below were checked against the
+v3.8.4 tag and not on a live Omarchy box.
+
+**Who owns what.** Omarchy owns `~/.local/share/omarchy` and, on install, copies its
+`config/*` into `~/.config` (`hypr`, `waybar`, `walker`, `alacritty`, `kitty`, `foot`,
+`btop`, `lazygit`, `uwsm`, `xdg-terminals.list`, …) and writes `~/.bashrc`. These
+dotfiles own zsh, git, nvim, tmux, ghostty, yazi, jj, zellij, starship, atuin, and the
+rest of `.config/`. Leave Omarchy's Hyprland/waybar/walker configs alone.
+
+**Stow conflicts.** Omarchy also writes files these dotfiles ship, so `make link` will
+refuse on a fresh box: `~/.config/ghostty/config`, `~/.config/tmux/tmux.conf`,
+`~/.config/fastfetch/config.jsonc`, and `~/.config/nvim` (LazyVim, via
+`omarchy-nvim-setup`). Move them aside, then link:
+
+```bash
+for p in ghostty/config tmux/tmux.conf fastfetch/config.jsonc nvim; do
+  [[ -e ~/.config/$p ]] && mv ~/.config/$p ~/.config/$p.omarchy-backup; done
+make link
+```
+
+Or `stow --adopt` then `git checkout -- .config` to discard the adopted copies.
+`~/.config/git/config` (Omarchy's) does not collide: this repo ships `git/ignore` and a
+`config.local.example`, not `git/config`. Starship: Omarchy writes `~/.config/starship.toml`;
+`.zshrc` sets `STARSHIP_CONFIG` to `~/.config/starship/starship.toml`, so zsh uses ours.
+
+**Shell.** Omarchy's login shell is bash and its boot chain (SDDM session script,
+`~/.bashrc` → `~/.local/share/omarchy/default/bash/rc`, the `omarchy-*` helpers)
+assumes it. Upstream advises against `chsh -s $(which zsh)`
+([discussion #2495](https://github.com/basecamp/omarchy/discussions/2495)); instead
+launch zsh from the terminal: `command = /usr/bin/zsh` in `~/.config/ghostty/config`
+(ours), or `exec zsh` at the end of `~/.bashrc` guarded so it only fires interactively.
+`make doctor` reports this. The terminal itself is picked with
+`omarchy-install-terminal ghostty`, which rewrites `~/.config/xdg-terminals.list` for
+`xdg-terminal-exec`; the manual's default is Alacritty.
+
+**Packages.** `install/pacmanfile` overlaps Omarchy's base set on `base-devel`,
+`bash-completion`, `fd`, `fzf`, `git`, `zoxide` (harmless re-install); only `git-delta`
+and `nano` are new. Nothing in it conflicts with an Omarchy package.
+
+**Updating.** `omarchy-update` (snapshot, `git pull` of the Omarchy checkout, migrations,
+`pacman -Syu`) is separate from `make update`, which knows nothing about Omarchy. Run both.
 
 ### Fresh-laptop checklist
 
@@ -154,7 +202,7 @@ echo "# New App Configuration" > .config/new-app/README.md
 make link
 ```
 
-The `.config/new-app/README.md` should document why the config exists, any non-obvious choices, and a link to upstream docs. This is a repo-wide convention (see [AGENTS.md](AGENTS.md)).
+The `.config/new-app/README.md` should document why the config exists, any non-obvious choices, and a link to upstream docs. This is a repo-wide convention (see [Per-config README](#per-config-readme)).
 
 ### Add a Homebrew formula (CLI tool)
 
@@ -306,3 +354,58 @@ The alias references a command that is not a shell builtin, not in any install m
 3. **Allowlist the command.** Only when the command is a base-OS tool (e.g., `osascript`, `pbcopy`) that should not be manifested. Add it to `test/allowlist/system-tools.txt` with a one-line comment.
 
 To iterate locally without committing, run `bin/check-alias-references` directly — it prints the same output as the BATS test.
+
+---
+
+## Contributing and conventions
+
+Style, testing, and PR rules. `AGENTS.md` and `CLAUDE.md` point here.
+
+### Where things go
+
+- `.config/<app>/` — one directory per tool; keep tool-specific changes inside it.
+- `bin/` — portable helper scripts, kebab-case names (`dotfiles-update`).
+- `install/` — package manifests. `test/` — BATS tests (`test_*.bats`, helpers in `test_helper/`).
+- `docs/` — `TOOLS.md` (tool catalog) and `superpowers/{plans,specs}/` design documents.
+
+### Style
+
+Follow `.editorconfig`: UTF-8, LF, final newline, no trailing whitespace; 2-space
+indent by default, 4 spaces in shell scripts, tabs in Makefiles; Markdown lines
+readable (max 80 configured). Prefer portable shell — no GNU-only flags in anything
+sourced on macOS (see `file_mode` in `bin/dotfiles-doctor` for the `stat` split).
+
+### Testing
+
+Add or update a test whenever behavior changes; regression guards live in
+`test/test_regressions.bats`. Iterate with targeted runs
+(`bats test/test_regressions.bats -f "theme consistency"`), then `make test`.
+`make verify-shell-surface` parses and sources `.zshenv`, `aliases.zsh`, and
+`functions.zsh`, asserts a sentinel alias per conditional block, and runs
+`bin/check-alias-references` so every unconditional alias resolves to a known command
+(fixes are under [Troubleshooting](#verify-shell-surface-fails-with-alias-references-unresolved-command)).
+
+### Commits and pull requests
+
+Conventional-Commit style (`feat:`, `fix:`, `chore:`, optional scope); one focused
+change per commit. Branch from the default branch, keep the PR small, describe what
+was done and how it was validated. Before opening or pushing:
+
+- `make test` passes and `make verify` succeeds — there is no CI; this is the gate.
+- Docs updated when behavior or commands change.
+- No secrets. Machine-specific values go in local files
+  (`~/.config/zsh/zshrc.local`, `~/.config/git/config.local`), never in git.
+
+### Per-config README
+
+Every `.config/<app>/` directory carries a `README.md`: why the app is installed and
+its role (primary / backup / specialized), non-obvious choices (keybindings,
+overrides, themes), and a link to upstream. Required for new configs, in the same
+commit as the config.
+
+### Tool catalog
+
+Every package in the install manifests has an entry in [docs/TOOLS.md](docs/TOOLS.md)
+saying why it is in the stack. `bin/validate-tool-docs` (part of `make verify`)
+enforces this both ways — undocumented packages and stale entries fail. Update the
+catalog in the commit that adds or removes a package. Browse it with `dotfiles-why`.
