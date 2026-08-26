@@ -16,7 +16,7 @@ export ACCEPT_EULA=Y
         doctor update backup worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
         brew git packages-macos packages-arch core-macos core-arch \
-        stow-arch stow-macos stow-linux linux brew-taps cask-apps vscode-extensions node-packages \
+        stow-arch stow-macos stow-linux linux brew-taps cask-apps cask-apps-extra vscode-extensions node-packages \
         rust-packages duti bun pacman-packages brew-packages \
         help \
         sync-install sync-uninstall sync-status sync-run \
@@ -124,6 +124,16 @@ cask-apps: brew brew-taps
 		brew bundle --file=$(DOTFILES_DIR)/install/Caskfile; \
 	else \
 		brew bundle --file=$(DOTFILES_DIR)/install/Caskfile || true; \
+	fi
+
+# Optional apps (games, media production, misc). Not part of `make macos`.
+cask-apps-extra: brew brew-taps
+	if [ -n "$(SKIP_CASKS)" ]; then \
+		echo "Skipping Homebrew casks (extra)"; \
+	elif [ -n "$(BREW_BUNDLE_STRICT)" ]; then \
+		brew bundle --file=$(DOTFILES_DIR)/install/Caskfile.extra; \
+	else \
+		brew bundle --file=$(DOTFILES_DIR)/install/Caskfile.extra || true; \
 	fi
 
 vscode-extensions: cask-apps
@@ -441,7 +451,8 @@ help:
 	@echo ""
 	@echo "Packages:"
 	@echo "  make brew-packages    - Install Homebrew formulae"
-	@echo "  make cask-apps        - Install Homebrew casks"
+	@echo "  make cask-apps        - Install day-one Homebrew casks (install/Caskfile)"
+	@echo "  make cask-apps-extra  - Install optional casks (install/Caskfile.extra)"
 	@echo "  make node-packages    - Install npm packages"
 	@echo "  make rust-packages    - Install Cargo packages"
 	@echo "  make vscode-extensions - Install Codefile extensions (VSCodium/VS Code)"

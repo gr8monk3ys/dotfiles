@@ -13,7 +13,7 @@ for i in "${!SPACE_ICONS[@]}"; do
             icon="${SPACE_ICONS[$i]}" \
             icon.padding_left=7 \
             icon.padding_right=7 \
-            background.color=$BACKGROUND \
+            background.color="$BACKGROUND" \
             background.corner_radius=5 \
             background.height=24 \
             background.drawing=off \

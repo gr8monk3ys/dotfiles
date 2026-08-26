@@ -21,6 +21,17 @@ teardown() {
     assert_success
 }
 
+@test "Caskfile.extra has valid format" {
+    run grep -E "^cask " install/Caskfile.extra
+    assert_success
+}
+
+@test "Caskfile and Caskfile.extra do not overlap" {
+    run bash -c 'comm -12 <(sed -nE '"'"'s/^cask "([^"]+)".*/\1/p'"'"' install/Caskfile | sort) <(sed -nE '"'"'s/^cask "([^"]+)".*/\1/p'"'"' install/Caskfile.extra | sort)'
+    assert_success
+    assert_output ""
+}
+
 @test "npmfile has valid format (one package per line)" {
     # Check no empty lines or comments
     while IFS= read -r line; do

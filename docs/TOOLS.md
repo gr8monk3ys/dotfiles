@@ -1,7 +1,7 @@
 # Tool Catalog
 
 Why every tool in this repo exists. One entry per package across the
-install manifests (`install/Brewfile`, `Caskfile`, `npmfile`, `Rustfile`,
+install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, `Rustfile`,
 `pacmanfile`), grouped roughly by the manifest sections.
 
 - Browse interactively with **`dotfiles-why`** (fzf picker with preview) or
@@ -604,7 +604,7 @@ install manifests (`install/Brewfile`, `Caskfile`, `npmfile`, `Rustfile`,
 ## Status Bar
 
 ### sketchybar
-- **Why:** Customizable status bar showing AeroSpace workspaces; Catppuccin Mocha (intentional theme exception).
+- **Why:** Customizable status bar showing AeroSpace workspaces; themed with the repo-wide OneDark palette.
 - **Alternatives:** stock menu bar, übersicht
 - **Installed via:** Brewfile
 - **Config:** [`.config/sketchybar/`](../.config/sketchybar/)
@@ -637,7 +637,7 @@ install manifests (`install/Brewfile`, `Caskfile`, `npmfile`, `Rustfile`,
 
 ### keycastr
 - **Why:** Keystroke visualizer for presentations.
-- **Installed via:** Caskfile
+- **Installed via:** Caskfile.extra
 
 ## Terminals & Terminal Tools (GUI)
 
@@ -665,7 +665,7 @@ install manifests (`install/Brewfile`, `Caskfile`, `npmfile`, `Rustfile`,
 
 ### tor-browser
 - **Why:** Anonymous web browser.
-- **Installed via:** Caskfile
+- **Installed via:** Caskfile.extra
 
 ## Development Tools & IDEs (GUI)
 
@@ -674,33 +674,37 @@ install manifests (`install/Brewfile`, `Caskfile`, `npmfile`, `Rustfile`,
 - **Alternatives:** vscode
 - **Installed via:** Caskfile
 
+### docker-desktop
+- **Why:** Docker Desktop — the container runtime plus Docker CLI; used for local services and the fleet's containerised projects.
+- **Installed via:** Caskfile
+
 ### db-browser-for-sqlite
 - **Why:** SQLite database browser.
-- **Installed via:** Caskfile
+- **Installed via:** Caskfile.extra
 
 ## Design & Creative Tools (GUI)
 
 ### figma
 - **Why:** Interface design and prototyping.
-- **Installed via:** Caskfile
+- **Installed via:** Caskfile.extra
 
 ### godot
 - **Why:** Open-source game engine.
-- **Installed via:** Caskfile
+- **Installed via:** Caskfile.extra
 
 ## Media Creation & Editing (GUI)
 
 ### audacity
 - **Why:** Audio editing software.
-- **Installed via:** Caskfile
+- **Installed via:** Caskfile.extra
 
 ### obs
 - **Why:** Open Broadcaster Software (streaming/recording).
-- **Installed via:** Caskfile
+- **Installed via:** Caskfile.extra
 
 ### rode-central
 - **Why:** Rode microphone control software.
-- **Installed via:** Caskfile
+- **Installed via:** Caskfile.extra
 
 ## Media Players & Music (GUI)
 
@@ -719,7 +723,7 @@ install manifests (`install/Brewfile`, `Caskfile`, `npmfile`, `Rustfile`,
 
 ### spacedrive
 - **Why:** Cross-platform file manager.
-- **Installed via:** Caskfile
+- **Installed via:** Caskfile.extra
 
 ## Security & Privacy (GUI)
 
@@ -734,33 +738,33 @@ install manifests (`install/Brewfile`, `Caskfile`, `npmfile`, `Rustfile`,
 
 ### monero-wallet
 - **Why:** Cryptocurrency wallet.
-- **Installed via:** Caskfile
+- **Installed via:** Caskfile.extra
 
 ## Communication (GUI)
 
 ### dorion
 - **Why:** Discord client alternative.
-- **Installed via:** Caskfile
+- **Installed via:** Caskfile.extra
 
 ## System Utilities & Tools (GUI)
 
 ### balenaetcher
 - **Why:** USB/SD card imaging tool.
-- **Installed via:** Caskfile
+- **Installed via:** Caskfile.extra
 
 ### cameracontroller
 - **Why:** Webcam control software.
-- **Installed via:** Caskfile
+- **Installed via:** Caskfile.extra
 
 ## Gaming & Entertainment (GUI)
 
 ### lunar-client
 - **Why:** Minecraft client with mods.
-- **Installed via:** Caskfile
+- **Installed via:** Caskfile.extra
 
 ### love
 - **Why:** LÖVE 2D game framework.
-- **Installed via:** Caskfile
+- **Installed via:** Caskfile.extra
 
 ## npm globals
 
@@ -862,10 +866,11 @@ install manifests (`install/Brewfile`, `Caskfile`, `npmfile`, `Rustfile`,
 
 ## Fonts (GUI)
 
-Nerd-Font patched monospace fonts from the Caskfile (`font-*` casks):
-JetBrains Mono (primary, used by Ghostty/SketchyBar), 0xProto, IBM 3270,
-Agave, Fira Code (ligatures), Hack, plus Font Awesome icons. Installed as a
-family; the validator treats `font-*` casks as covered by this section.
+Nerd-Font patched monospace fonts (`font-*` casks). Day-one, from the
+Caskfile: JetBrains Mono (primary, used by Ghostty/SketchyBar) and Fira Code
+(ligatures). Optional, from Caskfile.extra: 0xProto, IBM 3270, Agave, Hack,
+plus Font Awesome icons. The validator treats `font-*` casks as covered by
+this section.
 
 ## Not installed by manifests
 

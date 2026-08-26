@@ -1,0 +1,56 @@
+# Homebrew Caskfile.extra — optional desktop apps
+# Games, media production and misc GUI tools that are nice to have but not
+# needed on day one. NOT part of `make macos`; apply on demand with
+# `make cask-apps-extra` or: brew bundle --file=install/Caskfile.extra
+
+# ============================================================================
+# System Utilities
+# ============================================================================
+cask "keycastr"                        # Keystroke visualizer for presentations
+cask "balenaetcher"                    # USB/SD card imaging tool
+cask "cameracontroller"                # Webcam control software
+cask "spacedrive"                      # Cross-platform file manager
+
+# ============================================================================
+# Web Browsers
+# ============================================================================
+cask "tor-browser"                     # Anonymous web browser
+
+# ============================================================================
+# Development & Design
+# ============================================================================
+cask "db-browser-for-sqlite"           # SQLite database browser
+cask "figma"                           # Interface design and prototyping
+
+# ============================================================================
+# Media Creation & Editing
+# ============================================================================
+cask "audacity"                        # Audio editing software
+cask "obs"                             # Open Broadcaster Software (streaming/recording)
+cask "rode-central"                    # Rode microphone control software
+
+# ============================================================================
+# Security & Privacy
+# ============================================================================
+cask "monero-wallet"                   # Cryptocurrency wallet
+
+# ============================================================================
+# Communication
+# ============================================================================
+cask "dorion"                          # Discord client alternative
+
+# ============================================================================
+# Gaming & Entertainment
+# ============================================================================
+cask "godot"                           # Open-source game engine
+cask "love"                            # LÖVE 2D game framework
+cask "lunar-client"                    # Minecraft client with mods
+
+# ============================================================================
+# Fonts
+# ============================================================================
+cask "font-0xproto-nerd-font"          # 0xProto Nerd Font (programming font)
+cask "font-3270-nerd-font"             # IBM 3270 Nerd Font (terminal font)
+cask "font-agave-nerd-font"            # Agave Nerd Font (monospace font)
+cask "font-hack-nerd-font"             # Hack Nerd Font (clean terminal font)
+cask "font-fontawesome"                # Font Awesome icon font

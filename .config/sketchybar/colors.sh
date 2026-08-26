@@ -1,21 +1,21 @@
 #!/bin/bash
 
-# Catppuccin Mocha color palette for SketchyBar
-# https://github.com/catppuccin/catppuccin
-# Matches Ghostty/Neovim theme for visual consistency
+# OneDark color palette for SketchyBar
+# Same hexes as .config/starship/starship.toml and the zsh highlight styles,
+# so the bar matches the prompt, Ghostty and Neovim.
 
-export BAR_COLOR=0xff1e1e2e        # Base
-export BAR_BORDER_COLOR=0xff313244  # Surface0
-export BACKGROUND=0xff313244        # Surface0
-export FOREGROUND=0xffcdd6f4        # Text
-export ACCENT=0xffcba6f7            # Mauve
-export GREEN=0xffa6e3a1             # Green
-export RED=0xfff38ba8               # Red
-export YELLOW=0xfff9e2af            # Yellow
-export BLUE=0xff89b4fa              # Blue
-export PEACH=0xfffab387              # Peach
-export TEAL=0xff94e2d5              # Teal
-export LAVENDER=0xffb4befe          # Lavender
-export SUBTEXT=0xffa6adc8           # Subtext0
-export OVERLAY=0xff6c7086           # Overlay0
+export BAR_COLOR=0xff282c34         # bg
+export BAR_BORDER_COLOR=0xff3e4451  # visual/selection grey
+export BACKGROUND=0xff3e4451        # visual/selection grey
+export FOREGROUND=0xffabb2bf        # fg
+export ACCENT=0xffc678dd            # magenta
+export GREEN=0xff98c379             # green
+export RED=0xffe06c75               # red
+export YELLOW=0xffe5c07b            # yellow
+export BLUE=0xff61afef              # blue
+export PEACH=0xffd19a66             # orange (dark yellow)
+export TEAL=0xff56b6c2              # cyan
+export LAVENDER=0xff61afef          # blue (light accent)
+export SUBTEXT=0xff5c6370           # comment
+export OVERLAY=0xff5c6370           # comment
 export TRANSPARENT=0x00000000
