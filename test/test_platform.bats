@@ -46,6 +46,22 @@ teardown() {
     fi
 }
 
+@test "platform is-omarchy fails without the Omarchy checkout" {
+    HOME="$TEST_HOME" run bin/platform is-omarchy
+    assert_failure
+}
+
+@test "platform is-omarchy detects ~/.local/share/omarchy and detect stays arch-compatible" {
+    mkdir -p "$TEST_HOME/.local/share/omarchy"
+    HOME="$TEST_HOME" run bin/platform is-omarchy
+    assert_success
+    # Omarchy is Arch: detect must not grow a new OS name for it.
+    HOME="$TEST_HOME" run bin/platform detect
+    assert_success
+    [[ "$output" =~ ^(macos|arch|linux|unknown)$ ]]
+    [[ "$output" != "omarchy" ]]
+}
+
 @test "platform is-arm64 detects ARM architecture" {
     run bin/platform is-arm64
     if [[ $(uname -m) == "arm64" ]] || [[ $(uname -m) == "aarch64" ]]; then

@@ -108,8 +108,7 @@ installed without a catalog entry, or documented without being installed.
 
 ## 🎨 Theme
 
-A consistent **OneDark** palette across the core CLI tools, with two
-intentional exceptions (Ghostty and SketchyBar):
+A consistent **OneDark** palette across every themed tool:
 
 | Color | Hex | Usage |
 | ------- | ----- | ------- |
@@ -121,8 +120,7 @@ intentional exceptions (Ghostty and SketchyBar):
 | 🔵 Cyan | `#56b6c2` | Links, symlinks |
 | 🟠 Orange | `#d19a66` | Constants |
 
-**Themed tools:** Neovim, Yazi, bat, eza, git-delta, zellij, fzf, starship, atuin, Ghostty (Atom One Dark, frosted glass)
-**Own theme:** SketchyBar (Catppuccin Mocha)
+**Themed tools:** Neovim, Yazi, bat, eza, git-delta, zellij, fzf, starship, atuin, zsh-syntax-highlighting, Ghostty (Atom One Dark, frosted glass), SketchyBar
 
 ---
 
@@ -145,8 +143,8 @@ intentional exceptions (Ghostty and SketchyBar):
 
 | Document | Description |
 | ---------- | ------------- |
-| [OPERATING.md](OPERATING.md) | Install paths, daily ops, `make` reference, local overrides, troubleshooting |
-| [AGENTS.md](AGENTS.md) | Conventions for contributors and AI assistants: style, testing, commits |
+| [OPERATING.md](OPERATING.md) | Install paths, daily ops, `make` reference, local overrides, troubleshooting, contributing conventions |
+| [AGENTS.md](AGENTS.md) | Pointer file for agent tools (Codex, Cursor); content is in OPERATING.md |
 | [docs/TOOLS.md](docs/TOOLS.md) | Why each tool is here |
 | [CHANGELOG.md](CHANGELOG.md) | Version history |
 

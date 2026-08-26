@@ -4,6 +4,8 @@
 # Run:   docker run --rm dotfiles-test-arch
 #
 # This tests the dotfiles installation in a clean Arch Linux environment.
+# Omarchy (Arch + Hyprland) is plain Arch for this test's purposes: same
+# pacman, same `make arch` path. There is no separate Omarchy image.
 
 FROM archlinux:latest@sha256:bb1e5dd58eb79755e736ac530292074f4408572c0fbc4306cd62b431fdf356f0
 
