@@ -1,6 +1,8 @@
+# Example host snippet. Copy to pi-lab.conf (gitignored) and fill in real values;
+# every *.conf in this directory is Included by ~/.ssh/config after `make link`.
 Host pi
-  HostName 172.16.0.20
-  User gr8monk3ys
+  HostName 192.0.2.10
+  User <your-user>
   Port 2222
   IdentityFile ~/.ssh/id_ed25519
   IdentitiesOnly yes
@@ -8,8 +10,8 @@ Host pi
   ServerAliveCountMax 3
 
 Host pi-gw
-  HostName 172.16.0.20
-  User gr8monk3ys
+  HostName 192.0.2.10
+  User <your-user>
   Port 2222
   IdentityFile ~/.ssh/id_ed25519
   IdentitiesOnly yes
