@@ -4,7 +4,7 @@
 #
 # Coverage rules:
 #   - Brewfile `brew` lines (tap-qualified names match on the last segment)
-#   - Caskfile `cask` lines, except `font-*` (covered by the Fonts section)
+#   - Caskfile / Caskfile.extra `cask` lines, except `font-*` (covered by the Fonts section)
 #   - npmfile / Rustfile / pacmanfile non-comment lines
 #   - Entries under "## Not installed by manifests" are exempt from the
 #     reverse check (they document deliberate gaps and system tools).
@@ -24,7 +24,7 @@ fi
 
 manifest_tools() {
     sed -nE 's|^brew "([^"]+)".*|\1|p' install/Brewfile | awk -F/ '{print $NF}'
-    sed -nE 's|^cask "([^"]+)".*|\1|p' install/Caskfile | grep -v '^font-'
+    sed -nE 's|^cask "([^"]+)".*|\1|p' install/Caskfile install/Caskfile.extra | grep -v '^font-'
     grep -hvE '^[[:space:]]*(#|$)' install/npmfile install/Rustfile install/pacmanfile
 }
 

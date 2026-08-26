@@ -1,6 +1,8 @@
-# Homebrew Caskfile
-# GUI applications for macOS
-# Install with: brew bundle --file=install/Caskfile --cask
+# Homebrew Caskfile — day-one desktop
+# GUI applications a fresh macOS machine needs before it is usable.
+# Applied by `make cask-apps` (part of `make macos`).
+# Everything optional lives in Caskfile.extra (`make cask-apps-extra`).
+# Install by hand with: brew bundle --file=install/Caskfile
 
 # ============================================================================
 # Window Management & System Utilities
@@ -8,86 +10,39 @@
 cask "aerospace"                       # i3-like tiling window manager for macOS
 cask "karabiner-elements"              # Keyboard customization and remapping
 cask "raycast"                         # Spotlight replacement with extensions
-cask "keycastr"                        # Keystroke visualizer for presentations
 
 # ============================================================================
-# Terminals & Terminal Tools
+# Terminals
 # ============================================================================
 cask "ghostty"                         # Zig-based GPU-accelerated terminal (primary)
 
 # ============================================================================
 # Web Browsers
 # ============================================================================
+cask "zen"                             # Zen browser (privacy-focused, primary)
 cask "firefox"                         # Mozilla Firefox web browser
 cask "brave-browser"                   # Privacy-focused Chromium browser
-cask "zen"                             # Zen browser (privacy-focused)
-cask "tor-browser"                     # Anonymous web browser
 
 # ============================================================================
-# Development Tools & IDEs
+# Development Tools
 # ============================================================================
 cask "vscodium"                        # Open-source VS Code without telemetry
-cask "db-browser-for-sqlite"           # SQLite database browser
+cask "docker-desktop"                  # Docker Desktop (containers + Docker CLI)
 
 # ============================================================================
-# Design & Creative Tools
+# Notes, Security & Sync
 # ============================================================================
-cask "figma"                           # Interface design and prototyping
-cask "godot"                           # Open-source game engine
+cask "obsidian"                        # Markdown-based knowledge base
+cask "keepassxc"                       # Password manager
+cask "proton-drive"                    # End-to-end encrypted cloud storage
 
 # ============================================================================
-# Media Creation & Editing
-# ============================================================================
-cask "audacity"                        # Audio editing software
-cask "obs"                             # Open Broadcaster Software (streaming/recording)
-cask "rode-central"                    # Rode microphone control software
-
-# ============================================================================
-# Media Players & Music
+# Music
 # ============================================================================
 cask "tidal"                           # Music streaming service
 
 # ============================================================================
-# Note-Taking & Knowledge Management
-# ============================================================================
-cask "obsidian"                        # Markdown-based knowledge base
-
-# ============================================================================
-# Productivity & Organization
-# ============================================================================
-cask "spacedrive"                      # Cross-platform file manager
-
-# ============================================================================
-# Security & Privacy
-# ============================================================================
-cask "keepassxc"                       # Password manager
-cask "proton-drive"                    # End-to-end encrypted cloud storage
-cask "monero-wallet"                   # Cryptocurrency wallet
-
-# ============================================================================
-# Communication
-# ============================================================================
-cask "dorion"                          # Discord client alternative
-
-# ============================================================================
-# System Utilities & Tools
-# ============================================================================
-cask "balenaetcher"                    # USB/SD card imaging tool
-cask "cameracontroller"                # Webcam control software
-
-# ============================================================================
-# Gaming & Entertainment
-# ============================================================================
-cask "lunar-client"                    # Minecraft client with mods
-cask "love"                            # LÖVE 2D game framework
-
-# ============================================================================
 # Fonts
 # ============================================================================
-cask "font-jetbrains-mono-nerd-font"   # JetBrains Mono Nerd Font (primary)
-cask "font-0xproto-nerd-font"          # 0xProto Nerd Font (programming font)
-cask "font-3270-nerd-font"             # IBM 3270 Nerd Font (terminal font)
-cask "font-agave-nerd-font"            # Agave Nerd Font (monospace font)
+cask "font-jetbrains-mono-nerd-font"   # JetBrains Mono Nerd Font (Ghostty's font)
 cask "font-fira-code-nerd-font"        # Fira Code Nerd Font (ligature support)
-cask "font-hack-nerd-font"             # Hack Nerd Font (clean terminal font)
-cask "font-fontawesome"                # Font Awesome icon font

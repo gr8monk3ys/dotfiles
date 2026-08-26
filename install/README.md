@@ -29,20 +29,27 @@ Contains formulae (command-line tools) installed via [Homebrew](https://brew.sh)
 - `oven-sh/bun` - Bun JavaScript runtime
 
 ### [Caskfile](Caskfile)
-**Homebrew Casks** - GUI applications for macOS.
+**Homebrew Casks (day-one)** - GUI applications a fresh Mac needs to be usable.
+Applied by `make cask-apps`, which runs as part of `make macos`.
 
-Contains casks (graphical applications) installed via [Homebrew Cask](https://github.com/Homebrew/homebrew-cask).
+- **Window management**: aerospace, karabiner-elements, raycast
+- **Terminal**: ghostty
+- **Browsers**: zen, firefox, brave-browser
+- **Development**: vscodium, docker-desktop
+- **Notes / security / sync**: obsidian, keepassxc, proton-drive
+- **Music**: tidal
+- **Fonts**: font-jetbrains-mono-nerd-font (Ghostty's font), font-fira-code-nerd-font
 
-**Applications include:**
-- **Browsers**: firefox, brave-browser, zen, tor-browser
-- **Development**: vscodium, figma, godot
-- **Terminals**: ghostty
-- **Productivity**: obsidian, raycast, karabiner-elements
-- **Security**: keepassxc, proton-drive, monero-wallet
-- **Media**: audacity, obs, tidal
-- **Utilities**: aerospace, balenaetcher, keycastr, spacedrive
-- **Communication**: dorion (Discord client)
-- **Fonts**: Nerd Fonts collection (0xproto, 3270, agave, fira-code, fontawesome)
+### [Caskfile.extra](Caskfile.extra)
+**Homebrew Casks (optional)** - everything else. Not part of `make macos`;
+install on demand with `make cask-apps-extra` (honours `SKIP_CASKS` and
+`BREW_BUNDLE_STRICT` like `cask-apps`).
+
+- **Games**: godot, love, lunar-client
+- **Media production**: audacity, obs, cameracontroller, rode-central
+- **Misc**: balenaetcher, db-browser-for-sqlite, dorion, figma, keycastr,
+  monero-wallet, spacedrive, tor-browser
+- **Fonts**: the remaining Nerd Fonts (0xproto, 3270, agave, hack) and font-fontawesome
 
 ### [npmfile](npmfile)
 **Node.js packages** - Global npm packages.
@@ -104,8 +111,11 @@ Install with: `make vscode-extensions`
 # Install formulae (command-line tools)
 brew bundle --file=install/Brewfile
 
-# Install casks (applications)
+# Install day-one casks (applications)
 brew bundle --file=install/Caskfile
+
+# Install optional casks (games, media production, misc)
+brew bundle --file=install/Caskfile.extra
 ```
 
 ### Installing npm Packages
@@ -141,7 +151,7 @@ To update these files with currently installed packages:
 **Homebrew:**
 ```bash
 brew bundle dump --force --file=install/Brewfile
-brew bundle dump --force --file=install/Caskfile --cask
+brew bundle dump --force --file=install/Caskfile --cask   # then move optional apps to Caskfile.extra by hand
 ```
 
 **npm:**
@@ -173,7 +183,7 @@ pacman -Qqe > install/pacmanfile
 ### To add a new Homebrew cask
 
 1. Install it: `brew install --cask <cask>`
-2. Add to Caskfile: `echo 'cask "<cask>"' >> install/Caskfile`
+2. Add to Caskfile (day-one) or Caskfile.extra (optional): `echo 'cask "<cask>"' >> install/Caskfile.extra`
 
 ### To add a new npm package
 

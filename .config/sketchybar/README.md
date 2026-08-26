@@ -11,7 +11,7 @@ Floating macOS status bar with AeroSpace workspace integration.
 ## Design
 
 - **Position:** Top, floating with rounded corners
-- **Colors:** Catppuccin Mocha palette (intentional exception to the repo-wide OneDark theme)
+- **Colors:** OneDark palette (same hexes as Starship, zsh, Ghostty, Neovim)
 - **Font:** SF Pro (ships with macOS)
 
 ## File Structure
@@ -19,7 +19,7 @@ Floating macOS status bar with AeroSpace workspace integration.
 ```
 sketchybar/
 ├── sketchybarrc          # Main config — bar appearance, loads items
-├── colors.sh             # Catppuccin Mocha color palette
+├── colors.sh             # OneDark color palette
 ├── icons.sh              # Nerd Font icon constants
 ├── items/
 │   ├── apple.sh          # Apple logo popup menu
