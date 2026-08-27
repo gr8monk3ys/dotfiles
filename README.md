@@ -1,5 +1,7 @@
 # dotfiles
 
+[![CI](https://img.shields.io/github/actions/workflow/status/gr8monk3ys/dotfiles/ci.yml?branch=main&style=flat-square&logo=github)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/ci.yml)
+
 My macOS and Arch (incl. Omarchy) environment: 26 XDG configs linked with GNU
 Stow, package manifests, and a `make verify` gate that keeps the two honest.
 
