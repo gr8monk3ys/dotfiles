@@ -60,9 +60,13 @@ jobs:
         run: |
           # .zshenv is zsh (glob qualifiers), so it must be checked by zsh, not bash.
           command -v zsh >/dev/null || sudo apt-get install -y zsh
+          export TERM=xterm   # runners have no TERM; compinit/zinit need one
           test -L "$HOME/.zshenv"
+          # First boot bootstraps zinit and clones plugins (network); tolerate its status.
+          zsh -ic 'exit' || true
+          # Second boot is the real check.
           zsh -ic 'exit'
-          zsh -ic 'test "$ZDOTDIR" = "$HOME/.config/zsh" && alias g | grep -q git' && echo "shell boots, ZDOTDIR set, aliases live"
+          zsh -ic 'test "$ZDOTDIR" = "$HOME/.config/zsh" && alias g | grep -q git && print "completions: ${#_comps}"'
 
       - name: Run health check
         run: make doctor
