@@ -52,11 +52,9 @@ jobs:
 
       - name: Install using Makefile
         run: |
-          if [ "$RUNNER_OS" == "macOS" ]; then
-            make
-          else
-            sudo make
-          fi
+          # No sudo wrapper: links must land in the runner user's HOME;
+          # stow-linux escalates on its own for apt/dnf.
+          make
 
       - name: Load & verify shell setup
         run: |
