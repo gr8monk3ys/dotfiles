@@ -25,7 +25,7 @@ brew install imagemagick ffmpeg
 
 ### Navigation
 | Key | Action |
-|-----|--------|
+| ---| ---|
 | `h/j/k/l` | Navigate (vim-style) |
 | `gg` | Go to top |
 | `G` | Go to bottom |
@@ -34,7 +34,7 @@ brew install imagemagick ffmpeg
 
 ### File Operations
 | Key | Action |
-|-----|--------|
+| ---| ---|
 | `y` | Yank (copy) |
 | `x` | Cut |
 | `p` | Paste |
@@ -45,14 +45,14 @@ brew install imagemagick ffmpeg
 
 ### Selection
 | Key | Action |
-|-----|--------|
+| ---| ---|
 | `Space` | Toggle selection |
 | `v` | Visual mode |
 | `Ctrl+a` | Select all |
 
 ### Search & Filter
 | Key | Action |
-|-----|--------|
+| ---| ---|
 | `/` | Find |
 | `s` | Search with fd |
 | `S` | Search with ripgrep |
@@ -60,7 +60,7 @@ brew install imagemagick ffmpeg
 
 ### Quick Navigation
 | Key | Action |
-|-----|--------|
+| ---| ---|
 | `gh` | Go to ~ |
 | `gc` | Go to ~/.config |
 | `gd` | Go to ~/Downloads |
@@ -71,14 +71,14 @@ brew install imagemagick ffmpeg
 
 ### Tabs
 | Key | Action |
-|-----|--------|
+| ---| ---|
 | `t` | New tab |
 | `1-4` | Go to tab |
 | `[/]` | Previous/Next tab |
 
 ### Copy Info
 | Key | Action |
-|-----|--------|
+| ---| ---|
 | `cc` | Copy file path |
 | `cd` | Copy directory path |
 | `cf` | Copy filename |

@@ -263,8 +263,8 @@ Helps non-root installations on Arch Linux.
 
 ## Platform Compatibility
 
+| Script | macOS | Linux | Arch |
 | --- | --- | --- | --- |
-|--------|-------|-------|------|
 | platform | ✓ | ✓ | ✓ |
 | dotfiles-doctor | ✓ | ✓ | ✓ |
 | dotfiles-update | ✓ | ✓ | ✓ |

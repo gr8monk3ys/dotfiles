@@ -27,7 +27,7 @@ Leader key: `Ctrl+Space` (configurable)
 
 ### Pane Management
 | Key | Action |
-|-----|--------|
+| ---| ---|
 | `Leader + \|` | Split right |
 | `Leader + -` | Split down |
 | `Leader + x` | Close pane |
@@ -37,7 +37,7 @@ Leader key: `Ctrl+Space` (configurable)
 
 ### Tab Management
 | Key | Action |
-|-----|--------|
+| ---| ---|
 | `Leader + c` | New tab |
 | `Leader + n/p` | Next/Previous tab |
 | `Leader + 1-9` | Go to tab N |
@@ -46,18 +46,18 @@ Leader key: `Ctrl+Space` (configurable)
 
 ### Resize
 | Key | Action |
-|-----|--------|
+| ---| ---|
 | `Leader + H/J/K/L` | Resize pane |
 
 ### Session
 | Key | Action |
-|-----|--------|
+| ---| ---|
 | `Leader + d` | Detach |
 | `Leader + w` | Session manager |
 
 ### Scroll/Copy Mode
 | Key | Action |
-|-----|--------|
+| ---| ---|
 | `Leader + [` | Enter scroll mode |
 | `j/k` | Scroll up/down |
 | `Ctrl+f/b` | Page up/down |
@@ -91,7 +91,7 @@ zellij kill-all-sessions
 ## Comparison: Zellij vs tmux
 
 | Feature | tmux | Zellij |
-|---------|------|--------|
+| ---| ---| ---|
 | Learning curve | Steeper | Gentler |
 | Default keybindings | Less intuitive | More intuitive |
 | Floating panes | Plugin required | Built-in |
