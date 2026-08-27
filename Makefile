@@ -170,6 +170,8 @@ rust-packages: brew-packages
 	@if [ -n "$(SKIP_RUST)" ]; then \
 		echo "Skipping Rust packages"; \
 	else \
+		export PATH="$$HOME/.cargo/bin:$$(brew --prefix rustup 2>/dev/null)/bin:$$PATH"; \
+		command -v cargo >/dev/null 2>&1 || rustup default stable; \
 		grep -Ev '^\s*(#|$$)' install/Rustfile | xargs -n1 cargo install; \
 	fi
 
