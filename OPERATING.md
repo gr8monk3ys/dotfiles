@@ -9,7 +9,7 @@ Two audiences:
 - **Future-you on a fresh machine.** You have full mental context about why things are set up this way, but no muscle memory for which commands to run. This doc is your runbook.
 - **AI assistants opening the repo.** You have zero context. This doc gives you orientation, current-state truth, and canonical recipes for changes.
 
-For a public-facing overview (what this repo is and why), see [README.md](README.md). Contributing conventions and style are at the end of this file: [Contributing and conventions](#contributing-and-conventions). `AGENTS.md` and `CLAUDE.md` are pointer files for agent tools and carry no content of their own.
+For a public-facing overview (what this repo is and why), see [README.md](README.md). Contributing conventions and style are at the end of this file: [Contributing and conventions](#contributing-and-conventions). `CLAUDE.md` is a short fact sheet for agent tools.
 
 ---
 
@@ -268,8 +268,8 @@ Top-level directories, one sentence each.
 - **`bin/`** — Helper scripts: platform detection, `dotfiles-doctor/update/backup/restore/bench-shell/worktree/sync/why`, and the validators `validate-doc-links`, `validate-tool-docs`, `check-alias-references`. See `bin/README.md`.
 - **`install/`** — Package manifests: `Brewfile`, `Caskfile`, `npmfile`, `Rustfile`, `pacmanfile`, `Codefile` (VSCodium extensions), `duti` (macOS file associations).
 - **`test/`** — BATS test suite. Run with `make test`. Pattern: `test_*.bats`, helpers in `test_helper/`.
-- **`.github/`** — `CODEOWNERS` only. There is no CI; `make verify` before pushing is the gate. `.pre-commit-config.yaml` is available for local hooks (`pre-commit install`).
-- **`docs/`** — `TOOLS.md` (the tool catalog) plus `superpowers/plans/` and `superpowers/specs/` for non-trivial changes.
+- **`.github/`** — `workflows/ci.yml` (shellcheck, markdownlint, validators, BATS on macOS and Ubuntu, the curl installer on Ubuntu) and `dependabot.yml`. `make verify` before pushing is still the local gate. `.pre-commit-config.yaml` is available for local hooks (`pre-commit install`).
+- **`docs/`** — `TOOLS.md` (the tool catalog).
 
 The Stow target is `~/.config/`. The only exception is `.zshenv`, which is manually symlinked from the repo root to `~/.zshenv` because Zsh must find it in `$HOME`.
 
@@ -359,14 +359,14 @@ To iterate locally without committing, run `bin/check-alias-references` directly
 
 ## Contributing and conventions
 
-Style, testing, and PR rules. `AGENTS.md` and `CLAUDE.md` point here.
+Style, testing, and PR rules. `CLAUDE.md` points here.
 
 ### Where things go
 
 - `.config/<app>/` — one directory per tool; keep tool-specific changes inside it.
 - `bin/` — portable helper scripts, kebab-case names (`dotfiles-update`).
 - `install/` — package manifests. `test/` — BATS tests (`test_*.bats`, helpers in `test_helper/`).
-- `docs/` — `TOOLS.md` (tool catalog) and `superpowers/{plans,specs}/` design documents.
+- `docs/` — `TOOLS.md` (tool catalog).
 
 ### Style
 
@@ -391,7 +391,7 @@ Conventional-Commit style (`feat:`, `fix:`, `chore:`, optional scope); one focus
 change per commit. Branch from the default branch, keep the PR small, describe what
 was done and how it was validated. Before opening or pushing:
 
-- `make test` passes and `make verify` succeeds — there is no CI; this is the gate.
+- `make test` passes and `make verify` succeeds locally; CI re-runs the same checks on the PR.
 - Docs updated when behavior or commands change.
 - No secrets. Machine-specific values go in local files
   (`~/.config/zsh/zshrc.local`, `~/.config/git/config.local`), never in git.

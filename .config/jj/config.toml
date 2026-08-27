@@ -1,12 +1,10 @@
 # Jujutsu (jj) Configuration
 # https://martinvonz.github.io/jj/latest/config/
 
-# ============================================================================
-# User Information
-# ============================================================================
-[user]
-name = "Lorenzo Scaturchio"
-email = "lorenzosca7@protonmail.ch"
+# Identity lives in ~/.config/jj/conf.d/user.toml (gitignored):
+#   [user]
+#   name = "Your Name"
+#   email = "you@example.com"
 
 # ============================================================================
 # UI Settings

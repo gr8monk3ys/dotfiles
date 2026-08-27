@@ -211,3 +211,6 @@ credentials.json
 # Age encryption
 ##
 .config/age/key.txt
+
+# jj identity stays local (see .config/jj/config.toml header)
+.config/jj/conf.d/
