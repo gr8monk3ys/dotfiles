@@ -49,8 +49,12 @@ stow-macos: brew
 	brew install stow
 endif
 
+# Generic Linux: install stow with whatever package manager exists (needs sudo).
 stow-linux:
-	@bin/platform has stow || { echo "stow not found: install it with your package manager (apt/dnf install stow)"; exit 1; }
+	@bin/platform has stow || { \
+		if command -v apt-get >/dev/null 2>&1; then sudo apt-get install -y stow; \
+		elif command -v dnf >/dev/null 2>&1; then sudo dnf install -y stow; \
+		else echo "stow not found: install it with your package manager"; exit 1; fi; }
 
 link: stow-$(OS)
 	@echo "Linking dotfiles..."

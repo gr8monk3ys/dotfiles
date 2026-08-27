@@ -5,11 +5,13 @@ This directory contains package lists for various package managers, making it ea
 ## Files Overview
 
 ### [Brewfile](Brewfile)
+
 **Homebrew formulae** - Command-line tools and development packages.
 
 Contains formulae (command-line tools) installed via [Homebrew](https://brew.sh), the package manager for macOS.
 
 **Categories include:**
+
 - **Development Tools**: gcc, node, python, rust-analyzer, lua-language-server
 - **Version Control**: gh (GitHub CLI), git, lazygit
 - **Shell & Terminal**: zsh-syntax-highlighting, tmux, fzf
@@ -24,11 +26,13 @@ Contains formulae (command-line tools) installed via [Homebrew](https://brew.sh)
 - **Utilities**: tldr, aria2, pass, timewarrior, ollama
 
 **Taps (Third-party repositories):**
+
 - `nikitabobko/tap` - AeroSpace window manager
 - `homebrew-zathura/zathura` - Zathura document viewer
 - `oven-sh/bun` - Bun JavaScript runtime
 
 ### [Caskfile](Caskfile)
+
 **Homebrew Casks (day-one)** - GUI applications a fresh Mac needs to be usable.
 Applied by `make cask-apps`, which runs as part of `make macos`.
 
@@ -41,6 +45,7 @@ Applied by `make cask-apps`, which runs as part of `make macos`.
 - **Fonts**: font-jetbrains-mono-nerd-font (Ghostty's font), font-fira-code-nerd-font
 
 ### [Caskfile.extra](Caskfile.extra)
+
 **Homebrew Casks (optional)** - everything else. Not part of `make macos`;
 install on demand with `make cask-apps-extra` (honours `SKIP_CASKS` and
 `BREW_BUNDLE_STRICT` like `cask-apps`).
@@ -52,11 +57,13 @@ install on demand with `make cask-apps-extra` (honours `SKIP_CASKS` and
 - **Fonts**: the remaining Nerd Fonts (0xproto, 3270, agave, hack) and font-fontawesome
 
 ### [npmfile](npmfile)
+
 **Node.js packages** - Global npm packages.
 
 Global Node.js packages installed via npm/pnpm.
 
 **Packages include:**
+
 - **Package Managers**: npm, pnpm, yarn
 - **CLI Utilities**: @antfu/ni, fkill-cli, get-port-cli, gtop
 - **Development Tools**: prettier, tsx, underscore-cli
@@ -66,33 +73,39 @@ Global Node.js packages installed via npm/pnpm.
 - **Optimization**: svgo
 
 ### [Rustfile](Rustfile)
+
 **Rust packages** - Cargo-installed tools.
 
 Rust packages installed via [Cargo](https://doc.rust-lang.org/cargo/), Rust's package manager.
 
 **Packages include:**
+
 - `cargo-cache` - Manage cargo cache
 - `cargo-update` - Update installed cargo packages
 - `jless` - JSON viewer for the terminal
 - `just` - Command runner (make alternative)
 
 ### [pacmanfile](pacmanfile)
+
 **Arch Linux packages** - Pacman package list.
 
 Packages for Arch Linux systems installed via [pacman](https://wiki.archlinux.org/title/Pacman).
 
 **Packages include:**
+
 - **Base**: base-devel, bash-completion
 - **Search**: fd, fzf, zoxide
 - **Version Control**: git, git-delta
 - **Editor**: nano
 
 ### [Codefile](Codefile)
+
 **VSCodium/VS Code extensions** - Editor extensions.
 
 Contains VSCodium/VS Code extension IDs for automated installation.
 
 **Extensions include:**
+
 - **Language Support**: Python, Rust, Go, JavaScript/TypeScript, ESLint, Prettier
 - **Editor Enhancement**: Vim keybindings
 - **Git Integration**: GitLens, Git Graph
@@ -149,6 +162,7 @@ cat install/pacmanfile | xargs sudo pacman -S --needed
 To update these files with currently installed packages:
 
 **Homebrew:**
+
 ```bash
 brew bundle dump --force --file=install/Brewfile
 brew bundle dump --force --file=install/Caskfile --cask   # then move optional apps to Caskfile.extra by hand
