@@ -9,6 +9,7 @@ Utility scripts for system management and dotfiles operations.
 Unified platform detection utility (replaces individual is-* scripts).
 
 **Usage:**
+
 ```bash
 # Detect OS
 platform detect              # Output: macos, arch, linux, or unknown
@@ -33,6 +34,7 @@ platform select /opt/homebrew /usr/local "platform is-arm64"
 ```
 
 **Examples:**
+
 ```bash
 # Conditional logic
 if platform is-macos; then
@@ -53,6 +55,7 @@ platform has docker && docker ps
 Comprehensive health check for your dotfiles installation.
 
 **Usage:**
+
 ```bash
 dotfiles-doctor [--verbose]
 # or
@@ -60,6 +63,7 @@ make doctor
 ```
 
 **Checks:**
+
 - System information
 - Dotfiles repository status
 - Symlink integrity
@@ -74,6 +78,7 @@ make doctor
 Update all packages and configurations.
 
 **Usage:**
+
 ```bash
 dotfiles-update [--skip-brew] [--skip-npm] [--skip-cargo]
 # or
@@ -85,6 +90,7 @@ make update
 Backup configurations and package lists.
 
 **Usage:**
+
 ```bash
 dotfiles-backup [--compress] [--cleanup]
 # or
@@ -96,6 +102,7 @@ make backup
 Restore files from snapshots produced by `dotfiles-backup`.
 
 **Usage:**
+
 ```bash
 dotfiles-restore                              # restore latest backup
 dotfiles-restore ~/dotfiles-backup/20260224_120000
@@ -109,6 +116,7 @@ make restore
 Benchmark interactive zsh startup and enforce a maximum average startup budget.
 
 **Usage:**
+
 ```bash
 dotfiles-bench-shell --runs 7 --budget-ms 900
 # or
@@ -121,6 +129,7 @@ Create isolated git worktrees/branches for parallel sessions (for example,
 multiple AI terminals working the same repository).
 
 **Usage:**
+
 ```bash
 dotfiles-worktree add ghostty-pass      # creates ../dotfiles-ghostty-pass on ai/ghostty-pass
 dotfiles-worktree list                  # show active worktrees
@@ -136,12 +145,14 @@ Lightweight automated sync for launchd (macOS only). Designed for
 unattended execution — for interactive updates, use `dotfiles-update`.
 
 **Behavior:**
+
 - Pulls git changes if available
 - Skips silently if uncommitted changes exist
 - Shows macOS notification only when something happens
 - Silent when already up to date
 
 **Usage:**
+
 ```bash
 dotfiles-sync            # Run manually (typically invoked by launchd)
 # or
@@ -162,6 +173,7 @@ Aliases inside `if command -v X &> /dev/null; then ... fi` blocks are exempt
 (the guard itself declares the dependency).
 
 **Usage:**
+
 ```bash
 check-alias-references  # Validate all unconditional aliases
 # or
@@ -170,6 +182,7 @@ make verify-shell-surface
 
 **On failure:** Prints the offending alias's file:line, the unresolved command, and
 three suggested fixes:
+
 1. Add the command to a package manifest (Brewfile, etc.)
 2. Wrap the alias with a guard condition
 3. Add the command to `test/allowlist/system-tools.txt` if it's a base system tool
@@ -179,6 +192,7 @@ three suggested fixes:
 Validates local Markdown links across repository documentation.
 
 **Usage:**
+
 ```bash
 validate-doc-links          # Validate links from current directory
 validate-doc-links /path    # Validate from specific repo path
@@ -193,6 +207,7 @@ every package needs a catalog entry, and every entry must still be installed
 by a manifest (entries under "Not installed by manifests" are exempt).
 
 **Usage:**
+
 ```bash
 validate-tool-docs          # Validate from current directory
 # or
@@ -205,6 +220,7 @@ Explains why a tool is part of these dotfiles, backed by
 [docs/TOOLS.md](../docs/TOOLS.md).
 
 **Usage:**
+
 ```bash
 dotfiles-why                # fzf browser with entry preview
 dotfiles-why ripgrep        # print one tool's entry
@@ -220,6 +236,7 @@ output by default (stable for tests/CI); headers upgrade to styled
 stdout is a terminal.
 
 **Usage (inside a script):**
+
 ```bash
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/ui.sh"
