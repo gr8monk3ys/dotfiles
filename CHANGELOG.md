@@ -11,6 +11,8 @@ Everything since 1.0.0 (2025-10-24), by theme.
 
 ### Added
 
+- `.github/workflows/ci.yml`: shellcheck, markdownlint, validators, BATS on macOS and Ubuntu, and the curl installer, on every PR
+
 - Tool catalog: `docs/TOOLS.md` with a rationale per package, `bin/dotfiles-why` to browse it, and `bin/validate-tool-docs` (run by `make verify`) to keep it in sync with the install manifests
 - 16 modern CLI tools (yazi, eza, bat, ripgrep, fd, zoxide, atuin, dust, procs, bottom, broot, navi, ouch, delta, …) with guarded aliases in `.config/zsh/aliases.zsh`
 - Jujutsu (`jj`), Zellij, SketchyBar and Karabiner vim-navigation configs
@@ -32,6 +34,8 @@ Everything since 1.0.0 (2025-10-24), by theme.
 - Test suite trimmed of structural tests that only asserted files exist
 
 ### Removed
+
+- `AGENTS.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `CODEOWNERS`, `docs/superpowers/` (AI-session plans); jj identity moved to a gitignored `conf.d/user.toml`
 
 - Nix layer (flake, `bin/dotfiles-nix`, Makefile targets)
 - Go CLI (`cmd/dotfiles/`), `bin/dotfiles-secrets`, `bin/dotfiles-template` and the `age` dependency

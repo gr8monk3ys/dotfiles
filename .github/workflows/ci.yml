@@ -1,0 +1,89 @@
+name: CI
+
+permissions: read-all
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: ShellCheck bin/
+        uses: ludeeus/action-shellcheck@00b27aa7cb85167568cb48a3838b75f4265f2bca
+        with:
+          scandir: ./bin
+          severity: warning
+
+      - name: markdownlint
+        uses: articulate/actions-markdownlint@17b8abe7407cd17590c006ecc837c35e1ac3ed83
+        with:
+          config: .markdownlint.json
+          files: "**/*.md"
+          ignore: |
+            .github
+            test
+
+      - name: Validators (doc links, tool catalog, stale refs)
+        run: make verify-doc-links verify-tool-docs verify-stale-refs
+
+  test:
+    name: Tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Install bats (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install bats-core
+          brew tap bats-core/bats-core
+          brew trust bats-core/bats-core 2>/dev/null || true
+          brew install bats-support bats-assert stow
+
+      - name: Install bats (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bats zsh stow
+          sudo mkdir -p /usr/lib/bats
+          sudo git clone --depth 1 https://github.com/bats-core/bats-support.git /usr/lib/bats/bats-support
+          sudo git clone --depth 1 https://github.com/bats-core/bats-assert.git /usr/lib/bats/bats-assert
+
+      - name: make verify (no Docker)
+        env:
+          SKIP_DOCKER: "1"
+          TERM: xterm
+        run: make verify
+
+      - name: link / unlink round-trip
+        run: |
+          make link
+          test -L "$HOME/.zshenv"
+          make unlink
+          test ! -L "$HOME/.zshenv"
+
+  installer:
+    name: Installer
+    runs-on: ubuntu-latest
+    steps:
+      - name: curl | bash, non-interactive
+        env:
+          DOTFILES_ASSUME_YES: "1"
+          DOTFILES_MACHINE_TYPE: "personal"
+          DOTFILES_DIR: "${{ github.workspace }}/.dotfiles-install-test"
+          DOTFILES_BRANCH: "${{ github.head_ref || github.ref_name }}"
+        run: |
+          curl -fsSL "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/install.sh" | bash
+          test -L "$HOME/.zshenv"
+          test -L "$HOME/.config/starship"

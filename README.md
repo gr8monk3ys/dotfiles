@@ -1,169 +1,76 @@
-<div align="center">
+# dotfiles
 
-```
-██╗      ██████╗ ██████╗ ███████╗███╗   ██╗███████╗ ██████╗ ███████╗
-██║     ██╔═══██╗██╔══██╗██╔════╝████╗  ██║╚══███╔╝██╔═══██╗██╔════╝
-██║     ██║   ██║██████╔╝█████╗  ██╔██╗ ██║  ███╔╝ ██║   ██║███████╗
-██║     ██║   ██║██╔══██╗██╔══╝  ██║╚██╗██║ ███╔╝  ██║   ██║╚════██║
-███████╗╚██████╔╝██║  ██║███████╗██║ ╚████║███████╗╚██████╔╝███████║
-╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝╚══════╝ ╚═════╝ ╚══════╝
+My macOS and Arch (incl. Omarchy) environment: 26 XDG configs linked with GNU
+Stow, package manifests, and a `make verify` gate that keeps the two honest.
 
-██████╗  ██████╗ ████████╗███████╗██╗██╗     ███████╗███████╗
-██╔══██╗██╔═══██╗╚══██╔══╝██╔════╝██║██║     ██╔════╝██╔════╝
-██║  ██║██║   ██║   ██║   █████╗  ██║██║     █████╗  ███████╗
-██║  ██║██║   ██║   ██║   ██╔══╝  ██║██║     ██╔══╝  ╚════██║
-██████╔╝╚██████╔╝   ██║   ██║     ██║███████╗███████╗███████║
-╚═════╝  ╚═════╝    ╚═╝   ╚═╝     ╚═╝╚══════╝╚══════╝╚══════╝
-```
+The part that matters: **every package has to justify itself.** `docs/TOOLS.md`
+carries one rationale entry per package, and `bin/validate-tool-docs` fails
+`make verify` in both directions — a package in a manifest with no entry, or an
+entry with no package. Same idea for the shell: `bin/check-alias-references`
+rejects any unconditional alias whose target is not a manifest entry, a builtin,
+or an allowlisted system tool. Tracked config carries no identity or real hosts;
+a regression test grep-checks that too. The suite is 91 BATS tests; a second
+interactive zsh start is budgeted at 900 ms and tested.
 
-**A keyboard-driven development environment for macOS (and, partially, Linux)**
-
-[![License](https://img.shields.io/badge/license-GPL--3.0-98c379?style=flat-square)](LICENSE)
-[![Theme](https://img.shields.io/badge/theme-OneDark-61afef?style=flat-square)](#-theme)
-
-[Quick start](#-quick-start) •
-[Features](#-features) •
-[Theme](#-theme) •
-[Structure](#-structure) •
-[Documentation](#-documentation)
-
-</div>
-
----
-
-## ⚡ Quick Start
+## Install
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/gr8monk3ys/dotfiles/main/install.sh | bash
 ```
 
-That installs Homebrew packages, symlinks `.config/` with Stow, and sets up
-the prompt. Prefer to look first? `git clone` the repo to `~/.dotfiles`, then
-`make link-dry-run` to preview and `make` to install.
+Or clone and look first:
 
-Everything else — non-interactive install, machine profiles, local overrides,
-the `make` command reference, and troubleshooting — lives in
-**[OPERATING.md](OPERATING.md)**.
-
----
-
-## ✨ Features
-
-<table>
-<tr>
-<td width="50%">
-
-### 🖥️ Window Management
-
-- **AeroSpace** - i3-like tiling for macOS
-- **SketchyBar** - Status bar
-- **Karabiner** - Keyboard remapping (vim-style navigation)
-
-### 🐚 Terminal & Shell
-
-- **Ghostty** - GPU-accelerated terminal
-- **Zsh + Zinit** - Fast plugin manager
-- **Starship** - Single-binary prompt
-- **Zellij** - Multiplexer (tmux config kept as backup)
-
-### ✏️ Development
-
-- **Neovim** - LSP-configured editor
-- **Jujutsu (jj)** - Git-compatible VCS, alongside Git + delta
-- **Lazygit** - Terminal Git UI
-- **VSCodium** - GUI editor for extension-heavy work
-
-</td>
-<td width="50%">
-
-### 🛠️ Modern CLI Tools
-
-- **yazi** - Terminal file manager
-- **eza** - `ls` with icons and git status
-- **bat** - `cat` with syntax highlighting
-- **ripgrep** / **fd** - Fast search (not aliased over `grep`/`find`)
-- **zoxide** - Smarter `cd`
-- **atuin** - Searchable shell history
-- **dust** / **procs** / **bottom** - Disk, process and system viewers
-  (`du`/`ps`/`top` are deliberately not shadowed)
-- **broot**, **navi**, **ouch** - Tree search, cheatsheets, archives
-
-### 📦 Package Management
-
-- **Homebrew** - macOS packages and casks
-- **mise** - Runtime version manager
-- **Cargo** / **npm** - Rust and Node globals
-
-</td>
-</tr>
-</table>
-
-Every package has a rationale entry in [docs/TOOLS.md](docs/TOOLS.md) —
-what it is, why it was chosen, and what the alternatives were. Browse it
-from the terminal with `dotfiles-why` (fzf browser) or
-`dotfiles-why ripgrep` (one entry). `make verify` fails if a package is
-installed without a catalog entry, or documented without being installed.
-
----
-
-## 🎨 Theme
-
-A consistent **OneDark** palette across every themed tool:
-
-| Color | Hex | Usage |
-| ------- | ----- | ------- |
-| 🔴 Red | `#e06c75` | Errors, deletions |
-| 🟢 Green | `#98c379` | Success, additions |
-| 🟡 Yellow | `#e5c07b` | Warnings, modified |
-| 🔵 Blue | `#61afef` | Info, directories |
-| 🟣 Magenta | `#c678dd` | Special elements |
-| 🔵 Cyan | `#56b6c2` | Links, symlinks |
-| 🟠 Orange | `#d19a66` | Constants |
-
-**Themed tools:** Neovim, Yazi, bat, eza, git-delta, zellij, fzf, starship, atuin, zsh-syntax-highlighting, Ghostty (Atom One Dark, frosted glass), SketchyBar
-
----
-
-## 📁 Structure
-
-```
-~/.dotfiles/
-├── .config/         # 26 XDG app configs, one directory per tool, each with a README
-├── bin/             # dotfiles-doctor / update / backup / restore / sync / why, validators
-├── install/         # Package manifests: Brewfile, Caskfile, npmfile, Rustfile, pacmanfile, Codefile, duti
-├── test/            # BATS test suite (make test)
-├── docs/            # TOOLS.md tool catalog + design plans/specs
-├── install.sh       # One-line installer
-└── Makefile         # Install, link, verify, maintenance targets (make help)
+```bash
+git clone https://github.com/gr8monk3ys/dotfiles.git ~/.dotfiles
+cd ~/.dotfiles
+make link-dry-run   # preview the symlinks
+make                # macOS: brew + casks + npm/cargo globals + link; Arch: pacman + link
 ```
 
----
+Non-interactive (what CI runs):
 
-## 📚 Documentation
+```bash
+DOTFILES_ASSUME_YES=1 DOTFILES_MACHINE_TYPE=personal \
+  curl -fsSL https://raw.githubusercontent.com/gr8monk3ys/dotfiles/main/install.sh | bash
+```
 
-| Document | Description |
-| ---------- | ------------- |
-| [OPERATING.md](OPERATING.md) | Install paths, daily ops, `make` reference, local overrides, troubleshooting, contributing conventions |
-| [AGENTS.md](AGENTS.md) | Pointer file for agent tools (Codex, Cursor); content is in OPERATING.md |
-| [docs/TOOLS.md](docs/TOOLS.md) | Why each tool is here |
-| [CHANGELOG.md](CHANGELOG.md) | Version history |
+Machine-specific values (git/jj identity, SSH hosts, work overrides) live in
+gitignored local files; `OPERATING.md` lists them.
 
-Each `.config/<app>/` directory has its own README describing that config.
+## Verify
 
----
+```bash
+make test      # bats test
+make verify    # syntax, shell-surface, stale refs, doc links, tool catalog, bats, Docker fresh install
+make doctor    # health check of the linked machine
+```
 
-## 🙏 Credits
+## What is in it
 
-Inspired by the [dotfiles community](https://dotfiles.github.io) and these repos:
+| Area | Tools |
+| --- | --- |
+| Window management | AeroSpace, SketchyBar, Karabiner (vim-style navigation) |
+| Terminal | Ghostty, zsh + zinit, Starship, Zellij (tmux kept as backup) |
+| Editing / VCS | Neovim (LSP), git + delta, Jujutsu, lazygit |
+| CLI | yazi, eza, bat, ripgrep, fd, zoxide, atuin, dust, procs, bottom, broot, navi, ouch |
+| Packages | Homebrew, pacman, mise, cargo, npm |
 
-- [mathiasbynens/dotfiles](https://github.com/mathiasbynens/dotfiles)
-- [holman/dotfiles](https://github.com/holman/dotfiles)
-- [thoughtbot/dotfiles](https://github.com/thoughtbot/dotfiles)
+`ls`, `cat`, `cd` are aliased to their replacements; `grep`, `find`, `du`,
+`ps`, `top` deliberately are not. Everything is themed OneDark. Why each tool
+is here: `dotfiles-why <tool>` or [docs/TOOLS.md](docs/TOOLS.md).
 
----
+## Layout
 
-<div align="center">
+```
+.config/     one directory per tool, each with a README
+bin/         dotfiles-doctor/update/backup/restore/sync/why, validators
+install/     Brewfile, Caskfile, Caskfile.extra, npmfile, Rustfile, pacmanfile, Codefile, duti
+test/        BATS suite
+docs/        TOOLS.md
+install.sh   one-line installer
+Makefile     install, link, verify targets (make help)
+```
 
-Made with ☕ by [Lorenzo](https://github.com/gr8monk3ys)
-
-</div>
+[OPERATING.md](OPERATING.md) is the runbook: install paths, machine profiles,
+local overrides, `make` reference, troubleshooting, conventions.
+[CHANGELOG.md](CHANGELOG.md) has the history. License: GPL-3.0.
