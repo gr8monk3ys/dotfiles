@@ -4,9 +4,8 @@
 # ============================================================================
 # User Information
 # ============================================================================
-[user]
-name = "Lorenzo Scaturchio"
-email = "lorenzosca7@protonmail.ch"
+# [user] name/email live in conf.d/user.toml (gitignored; see user.toml.example)
+# so the tracked config carries no identity. jj reads every conf.d/*.toml.
 
 # ============================================================================
 # UI Settings

@@ -254,8 +254,10 @@ EOS
 
 # Public-readiness: tracked config must carry no personal identity or hosts.
 @test "tracked git config and ssh snippets contain no personal identity" {
-	run git -C "$DOTFILES_DIR" grep -nE '^\s*(email|name)\s*=' -- .config/git/.gitconfig
+	run git -C "$DOTFILES_DIR" grep -nE '^\s*(email|name)\s*=' -- .config/git/.gitconfig .config/jj/config.toml
 	assert_failure
+	run git -C "$DOTFILES_DIR" ls-files -- '.config/jj/conf.d/*.toml'
+	[[ -z "$output" ]]
 	run git -C "$DOTFILES_DIR" ls-files -- '.config/ssh/config.d/*.conf'
 	[[ -z "$output" ]]
 	git -C "$DOTFILES_DIR" check-ignore -q .config/ssh/config.d/pi-lab.conf

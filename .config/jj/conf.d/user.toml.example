@@ -1,0 +1,4 @@
+# Copy to user.toml (gitignored) and fill in.
+[user]
+name = "Your Name"
+email = "you@example.com"
