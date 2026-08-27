@@ -34,7 +34,7 @@ Each file has one clear job after this change. No content lives in two top-level
 ## Task 1: Create OPERATING.md
 
 **Files:**
-- Create: `/Users/natalyscaturchio/code/dotfiles/OPERATING.md`
+- Create: `~/code/dotfiles/OPERATING.md`
 
 - [ ] **Step 1: Verify facts before writing**
 
@@ -42,23 +42,23 @@ Run these commands and confirm outputs match the content below. If any fact drif
 
 ```bash
 # Should output 24
-ls /Users/natalyscaturchio/code/dotfiles/.config/ | wc -l
+ls ~/code/dotfiles/.config/ | wc -l
 
 # Should exist and be executable
-ls -la /Users/natalyscaturchio/code/dotfiles/bin/dotfiles-doctor /Users/natalyscaturchio/code/dotfiles/bin/dotfiles-update /Users/natalyscaturchio/code/dotfiles/bin/dotfiles-backup
+ls -la ~/code/dotfiles/bin/dotfiles-doctor ~/code/dotfiles/bin/dotfiles-update ~/code/dotfiles/bin/dotfiles-backup
 
 # Should show verify + daily composite targets
-grep -E "^verify:|^daily:" /Users/natalyscaturchio/code/dotfiles/Makefile
+grep -E "^verify:|^daily:" ~/code/dotfiles/Makefile
 
 # Machine type is real
-grep -n "machine_type" /Users/natalyscaturchio/code/dotfiles/.config/zsh/.zshrc
+grep -n "machine_type" ~/code/dotfiles/.config/zsh/.zshrc
 ```
 
 Expected: 24 config dirs; three scripts executable; verify + daily targets exist; MACHINE_TYPE export line present in .zshrc.
 
 - [ ] **Step 2: Write OPERATING.md with complete content**
 
-Write the following content verbatim to `/Users/natalyscaturchio/code/dotfiles/OPERATING.md`:
+Write the following content verbatim to `~/code/dotfiles/OPERATING.md`:
 
 ````markdown
 # OPERATING.md
@@ -356,9 +356,9 @@ Expected — it downloads and builds everything from scratch. Subsequent builds 
 - [ ] **Step 3: Verify file exists and has expected structure**
 
 ```bash
-wc -l /Users/natalyscaturchio/code/dotfiles/OPERATING.md
-grep -c "^## " /Users/natalyscaturchio/code/dotfiles/OPERATING.md
-grep -c "^### " /Users/natalyscaturchio/code/dotfiles/OPERATING.md
+wc -l ~/code/dotfiles/OPERATING.md
+grep -c "^## " ~/code/dotfiles/OPERATING.md
+grep -c "^### " ~/code/dotfiles/OPERATING.md
 ```
 
 Expected: roughly 270-320 lines; 7 top-level `## ` section headers; several `### ` sub-section headers.
@@ -366,7 +366,7 @@ Expected: roughly 270-320 lines; 7 top-level `## ` section headers; several `###
 - [ ] **Step 4: Verify no TODO/TBD placeholders**
 
 ```bash
-grep -niE "TODO|TBD|FIXME|XXX|placeholder" /Users/natalyscaturchio/code/dotfiles/OPERATING.md
+grep -niE "TODO|TBD|FIXME|XXX|placeholder" ~/code/dotfiles/OPERATING.md
 ```
 
 Expected: no matches. If any appear, fix before committing.
@@ -374,7 +374,7 @@ Expected: no matches. If any appear, fix before committing.
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /Users/natalyscaturchio/code/dotfiles
+cd ~/code/dotfiles
 git add OPERATING.md
 git commit -m "$(cat <<'EOF'
 docs: add OPERATING.md as single source of truth for operators
@@ -396,11 +396,11 @@ EOF
 ## Task 2: Reduce CLAUDE.md to pointer form
 
 **Files:**
-- Modify: `/Users/natalyscaturchio/code/dotfiles/CLAUDE.md` (full rewrite — 400+ lines → 10 lines)
+- Modify: `~/code/dotfiles/CLAUDE.md` (full rewrite — 400+ lines → 10 lines)
 
 - [ ] **Step 1: Replace CLAUDE.md content entirely**
 
-Overwrite `/Users/natalyscaturchio/code/dotfiles/CLAUDE.md` with exactly this content:
+Overwrite `~/code/dotfiles/CLAUDE.md` with exactly this content:
 
 ```markdown
 # CLAUDE.md
@@ -417,8 +417,8 @@ Keep this file minimal. All other top-level docs consolidate into the three abov
 - [ ] **Step 2: Verify size and links**
 
 ```bash
-wc -l /Users/natalyscaturchio/code/dotfiles/CLAUDE.md
-grep -c "AGENTS.md\|OPERATING.md\|README.md" /Users/natalyscaturchio/code/dotfiles/CLAUDE.md
+wc -l ~/code/dotfiles/CLAUDE.md
+grep -c "AGENTS.md\|OPERATING.md\|README.md" ~/code/dotfiles/CLAUDE.md
 ```
 
 Expected: ≤15 lines; 3 link references (one per pointer).
@@ -426,7 +426,7 @@ Expected: ≤15 lines; 3 link references (one per pointer).
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /Users/natalyscaturchio/code/dotfiles
+cd ~/code/dotfiles
 git add CLAUDE.md
 git commit -m "$(cat <<'EOF'
 docs: reduce CLAUDE.md to a pointer file
@@ -448,14 +448,14 @@ EOF
 ## Task 3: Expand AGENTS.md
 
 **Files:**
-- Modify: `/Users/natalyscaturchio/code/dotfiles/AGENTS.md`
+- Modify: `~/code/dotfiles/AGENTS.md`
 
 Three specific changes: absorb CONTRIBUTING.md content, add cross-link to OPERATING.md at the top, add a per-config README convention section.
 
 - [ ] **Step 1: Read current AGENTS.md to preserve structure**
 
 ```bash
-cat /Users/natalyscaturchio/code/dotfiles/AGENTS.md
+cat ~/code/dotfiles/AGENTS.md
 ```
 
 The file currently has these section headers (in order):
@@ -547,9 +547,9 @@ This is aspirational for existing configs and required for new ones. When adding
 - [ ] **Step 5: Verify edits**
 
 ```bash
-grep -n "OPERATING.md" /Users/natalyscaturchio/code/dotfiles/AGENTS.md
-grep -n "^## " /Users/natalyscaturchio/code/dotfiles/AGENTS.md
-grep -c "Per-Config README Convention" /Users/natalyscaturchio/code/dotfiles/AGENTS.md
+grep -n "OPERATING.md" ~/code/dotfiles/AGENTS.md
+grep -n "^## " ~/code/dotfiles/AGENTS.md
+grep -c "Per-Config README Convention" ~/code/dotfiles/AGENTS.md
 ```
 
 Expected: 1 match for `OPERATING.md` at the top; 7 top-level `## ` headers (was 6, now 7 with the new convention section); 1 match for the new section title.
@@ -557,7 +557,7 @@ Expected: 1 match for `OPERATING.md` at the top; 7 top-level `## ` headers (was 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd /Users/natalyscaturchio/code/dotfiles
+cd ~/code/dotfiles
 git add AGENTS.md
 git commit -m "$(cat <<'EOF'
 docs: expand AGENTS.md, absorb CONTRIBUTING.md
@@ -582,7 +582,7 @@ EOF
 ## Task 4: Update README.md
 
 **Files:**
-- Modify: `/Users/natalyscaturchio/code/dotfiles/README.md`
+- Modify: `~/code/dotfiles/README.md`
 
 Four specific changes: add signpost callout, strip NEW tags, update Documentation table, remove deleted-doc references.
 
@@ -619,7 +619,7 @@ With:
 Use a grep pass first to locate them:
 
 ```bash
-grep -nE "\(NEW\)|NEW$|\*\*NEW\*\*" /Users/natalyscaturchio/code/dotfiles/README.md
+grep -nE "\(NEW\)|NEW$|\*\*NEW\*\*" ~/code/dotfiles/README.md
 ```
 
 Then remove each occurrence. Known locations based on current README:
@@ -640,7 +640,7 @@ Then remove each occurrence. Known locations based on current README:
 Use `sed` or Edit with `replace_all` to strip the exact token pattern `**(NEW)**` and ` (NEW)`:
 
 ```bash
-cd /Users/natalyscaturchio/code/dotfiles
+cd ~/code/dotfiles
 # Remove bold-wrapped variant (may appear after text)
 sed -i '' 's/ \*\*(NEW)\*\*//g' README.md
 # Remove plain parenthetical variant
@@ -650,7 +650,7 @@ sed -i '' 's/ (NEW)//g' README.md
 Then re-verify:
 
 ```bash
-grep -nE "\(NEW\)|NEW$|\*\*NEW\*\*" /Users/natalyscaturchio/code/dotfiles/README.md
+grep -nE "\(NEW\)|NEW$|\*\*NEW\*\*" ~/code/dotfiles/README.md
 ```
 
 Expected: no matches.
@@ -682,10 +682,10 @@ Replace with:
 - [ ] **Step 4: Verify README edits**
 
 ```bash
-grep -c "OPERATING.md" /Users/natalyscaturchio/code/dotfiles/README.md
-grep -c "AGENTS.md" /Users/natalyscaturchio/code/dotfiles/README.md
-grep -nE "\(NEW\)|\*\*NEW\*\*" /Users/natalyscaturchio/code/dotfiles/README.md
-grep -c "CONTRIBUTING.md" /Users/natalyscaturchio/code/dotfiles/README.md
+grep -c "OPERATING.md" ~/code/dotfiles/README.md
+grep -c "AGENTS.md" ~/code/dotfiles/README.md
+grep -nE "\(NEW\)|\*\*NEW\*\*" ~/code/dotfiles/README.md
+grep -c "CONTRIBUTING.md" ~/code/dotfiles/README.md
 ```
 
 Expected: OPERATING.md mentioned ≥2 times (callout + doc table); AGENTS.md mentioned ≥2 times; zero NEW tags; zero CONTRIBUTING.md references.
@@ -693,7 +693,7 @@ Expected: OPERATING.md mentioned ≥2 times (callout + doc table); AGENTS.md men
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /Users/natalyscaturchio/code/dotfiles
+cd ~/code/dotfiles
 git add README.md
 git commit -m "$(cat <<'EOF'
 docs: add OPERATING.md signpost to README, strip stale NEW tags
@@ -717,13 +717,13 @@ EOF
 ## Task 5: Delete SETUP.md and CONTRIBUTING.md
 
 **Files:**
-- Delete: `/Users/natalyscaturchio/code/dotfiles/SETUP.md`
-- Delete: `/Users/natalyscaturchio/code/dotfiles/CONTRIBUTING.md`
+- Delete: `~/code/dotfiles/SETUP.md`
+- Delete: `~/code/dotfiles/CONTRIBUTING.md`
 
 - [ ] **Step 1: Check for remaining references before deleting**
 
 ```bash
-cd /Users/natalyscaturchio/code/dotfiles
+cd ~/code/dotfiles
 grep -rln --exclude-dir=.git --exclude-dir=docs "SETUP\.md\|CONTRIBUTING\.md" . 2>&1
 ```
 
@@ -734,15 +734,15 @@ If any *live* references remain (outside `docs/superpowers/`), fix them before d
 - [ ] **Step 2: Delete the files**
 
 ```bash
-cd /Users/natalyscaturchio/code/dotfiles
+cd ~/code/dotfiles
 git rm SETUP.md CONTRIBUTING.md
 ```
 
 - [ ] **Step 3: Verify deletion**
 
 ```bash
-ls /Users/natalyscaturchio/code/dotfiles/SETUP.md 2>&1
-ls /Users/natalyscaturchio/code/dotfiles/CONTRIBUTING.md 2>&1
+ls ~/code/dotfiles/SETUP.md 2>&1
+ls ~/code/dotfiles/CONTRIBUTING.md 2>&1
 ```
 
 Expected: both commands report "No such file or directory".
@@ -750,7 +750,7 @@ Expected: both commands report "No such file or directory".
 - [ ] **Step 4: Commit**
 
 ```bash
-cd /Users/natalyscaturchio/code/dotfiles
+cd ~/code/dotfiles
 git commit -m "$(cat <<'EOF'
 docs: delete SETUP.md and CONTRIBUTING.md after consolidation
 
@@ -769,12 +769,12 @@ EOF
 ## Task 6: Update CHANGELOG.md
 
 **Files:**
-- Modify: `/Users/natalyscaturchio/code/dotfiles/CHANGELOG.md`
+- Modify: `~/code/dotfiles/CHANGELOG.md`
 
 - [ ] **Step 1: Read current CHANGELOG structure**
 
 ```bash
-head -30 /Users/natalyscaturchio/code/dotfiles/CHANGELOG.md
+head -30 ~/code/dotfiles/CHANGELOG.md
 ```
 
 Note the `[Unreleased]` section header format. Typical "Keep a Changelog" format uses `## [Unreleased]` with subheadings `### Added`, `### Changed`, `### Removed`.
@@ -798,8 +798,8 @@ Locate the `## [Unreleased]` section. Insert the following (merging into existin
 - [ ] **Step 3: Verify entry**
 
 ```bash
-grep -c "OPERATING.md" /Users/natalyscaturchio/code/dotfiles/CHANGELOG.md
-grep -A 20 "## \[Unreleased\]" /Users/natalyscaturchio/code/dotfiles/CHANGELOG.md | head -25
+grep -c "OPERATING.md" ~/code/dotfiles/CHANGELOG.md
+grep -A 20 "## \[Unreleased\]" ~/code/dotfiles/CHANGELOG.md | head -25
 ```
 
 Expected: at least 2 mentions of OPERATING.md; visible new entries under [Unreleased].
@@ -807,7 +807,7 @@ Expected: at least 2 mentions of OPERATING.md; visible new entries under [Unrele
 - [ ] **Step 4: Commit**
 
 ```bash
-cd /Users/natalyscaturchio/code/dotfiles
+cd ~/code/dotfiles
 git add CHANGELOG.md
 git commit -m "$(cat <<'EOF'
 docs: log doc consolidation in CHANGELOG
@@ -829,7 +829,7 @@ EOF
 - [ ] **Step 1: Run the doc-link validator**
 
 ```bash
-cd /Users/natalyscaturchio/code/dotfiles
+cd ~/code/dotfiles
 make verify-doc-links 2>&1
 ```
 
@@ -840,7 +840,7 @@ If broken links are reported, they are likely from other files still linking to 
 - [ ] **Step 2: Run the stale-reference check**
 
 ```bash
-cd /Users/natalyscaturchio/code/dotfiles
+cd ~/code/dotfiles
 make verify-stale-refs 2>&1
 ```
 
@@ -849,7 +849,7 @@ Expected: "Checking for stale migration references..." with no stale pattern mat
 - [ ] **Step 3: Run the full verify target**
 
 ```bash
-cd /Users/natalyscaturchio/code/dotfiles
+cd ~/code/dotfiles
 make verify 2>&1
 ```
 
@@ -862,7 +862,7 @@ To isolate plan-caused failures from pre-existing ones, check whether the failur
 - [ ] **Step 4: If fixes were required, commit them**
 
 ```bash
-cd /Users/natalyscaturchio/code/dotfiles
+cd ~/code/dotfiles
 git status
 # Stage only files this plan is responsible for
 git add <files>
@@ -881,7 +881,7 @@ If no fixes were required, skip this step.
 - [ ] **Step 5: Confirm git log shows the expected commits**
 
 ```bash
-cd /Users/natalyscaturchio/code/dotfiles
+cd ~/code/dotfiles
 git log --oneline -n 10
 ```
 
