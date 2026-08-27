@@ -51,6 +51,7 @@ brew "lazydocker"                      # Terminal UI for Docker
 # gh-dash is a gh CLI extension: gh extension install dlvhdr/gh-dash
 
 ## Language Servers & Development Tools
+brew "rustup"                          # Rust toolchain manager (make rust-packages runs `rustup default stable`)
 brew "rust-analyzer"                   # Rust language server
 brew "lua-language-server"             # Lua language server
 brew "python-lsp-server"               # Python language server

@@ -181,10 +181,11 @@ teardown() {
 
 ## Continuous Integration
 
-There is none. GitHub Actions is disabled on this private repo, so `make verify`
-(shell lint, shell-surface checks, doc-link and tool-doc validators, and this
-suite) is the pre-push gate. `make test-docker` / `make test-docker-arch` run
-the same suite in Linux containers locally.
+`.github/workflows/test.yml` runs this suite on macOS and Ubuntu for every PR and
+push to `main`; `install.yml` runs the real `curl | bash` installer; `lint.yml`
+runs shellcheck/markdownlint/gitleaks; `arch-smoke.yml` runs the Arch container
+weekly. `make verify` (which includes the Ubuntu container test when Docker is
+present) is the local equivalent — run it before pushing.
 
 ## Test Coverage
 

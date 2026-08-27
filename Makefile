@@ -49,8 +49,13 @@ stow-macos: brew
 	brew install stow
 endif
 
+# Generic Linux: install stow with whatever package manager exists (needs sudo);
+# otherwise say how.
 stow-linux:
-	@bin/platform has stow || { echo "stow not found: install it with your package manager (apt/dnf install stow)"; exit 1; }
+	@bin/platform has stow || { \
+		if command -v apt-get >/dev/null 2>&1; then sudo apt-get install -y stow; \
+		elif command -v dnf >/dev/null 2>&1; then sudo dnf install -y stow; \
+		else echo "stow not found: install it with your package manager"; exit 1; fi; }
 
 link: stow-$(OS)
 	@echo "Linking dotfiles..."
@@ -165,6 +170,8 @@ rust-packages: brew-packages
 	@if [ -n "$(SKIP_RUST)" ]; then \
 		echo "Skipping Rust packages"; \
 	else \
+		export PATH="$$HOME/.cargo/bin:$$(brew --prefix rustup 2>/dev/null)/bin:$$PATH"; \
+		command -v cargo >/dev/null 2>&1 || rustup default stable; \
 		grep -Ev '^\s*(#|$$)' install/Rustfile | xargs -n1 cargo install; \
 	fi
 

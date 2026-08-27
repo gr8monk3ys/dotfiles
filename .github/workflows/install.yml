@@ -1,0 +1,80 @@
+permissions: read-all
+
+name: Dotfiles Installation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: "0 17 * * 4" # Every Thursday 5:00PM
+
+jobs:
+  one-liner:
+    name: One-Liner Installer (Non-Interactive)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run installer one-liner
+        env:
+          DOTFILES_ASSUME_YES: "1"
+          DOTFILES_MACHINE_TYPE: "personal"
+          DOTFILES_DIR: "${{ github.workspace }}/.dotfiles-install-test"
+          DOTFILES_BRANCH: "${{ github.head_ref || github.ref_name }}"
+        run: |
+          curl -fsSL "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/install.sh" | bash
+          test -L "$HOME/.zshenv"
+          test -L "$HOME/.config/starship"
+
+  install:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-14, macos-15, ubuntu-latest]
+
+    steps:
+      - name: Clean up installed software
+        if: startsWith(matrix.os, 'macos')
+        run: |
+          brew uninstall --ignore-dependencies --force $(brew list --formula)
+          # brew uninstall --cask --force $(brew list --cask)
+          brew uninstall --cask --force firefox google-chrome
+          brew cleanup --prune-prefix
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall.sh)"
+
+      - name: Download and install available system updates
+        # Step disabled since it also tries to update macOS itself and there seems no way to disable this
+        if: ${{ false && startsWith(matrix.os, 'macos') }}
+        run: sudo softwareupdate -i -a
+
+      - name: Clone this repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Install using Makefile
+        run: |
+          # No sudo wrapper: links must land in the runner user's HOME;
+          # stow-linux escalates on its own for apt/dnf.
+          make
+
+      - name: Boot the shell for real
+        run: |
+          # .zshenv is zsh (glob qualifiers), so it must be checked by zsh, not bash.
+          command -v zsh >/dev/null || sudo apt-get install -y zsh
+          export TERM=xterm   # runners have no TERM; compinit/zinit need one
+          test -L "$HOME/.zshenv"
+          # First boot bootstraps zinit and clones plugins (network); tolerate its status.
+          zsh -ic 'exit' || true
+          # Second boot is the real check.
+          zsh -ic 'exit'
+          zsh -ic 'test "$ZDOTDIR" = "$HOME/.config/zsh" && alias g | grep -q git && print "completions: ${#_comps}"'
+
+      - name: Run health check
+        run: make doctor
+
+      - name: Install BATS
+        if: startsWith(matrix.os, 'macos')
+        run: brew install bats-core
+
+      - name: Run tests
+        if: startsWith(matrix.os, 'macos')
+        run: make test
