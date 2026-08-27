@@ -1,0 +1,76 @@
+permissions: read-all
+
+name: Dotfiles Installation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: "0 17 * * 4" # Every Thursday 5:00PM
+
+jobs:
+  one-liner:
+    name: One-Liner Installer (Non-Interactive)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run installer one-liner
+        env:
+          DOTFILES_ASSUME_YES: "1"
+          DOTFILES_MACHINE_TYPE: "personal"
+          DOTFILES_DIR: "${{ github.workspace }}/.dotfiles-install-test"
+          DOTFILES_BRANCH: "${{ github.ref_name }}"
+        run: |
+          curl -fsSL "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/install.sh" | bash
+          test -L "$HOME/.zshenv"
+          test -L "$HOME/.config/starship"
+
+  install:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-14, macos-15, ubuntu-latest]
+
+    steps:
+      - name: Clean up installed software
+        if: startsWith(matrix.os, 'macos')
+        run: |
+          brew uninstall --ignore-dependencies --force $(brew list --formula)
+          # brew uninstall --cask --force $(brew list --cask)
+          brew uninstall --cask --force firefox google-chrome
+          brew cleanup --prune-prefix
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall.sh)"
+
+      - name: Download and install available system updates
+        # Step disabled since it also tries to update macOS itself and there seems no way to disable this
+        if: ${{ false && startsWith(matrix.os, 'macos') }}
+        run: sudo softwareupdate -i -a
+
+      - name: Clone this repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Install using Makefile
+        run: |
+          if [ "$RUNNER_OS" == "macOS" ]; then
+            make
+          else
+            sudo make
+          fi
+
+      - name: Load & verify shell setup
+        run: |
+          if [ -f "$HOME/.zshenv" ]; then
+            source "$HOME/.zshenv"
+          fi
+
+      - name: Run health check
+        run: make doctor
+
+      - name: Install BATS
+        if: startsWith(matrix.os, 'macos')
+        run: brew install bats-core
+
+      - name: Run tests
+        if: startsWith(matrix.os, 'macos')
+        run: make test

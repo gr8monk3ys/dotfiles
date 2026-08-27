@@ -1,0 +1,106 @@
+permissions: read-all
+
+name: Lint
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  gitleaks:
+    name: Gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
+
+      - name: Run gitleaks scan
+        run: |
+          docker run --rm \
+            -v "$PWD:/repo" \
+            ghcr.io/gitleaks/gitleaks:latest \
+            detect --source /repo --no-git --redact --verbose
+
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@00b27aa7cb85167568cb48a3838b75f4265f2bca
+        with:
+          scandir: './bin'
+          severity: warning
+          ignore_paths: |
+            .github
+            test
+
+  markdownlint:
+    name: Markdown Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Run markdownlint
+        uses: articulate/actions-markdownlint@17b8abe7407cd17590c006ecc837c35e1ac3ed83
+        with:
+          config: .markdownlint.json
+          files: '**/*.md'
+          ignore: |
+            .github
+            test
+        continue-on-error: true
+
+  validate-package-files:
+    name: Validate Package Files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Check Brewfile format
+        run: |
+          grep -E "^(brew|tap|cask)" install/Brewfile || exit 1
+
+      - name: Check npmfile format
+        run: |
+          while IFS= read -r line; do
+            [[ -z "$line" ]] && continue
+            [[ "$line" =~ ^# ]] && continue
+            echo "Validating: $line"
+          done < install/npmfile
+
+      - name: Check Rustfile format
+        run: |
+          while IFS= read -r line; do
+            [[ -z "$line" ]] && continue
+            [[ "$line" =~ ^# ]] && continue
+            echo "Validating: $line"
+          done < install/Rustfile
+
+      - name: Verify all package files exist
+        run: |
+          test -f install/Brewfile
+          test -f install/Caskfile
+          test -f install/npmfile
+          test -f install/Rustfile
+          test -f install/Codefile
+          test -f install/pacmanfile
+          test -f install/duti
+
+  validate-doc-links:
+    name: Validate Doc Links
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Validate markdown links
+        run: bin/validate-doc-links

@@ -268,7 +268,7 @@ Top-level directories, one sentence each.
 - **`bin/`** — Helper scripts: platform detection, `dotfiles-doctor/update/backup/restore/bench-shell/worktree/sync/why`, and the validators `validate-doc-links`, `validate-tool-docs`, `check-alias-references`. See `bin/README.md`.
 - **`install/`** — Package manifests: `Brewfile`, `Caskfile`, `npmfile`, `Rustfile`, `pacmanfile`, `Codefile` (VSCodium extensions), `duti` (macOS file associations).
 - **`test/`** — BATS test suite. Run with `make test`. Pattern: `test_*.bats`, helpers in `test_helper/`.
-- **`.github/`** — `CODEOWNERS` only. There is no CI; `make verify` before pushing is the gate. `.pre-commit-config.yaml` is available for local hooks (`pre-commit install`).
+- **`.github/`** — `CODEOWNERS`, Dependabot for Actions, and the CI workflows (`test.yml`, `lint.yml`, `install.yml`, weekly `arch-smoke.yml`). `make verify` before pushing is still the local gate. `.pre-commit-config.yaml` is available for local hooks (`pre-commit install`).
 - **`docs/`** — `TOOLS.md` (the tool catalog) plus `superpowers/plans/` and `superpowers/specs/` for non-trivial changes.
 
 The Stow target is `~/.config/`. The only exception is `.zshenv`, which is manually symlinked from the repo root to `~/.zshenv` because Zsh must find it in `$HOME`.
@@ -391,7 +391,7 @@ Conventional-Commit style (`feat:`, `fix:`, `chore:`, optional scope); one focus
 change per commit. Branch from the default branch, keep the PR small, describe what
 was done and how it was validated. Before opening or pushing:
 
-- `make test` passes and `make verify` succeeds — there is no CI; this is the gate.
+- `make test` passes and `make verify` succeeds locally; CI runs the same suite on macOS and Ubuntu on every PR.
 - Docs updated when behavior or commands change.
 - No secrets. Machine-specific values go in local files
   (`~/.config/zsh/zshrc.local`, `~/.config/git/config.local`), never in git.
