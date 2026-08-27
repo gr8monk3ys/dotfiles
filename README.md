@@ -18,6 +18,9 @@
 
 **A keyboard-driven development environment for macOS (and, partially, Linux)**
 
+[![Tests](https://img.shields.io/github/actions/workflow/status/gr8monk3ys/dotfiles/test.yml?branch=main&label=tests&style=flat-square&logo=github)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/test.yml)
+[![Install](https://img.shields.io/github/actions/workflow/status/gr8monk3ys/dotfiles/install.yml?branch=main&label=install&style=flat-square&logo=github)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/install.yml)
+[![Lint](https://img.shields.io/github/actions/workflow/status/gr8monk3ys/dotfiles/lint.yml?branch=main&label=lint&style=flat-square&logo=github)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/lint.yml)
 [![License](https://img.shields.io/badge/license-GPL--3.0-98c379?style=flat-square)](LICENSE)
 [![Theme](https://img.shields.io/badge/theme-OneDark-61afef?style=flat-square)](#-theme)
 
