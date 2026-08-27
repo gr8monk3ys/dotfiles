@@ -20,7 +20,7 @@ jobs:
           DOTFILES_ASSUME_YES: "1"
           DOTFILES_MACHINE_TYPE: "personal"
           DOTFILES_DIR: "${{ github.workspace }}/.dotfiles-install-test"
-          DOTFILES_BRANCH: "${{ github.ref_name }}"
+          DOTFILES_BRANCH: "${{ github.head_ref || github.ref_name }}"
         run: |
           curl -fsSL "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/install.sh" | bash
           test -L "$HOME/.zshenv"

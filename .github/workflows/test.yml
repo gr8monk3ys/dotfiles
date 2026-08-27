@@ -25,6 +25,7 @@ jobs:
         run: |
           brew install bats-core
           brew tap bats-core/bats-core
+          brew trust bats-core/bats-core 2>/dev/null || true   # Homebrew >= 5 tap-trust gate
           brew install bats-support bats-assert
 
       - name: Install BATS and libraries (Linux)
