@@ -10,7 +10,7 @@ dotfiles color scheme.
 ### OneDark Colors Used
 
 | Element | Color | Hex |
-|---------|-------|-----|
+| ---| ---| ---|
 | Directories | Blue | `#61afef` |
 | Executables | Green | `#98c379` |
 | Symlinks | Cyan | `#56b6c2` |

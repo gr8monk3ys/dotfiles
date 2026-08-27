@@ -5,7 +5,7 @@ System-wide Vim-style navigation for macOS.
 ## Key Mappings
 
 | From | To | Notes |
-|------|-----|-------|
+| ---| ---| ---|
 | Left Ctrl + h/j/k/l | Arrow keys | Works with any additional modifier (Shift for selection, etc.) |
 | Right Cmd + h/j/k/l | Arrow keys | Alternative modifier for convenience |
 
