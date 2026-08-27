@@ -20,7 +20,7 @@ export ACCEPT_EULA=Y
         rust-packages duti bun pacman-packages brew-packages \
         help \
         sync-install sync-uninstall sync-status sync-run \
-        test-docker test-docker-arch test-docker-interactive
+        test-docker test-docker-arch test-docker-interactive verify-docker
 
 all: $(OS)
 
@@ -209,8 +209,15 @@ test-setup:
 		exit 1; \
 	fi
 
-verify: verify-shell verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-tests
+verify: verify-shell verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-tests verify-docker
 	@echo "✓ Verification complete"
+
+# The container test is the only check that exercises the fresh-install path.
+# Runs when a Docker daemon is reachable; otherwise says so loudly and moves on.
+verify-docker:
+	@if [ -n "$(SKIP_DOCKER)" ]; then echo "Skipping container test (SKIP_DOCKER set)"; \
+	elif docker info >/dev/null 2>&1; then $(MAKE) test-docker; \
+	else echo "⚠️  Docker not reachable; fresh-install container test SKIPPED (run 'make test-docker' where Docker exists)"; fi
 
 verify-shell:
 	@echo "Running shell syntax checks..."

@@ -29,13 +29,6 @@ if [[ -d "$HOME/.cargo/bin" ]]; then
   export PATH="$HOME/.cargo/bin:$PATH"
 fi
 
-# Add common Nix profile paths when Nix is installed
-for dir in "/nix/var/nix/profiles/default/bin" "$HOME/.nix-profile/bin"; do
-  if [[ -d "$dir" ]] && [[ ":$PATH:" != *":$dir:"* ]]; then
-    export PATH="$dir:$PATH"
-  fi
-done
-
 # cleaning up the home folder
 export LESSHISTFILE="-"
 export ZDOTDIR="$XDG_CONFIG_HOME/zsh"
