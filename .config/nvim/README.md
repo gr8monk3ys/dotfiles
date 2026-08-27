@@ -37,7 +37,7 @@ The leader key is `,` (comma).
 ### General Navigation
 
 | Key | Mode | Action |
-| ---| ---| ---|
+| --- | --- | --- |
 | `<Space>` | Normal | Center screen on cursor |
 | `<C-x>` | Normal | Next buffer |
 | `<C-z>` | Normal | Previous buffer |
@@ -50,14 +50,14 @@ The leader key is `,` (comma).
 ### File Explorer (nvim-tree)
 
 | Key | Mode | Action |
-| ---| ---| ---|
+| --- | --- | --- |
 | `<C-a>` | Normal | Toggle file tree sidebar |
 | `<C-r>` | Normal | Refresh file tree |
 
 ### Fuzzy Finding (Telescope)
 
 | Key | Mode | Action |
-| ---| ---| ---|
+| --- | --- | --- |
 | `<C-p>` | Normal | Find files (including dotfiles) |
 | `<C-g>` | Normal | Live grep across project |
 | `<C-b>` | Normal | Search git branches |
@@ -65,7 +65,7 @@ The leader key is `,` (comma).
 ### LSP (Language Server)
 
 | Key | Mode | Action |
-| ---| ---| ---|
+| --- | --- | --- |
 | `gd` | Normal | Go to definition |
 | `gD` | Normal | Go to declaration |
 | `gr` | Normal | Go to references |
@@ -78,7 +78,7 @@ The leader key is `,` (comma).
 ### Git (Gitsigns)
 
 | Key | Mode | Action |
-| ---| ---| ---|
+| --- | --- | --- |
 | `]c` | Normal | Next hunk |
 | `[c` | Normal | Previous hunk |
 | `<Leader>hs` | Normal | Stage hunk |
@@ -88,13 +88,13 @@ The leader key is `,` (comma).
 ### Terminal
 
 | Key | Mode | Action |
-| ---| ---| ---|
+| --- | --- | --- |
 | `<C-t>` | Normal/Terminal | Toggle floating terminal |
 
 ### Quick Actions
 
 | Key | Mode | Action |
-| ---| ---| ---|
+| --- | --- | --- |
 | `<Leader>w` | Normal | Save file |
 | `<Leader>q` | Normal | Quit |
 
@@ -103,7 +103,7 @@ The leader key is `,` (comma).
 ### Core
 
 | Plugin | Purpose |
-| ---| ---|
+| --- | --- |
 | [lazy.nvim](https://github.com/folke/lazy.nvim) | Plugin manager with lazy-loading |
 | [onedark.nvim](https://github.com/navarasu/onedark.nvim) | Color scheme (OneDark) |
 | [which-key.nvim](https://github.com/folke/which-key.nvim) | Keybinding hints and discovery |
@@ -111,7 +111,7 @@ The leader key is `,` (comma).
 ### File Navigation
 
 | Plugin | Purpose |
-| ---| ---|
+| --- | --- |
 | [nvim-tree.lua](https://github.com/kyazdani42/nvim-tree.lua) | File explorer sidebar |
 | [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) | Fuzzy finder for files, grep, branches |
 | [dashboard-nvim](https://github.com/nvimdev/dashboard-nvim) | Start screen with quick actions |
@@ -119,7 +119,7 @@ The leader key is `,` (comma).
 ### UI Enhancements
 
 | Plugin | Purpose |
-| ---| ---|
+| --- | --- |
 | [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim) | Status line |
 | [bufferline.nvim](https://github.com/akinsho/bufferline.nvim) | Buffer tabs |
 | [indent-blankline.nvim](https://github.com/lukas-reineke/indent-blankline.nvim) | Indentation guides |
@@ -129,7 +129,7 @@ The leader key is `,` (comma).
 ### LSP & Completion
 
 | Plugin | Purpose |
-| ---| ---|
+| --- | --- |
 | [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) | LSP configuration |
 | [lspsaga.nvim](https://github.com/nvimdev/lspsaga.nvim) | LSP UI enhancements |
 | [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) | Autocompletion engine |
@@ -143,20 +143,20 @@ The leader key is `,` (comma).
 ### Git
 
 | Plugin | Purpose |
-| ---| ---|
+| --- | --- |
 | [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) | Git decorations, blame, hunks |
 
 ### Syntax & Formatting
 
 | Plugin | Purpose |
-| ---| ---|
+| --- | --- |
 | [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter) | Syntax highlighting and parsing |
 | [conform.nvim](https://github.com/stevearc/conform.nvim) | Format on save |
 
 ### Editing
 
 | Plugin | Purpose |
-| ---| ---|
+| --- | --- |
 | [nvim-surround](https://github.com/kylechui/nvim-surround) | Surround text objects |
 | [vim-visual-multi](https://github.com/mg979/vim-visual-multi) | Multiple cursors (`<C-n>`) |
 | [vim-endwise](https://github.com/tpope/vim-endwise) | Auto-add `end` in Ruby, Lua, etc. |
@@ -167,7 +167,7 @@ The leader key is `,` (comma).
 The following language servers are auto-configured when available:
 
 | Language | Server | Install Command |
-| ---| ---| ---|
+| --- | --- | --- |
 | Go | gopls | `go install golang.org/x/tools/gopls@latest` |
 | Python | pyright | `npm install -g pyright` |
 | Rust | rust-analyzer | `rustup component add rust-analyzer` |
@@ -181,7 +181,7 @@ The following language servers are auto-configured when available:
 Format-on-save is configured via Conform.nvim for these languages:
 
 | Language | Formatter(s) |
-| ---| ---|
+| --- | --- |
 | Go | goimports, gofumpt |
 | JavaScript/TypeScript | biome |
 | JSON | jq |
