@@ -113,6 +113,7 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 - **Installed via:** Brewfile
 
 ### rustup
+
 - **Why:** The Rust toolchain itself; nothing else installs `cargo`, and `install/Rustfile` needs it. `make rust-packages` runs `rustup default stable` on first use.
 - **Installed via:** Brewfile
 
