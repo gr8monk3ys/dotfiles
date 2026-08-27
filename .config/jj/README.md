@@ -5,7 +5,7 @@
 ## Why Jujutsu?
 
 | Feature | Git | Jujutsu |
-|---------|-----|---------|
+| --- | --- | --- |
 | Working copy | Must be tracked | Auto-snapshotted |
 | Conflicts | Block workflow | First-class citizens |
 | Rebasing | Manual, error-prone | Automatic |
@@ -80,7 +80,7 @@ Conflicts don't block you. You can continue working and resolve later.
 ## Command Comparison
 
 | Git | Jujutsu | Description |
-|-----|---------|-------------|
+| --- | --- | --- |
 | `git status` | `jj status` | View status |
 | `git add . && git commit` | `jj describe` | Commit changes |
 | `git checkout -b` | `jj new` | New change |

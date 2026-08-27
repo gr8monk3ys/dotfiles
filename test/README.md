@@ -181,11 +181,11 @@ teardown() {
 
 ## Continuous Integration
 
-`.github/workflows/test.yml` runs this suite on macOS and Ubuntu for every PR and
-push to `main`; `install.yml` runs the real `curl | bash` installer; `lint.yml`
-runs shellcheck/markdownlint/gitleaks; `arch-smoke.yml` runs the Arch container
-weekly. `make verify` (which includes the Ubuntu container test when Docker is
-present) is the local equivalent — run it before pushing.
+`.github/workflows/ci.yml` runs on every PR and push to `main`: `SKIP_DOCKER=1
+make verify` plus a link/unlink round-trip on macOS and Ubuntu, shellcheck and
+markdownlint with the doc-link/tool-catalog/stale-ref validators, and the real
+`curl | bash` installer on Ubuntu. `make verify` (which adds the Ubuntu container
+test when Docker is present) is the local equivalent — run it before pushing.
 
 ## Test Coverage
 
