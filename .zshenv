@@ -40,3 +40,6 @@ export MANPAGER="nvim +Man!"
 # set the localization. LANG (not LC_ALL) so finer LC_* settings still
 # apply and boxes without this locale don't warn on every command.
 export LANG=en_US.UTF-8
+
+# autoapply mail access (secret lives in the 600 file, not here)
+[ -f ~/.config/autoapply/imap.env ] && . ~/.config/autoapply/imap.env
