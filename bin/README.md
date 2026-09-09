@@ -244,7 +244,7 @@ source "$SCRIPT_DIR/lib/ui.sh"
 ### [lib/preamble.sh](lib/preamble.sh)
 
 Checkout resolution (`DOTFILES_DIR`) and the `command_exists` predicate,
-sourced by the `dotfiles-*` scripts. `SCRIPT_DIR` is deliberately *not* here —
+sourced by the `dotfiles-*` scripts. `SCRIPT_DIR` is deliberately _not_ here —
 a script needs it to find this file — so every caller starts with:
 
 ```bash
@@ -305,7 +305,7 @@ Point it at another checkout with `DOTFILES_DIR`.
 ### [validate-doctor-tools](validate-doctor-tools)
 
 Fails when `dotfiles-doctor`'s probed tool lists and the `install/` manifests
-drift apart. Doctor probes *commands* (`rg`); manifests list *packages*
+drift apart. Doctor probes _commands_ (`rg`); manifests list _packages_
 (`ripgrep`), so the mapping and the deliberate exemptions live in
 `test/allowlist/command-packages.txt`.
 
