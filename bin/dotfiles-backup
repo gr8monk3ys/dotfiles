@@ -9,13 +9,10 @@ readonly TIMESTAMP
 readonly BACKUP_PATH="$BACKUP_DIR/$TIMESTAMP"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/preamble.sh
+source "$SCRIPT_DIR/lib/preamble.sh"
 # shellcheck source=lib/ui.sh
 source "$SCRIPT_DIR/lib/ui.sh"
-
-# Check if command exists
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
-}
 
 # Setup backup directory
 setup_backup_dir() {
@@ -175,7 +172,7 @@ EOF
     } >> "$manifest"
 
     # Add system info
-    if [[ "$OSTYPE" == "darwin"* ]]; then
+    if "$SCRIPT_DIR/platform" is-macos; then
         echo "" >> "$manifest"
         echo "macOS Version: $(sw_vers -productVersion)" >> "$manifest"
     fi

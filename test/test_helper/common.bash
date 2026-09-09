@@ -70,6 +70,9 @@ cleanup_test_env() {
     fi
 }
 
+# Platform checks are intentionally inline rather than delegated to
+# bin/platform: a helper that calls the module under test would make
+# platform-conditional tests *skip* instead of fail when the module breaks.
 # Check if running on macOS
 is_macos() {
     [[ "$OSTYPE" == "darwin"* ]]

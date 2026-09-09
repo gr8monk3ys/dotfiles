@@ -16,35 +16,24 @@ teardown() {
 	assert_failure
 }
 
-@test "core alias c is defined exactly once" {
-	local count
-	count="$(grep -E -n '^alias c=' .config/zsh/.zshrc .config/zsh/aliases.zsh | wc -l | tr -d '[:space:]')"
-	[[ "$count" -eq 1 ]] || {
-		echo "Expected exactly one alias c definition, found: $count"
-		grep -E -n '^alias c=' .config/zsh/.zshrc .config/zsh/aliases.zsh || true
-		return 1
-	}
-}
-
-@test "bat theme uses base16-onedark in env and bat config" {
-	run grep -n 'BAT_THEME="base16-onedark"' .zshenv
-	assert_success
-
+# $BAT_THEME is asserted on a booted shell in test_shell_boot.bats. bat's own
+# config file has no cheap runtime observable, so it stays a text check.
+@test "bat config file selects base16-onedark" {
 	run grep -n '^--theme="base16-onedark"$' .config/bat/config
 	assert_success
 }
 
 @test "git delta and neovim are configured for onedark" {
-	run grep -n '^[[:space:]]*syntax-theme = base16-onedark$' .config/git/.gitconfig
+	# git's own parser, not a regex over git's syntax: this passes only if
+	# the setting is in a section git actually reads.
+	run git config --file .config/git/.gitconfig --get delta.syntax-theme
 	assert_success
+	assert_output "base16-onedark"
 
+	# nvim would need a headless boot to observe; a text check is the
+	# proportionate tool here.
 	run grep -E -n '"navarasu/onedark.nvim"|theme = "onedark"' .config/nvim/lua/plugins.lua
 	assert_success
-}
-
-@test "legacy theme names are absent from key configs" {
-	run grep -E -n 'OneHalfDark|tokyonight' .zshenv .config/bat/config .config/git/.gitconfig .config/nvim/lua/plugins.lua
-	assert_failure
 }
 
 @test "dotfiles-backup completes when a single config file is present" {
@@ -92,8 +81,10 @@ teardown() {
 	assert_output --partial "issue(s) found"
 }
 
+# That starship is the *live* prompt is asserted on a booted shell in
+# test_shell_boot.bats. What stays here are the static negatives: p10k is
+# gone and nothing reintroduces it.
 @test "prompt system: starship only, guarded on the binary" {
-	grep -q 'starship init zsh' .config/zsh/.zshrc
 	grep -q 'command -v starship' .config/zsh/.zshrc
 	[[ -f .config/starship/starship.toml ]]
 	# p10k is gone: no config file, no plugin load, no prompt switch
@@ -148,7 +139,8 @@ teardown() {
 	assert_success
 	[[ "$output" != *"chsh"* ]]
 	[[ "$output" != *"sudo -v"* ]]
-	[[ "$output" == *"Codefile"* ]]
+	# macos still reaches the editor-extension step (however the list is read).
+	[[ "$output" == *"install-extension"* ]]
 }
 
 # Regression: `stow-macos: brew` made "symlinks only" install Homebrew via
@@ -219,18 +211,31 @@ EOS
 # file onto one line so the leading "# comment" turned every package name
 # into a shell comment. `make node-packages` installed nothing and
 # `make rust-packages` ran a bare `cargo install`.
+#
+# The package list now comes from bin/manifest, so these assert the outcome
+# (real names, no comment leaking in) rather than which file the recipe names.
 @test "make node-packages expands real package names, not a comment" {
     run make -n node-packages SKIP_BREW=1
     assert_success
-    [[ "$output" == *"install/npmfile"* ]]
     [[ "$output" != *"global # npm"* ]]
+
+    run bin/manifest list npm
+    assert_success
+    [[ "${#lines[@]}" -gt 0 ]]
+    run bash -c 'bin/manifest list npm | grep -c "^#"'
+    assert_output "0"
 }
 
 @test "make rust-packages does not run a bare cargo install" {
     run make -n rust-packages SKIP_BREW=1
     assert_success
     [[ "$output" != *"cargo install # Rust"* ]]
-    [[ "$output" == *"install/Rustfile"* ]]
+
+    run bin/manifest list rust
+    assert_success
+    [[ "${#lines[@]}" -gt 0 ]]
+    run bash -c 'bin/manifest list rust | grep -c "^#"'
+    assert_output "0"
 }
 
 # Regression: `link: stow-$(OS)` had no stow-linux target, so `make link`

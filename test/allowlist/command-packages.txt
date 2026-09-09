@@ -1,0 +1,23 @@
+# test/allowlist/command-packages.txt
+#
+# Maps a command name to the package that provides it, for the cases where
+# they differ, plus the commands no manifest tracks at all.
+#
+# bin/dotfiles-doctor probes *commands* (`rg`); install/ manifests list
+# *packages* (`ripgrep`). Without this mapping the two drift apart silently:
+# removing a package from the Brewfile leaves doctor warning about it
+# forever, and renaming a command leaves doctor probing something nothing
+# installs. bin/validate-doctor-tools checks both directions against it.
+#
+# Format: one entry per line, `command package  # justification`.
+# Use `-` as the package for a command no manifest tracks.
+
+# --- command differs from the package that provides it ---
+rg       ripgrep     # ripgrep installs the `rg` binary
+delta    git-delta   # git-delta installs the `delta` binary
+nvim     neovim      # neovim installs the `nvim` binary
+tldr     tealdeer    # tealdeer is the Rust tldr client; installs `tldr`
+
+# --- tracked by no manifest, deliberately ---
+zsh      -           # login shell; ships with macOS and is a base package on Arch
+stow     -           # bootstrapped by `make link` (brew/pacman), never a manifest entry

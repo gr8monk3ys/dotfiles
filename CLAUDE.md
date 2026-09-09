@@ -34,4 +34,22 @@ into `~/.config/`; `make` drives install, link and verification.
   `test/allowlist/system-tools.txt` — `check-alias-references` fails otherwise.
 - Portable shell only in anything sourced on macOS (no GNU-only flags).
 - Conventional commits; one change per commit; update `docs/TOOLS.md` in the
-  same commit that adds or removes a package.
+  same commit that adds or removes a package. If that package provides a
+  command `dotfiles-doctor` probes, `make verify-doctor-tools` will tell you
+  what else to update.
+- Manifests under `install/` are read only through `bin/manifest`, never
+  parsed inline.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live as GitHub issues in `gr8monk3ys/dotfiles`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical triage roles, each label string equal to its name. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` and `docs/adr/` at the repo root, created lazily. See `docs/agents/domain.md`.

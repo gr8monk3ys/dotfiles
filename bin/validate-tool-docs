@@ -3,16 +3,22 @@
 # manifests, and that every documented entry is still installed somewhere.
 #
 # Coverage rules:
-#   - Brewfile `brew` lines (tap-qualified names match on the last segment)
-#   - Caskfile / Caskfile.extra `cask` lines, except `font-*` (covered by the Fonts section)
-#   - npmfile / Rustfile / pacmanfile non-comment lines
+#   - Package names come from bin/manifest (the single manifest reader)
+#   - Caskfile / Caskfile.extra entries, except `font-*` (covered by the Fonts section)
+#   - Codefile and duti are not package manifests and are not checked
 #   - Entries under "## Not installed by manifests" are exempt from the
 #     reverse check (they document deliberate gaps and system tools).
 
 set -euo pipefail
 
+# Resolve the module from this script's own directory, then point it at
+# ROOT_DIR: the validator is run against fixture roots that have no bin/.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MANIFEST="$SCRIPT_DIR/manifest"
+
 ROOT_DIR="${1:-.}"
 cd "$ROOT_DIR"
+ROOT_ABS="$PWD"
 
 CATALOG="docs/TOOLS.md"
 status=0
@@ -22,10 +28,16 @@ if [[ ! -f "$CATALOG" ]]; then
     exit 1
 fi
 
+# font-* casks are covered by the catalog's Fonts section, so they are
+# filtered here rather than in the module: which casks this validator cares
+# about is its policy, not a parsing rule.
 manifest_tools() {
-    sed -nE 's|^brew "([^"]+)".*|\1|p' install/Brewfile | awk -F/ '{print $NF}'
-    sed -nE 's|^cask "([^"]+)".*|\1|p' install/Caskfile install/Caskfile.extra | grep -v '^font-'
-    grep -hvE '^[[:space:]]*(#|$)' install/npmfile install/Rustfile install/pacmanfile
+    DOTFILES_DIR="$ROOT_ABS" "$MANIFEST" list brew
+    { DOTFILES_DIR="$ROOT_ABS" "$MANIFEST" list cask
+      DOTFILES_DIR="$ROOT_ABS" "$MANIFEST" list cask-extra; } | grep -v '^font-'
+    DOTFILES_DIR="$ROOT_ABS" "$MANIFEST" list npm
+    DOTFILES_DIR="$ROOT_ABS" "$MANIFEST" list rust
+    DOTFILES_DIR="$ROOT_ABS" "$MANIFEST" list pacman
 }
 
 catalog_entries() {

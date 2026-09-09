@@ -12,7 +12,7 @@ export STOW_DIR = $(DOTFILES_DIR)
 export ACCEPT_EULA=Y
 
 .PHONY: all macos arch link unlink link-dry-run test test-setup verify \
-        verify-shell verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-tests \
+        verify-shell verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-doctor-tools verify-tests \
         doctor update backup worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
         brew git packages-macos packages-arch core-macos core-arch \
@@ -92,7 +92,7 @@ unlink: stow-$(OS)
 	@echo "Dotfiles unlinked successfully!"
 
 brew:
-	is-executable brew || curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh | bash
+	bin/platform has brew || curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh | bash
 
 git: brew
 	brew install git git-extras
@@ -109,7 +109,7 @@ pacman-packages:
 # taps the Brewfile declares; a no-op on Homebrew versions without `trust`.
 brew-taps: brew
 	@if [ -z "$(SKIP_BREW)" ] && brew help trust >/dev/null 2>&1; then \
-		grep -oE '^tap "[^"]+"' $(DOTFILES_DIR)/install/Brewfile | cut -d'"' -f2 | \
+		$(DOTFILES_DIR)/bin/manifest taps | \
 			while read -r tap; do brew trust "$$tap" >/dev/null 2>&1 || brew trust "$$tap"; done; \
 	fi
 
@@ -144,16 +144,14 @@ cask-apps-extra: brew brew-taps
 vscode-extensions: cask-apps
 	@if command -v codium >/dev/null 2>&1; then \
 		echo "Installing extensions with VSCodium..."; \
-		while IFS= read -r ext || [[ -n "$$ext" ]]; do \
-			[[ -z "$$ext" || "$$ext" =~ ^# ]] && continue; \
+		$(DOTFILES_DIR)/bin/manifest list code | while read -r ext; do \
 			codium --install-extension "$$ext" || true; \
-		done < install/Codefile; \
+		done; \
 	elif command -v code >/dev/null 2>&1; then \
 		echo "Installing extensions with VS Code..."; \
-		while IFS= read -r ext || [[ -n "$$ext" ]]; do \
-			[[ -z "$$ext" || "$$ext" =~ ^# ]] && continue; \
+		$(DOTFILES_DIR)/bin/manifest list code | while read -r ext; do \
 			code --install-extension "$$ext" || true; \
-		done < install/Codefile; \
+		done; \
 	else \
 		echo "⚠️  Neither code nor codium found. Skipping extension installation."; \
 	fi
@@ -163,7 +161,7 @@ node-packages: brew-packages
 	@if [ -n "$(SKIP_NPM)" ]; then \
 		echo "Skipping npm packages"; \
 	else \
-		grep -Ev '^\s*(#|$$)' install/npmfile | xargs npm install --force --location global; \
+		$(DOTFILES_DIR)/bin/manifest list npm | xargs npm install --force --location global; \
 	fi
 
 rust-packages: brew-packages
@@ -172,7 +170,7 @@ rust-packages: brew-packages
 	else \
 		export PATH="$$HOME/.cargo/bin:$$(brew --prefix rustup 2>/dev/null)/bin:$$PATH"; \
 		command -v cargo >/dev/null 2>&1 || rustup default stable; \
-		grep -Ev '^\s*(#|$$)' install/Rustfile | xargs -n1 cargo install; \
+		$(DOTFILES_DIR)/bin/manifest list rust | xargs -n1 cargo install; \
 	fi
 
 duti:
@@ -216,7 +214,7 @@ test-setup:
 		exit 1; \
 	fi
 
-verify: verify-shell verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-tests verify-docker
+verify: verify-shell verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-doctor-tools verify-tests verify-docker
 	@echo "✓ Verification complete"
 
 # The container test is the only check that exercises the fresh-install path.
@@ -268,6 +266,10 @@ verify-shell-surface:
 verify-tool-docs:
 	@echo "Validating tool catalog..."
 	@bin/validate-tool-docs
+
+verify-doctor-tools:
+	@echo "Validating dotfiles-doctor tool lists against manifests..."
+	@bin/validate-doctor-tools
 
 verify-tests:
 	@$(MAKE) test

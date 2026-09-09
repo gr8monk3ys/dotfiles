@@ -6,12 +6,11 @@
 #   platform detect           # Output: macos, arch, linux, or unknown
 #   platform arch             # Output: arm64, x86_64, or unknown
 #   platform is-macos         # Exit 0 if macOS, 1 otherwise
-#   platform is-arch          # Exit 0 if Arch Linux, 1 otherwise
 #   platform is-omarchy       # Exit 0 if Omarchy (Arch + Hyprland), 1 otherwise
 #   platform is-linux         # Exit 0 if Linux, 1 otherwise
 #   platform is-arm64         # Exit 0 if ARM64, 1 otherwise
 #   platform has <cmd>        # Exit 0 if command exists, 1 otherwise
-#   platform run-if <cmd> ... # Run command only if it exists
+#   platform file-mode <path> # Octal permission bits (BSD/GNU stat)
 #   platform select <true> <false> <check>
 #                             # Output <true> if check passes, <false> otherwise
 #
@@ -49,6 +48,18 @@ is_omarchy() {
         { [[ -r /etc/os-release ]] && grep -qi '^\(ID\|NAME\)=.*omarchy' /etc/os-release; }
 }
 
+# BSD and GNU stat spell the octal-permissions format differently, and the
+# obvious `stat -f ... || stat -c ...` fallback does not work: GNU stat
+# accepts -f (as --file-system) and exits 0, so the BSD form silently wins
+# on Linux and prints the wrong thing.
+file_mode() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        stat -f "%Lp" "$1" 2>/dev/null
+    else
+        stat -c "%a" "$1" 2>/dev/null
+    fi
+}
+
 detect_arch() {
     case "$(uname -m)" in
         arm64|aarch64)
@@ -77,9 +88,6 @@ main() {
         is-macos)
             [[ "$OSTYPE" =~ ^darwin ]]
             ;;
-        is-arch)
-            [[ -f /etc/arch-release ]]
-            ;;
         is-omarchy)
             is_omarchy
             ;;
@@ -92,10 +100,8 @@ main() {
         has)
             command -v "$1" >/dev/null 2>&1
             ;;
-        run-if)
-            if command -v "$1" >/dev/null 2>&1; then
-                "$@"
-            fi
+        file-mode)
+            file_mode "$1"
             ;;
         select)
             # Usage: platform select <if-true> <if-false> <check-command>
@@ -117,12 +123,11 @@ Usage:
   platform detect           Output: macos, arch, linux, or unknown
   platform arch             Output: arm64, x86_64, or unknown
   platform is-macos         Exit 0 if macOS, 1 otherwise
-  platform is-arch          Exit 0 if Arch Linux, 1 otherwise
   platform is-omarchy       Exit 0 if Omarchy (~/.local/share/omarchy), 1 otherwise
   platform is-linux         Exit 0 if Linux, 1 otherwise
   platform is-arm64         Exit 0 if ARM64, 1 otherwise
   platform has <cmd>        Exit 0 if command exists, 1 otherwise
-  platform run-if <cmd> ... Run command only if it exists
+  platform file-mode <path> Octal permission bits (BSD/GNU stat)
   platform select <t> <f> <check>
                             Output <t> if check passes, <f> otherwise
 

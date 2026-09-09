@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+# Validate that bin/dotfiles-doctor's probed commands and the install
+# manifests have not drifted apart.
+#
+# Doctor probes *commands*; manifests list *packages*. The mapping between
+# them (and the commands no manifest tracks) lives in
+# test/allowlist/command-packages.txt.
+#
+# Checks both directions:
+#   forward  every command doctor probes resolves to a package in some
+#            manifest, either directly or via the mapping, or is explicitly
+#            exempt ("-"). Catches: doctor probes a tool nothing installs.
+#   reverse  every mapping entry names a package that is still in a manifest.
+#            Catches: a package removed from the Brewfile while doctor keeps
+#            warning about its command forever.
+#
+# Usage: validate-doctor-tools [ROOT_DIR]
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MANIFEST="$SCRIPT_DIR/manifest"
+DOCTOR="$SCRIPT_DIR/dotfiles-doctor"
+
+ROOT_DIR="${1:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+cd "$ROOT_DIR"
+ROOT_ABS="$PWD"
+
+MAP_FILE="test/allowlist/command-packages.txt"
+status=0
+
+if [[ ! -f "$MAP_FILE" ]]; then
+    echo "Missing $MAP_FILE"
+    exit 1
+fi
+
+# Every package name across every manifest kind.
+all_packages() {
+    local kind
+    for kind in $(DOTFILES_DIR="$ROOT_ABS" "$MANIFEST" kinds); do
+        DOTFILES_DIR="$ROOT_ABS" "$MANIFEST" list "$kind"
+    done
+}
+
+# command -> package, dropping comments and blank lines.
+map_entries() {
+    awk '/^[[:space:]]*#/ { next } /^[[:space:]]*$/ { next } { print $1, $2 }' "$MAP_FILE"
+}
+
+packages="$(all_packages | sort -u)"
+has_package() { printf '%s\n' "$packages" | grep -Fxq "$1"; }
+
+mapped_package() {
+    local cmd="$1" c p
+    while read -r c p; do
+        [[ "$c" == "$cmd" ]] && { echo "$p"; return 0; }
+    done < <(map_entries)
+    return 1
+}
+
+# --- forward: doctor's commands all resolve ---
+while read -r cmd; do
+    [[ -n "$cmd" ]] || continue
+
+    if has_package "$cmd"; then
+        continue
+    fi
+
+    if pkg="$(mapped_package "$cmd")"; then
+        if [[ "$pkg" == "-" ]]; then
+            continue
+        fi
+        if has_package "$pkg"; then
+            continue
+        fi
+        echo "dotfiles-doctor probes '$cmd', mapped to package '$pkg', which is in no manifest"
+        status=1
+        continue
+    fi
+
+    echo "dotfiles-doctor probes '$cmd', which is in no manifest and has no entry in $MAP_FILE"
+    status=1
+done < <("$DOCTOR" --list-checked-tools)
+
+# --- reverse: mapping entries still point at something real ---
+probed="$("$DOCTOR" --list-checked-tools | sort -u)"
+while read -r cmd pkg; do
+    [[ -n "$cmd" ]] || continue
+
+    if ! printf '%s\n' "$probed" | grep -Fxq "$cmd"; then
+        echo "$MAP_FILE maps '$cmd', which dotfiles-doctor no longer probes"
+        status=1
+    fi
+
+    if [[ "$pkg" != "-" ]] && ! has_package "$pkg"; then
+        echo "$MAP_FILE maps '$cmd' to package '$pkg', which is in no manifest"
+        status=1
+    fi
+done < <(map_entries)
+
+if [[ "$status" -eq 0 ]]; then
+    echo "✓ dotfiles-doctor tool lists are in sync with install manifests."
+fi
+
+exit "$status"

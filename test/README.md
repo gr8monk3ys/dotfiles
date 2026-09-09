@@ -101,7 +101,6 @@ test/
 Tests for utility scripts in `bin/`:
 
 - Platform detection helper (platform)
-- Executable checker (is-executable)
 - Utility scripts (dotfiles-doctor, dotfiles-update, dotfiles-backup, dotfiles-restore, dotfiles-bench-shell, dotfiles-worktree)
 
 ### test_platform.bats

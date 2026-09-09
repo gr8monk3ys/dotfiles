@@ -3,65 +3,91 @@
 
 set -euo pipefail
 
-# Default to the checkout this script lives in (works through symlinks), so
-# running bin/dotfiles-* from any clone operates on that clone.
-readonly DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)}"
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/preamble.sh
+source "$SCRIPT_DIR/lib/preamble.sh"
 # shellcheck source=lib/ui.sh
 source "$SCRIPT_DIR/lib/ui.sh"
+# shellcheck source=lib/git-sync.sh
+source "$SCRIPT_DIR/lib/git-sync.sh"
+
+# Resolved once: bin/platform is an executable (the Makefile cannot source
+# it), so cache the answer rather than forking per branch. Resolved from this
+# script's own directory, not DOTFILES_DIR: DOTFILES_DIR is the checkout being
+# inspected, which may be a fixture with no bin/.
+PLATFORM="$SCRIPT_DIR/platform"
+PLATFORM_OS="$("$PLATFORM" detect)"
+readonly PLATFORM PLATFORM_OS
 
 # Track overall health
 ISSUES=0
 WARNINGS=0
 
+# The commands this health check probes, by severity. These are *command*
+# names, not package names: `rg` ships in the `ripgrep` package. The mapping
+# and the exemptions live in test/allowlist/command-packages.txt, and
+# bin/validate-doctor-tools fails when these lists and the install manifests
+# drift apart in either direction.
+readonly DOCTOR_CORE_TOOLS=("git" "zsh" "nvim" "stow")
+readonly DOCTOR_ESSENTIAL_TOOLS=("eza" "bat" "fd" "rg" "zoxide" "fzf")
+readonly DOCTOR_NEXTGEN_TOOLS=("yazi" "zellij" "jj" "delta" "atuin")
+readonly DOCTOR_ADDITIONAL_TOOLS=("navi" "broot" "tldr" "gping" "ouch")
+
+# Every probed command, one per line. Consumed by bin/validate-doctor-tools.
+list_checked_tools() {
+    printf '%s\n' \
+        "${DOCTOR_CORE_TOOLS[@]}" \
+        "${DOCTOR_ESSENTIAL_TOOLS[@]}" \
+        "${DOCTOR_NEXTGEN_TOOLS[@]}" \
+        "${DOCTOR_ADDITIONAL_TOOLS[@]}"
+}
+
+# Thin counters over lib/ui.sh's printers: the tally is doctor's own state,
+# the formatting is not.
 check_pass() {
-    echo -e "${GREEN}✓${NC} $1"
+    print_success "$1"
 }
 
 check_fail() {
-    echo -e "${RED}✗${NC} $1"
+    print_error "$1"
     ((++ISSUES))
 }
 
 check_warn() {
-    echo -e "${YELLOW}⚠${NC} $1"
+    print_warn "$1"
     ((++WARNINGS))
 }
 
 check_info() {
-    echo -e "${BLUE}ℹ${NC} $1"
-}
-
-# Check if command exists
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
+    print_info "$1"
 }
 
 # Check System Information
 check_system() {
     print_header "System Information"
 
-    if [[ "$OSTYPE" == "darwin"* ]]; then
+    if [[ "$PLATFORM_OS" == "macos" ]]; then
         check_pass "Operating System: macOS $(sw_vers -productVersion)"
 
         # Check architecture
-        if [[ $(uname -m) == "arm64" ]]; then
+        if [[ "$("$PLATFORM" arch)" == "arm64" ]]; then
             check_pass "Architecture: Apple Silicon (ARM64)"
         else
             check_pass "Architecture: Intel (x86_64)"
         fi
-    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    elif [[ "$PLATFORM_OS" == "arch" || "$PLATFORM_OS" == "linux" ]]; then
         check_pass "Operating System: Linux"
         local distro="Unknown"
         if [[ -r /etc/os-release ]]; then
             distro="$(. /etc/os-release && echo "${PRETTY_NAME:-${NAME:-Unknown}}")"
         fi
         check_info "Distribution: $distro"
-        if "$DOTFILES_DIR/bin/platform" is-omarchy; then
+        if "$PLATFORM" is-omarchy; then
             check_info "Omarchy detected (~/.local/share/omarchy) — see OPERATING.md § Omarchy"
         fi
     else
+        # The module answers the question; the raw value stays as detail,
+        # because "unknown" alone is useless in a bug report.
         check_warn "Operating System: $OSTYPE (Limited support)"
     fi
 
@@ -96,6 +122,22 @@ check_dotfiles() {
             else
                 check_warn "No remote origin configured"
             fi
+
+            # Sync state, offline: compares against the last fetch rather than
+            # contacting the remote, so `doctor` stays fast and works on a
+            # plane. Same module dotfiles-update and dotfiles-sync act on.
+            git_sync_status "$DOTFILES_DIR" no-fetch
+            case "$GIT_SYNC_STATE" in
+                "$GIT_SYNC_CLEAN_BEHIND")
+                    check_warn "Behind origin by $GIT_SYNC_BEHIND commit(s) as of last fetch (run 'dotfiles-update')"
+                    ;;
+                "$GIT_SYNC_DIVERGED")
+                    check_warn "Local and remote have diverged - manual merge required"
+                    ;;
+                "$GIT_SYNC_NO_UPSTREAM")
+                    check_warn "No upstream configured - this checkout can never sync"
+                    ;;
+            esac
         else
             check_warn "Not a git repository"
         fi
@@ -189,7 +231,7 @@ check_package_managers() {
             check_pass "All Homebrew packages up to date"
         fi
     else
-        if [[ "$OSTYPE" == "darwin"* ]]; then
+        if [[ "$PLATFORM_OS" == "macos" ]]; then
             check_fail "Homebrew not installed"
         else
             check_info "Homebrew not installed (macOS only)"
@@ -224,9 +266,7 @@ check_package_managers() {
 check_core_tools() {
     print_header "Core Tools"
 
-    local tools=("git" "zsh" "nvim" "stow")
-
-    for tool in "${tools[@]}"; do
+    for tool in "${DOCTOR_CORE_TOOLS[@]}"; do
         if command_exists "$tool"; then
             check_pass "$tool installed"
         else
@@ -240,8 +280,7 @@ check_modern_tools() {
     print_header "Modern CLI Tools"
 
     # Essential modern tools
-    local essential=("eza" "bat" "fd" "rg" "zoxide" "fzf")
-    for tool in "${essential[@]}"; do
+    for tool in "${DOCTOR_ESSENTIAL_TOOLS[@]}"; do
         if command_exists "$tool"; then
             check_pass "$tool installed"
         else
@@ -250,8 +289,7 @@ check_modern_tools() {
     done
 
     # Next-gen tools (optional but nice to have)
-    local nextgen=("yazi" "zellij" "jj" "delta" "atuin")
-    for tool in "${nextgen[@]}"; do
+    for tool in "${DOCTOR_NEXTGEN_TOOLS[@]}"; do
         if command_exists "$tool"; then
             check_pass "$tool installed"
         else
@@ -260,8 +298,7 @@ check_modern_tools() {
     done
 
     # Additional modern tools
-    local additional=("navi" "broot" "tldr" "gping" "ouch")
-    for tool in "${additional[@]}"; do
+    for tool in "${DOCTOR_ADDITIONAL_TOOLS[@]}"; do
         if command_exists "$tool"; then
             check_pass "$tool installed"
         else
@@ -281,7 +318,7 @@ check_shell_config() {
     login_shell="${login_shell:-$SHELL}"
     if [[ "$login_shell" == *"zsh"* ]]; then
         check_pass "Zsh is login shell"
-    elif "$DOTFILES_DIR/bin/platform" is-omarchy; then
+    elif "$PLATFORM" is-omarchy; then
         # Omarchy ships bash as login shell and its boot chain (SDDM session,
         # ~/.bashrc, omarchy-* helpers) assumes it. Upstream advises against
         # chsh; point the terminal at zsh instead. Details in OPERATING.md.
@@ -308,11 +345,7 @@ check_shell_config() {
 # Octal mode of a path. BSD stat is `-f FORMAT`; on GNU `-f` means
 # "filesystem status" and succeeds, so an `||` fallback never fires.
 file_mode() {
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        stat -f "%Lp" "$1" 2>/dev/null
-    else
-        stat -c "%a" "$1" 2>/dev/null
-    fi
+    "$PLATFORM" file-mode "$1"
 }
 
 # Check file permissions
@@ -401,6 +434,8 @@ EXAMPLES:
     dotfiles-doctor              Run health check
     dotfiles-doctor --help       Show this help
     dotfiles-doctor --verbose    Run with detailed output
+    dotfiles-doctor --list-checked-tools
+                                 List the commands this check probes
 
 EOF
 }
@@ -417,6 +452,10 @@ main() {
             -v|--verbose)
                 set -x
                 shift
+                ;;
+            --list-checked-tools)
+                list_checked_tools
+                exit 0
                 ;;
             *)
                 echo "Unknown option: $1"

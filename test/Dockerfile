@@ -20,9 +20,18 @@ RUN apt-get update && apt-get install -y \
     zsh \
     sudo \
     make \
-    bats \
     locales \
     && rm -rf /var/lib/apt/lists/*
+
+# Ubuntu's `bats` package is 1.2.1, which predates
+# bats_require_minimum_version and `run --separate-stderr`. Installing it
+# made test_shell_boot.bats die with status 127 and silently cost the run
+# two tests. Install bats-core from source instead.
+ARG BATS_VERSION=1.11.0
+RUN git clone --depth 1 --branch "v${BATS_VERSION}" \
+        https://github.com/bats-core/bats-core.git /tmp/bats-core \
+    && /tmp/bats-core/install.sh /usr/local \
+    && rm -rf /tmp/bats-core
 
 # Set up locale
 RUN locale-gen en_US.UTF-8

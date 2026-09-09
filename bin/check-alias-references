@@ -3,8 +3,8 @@
 #
 # Validate that every unconditional alias in .config/zsh/aliases.zsh
 # resolves to a known source: a shell builtin, an entry in an install
-# manifest (Brewfile/Caskfile/Rustfile/npmfile), or an entry in
-# test/allowlist/system-tools.txt.
+# manifest (read via bin/manifest, covering every kind that puts a command
+# on PATH), or an entry in test/allowlist/system-tools.txt.
 #
 # Conditional blocks (`if command -v X &> /dev/null; then ...; fi`) are
 # exempt — the guard itself declares the dependency.
@@ -19,7 +19,7 @@ set -euo pipefail
 DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 ALIASES_FILE="${ALIASES_FILE:-$DOTFILES_DIR/.config/zsh/aliases.zsh}"
 ALLOWLIST_FILE="$DOTFILES_DIR/test/allowlist/system-tools.txt"
-INSTALL_DIR="$DOTFILES_DIR/install"
+MANIFEST="$DOTFILES_DIR/bin/manifest"
 
 # Hardcoded list of POSIX/zsh shell builtins.
 BUILTINS=(
@@ -47,36 +47,27 @@ is_in_allowlist() {
     ' "$ALLOWLIST_FILE" | grep -Fxq "$cmd"
 }
 
-is_in_manifest_quoted() {
-    # Matches Brewfile/Caskfile lines like: brew "name" or cask 'name'
-    local file="$1"
-    local keyword="$2"
-    local cmd="$3"
-    [[ -f "$file" ]] || return 1
-    sed -nE 's/^[[:space:]]*'"$keyword"'[[:space:]]+["'"'"']([^"'"'"']+)["'"'"'].*/\1/p' "$file" \
-        | grep -Fxq "$cmd"
+# Every package name this system installs, from the one manifest reader.
+# Codefile (editor extension IDs) and duti (file associations) are excluded:
+# neither puts a command on PATH.
+manifest_names() {
+    local kind
+    for kind in brew cask cask-extra rust npm pacman; do
+        "$MANIFEST" list "$kind"
+    done
 }
 
-is_in_manifest_bare() {
-    # Matches Rustfile/npmfile bare-name lines, ignoring comments and blanks.
-    local file="$1"
-    local cmd="$2"
-    [[ -f "$file" ]] || return 1
-    awk '
-        /^[[:space:]]*#/ { next }
-        /^[[:space:]]*$/ { next }
-        { print $1 }
-    ' "$file" | grep -Fxq "$cmd"
+is_in_manifest() {
+    printf '%s\n' "$MANIFEST_NAMES" | grep -Fxq "$1"
 }
+
+MANIFEST_NAMES="$(manifest_names | sort -u)"
 
 resolve() {
     local cmd="$1"
     is_builtin "$cmd" && return 0
     is_in_allowlist "$cmd" && return 0
-    is_in_manifest_quoted "$INSTALL_DIR/Brewfile" "brew" "$cmd" && return 0
-    is_in_manifest_quoted "$INSTALL_DIR/Caskfile" "cask" "$cmd" && return 0
-    is_in_manifest_bare "$INSTALL_DIR/Rustfile" "$cmd" && return 0
-    is_in_manifest_bare "$INSTALL_DIR/npmfile" "$cmd" && return 0
+    is_in_manifest "$cmd" && return 0
     return 1
 }
 
@@ -175,7 +166,8 @@ while IFS=$'\t' read -r line_num line; do
             echo "    '$first_word' is not in:"
             echo "      - shell builtins"
             echo "      - test/allowlist/system-tools.txt"
-            echo "      - install/Brewfile, install/Caskfile, install/Rustfile, install/npmfile"
+            echo "      - any install/ manifest that puts a command on PATH"
+            echo "        (brew, cask, cask-extra, rust, npm, pacman)"
             echo ""
         } >> "$violation_log"
         violations=$((violations + 1))

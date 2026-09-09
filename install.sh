@@ -95,6 +95,10 @@ is_interactive() {
 # ============================================================================
 # System Detection
 # ============================================================================
+# Deliberately duplicates bin/platform: this script runs via `curl | bash`
+# before the repo exists, so it cannot source or exec anything from the
+# checkout. Used only for the pre-clone stretch; after the clone,
+# run_installation() asks bin/platform instead.
 detect_os() {
     case "$(uname -s)" in
         Darwin)
@@ -118,7 +122,7 @@ detect_arch() {
         arm64|aarch64)
             echo "arm64"
             ;;
-        x86_64)
+        x86_64|amd64)
             echo "x86_64"
             ;;
         *)
@@ -273,8 +277,9 @@ run_installation() {
 
     cd "$DOTFILES_DIR"
 
+    # The checkout exists now, so use the module rather than the local copy.
     local os
-    os=$(detect_os)
+    os=$("$DOTFILES_DIR/bin/platform" detect)
 
     case "$os" in
         macos)

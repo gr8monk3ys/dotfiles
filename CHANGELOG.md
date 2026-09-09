@@ -11,6 +11,41 @@ Everything since 1.0.0 (2025-10-24), by theme.
 
 ### Added
 
+- `bin/lib/preamble.sh`: shared checkout resolution and `command_exists`, collapsing three copies in `bin/`
+- `bin/platform file-mode <path>`: the BSD/GNU `stat` adapter pair, moved out of `dotfiles-doctor` where it was private to one caller
+- `bin/validate-doctor-tools` (and `make verify-doctor-tools`, in CI): fails when `dotfiles-doctor`'s probed tool lists and the install manifests drift apart, in either direction; the command-to-package mapping lives in `test/allowlist/command-packages.txt`
+- `dotfiles-doctor --list-checked-tools`: lists every command the health check probes
+- `bin/manifest`: the single reader of the `install/` manifests (`list <kind>`, `kinds`, `taps`), replacing five parsers that disagreed with each other; `test/test_manifest.bats` covers it
+- `bin/lib/git-sync.sh`: shared git fast-forward state machine behind one interface, with `dotfiles-update`, `dotfiles-sync` and `dotfiles-doctor` as three reporters over it; `test/test_git_sync.bats` covers it directly
+- `CONTEXT.md`: domain glossary (checkout, sync state, reporter, manifest, platform)
+- `docs/agents/`: issue-tracker, triage-label and domain-doc conventions for the engineering skills
+
+### Fixed
+
+- `test/Dockerfile` installed Ubuntu's `bats` 1.2.1, which predates `bats_require_minimum_version` and `run --separate-stderr`: `test_shell_boot.bats` died with status 127 and the container run silently lost two tests. Installs bats-core 1.11.0 from source instead, and `make verify` (with Docker) passes again
+
+- Worktrees are no longer reported as "Not a git repository": the sync state machine uses `git rev-parse --show-prefix` instead of `[[ -d .git ]]`, which is false in any checkout made by `bin/dotfiles-worktree`
+- A checkout with no upstream no longer reports "up to date" forever; it is now a distinct `no-upstream` state that `dotfiles-doctor` surfaces
+- `dotfiles-sync` no longer discards git's stderr into `/dev/null`, so `make sync-log` can show why a sync failed
+
+### Removed
+
+- `test_regressions.bats` "legacy theme names are absent": duplicated `make verify-stale-refs`, which checks 9 patterns over more paths in the same `make verify`
+
+- `bin/is-executable`: a one-line `command -v` wrapper with a single caller; `make brew` uses `bin/platform has brew` instead
+- `platform run-if` and `platform is-arch`: no callers; `platform has` and `platform is-omarchy` cover their uses
+
+### Changed
+
+- `bin/platform` is now the only place in `bin/` that reads `$OSTYPE` or `uname`: seven inline branches in `dotfiles-doctor` and `dotfiles-backup` go through it, and `install.sh` uses it once the checkout exists (its own copy remains for the pre-clone stretch, where nothing can be sourced)
+- `install.sh` now accepts `amd64` as `x86_64`, matching `bin/platform`
+- `bin/check-alias-references` now resolves aliases against every manifest kind that puts a command on PATH (previously 4 of 6: no `Caskfile.extra`, no `pacmanfile`) and matches tap-qualified formulae by their PATH name, so `sketchybar` resolves where `FelixKratz/formulae/sketchybar` did not. It therefore rejects fewer aliases; the ones it stopped rejecting were false positives
+- Manifest format validation moved from seven hand-rolled regexes in `test/test_packages.bats` into `bin/manifest`, so the rule that parses a manifest is the rule that validates it
+- Regression tests that asserted on config *file text* now assert on runtime behaviour where one exists: `alias c`, `$BAT_THEME` and the live starship prompt hook moved onto the booted shell in `test_shell_boot.bats`, and the delta theme check asks `git config --get` instead of grepping git's syntax. Text checks remain only where there is no cheap runtime observable (bat's config, nvim's plugin spec) or the rule is inherently static (portable shell, no personal identity)
+- `test_shell_boot.bats` now fails instead of skipping when `CI` is set and zsh or zinit is unavailable, so the suite cannot silently stop running
+- `dotfiles-doctor`'s `check_pass`/`check_fail`/`check_warn`/`check_info` now wrap `lib/ui.sh`'s printers instead of restating its escape codes, so a change to shared output formatting actually reaches the health check
+- `dotfiles-update` no longer aborts the entire run when the checkout has uncommitted changes; it skips the repository step, continues with package updates, and says so in the summary
+
 - `.github/workflows/ci.yml`: shellcheck, markdownlint, validators, BATS on macOS and Ubuntu, and the curl installer, on every PR
 
 - Tool catalog: `docs/TOOLS.md` with a rationale per package, `bin/dotfiles-why` to browse it, and `bin/validate-tool-docs` (run by `make verify`) to keep it in sync with the install manifests

@@ -31,7 +31,7 @@ jobs:
             test
 
       - name: Validators (doc links, tool catalog, stale refs)
-        run: make verify-doc-links verify-tool-docs verify-stale-refs
+        run: make verify-doc-links verify-tool-docs verify-doctor-tools verify-stale-refs
 
   test:
     name: Tests
