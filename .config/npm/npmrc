@@ -1,0 +1,10 @@
+# npm global install location.
+#
+# Without this, npm's prefix defaults to wherever node itself is installed —
+# on a Homebrew mac that is /opt/homebrew/Cellar/node/<version>, so every
+# `npm install -g` package (everything in install/npmfile) is deleted the
+# next time Homebrew upgrades node.
+#
+# ~/.local keeps globals outside the Cellar, and ~/.local/bin is already on
+# PATH via .zshenv, so no PATH change is needed.
+prefix=${HOME}/.local

@@ -33,6 +33,10 @@ fi
 export LESSHISTFILE="-"
 export ZDOTDIR="$XDG_CONFIG_HOME/zsh"
 
+# npm has no XDG support: point it at the tracked config, which moves the
+# global prefix out of the Homebrew Cellar (see .config/npm/README.md).
+export NPM_CONFIG_USERCONFIG="$XDG_CONFIG_HOME/npm/npmrc"
+
 # colors!
 export BAT_THEME="base16-onedark"
 export MANPAGER="nvim +Man!"
