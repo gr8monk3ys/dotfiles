@@ -61,6 +61,35 @@ Which kinds a caller cares about is that caller's policy, not the module's:
 `validate-tool-docs` excludes `font-*` casks (its Fonts section covers them),
 `check-alias-references` reads only the kinds that put a command on PATH.
 
+## Snapshot
+
+A timestamped directory written by `bin/dotfiles-backup` under `$BACKUP_DIR`.
+Its layout is described once, in `bin/lib/snapshot.sh`; backup and restore
+both read that table rather than each knowing the filenames.
+
+A snapshot is a **forensic record, not a replayable installer**. Replay lives
+in the **manifests** and `make`. What a snapshot uniquely holds is drift:
+what was actually on the machine at that moment, including things no manifest
+tracks.
+
+Each artifact has a class:
+
+| Class | Meaning | Members |
+| --- | --- | --- |
+| `tree` | A directory of files; `dotfiles-restore` replays it | `configs/`, `ssh/` |
+| `record` | Text record of installed state; preserved, never replayed | `Brewfile`, `Caskfile`, `npm-global-list.txt`, `cargo-installed.txt`, the extension lists |
+| `metadata` | Describes the snapshot itself | `MANIFEST.txt` |
+
+`Brewfile` is a `record` even though `brew bundle` could replay it: recording
+a capability nothing uses would mislead the next reader about what restore
+does. Records carry a provenance header naming the command that produced
+them, so none can be mistaken for a file under `install/`.
+
+A row may name a `legacy` filename, so a snapshot taken before a rename still
+resolves — `npm-global-list.txt` was once `npmfile.txt`, which was misleading
+because it is `npm list` tree output, not the bare-name format of
+`install/npmfile`.
+
 ## Command vs package
 
 A **package** is what a manifest installs (`ripgrep`); a **command** is what

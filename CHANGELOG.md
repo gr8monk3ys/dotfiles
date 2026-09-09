@@ -14,6 +14,7 @@ Everything since 1.0.0 (2025-10-24), by theme.
 - `bin/lib/git-sync.sh`: shared git fast-forward state machine behind one interface, with `dotfiles-update`, `dotfiles-sync` and `dotfiles-doctor` as three reporters over it; `test/test_git_sync.bats` covers it directly
 - `bin/manifest`: the single reader of the `install/` manifests (`list <kind>`, `kinds`, `taps`), replacing five parsers that disagreed with each other; `test/test_manifest.bats` covers it
 - `bin/validate-doctor-tools` (and `make verify-doctor-tools`, in CI): fails when `dotfiles-doctor`'s probed tool lists and the install manifests drift apart, in either direction; the command-to-package mapping lives in `test/allowlist/command-packages.txt`
+- `bin/lib/snapshot.sh`: the snapshot layout described once, read by both `dotfiles-backup` and `dotfiles-restore`; `test/test_snapshot.bats` covers it against a fixture snapshot, with a drift check that the two cannot disagree again
 - `bin/lib/preamble.sh`: shared checkout resolution and `command_exists`, collapsing three copies in `bin/`
 - `bin/platform file-mode <path>`: the BSD/GNU `stat` adapter pair, moved out of `dotfiles-doctor` where it was private to one caller
 - `dotfiles-doctor --list-checked-tools`: lists every command the health check probes
@@ -64,6 +65,11 @@ Everything since 1.0.0 (2025-10-24), by theme.
 ### Fixed
 
 - `make link` appended a duplicate `Include ~/.config/ssh/config.d/*.conf` block to `~/.ssh/config` on every run. `link` and `link-dry-run` each carried their own copy of the match pattern with different escaping; make does not collapse `\\`, so `link`'s grep received an escaped backslash plus a quantifier instead of a literal `*` and never matched. Both targets now read one `SSH_INCLUDE_RE`, and `make link` is idempotent
+- `dotfiles-restore` silently handled 2 of the 9 artifacts `dotfiles-backup` writes, while its help promised to "restore files from a dotfiles backup". It now replays every `tree` artifact from the shared table, names the records it preserved, and warns about artifacts it does not recognise instead of walking past them
+- Backup's `npmfile.txt` and `Rustfile.txt` were `npm list -g` and `cargo install --list` output — decorated listings, not the bare-name format of `install/npmfile` and `install/Rustfile`, and not replayable. Renamed to `npm-global-list.txt` and `cargo-installed.txt`, and every record now carries a provenance header naming the command that produced it. Old snapshots still resolve via a legacy name in the table
+- `dotfiles-backup` captured only one editor's extensions (`code` **or** `codium`) while the Makefile preferred the other; it now captures both when both exist
+- `dotfiles-backup --cleanup` removed old snapshot directories but never the `.tar.gz` archives `--compress` made from them, so archives accumulated unbounded and nothing ever read them
+- `MANIFEST.txt` counted only Homebrew formulae and casks; it now reports every record artifact actually written
 - Worktrees are no longer reported as "Not a git repository": the sync state machine uses `git rev-parse --show-prefix` instead of `[[ -d .git ]]`, which is false in any checkout made by `bin/dotfiles-worktree`
 - A checkout with no upstream no longer reports "up to date" forever; it is now a distinct `no-upstream` state that `dotfiles-doctor` surfaces
 - `dotfiles-sync` no longer discards git's stderr into `/dev/null`, so `make sync-log` can show why a sync failed

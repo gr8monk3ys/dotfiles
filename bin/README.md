@@ -241,6 +241,24 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/ui.sh"
 ```
 
+### [lib/snapshot.sh](lib/snapshot.sh)
+
+The layout of a `dotfiles-backup` snapshot, described once. Backup writes a
+snapshot and restore reads one; before this they each knew the filenames
+separately and had drifted, so backup wrote nine artifacts and restore
+handled two.
+
+Artifacts have a class — `tree` (restore replays it), `record` (preserved,
+never replayed) and `metadata`. See CONTEXT.md § Snapshot for the table and
+the reasoning. Rows may carry a legacy filename so older snapshots still
+resolve after a rename.
+
+```bash
+snapshot_names_of_class tree      # configs, ssh
+snapshot_class Brewfile           # record
+snapshot_present "$dir" npm-global-list.txt   # path, or legacy name, or 1
+```
+
 ### [lib/preamble.sh](lib/preamble.sh)
 
 Checkout resolution (`DOTFILES_DIR`) and the `command_exists` predicate,
