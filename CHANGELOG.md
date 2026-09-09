@@ -19,6 +19,8 @@ Everything since 1.0.0 (2025-10-24), by theme.
 - `dotfiles-doctor --list-checked-tools`: lists every command the health check probes
 - `CONTEXT.md`: domain glossary (checkout, sync state, reporter, manifest, command vs package, platform)
 - `docs/agents/`: issue-tracker, triage-label and domain-doc conventions for the engineering skills
+- `make verify-shellcheck` and `make verify-markdown`, both in the `make verify` chain: shellcheck and markdownlint previously ran only in CI, so a green local gate could still fail on push. `SKIP_LINTERS=1` opts out; a missing linter warns rather than failing
+- `shellcheck` (Brewfile) and `markdownlint-cli` (npmfile) are now manifest-tracked, with catalog entries
 - `.github/workflows/ci.yml`: shellcheck, markdownlint, validators, BATS on macOS and Ubuntu, and the curl installer, on every PR
 - Tool catalog: `docs/TOOLS.md` with a rationale per package, `bin/dotfiles-why` to browse it, and `bin/validate-tool-docs` (run by `make verify`) to keep it in sync with the install manifests
 - 16 modern CLI tools (yazi, eza, bat, ripgrep, fd, zoxide, atuin, dust, procs, bottom, broot, navi, ouch, delta, …) with guarded aliases in `.config/zsh/aliases.zsh`
@@ -65,6 +67,7 @@ Everything since 1.0.0 (2025-10-24), by theme.
 - A checkout with no upstream no longer reports "up to date" forever; it is now a distinct `no-upstream` state that `dotfiles-doctor` surfaces
 - `dotfiles-sync` no longer discards git's stderr into `/dev/null`, so `make sync-log` can show why a sync failed
 - `test/Dockerfile` installed Ubuntu's `bats` 1.2.1, which predates `bats_require_minimum_version` and `run --separate-stderr`: `test_shell_boot.bats` died with status 127 and the container run silently lost two tests. Installs bats-core 1.11.0 from source instead, and `make verify` (with Docker) passes again
+- `SECURITY.md` markdown violations (`MD022`, `MD032`), which CI's markdownlint step was not catching
 - `make clean` on macOS; `make node-packages` / `make rust-packages` installing nothing
 - Stale Homebrew taps and the gh-dash install method
 - Sketchybar tap; theme claims in README and Yazi config

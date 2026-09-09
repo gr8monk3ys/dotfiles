@@ -84,6 +84,11 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 - **Why:** Build system.
 - **Installed via:** Brewfile
 
+### shellcheck
+
+- **Why:** Static analysis for shell scripts; `make verify` and CI both gate on it.
+- **Installed via:** Brewfile
+
 ### tbb
 
 - **Why:** Threading Building Blocks.
@@ -924,6 +929,11 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 - **Installed via:** Caskfile.extra
 
 ## npm globals
+
+### markdownlint-cli
+
+- **Why:** Markdown linter; `make verify` and CI both gate on it with `.markdownlint.json`.
+- **Installed via:** npmfile
 
 ### npm
 

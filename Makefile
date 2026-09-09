@@ -12,7 +12,7 @@ export STOW_DIR = $(DOTFILES_DIR)
 export ACCEPT_EULA=Y
 
 .PHONY: all macos arch link unlink link-dry-run test test-setup verify \
-        verify-shell verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-doctor-tools verify-tests \
+        verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-doctor-tools verify-tests \
         doctor update backup worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
         brew git packages-macos packages-arch core-macos core-arch \
@@ -214,7 +214,7 @@ test-setup:
 		exit 1; \
 	fi
 
-verify: verify-shell verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-doctor-tools verify-tests verify-docker
+verify: verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-doctor-tools verify-tests verify-docker
 	@echo "✓ Verification complete"
 
 # The container test is the only check that exercises the fresh-install path.
@@ -266,6 +266,35 @@ verify-shell-surface:
 verify-tool-docs:
 	@echo "Validating tool catalog..."
 	@bin/validate-tool-docs
+
+# Mirrors the Lint job in .github/workflows/ci.yml. Kept here so `make verify`
+# is a superset of CI rather than a subset of it: shellcheck and markdownlint
+# used to run only in CI, which meant a green local gate could still fail on
+# push. SKIP_LINTERS=1 opts out; a missing linter warns rather than failing,
+# so a fresh checkout without npm still gets a usable `make verify`.
+verify-shellcheck:
+	@echo "Running shellcheck on bin/..."
+	@if [ -n "$(SKIP_LINTERS)" ]; then \
+		echo "Skipping shellcheck (SKIP_LINTERS set)"; \
+	elif command -v shellcheck >/dev/null 2>&1; then \
+		find bin -type f ! -name '*.md' -print0 \
+			| xargs -0 grep -l '^#!.*\(bash\|sh\)' \
+			| xargs shellcheck --severity=warning -x; \
+	else \
+		echo "⚠️  shellcheck not found; SKIPPED (CI runs it — brew install shellcheck)"; \
+	fi
+
+verify-markdown:
+	@echo "Running markdownlint..."
+	@if [ -n "$(SKIP_LINTERS)" ]; then \
+		echo "Skipping markdownlint (SKIP_LINTERS set)"; \
+	elif command -v markdownlint >/dev/null 2>&1; then \
+		markdownlint -c .markdownlint.json --ignore .github --ignore test "**/*.md"; \
+	elif [ -x "$$(npm config get prefix 2>/dev/null)/bin/markdownlint" ]; then \
+		"$$(npm config get prefix)/bin/markdownlint" -c .markdownlint.json --ignore .github --ignore test "**/*.md"; \
+	else \
+		echo "⚠️  markdownlint not found; SKIPPED (CI runs it — npm i -g markdownlint-cli)"; \
+	fi
 
 verify-doctor-tools:
 	@echo "Validating dotfiles-doctor tool lists against manifests..."

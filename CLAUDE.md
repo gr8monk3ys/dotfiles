@@ -7,9 +7,10 @@ into `~/.config/`; `make` drives install, link and verification.
 
 - `make` — detect platform (`bin/platform detect`) and install + link.
 - `make link` / `make link-dry-run` / `make unlink` — Stow only.
-- `make verify` — the gate: shell syntax, shell-surface tests, stale-ref grep,
-  doc-link and tool-catalog validators, BATS, and a Docker fresh-install
-  (`SKIP_DOCKER=1` to skip). `make test` is just BATS (`bats test`).
+- `make verify` — the gate: shell syntax, shellcheck, markdownlint, shell-surface
+  tests, stale-ref grep, doc-link, tool-catalog and doctor-tool validators, BATS,
+  and a Docker fresh-install (`SKIP_DOCKER=1`, `SKIP_LINTERS=1` to skip parts).
+  It is a superset of CI. `make test` is just BATS (`bats test`).
 - CI (`.github/workflows/ci.yml`) runs the same checks plus the curl installer.
 
 ## Where things live
