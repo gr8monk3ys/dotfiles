@@ -63,6 +63,7 @@ Everything since 1.0.0 (2025-10-24), by theme.
 
 ### Fixed
 
+- `make link` appended a duplicate `Include ~/.config/ssh/config.d/*.conf` block to `~/.ssh/config` on every run. `link` and `link-dry-run` each carried their own copy of the match pattern with different escaping; make does not collapse `\\`, so `link`'s grep received an escaped backslash plus a quantifier instead of a literal `*` and never matched. Both targets now read one `SSH_INCLUDE_RE`, and `make link` is idempotent
 - Worktrees are no longer reported as "Not a git repository": the sync state machine uses `git rev-parse --show-prefix` instead of `[[ -d .git ]]`, which is false in any checkout made by `bin/dotfiles-worktree`
 - A checkout with no upstream no longer reports "up to date" forever; it is now a distinct `no-upstream` state that `dotfiles-doctor` surfaces
 - `dotfiles-sync` no longer discards git's stderr into `/dev/null`, so `make sync-log` can show why a sync failed

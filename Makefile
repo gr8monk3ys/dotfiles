@@ -7,6 +7,16 @@ SHELL := env PATH=$(PATH) /bin/bash
 # nothing extra when stow is present, the Homebrew bootstrap when it is not.
 HAVE_STOW := $(shell bin/platform has stow && echo yes)
 BIN := $(HOMEBREW_PREFIX)/bin
+
+# Written once because `link` and `link-dry-run` each used to carry their own
+# copy. The copies had different escaping and only the dry-run one worked:
+# make does not collapse `\\`, so `link`'s grep received an escaped backslash
+# plus a quantifier instead of a literal `*`, never matched, and appended a
+# fresh Include block to ~/.ssh/config on every single `make link`.
+# Deferred (=) not immediate (:=) so `$$` survives to recipe expansion.
+SSH_INCLUDE_LINE = Include ~/.config/ssh/config.d/*.conf
+SSH_INCLUDE_RE = ^[[:space:]]*Include[[:space:]]+~/\.config/ssh/config\.d/\*\.conf([[:space:]]|$$)
+ZSHENV_NEEDS_BACKUP = [ -f "$(HOME)/.zshenv" ] && [ ! -h "$(HOME)/.zshenv" ]
 export XDG_CONFIG_HOME = $(HOME)/.config
 export STOW_DIR = $(DOTFILES_DIR)
 export ACCEPT_EULA=Y
@@ -61,7 +71,7 @@ link: stow-$(OS)
 	@echo "Linking dotfiles..."
 	mkdir -p "$(XDG_CONFIG_HOME)"
 	# Backup existing .zshenv if it exists and is not a symlink
-	if [ -f "$(HOME)/.zshenv" ] && [ ! -h "$(HOME)/.zshenv" ]; then \
+	if $(ZSHENV_NEEDS_BACKUP); then \
 		mv -v "$(HOME)/.zshenv" "$(HOME)/.zshenv.bak"; \
 	fi
 	# Link .zshenv to home directory
@@ -73,8 +83,8 @@ link: stow-$(OS)
 	chmod 700 "$(HOME)/.ssh"
 	touch "$(HOME)/.ssh/config"
 	chmod 600 "$(HOME)/.ssh/config"
-	if ! grep -Eq '^[[:space:]]*Include[[:space:]]+~/.config/ssh/config.d/\\*\\.conf([[:space:]]|$$)' "$(HOME)/.ssh/config"; then \
-		printf "\n# Dotfiles managed SSH host snippets\nInclude ~/.config/ssh/config.d/*.conf\n" >> "$(HOME)/.ssh/config"; \
+	if ! grep -Eq '$(SSH_INCLUDE_RE)' "$(HOME)/.ssh/config"; then \
+		printf "\n# Dotfiles managed SSH host snippets\n%s\n" '$(SSH_INCLUDE_LINE)' >> "$(HOME)/.ssh/config"; \
 	fi
 	mkdir -p "$(HOME)/.local/runtime"
 	chmod 700 "$(HOME)/.local/runtime"
@@ -445,7 +455,7 @@ link-dry-run: stow-$(OS)
 	@echo "Dry run - the following symlinks would be created:"
 	@echo ""
 	@echo "==> .zshenv symlink:"
-	@if [ -f "$(HOME)/.zshenv" ] && [ ! -h "$(HOME)/.zshenv" ]; then \
+	@if $(ZSHENV_NEEDS_BACKUP); then \
 		echo "    Would backup: $(HOME)/.zshenv -> $(HOME)/.zshenv.bak"; \
 	fi
 	@echo "    Would create: $(HOME)/.zshenv -> $(DOTFILES_DIR)/.zshenv"
@@ -454,10 +464,10 @@ link-dry-run: stow-$(OS)
 	@stow -n -v -t "$(XDG_CONFIG_HOME)" .config 2>&1 | grep -E "^(LINK|UNLINK)" || echo "    (no changes needed)"
 	@echo ""
 	@echo "==> SSH include:"
-	@if grep -Eq '^[[:space:]]*Include[[:space:]]+~/.config/ssh/config.d/\*\.conf([[:space:]]|$$)' "$(HOME)/.ssh/config" 2>/dev/null; then \
+	@if grep -Eq '$(SSH_INCLUDE_RE)' "$(HOME)/.ssh/config" 2>/dev/null; then \
 		echo "    Include already present in $(HOME)/.ssh/config"; \
 	else \
-		echo "    Would append: Include ~/.config/ssh/config.d/*.conf"; \
+		echo "    Would append: $(SSH_INCLUDE_LINE)"; \
 	fi
 	@echo ""
 	@echo "Run 'make link' to apply these changes."

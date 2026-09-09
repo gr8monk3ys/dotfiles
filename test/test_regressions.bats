@@ -267,3 +267,39 @@ EOS
 	[[ -z "$output" ]]
 	git -C "$DOTFILES_DIR" check-ignore -q .config/ssh/config.d/pi-lab.conf
 }
+
+# Regression: `link` and `link-dry-run` each carried their own copy of the
+# SSH-include pattern with different escaping. Make does not collapse `\\`, so
+# `link`'s grep received an escaped backslash plus a quantifier rather than a
+# literal `*`, never matched an existing Include, and appended another block
+# on every run. A real ~/.ssh/config had accumulated three.
+@test "make link is idempotent: the SSH Include is appended exactly once" {
+	command -v stow >/dev/null 2>&1 || skip "stow not installed"
+	mkdir -p "$TEST_HOME/.config"
+
+	run make -C "$DOTFILES_DIR" link HOME="$TEST_HOME" XDG_CONFIG_HOME="$TEST_HOME/.config"
+	assert_success
+	run make -C "$DOTFILES_DIR" link HOME="$TEST_HOME" XDG_CONFIG_HOME="$TEST_HOME/.config"
+	assert_success
+
+	run grep -c 'Include ~/.config/ssh/config.d' "$TEST_HOME/.ssh/config"
+	assert_output "1"
+}
+
+@test "link and link-dry-run agree about the SSH Include" {
+	command -v stow >/dev/null 2>&1 || skip "stow not installed"
+	mkdir -p "$TEST_HOME/.config"
+
+	# Before linking, the dry run must say it would append.
+	run make -C "$DOTFILES_DIR" link-dry-run HOME="$TEST_HOME" XDG_CONFIG_HOME="$TEST_HOME/.config"
+	assert_success
+	[[ "$output" == *"Would append"* ]]
+
+	run make -C "$DOTFILES_DIR" link HOME="$TEST_HOME" XDG_CONFIG_HOME="$TEST_HOME/.config"
+	assert_success
+
+	# After linking, it must say it is already present.
+	run make -C "$DOTFILES_DIR" link-dry-run HOME="$TEST_HOME" XDG_CONFIG_HOME="$TEST_HOME/.config"
+	assert_success
+	[[ "$output" == *"already present"* ]]
+}
