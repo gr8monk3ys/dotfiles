@@ -243,6 +243,25 @@ EOS
 
 # Regression: `link: stow-$(OS)` had no stow-linux target, so `make link`
 # on any non-Arch Linux failed with "No rule to make target 'stow-linux'".
+# Regression: install.sh cased on `bin/platform detect` and called make
+# macos/arch/link itself, duplicating the Makefile's own OS dispatch. The two
+# disagreed: platform detect can return "unknown", and make had no target for
+# it, so only the curl installer covered that platform.
+@test "make has a target for every value bin/platform detect can return" {
+	local os
+	for os in macos arch linux unknown; do
+		run make -n "$os"
+		assert_success
+	done
+}
+
+@test "install.sh does not re-implement the Makefile's OS dispatch" {
+	# It may read the platform to report it, but must not branch to targets.
+	# Comments are exempt: the deletion is explained in one.
+	run bash -c 'grep -vE "^[[:space:]]*#" install.sh | grep -nE "make (macos|arch|link)\b"'
+	assert_failure
+}
+
 @test "make link has a rule for generic linux" {
 	run make -n OS=linux link
 	assert_success

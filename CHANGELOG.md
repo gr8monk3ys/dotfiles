@@ -57,6 +57,7 @@ Everything since 1.0.0 (2025-10-24), by theme.
 
 ### Removed
 
+- `install.sh`'s OS dispatch: it cased on `bin/platform detect` and called `make macos`/`make arch`/`make link` itself, duplicating the Makefile's own `OS := $(shell bin/platform detect)` / `all: $(OS)`. It now just runs `make`
 - The `bun` make target: bun is already in the Brewfile (`brew "oven-sh/bun/bun"`), so the target only ever printed "already installed" — and it put a `curl | bash` in the default install path for no gain
 - The `brew-taps` make target: trusting taps is a step within installing a brew kind, not ordering between kinds, so it moved inside `bin/install-kind`
 - `bin/is-executable`: a one-line `command -v` wrapper with a single caller; `make brew` uses `bin/platform has brew` instead
@@ -77,6 +78,7 @@ Everything since 1.0.0 (2025-10-24), by theme.
 - `dotfiles-backup` captured only one editor's extensions (`code` **or** `codium`) while the Makefile preferred the other; it now captures both when both exist
 - `dotfiles-backup --cleanup` removed old snapshot directories but never the `.tar.gz` archives `--compress` made from them, so archives accumulated unbounded and nothing ever read them
 - `MANIFEST.txt` counted only Homebrew formulae and casks; it now reports every record artifact actually written
+- `make` had no target for `unknown`, the fourth value `bin/platform detect` can return, so `make` on an unsupported OS died with "No rule to make target". Only `install.sh` covered for that — which is why the two dispatches could disagree. Added `unknown: link`
 - `make pacman-packages` piped `install/pacmanfile` straight into `pacman -S --noconfirm -`, comments included; it worked only because that file happens to have none. It now goes through `bin/manifest list pacman` like every other kind, and gained skip support it never had
 - `dotfiles-doctor` judged 8 hardcoded `.config` directories while `stow` links all 26 the checkout ships, so 18 were never checked and nothing failed when the list fell behind. It now derives the list, and immediately surfaced two real problems: `.config/npm` was not linked at all, and `.config/atuin` holds a real file where a link should be
 - Worktrees are no longer reported as "Not a git repository": the sync state machine uses `git rev-parse --show-prefix` instead of `[[ -d .git ]]`, which is false in any checkout made by `bin/dotfiles-worktree`

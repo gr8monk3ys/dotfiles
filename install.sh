@@ -280,32 +280,21 @@ run_installation() {
 
     cd "$DOTFILES_DIR"
 
-    # The checkout exists now, so use the module rather than the local copy.
+    # No dispatch here: the Makefile already selects a target from
+    # `bin/platform detect` (OS := ..., all: $(OS)). This used to case on the
+    # same value and call make macos / make arch / make link, which meant two
+    # implementations of one decision — and they disagreed, because make had
+    # no target for the "unknown" platform.
     local os
     os=$("$DOTFILES_DIR/bin/platform" detect)
+    print_substep "Detected $os - running make"
 
-    case "$os" in
-        macos)
-            print_substep "Detected macOS - running full installation"
-            print_info "This may take a while..."
-            if [[ "$STRICT_PACKAGES" == "1" ]]; then
-                print_info "Strict package mode enabled (installation fails on package errors)"
-                STRICT_PACKAGES=1 make macos
-            else
-                make macos
-            fi
-            ;;
-        arch)
-            print_substep "Detected Arch Linux - running full installation"
-            make arch
-            ;;
-        *)
-            print_warning "Unknown OS - running symlink-only installation"
-            print_info "Package installation is not configured for this OS."
-            make link
-            ;;
-    esac
+    if [[ "$STRICT_PACKAGES" == "1" ]]; then
+        print_info "Strict package mode enabled (installation fails on package errors)"
+    fi
+    STRICT_PACKAGES="$STRICT_PACKAGES" make
 }
+
 
 # ============================================================================
 # Post-Installation

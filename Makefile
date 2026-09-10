@@ -31,7 +31,7 @@ export ACCEPT_EULA=Y
         doctor update backup worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
         brew git packages-macos packages-arch core-macos core-arch \
-        stow-arch stow-macos stow-linux linux cask-apps cask-apps-extra vscode-extensions node-packages \
+        stow-arch stow-macos stow-linux linux unknown cask-apps cask-apps-extra vscode-extensions node-packages \
         rust-packages duti pacman-packages brew-packages \
         help \
         sync-install sync-uninstall sync-status sync-run \
@@ -45,6 +45,13 @@ arch: core-arch packages-arch link
 
 # Generic Linux (Debian, Fedora, …): no package manifests here; link only.
 linux: link
+
+# bin/platform detect returns a fourth value, "unknown", and without a target
+# for it `make` on an unsupported OS died with "No rule to make target". Only
+# install.sh covered for that, which is why its dispatch could disagree with
+# this one.
+unknown: link
+	@echo "Unknown platform: linked configs only, no package manifests apply."
 
 core-macos: brew git
 
