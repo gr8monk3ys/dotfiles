@@ -36,6 +36,29 @@ prints it, `dotfiles-sync` notifies on it, `dotfiles-doctor` warns on it.
 each caller decides. `dotfiles-sync` treats it as a benign skip; `dotfiles-update`
 skips the repository step and carries on with package updates.
 
+## Link state
+
+The classification of a managed path against the **checkout**, produced by
+`bin/link-state`. `dotfiles-doctor` reports it; `make clean` acts on it.
+
+| State | Meaning |
+| --- | --- |
+| `linked` | Resolves into the checkout (folded or unfolded) |
+| `partial` | Unfolded directory, some shipped files not linked |
+| `unlinked` | The checkout ships it, nothing is at the target |
+| `unmanaged` | Something is there, but it is not ours |
+| `broken-ours` | A broken link pointing into the checkout |
+| `broken-foreign` | A broken link pointing somewhere else |
+
+Folded versus unfolded is deliberately absent: no caller acts on the
+difference, so it stays an implementation detail rather than interface.
+
+The directory list is **derived** from what the checkout ships, not curated —
+`stow` links all of `.config/`, so there is no editorial judgement to
+preserve. This is the opposite of the tool lists in **command vs package**,
+where the severity tiers are a real editorial choice and the validator checks
+a curated list instead of replacing it.
+
 ## Reporter
 
 A caller that maps **sync state** to output. The reporter is the seam:

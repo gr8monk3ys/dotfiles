@@ -147,71 +147,44 @@ check_dotfiles() {
 }
 
 # Check symlinks
+#
+# A reporter over bin/link-state: the classification lives there, where it is
+# tested directly. This used to carry its own folded/unfolded logic plus a
+# hand-written list of 8 directories, while stow links all 26 the checkout
+# ships — so 18 were never judged at all.
 check_symlinks() {
     print_header "Symlink Status"
 
-    # Check .zshenv
-    if [[ -L "$HOME/.zshenv" ]]; then
-        if [[ -e "$HOME/.zshenv" ]]; then
-            check_pass ".zshenv symlink exists and valid"
-        else
-            check_fail ".zshenv symlink broken"
-        fi
-    else
-        if [[ -f "$HOME/.zshenv" ]]; then
-            check_warn ".zshenv exists but is not a symlink"
-        else
-            check_fail ".zshenv not found"
-        fi
-    fi
-
-    # Check .config directory
-    if [[ -d "$HOME/.config" ]]; then
-        check_pass ".config directory exists"
-
-        # Physical path of the checkout, so link targets compare cleanly
-        local repo_config
-        repo_config="$(cd "$DOTFILES_DIR/.config" 2>/dev/null && pwd -P || true)"
-
-        # Check common config symlinks (including new modern tools)
-        local config_dirs=("zsh" "git" "nvim" "ghostty" "yazi" "zellij" "jj" "tmux")
-        for dir in "${config_dirs[@]}"; do
-            # Only judge dirs this checkout actually ships
-            [[ -n "$repo_config" && -d "$repo_config/$dir" ]] || continue
-            if [[ -L "$HOME/.config/$dir" ]]; then
-                # Folded: the dir itself is a link into the repo
-                if links_into_repo "$HOME/.config/$dir" "$repo_config/$dir"; then
-                    check_pass ".config/$dir linked"
-                else
-                    check_fail ".config/$dir is a symlink but does not resolve into $DOTFILES_DIR"
-                fi
-            elif [[ -d "$HOME/.config/$dir" ]]; then
-                # Unfolded: every file the repo ships must be a link into it
-                local missing=0 f
-                while IFS= read -r f; do
-                    links_into_repo "$HOME/.config/$dir/${f#"$repo_config/$dir/"}" "$f" || ((++missing))
-                done < <(find "$repo_config/$dir" -type f)
-                if [[ $missing -eq 0 ]]; then
-                    check_pass ".config/$dir linked"
-                else
-                    check_fail ".config/$dir: $missing file(s) not linked into $DOTFILES_DIR (run 'make link')"
-                fi
-            else
-                check_fail ".config/$dir not linked (run 'make link')"
-            fi
-        done
-    else
+    if [[ ! -d "$HOME/.config" ]]; then
         check_fail ".config directory not found"
+        return 0
     fi
-}
+    check_pass ".config directory exists"
 
-# links_into_repo <path> <expected> — true if <path> is a symlink that
-# resolves to the physical path <expected>.
-links_into_repo() {
-    local path="$1" expected="$2" resolved
-    [[ -L "$path" ]] || return 1
-    resolved="$(readlink -f "$path" 2>/dev/null)" || return 1
-    [[ "$resolved" == "$expected" ]]
+    local state path rel
+    while IFS=$'\t' read -r state path; do
+        rel="${path#"$HOME"/}"
+        case "$state" in
+            linked)
+                check_pass "$rel linked"
+                ;;
+            partial)
+                check_fail "$rel: some files not linked into $DOTFILES_DIR (run 'make link')"
+                ;;
+            unlinked)
+                check_fail "$rel not linked (run 'make link')"
+                ;;
+            unmanaged)
+                check_warn "$rel exists but is not linked into $DOTFILES_DIR"
+                ;;
+            broken-ours)
+                check_fail "$rel is a broken link into $DOTFILES_DIR (run 'make clean')"
+                ;;
+            broken-foreign)
+                # Someone else's broken link; not ours to judge.
+                ;;
+        esac
+    done < <("$SCRIPT_DIR/link-state")
 }
 
 # Check package managers

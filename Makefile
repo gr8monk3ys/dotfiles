@@ -1,4 +1,9 @@
-DOTFILES_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+# Where this Makefile lives, always. DOTFILES_DIR is the checkout being
+# operated on and tests override it on the command line, so tools must be
+# resolved from MAKEFILE_DIR and pointed at DOTFILES_DIR — not looked up
+# inside the subject.
+MAKEFILE_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+DOTFILES_DIR := $(MAKEFILE_DIR)
 OS := $(shell bin/platform detect)
 HOMEBREW_PREFIX := $(shell bin/platform select /opt/homebrew /usr/local "bin/platform is-arm64")
 PATH := $(HOMEBREW_PREFIX)/bin:$(DOTFILES_DIR)/bin:$(PATH)
@@ -350,24 +355,15 @@ sync-status:
 sync-run:
 	@bin/dotfiles-sync
 
-# Only removes broken links that pointed into this checkout; broken links
-# owned by other tools under ~/.config are left alone. Targets are resolved
-# lexically (readlink + ../ collapsing) because a broken link's target
-# cannot be canonicalised on disk.
+# Removes only broken links that pointed into this checkout; broken links
+# owned by other tools under ~/.config are left alone. The ownership rule
+# (lexical resolution, because a broken link's target cannot be canonicalised
+# on disk) lives in bin/link-state, which dotfiles-doctor reads too.
 clean:
 	@echo "Cleaning broken symlinks..."
-	@find "$(HOME)/.config" -type l ! -exec test -e {} \; -print 2>/dev/null | while IFS= read -r link; do \
-		target="$$(readlink "$$link")"; \
-		[ "$${target#/}" = "$$target" ] && target="$$(dirname "$$link")/$$target"; \
-		norm=""; IFS=/; for part in $$target; do \
-			case "$$part" in ''|.) ;; ..) norm="$${norm%/*}" ;; *) norm="$$norm/$$part" ;; esac; \
-		done; unset IFS; \
-		case "$$norm" in "$(DOTFILES_DIR)"/*) rm -f "$$link"; echo "Removed $$link" ;; esac; \
-	done
-	@if [ -h "$(HOME)/.zshenv" ] && [ ! -e "$(HOME)/.zshenv" ]; then \
-		rm -f "$(HOME)/.zshenv"; \
-		echo "Removed broken .zshenv symlink"; \
-	fi
+	@DOTFILES_DIR="$(DOTFILES_DIR)" $(MAKEFILE_DIR)/bin/link-state | \
+		awk -F'\t' '$$1 == "broken-ours" { print $$2 }' | \
+		while IFS= read -r link; do rm -f "$$link"; echo "Removed $$link"; done
 	@echo "✓ Cleanup complete"
 
 ## Restore files from a dotfiles-backup snapshot (default: latest)

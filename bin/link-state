@@ -1,0 +1,179 @@
+#!/usr/bin/env bash
+# link-state - Classify the link state of this checkout's managed paths.
+#
+# `dotfiles-doctor` reports it and `make clean` acts on it. Before this
+# module, doctor's folded/unfolded classification was 25 lines with no test
+# at all — it could only be exercised by running the whole health check — and
+# its list of directories to judge was hand-written, so it checked 8 of the
+# 26 that stow actually links.
+#
+# Usage:
+#   link-state [TARGET_HOME]     # defaults to $HOME
+#   link-state --states          # the state vocabulary, one per line
+#
+# Emits one `state<TAB>path` row per managed path, sorted, where state is:
+#
+#   linked          resolves into the checkout (folded or unfolded)
+#   partial         unfolded directory, some shipped files not linked
+#   unlinked        the checkout ships it, nothing is at the target
+#   unmanaged       something is there, but it is not ours
+#   broken-ours     a broken link pointing into the checkout
+#   broken-foreign  a broken link pointing somewhere else
+#
+# Folded vs unfolded is deliberately not in the vocabulary: no caller acts on
+# the difference, so it stays an implementation detail.
+#
+# Out of scope: ~/.ssh permissions, the SSH Include line and ~/.local/runtime.
+# Those are permission and directory state, not link state; dotfiles-doctor's
+# check_permissions covers the perms and SSH_INCLUDE_RE owns the Include.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/preamble.sh
+source "$SCRIPT_DIR/lib/preamble.sh"
+
+TARGET_HOME="${1:-$HOME}"
+[[ "$TARGET_HOME" == "--states" ]] && TARGET_HOME="$HOME"
+readonly TARGET_HOME
+
+REPO_CONFIG="$(cd "$DOTFILES_DIR/.config" 2> /dev/null && pwd -P || true)"
+readonly REPO_CONFIG
+
+emit() { printf '%s\t%s\n' "$1" "$2"; }
+
+# The vocabulary, so callers and tests do not have to re-type it. The drift
+# test uses this to assert dotfiles-doctor handles every state.
+readonly LINK_STATES="linked partial unlinked unmanaged broken-ours broken-foreign"
+
+# Resolve a link target lexically. A broken link cannot be canonicalised on
+# disk, so `readlink -f` is not an option: collapse `.` and `..` by hand.
+lexical_target() {
+    local link="$1" target norm part
+    target="$(readlink "$link")"
+    [[ "${target#/}" == "$target" ]] && target="$(dirname "$link")/$target"
+    norm=""
+    local IFS=/
+    for part in $target; do
+        case "$part" in
+            '' | .) ;;
+            ..) norm="${norm%/*}" ;;
+            *) norm="$norm/$part" ;;
+        esac
+    done
+    printf '%s\n' "$norm"
+}
+
+# Is this (possibly broken) link pointing into the checkout?
+links_into_checkout() {
+    local resolved
+    resolved="$(lexical_target "$1")"
+    [[ "$resolved" == "$DOTFILES_DIR"/* ]]
+}
+
+classify_broken() {
+    if links_into_checkout "$1"; then echo broken-ours; else echo broken-foreign; fi
+}
+
+# An existing symlink: ours, foreign, or broken.
+classify_symlink() {
+    local link="$1" expected="$2" resolved
+    if [[ ! -e "$link" ]]; then
+        classify_broken "$link"
+        return
+    fi
+    resolved="$(readlink -f "$link" 2> /dev/null || true)"
+    # Canonicalise the expected side too: readlink -f resolves /var to
+    # /private/var on macOS, and any symlinked parent anywhere, so comparing
+    # against a raw path reports a correct link as unmanaged.
+    if [[ -n "$expected" && -e "$expected" ]]; then
+        expected="$(readlink -f "$expected" 2> /dev/null || printf '%s' "$expected")"
+    fi
+    if [[ -n "$expected" && "$resolved" == "$expected" ]]; then
+        echo linked
+    elif [[ -z "$expected" && "$resolved" == "$DOTFILES_DIR"/* ]]; then
+        echo linked
+    else
+        echo unmanaged
+    fi
+}
+
+# An unfolded directory: every file the checkout ships must be a link into it.
+classify_unfolded() {
+    local repo_dir="$1" target_dir="$2" f rel missing=0
+    while IFS= read -r f; do
+        rel="${f#"$repo_dir"/}"
+        if [[ ! -L "$target_dir/$rel" ]]; then
+            missing=1
+            break
+        fi
+        [[ "$(readlink -f "$target_dir/$rel" 2> /dev/null || true)" == "$(readlink -f "$f")" ]] || missing=1
+    done < <(find "$repo_dir" -type f | sort)
+    if [[ "$missing" -eq 0 ]]; then echo linked; else echo partial; fi
+}
+
+# --- shipped .config directories, in sorted order --------------------------
+
+report_config_dirs() {
+    [[ -n "$REPO_CONFIG" ]] || return 0
+    local repo_dir name target
+    while IFS= read -r repo_dir; do
+        name="$(basename "$repo_dir")"
+        target="$TARGET_HOME/.config/$name"
+
+        if [[ -L "$target" ]]; then
+            emit "$(classify_symlink "$target" "$repo_dir")" "$target"
+        elif [[ -d "$target" ]]; then
+            emit "$(classify_unfolded "$repo_dir" "$target")" "$target"
+        elif [[ -e "$target" ]]; then
+            emit unmanaged "$target"
+        else
+            emit unlinked "$target"
+        fi
+    done < <(find "$REPO_CONFIG" -mindepth 1 -maxdepth 1 -type d | sort)
+}
+
+# --- .zshenv, the one path linked directly into the home directory ---------
+
+report_zshenv() {
+    local target="$TARGET_HOME/.zshenv"
+    if [[ -L "$target" ]]; then
+        emit "$(classify_symlink "$target" "$DOTFILES_DIR/.zshenv")" "$target"
+    elif [[ -e "$target" ]]; then
+        emit unmanaged "$target"
+    else
+        emit unlinked "$target"
+    fi
+}
+
+# --- broken links elsewhere under ~/.config --------------------------------
+# `make clean` acts on these, so they must be visible even for directories
+# this checkout does not ship.
+
+report_stray_broken() {
+    [[ -d "$TARGET_HOME/.config" ]] || return 0
+    local link name
+    while IFS= read -r link; do
+        # Already reported as a shipped .config entry?
+        name="$(basename "$link")"
+        if [[ -n "$REPO_CONFIG" && -d "$REPO_CONFIG/$name" &&
+            "$link" == "$TARGET_HOME/.config/$name" ]]; then
+            continue
+        fi
+        emit "$(classify_broken "$link")" "$link"
+    done < <(find "$TARGET_HOME/.config" -type l ! -exec test -e {} \; -print 2> /dev/null | sort)
+}
+
+main() {
+    if [[ "${1:-}" == "--states" ]]; then
+        local st
+        for st in $LINK_STATES; do echo "$st"; done
+        return 0
+    fi
+
+    report_config_dirs
+    report_zshenv
+    report_stray_broken
+}
+
+main "$@"

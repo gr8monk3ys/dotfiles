@@ -320,6 +320,22 @@ segment (`oven-sh/bun/bun` -> `bun`), the name that lands on PATH.
 `install/duti` is not a kind: it lists file associations, not packages.
 Point it at another checkout with `DOTFILES_DIR`.
 
+### [link-state](link-state)
+
+Classifies the link state of every path this checkout manages, one
+`state<TAB>path` row per path, sorted. `dotfiles-doctor` reports it and
+`make clean` removes the `broken-ours` rows.
+
+```bash
+link-state                 # classify against $HOME
+link-state /tmp/fixture    # classify against another root (used by tests)
+link-state --states        # the state vocabulary
+```
+
+See CONTEXT.md § Link state for the vocabulary. The directory list is derived
+from what the checkout ships; doctor previously carried a hand-written list of
+8 while stow links all 26.
+
 ### [install-kind](install-kind)
 
 Installs one manifest **kind**. How a kind installs — which manifest, which

@@ -14,6 +14,7 @@ Everything since 1.0.0 (2025-10-24), by theme.
 - `bin/lib/git-sync.sh`: shared git fast-forward state machine behind one interface, with `dotfiles-update`, `dotfiles-sync` and `dotfiles-doctor` as three reporters over it; `test/test_git_sync.bats` covers it directly
 - `bin/manifest`: the single reader of the `install/` manifests (`list <kind>`, `kinds`, `taps`), replacing five parsers that disagreed with each other; `test/test_manifest.bats` covers it
 - `bin/validate-doctor-tools` (and `make verify-doctor-tools`, in CI): fails when `dotfiles-doctor`'s probed tool lists and the install manifests drift apart, in either direction; the command-to-package mapping lives in `test/allowlist/command-packages.txt`
+- `bin/link-state`: classifies every managed path against the checkout, read by `dotfiles-doctor` and `make clean`; `test/test_link_state.bats` covers the classification directly, which had no test of any kind before
 - `bin/install-kind`: installs one manifest kind, owning the manifest lookup, install command, tap-trusting, skip and strict policy that six Makefile targets each re-derived; `test/test_install_kind.bats` runs it for real against stub binaries
 - `bin/lib/snapshot.sh`: the snapshot layout described once, read by both `dotfiles-backup` and `dotfiles-restore`; `test/test_snapshot.bats` covers it against a fixture snapshot, with a drift check that the two cannot disagree again
 - `bin/lib/preamble.sh`: shared checkout resolution and `command_exists`, collapsing three copies in `bin/`
@@ -77,6 +78,7 @@ Everything since 1.0.0 (2025-10-24), by theme.
 - `dotfiles-backup --cleanup` removed old snapshot directories but never the `.tar.gz` archives `--compress` made from them, so archives accumulated unbounded and nothing ever read them
 - `MANIFEST.txt` counted only Homebrew formulae and casks; it now reports every record artifact actually written
 - `make pacman-packages` piped `install/pacmanfile` straight into `pacman -S --noconfirm -`, comments included; it worked only because that file happens to have none. It now goes through `bin/manifest list pacman` like every other kind, and gained skip support it never had
+- `dotfiles-doctor` judged 8 hardcoded `.config` directories while `stow` links all 26 the checkout ships, so 18 were never checked and nothing failed when the list fell behind. It now derives the list, and immediately surfaced two real problems: `.config/npm` was not linked at all, and `.config/atuin` holds a real file where a link should be
 - Worktrees are no longer reported as "Not a git repository": the sync state machine uses `git rev-parse --show-prefix` instead of `[[ -d .git ]]`, which is false in any checkout made by `bin/dotfiles-worktree`
 - A checkout with no upstream no longer reports "up to date" forever; it is now a distinct `no-upstream` state that `dotfiles-doctor` surfaces
 - `dotfiles-sync` no longer discards git's stderr into `/dev/null`, so `make sync-log` can show why a sync failed
