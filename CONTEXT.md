@@ -57,6 +57,12 @@ A manifest **kind** is the abstract name for one of them (`brew`, `cask`,
 path. `docs/TOOLS.md` carries one rationale entry per manifest entry, and
 `bin/validate-tool-docs` fails when the two disagree in either direction.
 
+Installing a kind is `bin/install-kind`'s job; the Makefile keeps only the
+dependency edges between kinds. `SKIP_KINDS` names kinds to skip and
+`STRICT_PACKAGES` decides whether a package failure is fatal — one axis, one
+spelling, replacing four booleans that could not express "skip cask-extra but
+not cask".
+
 Which kinds a caller cares about is that caller's policy, not the module's:
 `validate-tool-docs` excludes `font-*` casks (its Fonts section covers them),
 `check-alias-references` reads only the kinds that put a command on PATH.

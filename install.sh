@@ -32,7 +32,10 @@ readonly DIM='\033[2m'
 readonly DOTFILES_REPO="${DOTFILES_REPO:-https://github.com/gr8monk3ys/dotfiles.git}"
 readonly DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
 readonly DOTFILES_BRANCH="${DOTFILES_BRANCH:-main}"
-readonly DOTFILES_STRICT_PACKAGES="${DOTFILES_STRICT_PACKAGES:-1}"
+# A fresh, unattended machine should fail loudly on a broken package install;
+# plain `make` stays tolerant because it is interactive and `make doctor`
+# reports what is missing. DOTFILES_STRICT_PACKAGES is the old spelling.
+readonly STRICT_PACKAGES="${STRICT_PACKAGES:-${DOTFILES_STRICT_PACKAGES:-1}}"
 
 # ============================================================================
 # ASCII Art Banner
@@ -285,9 +288,9 @@ run_installation() {
         macos)
             print_substep "Detected macOS - running full installation"
             print_info "This may take a while..."
-            if [[ "$DOTFILES_STRICT_PACKAGES" == "1" ]]; then
+            if [[ "$STRICT_PACKAGES" == "1" ]]; then
                 print_info "Strict package mode enabled (installation fails on package errors)"
-                BREW_BUNDLE_STRICT=1 make macos
+                STRICT_PACKAGES=1 make macos
             else
                 make macos
             fi

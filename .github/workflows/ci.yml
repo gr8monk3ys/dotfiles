@@ -110,8 +110,13 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
       - name: make (full install for this OS)
+        # Strict here on purpose: the fresh-install matrix is the one place a
+        # broken manifest must fail. Bare `make` is tolerant, so before this
+        # a `brew bundle` failure was swallowed by `|| true` and CI stayed green.
         # No sudo wrapper: links must land in the runner user's HOME;
         # stow-linux escalates on its own for apt/dnf.
+        env:
+          STRICT_PACKAGES: "1"
         run: make
 
       - name: Boot the shell for real

@@ -135,12 +135,15 @@ teardown() {
 @test "Makefile has no bash/sudo targets and macos never touches the login shell" {
 	run grep -E -n '^(bash|sudo):' Makefile
 	assert_failure
-	run make -n macos SKIP_BREW=1 SKIP_CASKS=1 SKIP_NPM=1 SKIP_RUST=1
+	run make -n macos SKIP_KINDS="brew cask npm rust"
 	assert_success
 	[[ "$output" != *"chsh"* ]]
 	[[ "$output" != *"sudo -v"* ]]
-	# macos still reaches the editor-extension step (however the list is read).
-	[[ "$output" == *"install-extension"* ]]
+	# macos still reaches the editor-extension step. Asserting on `make -n`
+	# is right here and only here: this is a claim about make's dependency
+	# graph, which is make's job. What install-kind then *does* is asserted
+	# by running it, in test_install_kind.bats.
+	[[ "$output" == *"install-kind code"* ]]
 }
 
 # Regression: `stow-macos: brew` made "symlinks only" install Homebrew via
@@ -248,13 +251,18 @@ EOS
 
 # Regression: Homebrew >= 5 refuses third-party taps until `brew trust`ed,
 # so `brew bundle` on a fresh Mac died on the first tapped cask (aerospace).
-@test "brew-packages and cask-apps trust the Brewfile taps first" {
+#
+# Trusting taps moved inside bin/install-kind, where it is asserted by running
+# the real thing against stub binaries ("brew kinds trust the declared taps
+# first", test_install_kind.bats). What stays here is the make-level claim:
+# the brew kinds are still routed through install-kind at all.
+@test "brew and cask targets route through install-kind" {
 	run make -n brew-packages
 	assert_success
-	[[ "$output" == *"brew trust"* ]]
+	[[ "$output" == *"install-kind brew"* ]]
 	run make -n cask-apps
 	assert_success
-	[[ "$output" == *"brew trust"* ]]
+	[[ "$output" == *"install-kind cask"* ]]
 }
 
 # Public-readiness: tracked config must carry no personal identity or hosts.

@@ -14,6 +14,7 @@ Everything since 1.0.0 (2025-10-24), by theme.
 - `bin/lib/git-sync.sh`: shared git fast-forward state machine behind one interface, with `dotfiles-update`, `dotfiles-sync` and `dotfiles-doctor` as three reporters over it; `test/test_git_sync.bats` covers it directly
 - `bin/manifest`: the single reader of the `install/` manifests (`list <kind>`, `kinds`, `taps`), replacing five parsers that disagreed with each other; `test/test_manifest.bats` covers it
 - `bin/validate-doctor-tools` (and `make verify-doctor-tools`, in CI): fails when `dotfiles-doctor`'s probed tool lists and the install manifests drift apart, in either direction; the command-to-package mapping lives in `test/allowlist/command-packages.txt`
+- `bin/install-kind`: installs one manifest kind, owning the manifest lookup, install command, tap-trusting, skip and strict policy that six Makefile targets each re-derived; `test/test_install_kind.bats` runs it for real against stub binaries
 - `bin/lib/snapshot.sh`: the snapshot layout described once, read by both `dotfiles-backup` and `dotfiles-restore`; `test/test_snapshot.bats` covers it against a fixture snapshot, with a drift check that the two cannot disagree again
 - `bin/lib/preamble.sh`: shared checkout resolution and `command_exists`, collapsing three copies in `bin/`
 - `bin/platform file-mode <path>`: the BSD/GNU `stat` adapter pair, moved out of `dotfiles-doctor` where it was private to one caller
@@ -40,6 +41,9 @@ Everything since 1.0.0 (2025-10-24), by theme.
 - `bin/check-alias-references` now resolves aliases against every manifest kind that puts a command on PATH (previously 4 of 6: no `Caskfile.extra`, no `pacmanfile`) and matches tap-qualified formulae by their PATH name, so `sketchybar` resolves where `FelixKratz/formulae/sketchybar` did not. It therefore rejects fewer aliases; the ones it stopped rejecting were false positives
 - Manifest format validation moved from seven hand-rolled regexes in `test/test_packages.bats` into `bin/manifest`, so the rule that parses a manifest is the rule that validates it
 - Regression tests that asserted on config _file text_ now assert on runtime behaviour where one exists: `alias c`, `$BAT_THEME` and the live starship prompt hook moved onto the booted shell in `test_shell_boot.bats`, and the delta theme check asks `git config --get` instead of grepping git's syntax. Text checks remain only where there is no cheap runtime observable (bat's config, nvim's plugin spec) or the rule is inherently static (portable shell, no personal identity)
+- `SKIP_KINDS="rust pacman"` replaces `SKIP_BREW`/`SKIP_CASKS`/`SKIP_NPM`/`SKIP_RUST`, and `STRICT_PACKAGES` replaces `BREW_BUNDLE_STRICT`/`DOTFILES_STRICT_PACKAGES`. One axis, one spelling, using the same word `bin/manifest` already used — and able to express "skip cask-extra but not cask", which the booleans could not. The old names still work and print a deprecation notice
+- Package install failures are now uniformly tolerant by default and uniformly fatal under `STRICT_PACKAGES`. Previously brew and editor extensions were tolerant while npm, rust and pacman were fatal — an inconsistency nobody chose. `install.sh` still defaults to strict; CI's fresh-install matrix now sets it explicitly, closing a gap where a broken Brewfile passed CI because bare `make` swallowed the failure
+- `make help` documents `SKIP_KINDS`, `STRICT_PACKAGES`, `SKIP_DOCKER` and `SKIP_LINTERS`; a test now fails if any `SKIP_`/`STRICT_` variable the Makefile reads is missing from it
 - `dotfiles-doctor`'s `check_pass`/`check_fail`/`check_warn`/`check_info` now wrap `lib/ui.sh`'s printers instead of restating its escape codes, so a change to shared output formatting actually reaches the health check
 - `dotfiles-update` no longer aborts the entire run when the checkout has uncommitted changes; it skips the repository step, continues with package updates, and says so in the summary
 - Terminal: Kitty → Ghostty; theme standardised on OneDark across CLI tools (Ghostty and SketchyBar keep their own)
@@ -52,6 +56,8 @@ Everything since 1.0.0 (2025-10-24), by theme.
 
 ### Removed
 
+- The `bun` make target: bun is already in the Brewfile (`brew "oven-sh/bun/bun"`), so the target only ever printed "already installed" — and it put a `curl | bash` in the default install path for no gain
+- The `brew-taps` make target: trusting taps is a step within installing a brew kind, not ordering between kinds, so it moved inside `bin/install-kind`
 - `bin/is-executable`: a one-line `command -v` wrapper with a single caller; `make brew` uses `bin/platform has brew` instead
 - `platform run-if` and `platform is-arch`: no callers; `platform has` and `platform is-omarchy` cover their uses
 - `test_regressions.bats` "legacy theme names are absent": duplicated `make verify-stale-refs`, which checks 9 patterns over more paths in the same `make verify`
@@ -70,6 +76,7 @@ Everything since 1.0.0 (2025-10-24), by theme.
 - `dotfiles-backup` captured only one editor's extensions (`code` **or** `codium`) while the Makefile preferred the other; it now captures both when both exist
 - `dotfiles-backup --cleanup` removed old snapshot directories but never the `.tar.gz` archives `--compress` made from them, so archives accumulated unbounded and nothing ever read them
 - `MANIFEST.txt` counted only Homebrew formulae and casks; it now reports every record artifact actually written
+- `make pacman-packages` piped `install/pacmanfile` straight into `pacman -S --noconfirm -`, comments included; it worked only because that file happens to have none. It now goes through `bin/manifest list pacman` like every other kind, and gained skip support it never had
 - Worktrees are no longer reported as "Not a git repository": the sync state machine uses `git rev-parse --show-prefix` instead of `[[ -d .git ]]`, which is false in any checkout made by `bin/dotfiles-worktree`
 - A checkout with no upstream no longer reports "up to date" forever; it is now a distinct `no-upstream` state that `dotfiles-doctor` surfaces
 - `dotfiles-sync` no longer discards git's stderr into `/dev/null`, so `make sync-log` can show why a sync failed

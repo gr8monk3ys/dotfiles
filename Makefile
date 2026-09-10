@@ -26,15 +26,15 @@ export ACCEPT_EULA=Y
         doctor update backup worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
         brew git packages-macos packages-arch core-macos core-arch \
-        stow-arch stow-macos stow-linux linux brew-taps cask-apps cask-apps-extra vscode-extensions node-packages \
-        rust-packages duti bun pacman-packages brew-packages \
+        stow-arch stow-macos stow-linux linux cask-apps cask-apps-extra vscode-extensions node-packages \
+        rust-packages duti pacman-packages brew-packages \
         help \
         sync-install sync-uninstall sync-status sync-run \
         test-docker test-docker-arch test-docker-interactive verify-docker
 
 all: $(OS)
 
-macos: core-macos packages-macos link vscode-extensions duti bun
+macos: core-macos packages-macos link vscode-extensions duti
 
 arch: core-arch packages-arch link
 
@@ -112,76 +112,27 @@ packages-macos: brew-packages cask-apps node-packages rust-packages
 packages-arch: pacman-packages
 
 pacman-packages:
-	pacman -S --noconfirm - < $(DOTFILES_DIR)/install/pacmanfile
+	@$(DOTFILES_DIR)/bin/install-kind pacman
 
-# Homebrew >= 5 refuses to install from third-party taps until they are
-# trusted ("Refusing to load cask … from untrusted tap"). Trust exactly the
-# taps the Brewfile declares; a no-op on Homebrew versions without `trust`.
-brew-taps: brew
-	@if [ -z "$(SKIP_BREW)" ] && brew help trust >/dev/null 2>&1; then \
-		$(DOTFILES_DIR)/bin/manifest taps | \
-			while read -r tap; do brew trust "$$tap" >/dev/null 2>&1 || brew trust "$$tap"; done; \
-	fi
+brew-packages: brew
+	@$(DOTFILES_DIR)/bin/install-kind brew
 
-brew-packages: brew brew-taps
-	if [ -n "$(SKIP_BREW)" ]; then \
-		echo "Skipping Homebrew formulae"; \
-	elif [ -n "$(BREW_BUNDLE_STRICT)" ]; then \
-		brew bundle --file=$(DOTFILES_DIR)/install/Brewfile; \
-	else \
-		brew bundle --file=$(DOTFILES_DIR)/install/Brewfile || true; \
-	fi
-
-cask-apps: brew brew-taps
-	if [ -n "$(SKIP_CASKS)" ]; then \
-		echo "Skipping Homebrew casks"; \
-	elif [ -n "$(BREW_BUNDLE_STRICT)" ]; then \
-		brew bundle --file=$(DOTFILES_DIR)/install/Caskfile; \
-	else \
-		brew bundle --file=$(DOTFILES_DIR)/install/Caskfile || true; \
-	fi
+cask-apps: brew
+	@$(DOTFILES_DIR)/bin/install-kind cask
 
 # Optional apps (games, media production, misc). Not part of `make macos`.
-cask-apps-extra: brew brew-taps
-	if [ -n "$(SKIP_CASKS)" ]; then \
-		echo "Skipping Homebrew casks (extra)"; \
-	elif [ -n "$(BREW_BUNDLE_STRICT)" ]; then \
-		brew bundle --file=$(DOTFILES_DIR)/install/Caskfile.extra; \
-	else \
-		brew bundle --file=$(DOTFILES_DIR)/install/Caskfile.extra || true; \
-	fi
+cask-apps-extra: brew
+	@$(DOTFILES_DIR)/bin/install-kind cask-extra
 
 vscode-extensions: cask-apps
-	@if command -v codium >/dev/null 2>&1; then \
-		echo "Installing extensions with VSCodium..."; \
-		$(DOTFILES_DIR)/bin/manifest list code | while read -r ext; do \
-			codium --install-extension "$$ext" || true; \
-		done; \
-	elif command -v code >/dev/null 2>&1; then \
-		echo "Installing extensions with VS Code..."; \
-		$(DOTFILES_DIR)/bin/manifest list code | while read -r ext; do \
-			code --install-extension "$$ext" || true; \
-		done; \
-	else \
-		echo "⚠️  Neither code nor codium found. Skipping extension installation."; \
-	fi
+	@$(DOTFILES_DIR)/bin/install-kind code
 
 # Node itself comes from the Brewfile (`brew "node"`), so npm is on PATH.
 node-packages: brew-packages
-	@if [ -n "$(SKIP_NPM)" ]; then \
-		echo "Skipping npm packages"; \
-	else \
-		$(DOTFILES_DIR)/bin/manifest list npm | xargs npm install --force --location global; \
-	fi
+	@$(DOTFILES_DIR)/bin/install-kind npm
 
 rust-packages: brew-packages
-	@if [ -n "$(SKIP_RUST)" ]; then \
-		echo "Skipping Rust packages"; \
-	else \
-		export PATH="$$HOME/.cargo/bin:$$(brew --prefix rustup 2>/dev/null)/bin:$$PATH"; \
-		command -v cargo >/dev/null 2>&1 || rustup default stable; \
-		$(DOTFILES_DIR)/bin/manifest list rust | xargs -n1 cargo install; \
-	fi
+	@$(DOTFILES_DIR)/bin/install-kind rust
 
 duti:
 	@if command -v duti >/dev/null 2>&1; then \
@@ -192,13 +143,6 @@ duti:
 		echo "   Install with: brew install duti"; \
 	fi
 
-bun:
-	@if command -v bun >/dev/null 2>&1; then \
-		echo "✓ Bun already installed"; \
-	else \
-		echo "Installing Bun..."; \
-		curl -fsSL https://bun.sh/install | bash; \
-	fi
 
 test:
 	@if ! command -v bats >/dev/null 2>&1; then \
@@ -537,5 +481,12 @@ help:
 	@echo "  make sync-uninstall - Disable auto-sync"
 	@echo "  make sync-status    - Check sync service status"
 	@echo "  make sync-run       - Run sync manually"
+	@echo ""
+	@echo "Environment:"
+	@echo "  SKIP_KINDS=\"rust pacman\"  - Skip these manifest kinds"
+	@echo "                          (brew cask cask-extra npm rust pacman code)"
+	@echo "  STRICT_PACKAGES=1       - Make a package install failure fatal"
+	@echo "  SKIP_DOCKER=1           - Skip the container test in make verify"
+	@echo "  SKIP_LINTERS=1          - Skip shellcheck/markdownlint in make verify"
 	@echo ""
 	@echo "See README.md for full documentation."
