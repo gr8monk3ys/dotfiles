@@ -354,6 +354,43 @@ The Makefile keeps every dependency edge between kinds — ordering is what
 make is genuinely deep at. A missing tool is not a failure: `install-kind
 rust` with no cargo warns and exits 0.
 
+### [firefox-user-js](firefox-user-js)
+
+Installs this checkout's `user.js` into the Firefox profiles that actually
+read it. `make link` stows `.config/firefox/` to `~/.config/firefox/`, a path
+Firefox never opens — `user.js` is per-profile, read at startup from inside
+the profile directory. 81KB of arkenfox hardening sat at the stow target
+taking effect on nothing.
+
+```bash
+firefox-user-js profiles      # role<TAB>path, one row per profile
+firefox-user-js status        # state<TAB>path, one row per profile
+firefox-user-js install       # symlink it into the default profile
+firefox-user-js install --all --copy --dry-run
+firefox-user-js --states      # the state vocabulary
+# or
+make firefox [profiles=all] [copy=1] [dry=1]
+```
+
+See CONTEXT.md § Firefox profile state for the vocabulary. Three things it
+does not do the obvious way, each for a reason:
+
+- Profiles come from `profiles.ini`, never a `Profiles/*/` glob. An
+  `[Install…]` section's `Default=` names the profile Firefox actually opens
+  and beats a `[Profile N]` section's `Default=1`, which is only the legacy
+  fallback. On the machine this was written for the two disagree, and the
+  `Default=1` one has never been opened.
+- It symlinks rather than copies, so editing the checkout's `user.js` reaches
+  Firefox at its next start. That Firefox follows a symlinked `user.js` was
+  tested, not assumed. `--copy` exists for sandboxed builds (Flatpak, Snap),
+  which cannot see a path outside the sandbox.
+- A `user.js` it did not write is moved to `user.js.bak.<timestamp>` before
+  being replaced, and a profile already in the requested state is left
+  untouched — so a second run takes no second backup.
+
+`user.js` is read once, at startup, so `install` warns when Firefox is
+running instead of quietly doing nothing visible.
+
 ### [validate-doctor-tools](validate-doctor-tools)
 
 Fails when `dotfiles-doctor`'s probed tool lists and the `install/` manifests
@@ -392,3 +429,4 @@ Helps non-root installations on Arch Linux.
 | dotfiles-bench-shell | ✓ | ✓ | ✓ |
 | dotfiles-worktree | ✓ | ✓ | ✓ |
 | dotfiles-sync | ✓ | — | — |
+| firefox-user-js | ✓ | ✓ | ✓ |

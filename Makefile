@@ -28,7 +28,7 @@ export ACCEPT_EULA=Y
 
 .PHONY: all macos arch link unlink link-dry-run test test-setup verify \
         verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-doctor-tools verify-tests \
-        doctor update backup worktree-add worktree-list worktree-remove worktree-prune \
+        doctor update backup firefox worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
         brew git packages-macos packages-arch core-macos core-arch \
         stow-arch stow-macos stow-linux linux unknown cask-apps cask-apps-extra vscode-extensions node-packages \
@@ -282,6 +282,15 @@ update:
 backup:
 	@bin/dotfiles-backup
 
+## Install this checkout's user.js into the Firefox profiles that read it
+# Not folded into `link`: stow's target (~/.config/firefox/user.js) is a path
+# Firefox never opens, and a browser profile is not something `make link`
+# should reach into unasked. Resolved from MAKEFILE_DIR like every other tool
+# here — never looked up inside DOTFILES_DIR, which tests point elsewhere.
+firefox:
+	@DOTFILES_DIR="$(DOTFILES_DIR)" $(MAKEFILE_DIR)/bin/firefox-user-js install \
+		$(if $(filter all,$(profiles)),--all) $(if $(copy),--copy) $(if $(dry),--dry-run)
+
 ## Benchmark interactive zsh startup against a performance budget
 bench-shell:
 	@bin/dotfiles-bench-shell --runs "$(if $(runs),$(runs),7)" --budget-ms "$(if $(budget),$(budget),900)"
@@ -464,6 +473,9 @@ help:
 	@echo "  make doctor       - Run health check"
 	@echo "  make update       - Update all packages"
 	@echo "  make backup       - Backup configurations"
+	@echo "  make firefox [profiles=all] [copy=1] [dry=1] - Install user.js into"
+	@echo "                      the Firefox profiles that read it (bin/firefox-user-js status"
+	@echo "                      reports where it landed)"
 	@echo "  make restore [backup=/path] - Restore latest/specified backup snapshot"
 	@echo "  make restore-zshenv - Restore legacy .zshenv backup only"
 	@echo "  make bench-shell [runs=7] [budget=900] - Benchmark zsh startup budget"

@@ -1,58 +1,81 @@
 # Firefox Configuration
 
-This directory contains user preferences for [Mozilla Firefox](https://www.mozilla.org/firefox/).
+[arkenfox](https://github.com/arkenfox/user.js)-based privacy hardening for
+[Mozilla Firefox](https://www.mozilla.org/firefox/).
 
 ## Files
 
-- `user.js` - User preferences file for Firefox customization
+- `user.js` - the tracked preferences file (arkenfox v140, ~81KB)
 
-## What is user.js?
+## Stow links this somewhere Firefox never reads
 
-The `user.js` file is a configuration file that allows you to customize Firefox settings that aren't easily accessible through the standard preferences interface. It's particularly useful for:
-- Privacy and security hardening
-- Performance optimization
-- UI/UX customization
-- Developer-specific settings
+`make link` stows this directory to `~/.config/firefox/`, the same as every
+other tool here. Firefox does not read that path. `user.js` is a _per-profile_
+file: Firefox reads it at startup from inside the profile directory, and
+nowhere else.
 
-## How It Works
+So the stowed copy is the _source of truth_, not the _effective_ config. It
+takes effect only once it is installed into a profile:
 
-When Firefox starts, it reads the `user.js` file from your profile directory and applies all the preferences defined in it. These settings override any existing preferences in `prefs.js`.
+```bash
+make firefox                 # into the profile Firefox actually opens
+make firefox profiles=all    # into every profile in profiles.ini
+bin/firefox-user-js status   # where it actually landed
+```
 
-### Installation
+See [bin/firefox-user-js](../../bin/firefox-user-js) for the full interface
+(`--copy`, `--dry-run`, `--root`), and
+[CONTEXT.md § Firefox profile state](../../CONTEXT.md) for the vocabulary its
+`status` output uses.
 
-To use this configuration:
+## How installation works
 
-1. Locate your Firefox profile directory:
-   - macOS: `~/Library/Application Support/Firefox/Profiles/xxxxxxxx.default/`
-   - Linux: `~/.mozilla/firefox/xxxxxxxx.default/`
-   - Windows: `%APPDATA%\Mozilla\Firefox\Profiles\xxxxxxxx.default\`
+- **Profiles come from `profiles.ini`**, never from globbing `Profiles/*/`. A
+  glob picks up profiles Firefox has abandoned and cannot tell which one is
+  live. An `[Install…]` section's `Default=` names the profile _this install_
+  of Firefox opens and takes precedence over a `[Profile N]` section's
+  `Default=1`, which is only the legacy fallback — on this machine the two
+  disagree, and reading `Default=1` alone would harden a profile that has
+  never been opened.
+- **A symlink, not a copy.** Editing `user.js` here reaches Firefox at its
+  next start with no reinstall step. Firefox follows a symlinked `user.js`
+  (verified on 155.0.1 / macOS 15 by booting two throwaway profiles headless,
+  one linked and one copied, and diffing the resulting `prefs.js`). Use
+  `copy=1` for a sandboxed Firefox — Flatpak and Snap builds can only see
+  paths their sandbox exports, so a link into this checkout resolves to
+  nothing.
+- **Nothing is clobbered.** A `user.js` this checkout did not write is moved
+  to `user.js.bak.<timestamp>` first. Running twice changes nothing and takes
+  no second backup.
 
-2. Copy `user.js` to your profile directory
+## Firefox must be restarted
 
-3. Restart Firefox for changes to take effect
+`user.js` is read once, at startup. `make firefox` warns when Firefox is
+running rather than pretending the change is live.
 
-## Common Customizations
+## Verifying and undoing
 
-Typical `user.js` configurations include:
-- **Privacy**: Disable telemetry, tracking, and data collection
-- **Security**: Enhanced security settings and HTTPS-only mode
-- **Performance**: Hardware acceleration, cache settings
-- **UI/UX**: Disable animations, compact mode, custom homepage
-- **Developer Tools**: Enable debugging features
+Check a pref in `about:config`, or grep the profile's `prefs.js` after a
+restart — Firefox copies every `user.js` pref that differs from the default
+into it.
 
-## Managing Settings
+Removing `user.js` does _not_ revert the prefs it already wrote: they persist
+in `prefs.js`. arkenfox ships
+[prefsCleaner](https://github.com/arkenfox/user.js/wiki/5.1-Troubleshooting)
+for that.
 
-- Settings in `user.js` are permanent and override GUI changes
-- To change settings, edit `user.js` and restart Firefox
-- To remove a setting, delete the line from `user.js` and restart Firefox
-- Use `about:config` in Firefox to verify applied settings
+## Where the settings come from
 
-## Backup
+`user.js` is an arkenfox release, so most of it should not be hand-edited —
+arkenfox's own advice is to keep local changes in a `user-overrides.js` and
+append them, so the base file stays diffable against the next release.
 
-Always backup your `user.js` before making significant changes. This dotfiles repository serves as version control for your Firefox preferences.
+Sections worth reading before trusting it: 2800 (data erased on exit) and
+anything tagged `[SETUP-WEB]`, which can break sites.
 
 ## Resources
 
-- [Firefox user.js Documentation](https://kb.mozillazine.org/User.js_file)
-- [about:config Entries](https://kb.mozillazine.org/About:config_entries)
-- [arkenfox user.js](https://github.com/arkenfox/user.js) - Privacy-focused template
+- [arkenfox user.js](https://github.com/arkenfox/user.js) - the upstream project
+- [arkenfox wiki](https://github.com/arkenfox/user.js/wiki) - what each section does
+- [Firefox user.js documentation](https://kb.mozillazine.org/User.js_file)
+- [about:config entries](https://kb.mozillazine.org/About:config_entries)

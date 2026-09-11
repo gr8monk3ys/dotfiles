@@ -132,6 +132,54 @@ Doctor's severity tiers (core / essential / next-gen / additional) stay a
 curated editorial judgement: the manifests say what is installed, not what
 matters.
 
+## Firefox profile state
+
+The classification of one Firefox profile's `user.js` against the **checkout**,
+produced by `bin/firefox-user-js`. Profiles are discovered from `profiles.ini`,
+never by globbing `Profiles/*/`: a glob finds profiles Firefox has abandoned
+and cannot say which one is live.
+
+| State | Meaning |
+| --- | --- |
+| `linked` | `user.js` is a symlink resolving to the checkout's copy |
+| `installed` | `user.js` is a regular file identical to the checkout's copy |
+| `foreign` | A `user.js` is present that this checkout did not write |
+| `absent` | The profile exists and has no `user.js` |
+| `missing` | `profiles.ini` names the profile, but the directory is not there |
+
+`linked` and `installed` are the same intent under two placement modes
+(symlink, the default, and `--copy` for sandboxed builds); which one counts as
+current depends on the mode asked for, and switching between them is not a
+clobber. `foreign` is the only state that earns a backup.
+
+A profile also carries a **role**, `default` or `other`. `default` is the
+profile Firefox actually opens, which is what an `[Install…]` section's
+`Default=` names — not a `[Profile N]` section's `Default=1`, which is only
+the legacy fallback. The two disagree on the machine this was written for, and
+trusting `Default=1` would harden a profile that has never been opened.
+
+This is deliberately a separate vocabulary from **link state**, not an
+extension of it. Stow links `.config/firefox/` to `~/.config/firefox/`, a path
+Firefox never reads; the stowed copy is the source of truth and the profile
+copy is the effective one, so a profile can be `absent` while its link state is
+perfectly `linked`.
+
+## Shell surface
+
+The files a login shell sources: `.zshenv`, then `$ZDOTDIR/.zshrc`, which
+sources `lib.zsh`, `aliases.zsh` and `functions.zsh` **in that order**.
+
+The order is load-bearing, not incidental. `aliases.zsh` builds the `copy`
+alias out of `lib.zsh`'s `_dotfiles_clipboard`, and zsh expands aliases when a
+function body is _parsed_, so `functions.zsh` must come last for `cx` to pick
+up `l`. `test_shell_boot.bats` boots a real interactive zsh and asserts the
+helper is live, which makes this a checked constraint rather than a comment.
+
+Anything with a runtime observable is asserted against that booted shell
+rather than by grepping the config files — a grep cannot tell a setting that
+parses from one that takes effect. Text checks remain only where there is no
+cheap runtime observable, or the rule is inherently static.
+
 ## Platform
 
 Which OS and architecture a **checkout** is running on, answered by
