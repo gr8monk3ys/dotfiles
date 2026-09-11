@@ -181,7 +181,15 @@ esac
 EOS
 	chmod +x "$TEST_TEMP_DIR/bin/npm"
 
-	run env HOME="$TEST_HOME" DOTFILES_DIR="$TEST_HOME/dotfiles-repo" \
+	# ZDOTDIR and the XDG vars are scrubbed, not just HOME: dotfiles-update's
+	# zinit step runs a child `zsh -c`, zsh derives its completion dump from
+	# an inherited $ZDOTDIR rather than from $HOME, and on a machine where
+	# ~/.config/zsh is stowed that path resolves *into the checkout* — so this
+	# sandboxed test wrote .zcompdump into the working tree and
+	# test_shell_boot.bats's "the suite does not write into the checkout"
+	# failed several tests later. Same scrub test_shell_boot.bats uses.
+	run env -u ZDOTDIR -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_CACHE_HOME \
+		HOME="$TEST_HOME" DOTFILES_DIR="$TEST_HOME/dotfiles-repo" \
 		PATH="$TEST_TEMP_DIR/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
 		bash bin/dotfiles-update --skip-brew --skip-cargo
 	assert_success

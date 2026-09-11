@@ -33,7 +33,10 @@ setup() {
 
     FAKE_HOME="$(mktemp -d)"
     mkdir -p "$FAKE_HOME/.config" "$FAKE_HOME/.local"
-    ln -s "$DOTFILES_DIR/.config/zsh" "$FAKE_HOME/.config/zsh"
+    # Copy, do not symlink: this test used to point the fixture at the
+    # checkout and then rm .zcompdump* inside it, so the suite wrote to its
+    # own subject. ZDOTDIR points at the copy, so the checkout is untouched.
+    cp -R "$DOTFILES_DIR/.config/zsh" "$FAKE_HOME/.config/zsh"
     ln -s "$DOTFILES_DIR/.config/starship" "$FAKE_HOME/.config/starship"
     ln -s "$DOTFILES_DIR/.config/atuin" "$FAKE_HOME/.config/atuin"
     ln -s "${XDG_DATA_HOME:-$HOME/.local/share}" "$FAKE_HOME/.local/share"
@@ -41,12 +44,10 @@ setup() {
     cp "$DOTFILES_DIR/.zshenv" "$FAKE_HOME/.zshenv"
     # ZDOTDIR/XDG_* may be exported by the calling shell; zsh reads
     # $ZDOTDIR/.zshenv in preference to $HOME/.zshenv, so drop them.
-    # Use a private compdump so the repo checkout is not written to.
-    rm -f "$DOTFILES_DIR/.config/zsh/.zcompdump"*
+    rm -f "$FAKE_HOME/.config/zsh/.zcompdump"*
 }
 
 teardown() {
-    rm -f "$DOTFILES_DIR/.config/zsh/.zcompdump"*
     rm -rf "$FAKE_HOME"
 }
 
@@ -57,7 +58,7 @@ teardown() {
 
 @test "shell-boot: second start is under the 900ms budget and reuses the completion dump" {
     env -u ZDOTDIR -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_CACHE_HOME HOME="$FAKE_HOME" TERM=xterm zsh -ic exit
-    local dump="$DOTFILES_DIR/.config/zsh/.zcompdump"
+    local dump="$FAKE_HOME/.config/zsh/.zcompdump"
     [[ -f "$dump" ]]
     local m1 m2 ms
     m1=$(stat -f %m "$dump" 2>/dev/null || stat -c %Y "$dump")
@@ -110,4 +111,48 @@ teardown() {
         # The prompt is guarded on the binary, so absence is correct here.
         [[ "$output" != *"starship"* ]]
     fi
+}
+
+@test "shell-boot: the shared clipboard helper is live" {
+    # Also asserts the load order: lib.zsh must be sourced before aliases.zsh,
+    # which builds `copy` out of this helper.
+    run --separate-stderr env -u ZDOTDIR -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_CACHE_HOME HOME="$FAKE_HOME" TERM=xterm \
+        zsh -ic 'if (( $+functions[_dotfiles_clipboard] )); then print live; else print absent; fi; alias copy'
+    assert_success
+    [[ "$output" == *"live"* ]]
+    [[ "$output" == *"_dotfiles_clipboard"* ]]
+}
+
+@test "shell-boot: ZDOTDIR resolves to the zsh config directory" {
+    run --separate-stderr env -u ZDOTDIR -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_CACHE_HOME HOME="$FAKE_HOME" TERM=xterm \
+        zsh -ic 'print -r -- $ZDOTDIR'
+    assert_success
+    assert_output "$FAKE_HOME/.config/zsh"
+}
+
+@test "shell-boot: the suite does not write into the checkout" {
+    # Regression: setup used to symlink the fixture at $DOTFILES_DIR/.config/zsh
+    # and rm .zcompdump* inside it, so the suite wrote to its own subject.
+    #
+    # Asserts the boot *creates nothing new*, rather than that the checkout is
+    # pristine: on a machine where ~/.config/zsh is stowed, running any
+    # interactive zsh by hand legitimately leaves a .zcompdump there, and a
+    # bare existence check would fail for reasons that have nothing to do
+    # with this suite.
+    local before after
+    before="$(ls "$DOTFILES_DIR"/.config/zsh/.zcompdump* 2> /dev/null | sort | md5 2> /dev/null ||
+        ls "$DOTFILES_DIR"/.config/zsh/.zcompdump* 2> /dev/null | sort | md5sum)"
+
+    run --separate-stderr env -u ZDOTDIR -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_CACHE_HOME HOME="$FAKE_HOME" TERM=xterm \
+        zsh -ic exit
+    assert_success
+
+    after="$(ls "$DOTFILES_DIR"/.config/zsh/.zcompdump* 2> /dev/null | sort | md5 2> /dev/null ||
+        ls "$DOTFILES_DIR"/.config/zsh/.zcompdump* 2> /dev/null | sort | md5sum)"
+    [[ "$before" == "$after" ]]
+
+    # The fixture must be a copy, never a link at the checkout.
+    [[ ! -L "$FAKE_HOME/.config/zsh" ]]
+    # And the dump the boot produced must live in the fixture.
+    [[ -f "$FAKE_HOME/.config/zsh/.zcompdump" ]]
 }

@@ -15,13 +15,9 @@ if command -v fzf &> /dev/null; then
     f() {
         local file
         file="$(find . -type f -not -path '*/.*' | fzf)" || return
-        if command -v pbcopy &> /dev/null; then
-            printf '%s' "$file" | pbcopy
-        elif command -v wl-copy &> /dev/null; then
-            printf '%s' "$file" | wl-copy
-        elif command -v xclip &> /dev/null; then
-            printf '%s' "$file" | xclip -selection clipboard
-        else
+        # The tool chain lives in lib.zsh. Unlike `copy`, this degrades:
+        # you asked to find a file, so you still get the path.
+        if ! printf '%s' "$file" | _dotfiles_clipboard; then
             echo "$file"
             return
         fi

@@ -10,6 +10,12 @@ for _brew in /opt/homebrew/bin/brew /usr/local/bin/brew /home/linuxbrew/.linuxbr
 done
 unset _brew
 
+# Resolve ZDOTDIR once. .zshenv exports it, but a shell started without
+# .zshenv (zsh -f, some launchers) fell back to five sites with two different
+# defaults — including the completion dump, which used ${ZDOTDIR:-$HOME} and
+# so landed somewhere nothing else looked.
+: "${ZDOTDIR:=$HOME/.config/zsh}"
+
 # .zshenv already put ~/.local/bin and ~/.cargo/bin first, but on macOS
 # /etc/zprofile runs path_helper, which rebuilds PATH with the system dirs
 # in front for login shells; brew shellenv above also prepends its prefix.
@@ -52,7 +58,7 @@ command -v kubectx &> /dev/null && zinit snippet OMZP::kubectx
 # (-C). A full scan costs ~300ms and a single dangling completion symlink
 # makes it happen on every start.
 autoload -Uz compinit
-_zcompdump="${ZDOTDIR:-$HOME}/.zcompdump"
+_zcompdump="$ZDOTDIR/.zcompdump"
 _zcompdump_stale=( ${_zcompdump}(N.mh+24) )   # N: empty if absent; mh+24: older than a day
 if [[ ! -f "$_zcompdump" || ${#_zcompdump_stale} -gt 0 ]]; then
   compinit -d "$_zcompdump"
@@ -131,11 +137,16 @@ fi
 alias vim='nvim'
 alias c='clear'
 
+# Order matters: lib.zsh defines helpers aliases.zsh builds aliases out of,
+# and zsh expands aliases when a function body is parsed, so functions.zsh
+# must come last. test_shell_boot.bats asserts this holds.
+[[ -f "$ZDOTDIR/lib.zsh" ]] && source "$ZDOTDIR/lib.zsh"
+
 # Source aliases file (modern CLI replacements)
-[[ -f "${ZDOTDIR:-$HOME/.config/zsh}/aliases.zsh" ]] && source "${ZDOTDIR:-$HOME/.config/zsh}/aliases.zsh"
+[[ -f "$ZDOTDIR/aliases.zsh" ]] && source "$ZDOTDIR/aliases.zsh"
 
 # Source functions file (fuzzy-finder productivity functions)
-[[ -f "${ZDOTDIR:-$HOME/.config/zsh}/functions.zsh" ]] && source "${ZDOTDIR:-$HOME/.config/zsh}/functions.zsh"
+[[ -f "$ZDOTDIR/functions.zsh" ]] && source "$ZDOTDIR/functions.zsh"
 
 # Keep Claude bound to the local installer binary.
 if [[ -x "$HOME/.local/bin/claude" ]]; then
@@ -194,8 +205,8 @@ export MACHINE_TYPE
 # zshrc.<machine-type> for per-role settings. Written as `if` rather than
 # `[[ ]] &&` so an absent file doesn't leave the shell's exit status at 1.
 for _local in zshrc.local "zshrc.${MACHINE_TYPE}"; do
-  if [[ -f "${ZDOTDIR:-$HOME/.config/zsh}/${_local}" ]]; then
-    source "${ZDOTDIR:-$HOME/.config/zsh}/${_local}"
+  if [[ -f "$ZDOTDIR/${_local}" ]]; then
+    source "$ZDOTDIR/${_local}"
   fi
 done
 unset _local
