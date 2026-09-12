@@ -19,7 +19,7 @@ tap "FelixKratz/formulae"              # SketchyBar status bar
 # Core System Dependencies
 # ============================================================================
 brew "ca-certificates"                 # SSL/TLS certificates
-brew "dbus", restart_service: :changed # Message bus system
+brew "dbus"                            # Message bus system (no restart_service: fails on a fresh machine)
 brew "gnupg"                           # PGP encryption
 
 # ============================================================================
