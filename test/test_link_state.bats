@@ -76,6 +76,41 @@ rows() {
     assert_output "partial"
 }
 
+@test "a folded subdirectory link counts as linked, not partial" {
+    # Regression: stow folds subdirectories, so .config/atuin/themes can be a
+    # single link into the checkout and themes/*.toml are real files at the
+    # end of a correctly linked path. classify_unfolded required a symlink at
+    # each leaf and called that `partial` — a false positive that cost a
+    # tracked file when acted on.
+    ship atuin
+    mkdir -p "$FAKE_REPO/.config/atuin/themes"
+    printf 'theme\n' > "$FAKE_REPO/.config/atuin/themes/onedark.toml"
+
+    mkdir -p "$TEST_HOME/.config/atuin"
+    ln -s "$FAKE_REPO/.config/atuin/conf" "$TEST_HOME/.config/atuin/conf"
+    # The whole themes dir is one link, as stow leaves it.
+    ln -s "$FAKE_REPO/.config/atuin/themes" "$TEST_HOME/.config/atuin/themes"
+
+    run state_of ".config/atuin"
+    assert_output "linked"
+}
+
+@test "a folded subdirectory pointing elsewhere is still partial" {
+    # The fix must not make classification unconditionally permissive.
+    ship atuin
+    mkdir -p "$FAKE_REPO/.config/atuin/themes"
+    printf 'theme\n' > "$FAKE_REPO/.config/atuin/themes/onedark.toml"
+    mkdir -p "$TEST_TEMP_DIR/impostor/themes"
+    printf 'other\n' > "$TEST_TEMP_DIR/impostor/themes/onedark.toml"
+
+    mkdir -p "$TEST_HOME/.config/atuin"
+    ln -s "$FAKE_REPO/.config/atuin/conf" "$TEST_HOME/.config/atuin/conf"
+    ln -s "$TEST_TEMP_DIR/impostor/themes" "$TEST_HOME/.config/atuin/themes"
+
+    run state_of ".config/atuin"
+    assert_output "partial"
+}
+
 @test "a shipped directory with nothing at the target is unlinked" {
     ship npm
     run state_of ".config/npm"

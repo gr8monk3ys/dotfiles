@@ -98,16 +98,26 @@ classify_symlink() {
     fi
 }
 
-# An unfolded directory: every file the checkout ships must be a link into it.
+# An unfolded directory: every file the checkout ships must resolve into it.
+#
+# Deliberately NOT "every leaf must be a symlink". stow folds subdirectories:
+# .config/atuin/themes is a single link into the checkout, so themes/*.toml
+# are real files at the end of a correctly linked path. Requiring a link at
+# the leaf reported that arrangement as `partial` — a false positive I acted
+# on, deleting a tracked file. Resolution is the question; where the link
+# sits on the path is not.
 classify_unfolded() {
     local repo_dir="$1" target_dir="$2" f rel missing=0
     while IFS= read -r f; do
         rel="${f#"$repo_dir"/}"
-        if [[ ! -L "$target_dir/$rel" ]]; then
+        if [[ ! -e "$target_dir/$rel" ]]; then
             missing=1
             break
         fi
-        [[ "$(readlink -f "$target_dir/$rel" 2> /dev/null || true)" == "$(readlink -f "$f")" ]] || missing=1
+        if [[ "$(readlink -f "$target_dir/$rel" 2> /dev/null || true)" != "$(readlink -f "$f")" ]]; then
+            missing=1
+            break
+        fi
     done < <(find "$repo_dir" -type f | sort)
     if [[ "$missing" -eq 0 ]]; then echo linked; else echo partial; fi
 }
