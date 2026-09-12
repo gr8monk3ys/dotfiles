@@ -18,17 +18,17 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 ### ca-certificates
 
 - **Why:** SSL/TLS certificates.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### dbus
 
 - **Why:** Message bus system.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### gnupg
 
 - **Why:** PGP encryption.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ## Graphics & UI Libraries
 
@@ -45,27 +45,27 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 ### harfbuzz
 
 - **Why:** Text shaping.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### librsvg
 
 - **Why:** SVG rendering.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### adwaita-icon-theme
 
 - **Why:** Icon theme.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### at-spi2-core
 
 - **Why:** Accessibility toolkit.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### gsettings-desktop-schemas
 
 - **Why:** Desktop settings.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ## Development Tools
 
@@ -77,17 +77,17 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 ### bear
 
 - **Why:** Generate compilation database.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### meson
 
 - **Why:** Build system.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### shellcheck
 
 - **Why:** Static analysis for shell scripts; `make verify` and CI both gate on it.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### tbb
 
@@ -109,38 +109,38 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 - **Why:** Fast TUI for staging, rebasing, and browsing history when a full jj/git CLI round-trip is overkill.
 - **Alternatives:** gitui, tig
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### lazydocker
 
 - **Why:** Same UX as lazygit for containers; quick logs/exec without memorizing docker flags.
 - **Alternatives:** ctop, docker desktop dashboard
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### rustup
 
 - **Why:** The Rust toolchain itself; nothing else installs `cargo`, and `install/Rustfile` needs it. `make rust-packages` runs `rustup default stable` on first use.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### rust-analyzer
 
 - **Why:** Rust language server.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### lua-language-server
 
 - **Why:** Lua language server.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### python-lsp-server
 
 - **Why:** Python language server.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### typescript
 
 - **Why:** TypeScript compiler (tsc) available globally for tooling.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ## Programming Languages & Runtimes
 
@@ -153,13 +153,13 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 - **Why:** Secure-by-default TS runtime for one-off scripts.
 - **Alternatives:** node, bun
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### bun
 
 - **Why:** Fast all-in-one JS runtime/bundler/test runner for scripts and tooling.
 - **Alternatives:** node (kept), deno (kept)
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### python@3.12
 
@@ -185,17 +185,17 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 - **Why:** Fast Python package/venv manager; gradually replacing pip/poetry workflows.
 - **Alternatives:** pip, poetry (kept for legacy projects)
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### uvicorn
 
 - **Why:** ASGI server.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### ghc
 
 - **Why:** Glasgow Haskell Compiler.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### ghcup
 
@@ -210,22 +210,22 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 ### ruby
 
 - **Why:** Ruby programming language.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### r
 
 - **Why:** R statistical language.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### zig
 
 - **Why:** Zig programming language.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### luarocks
 
 - **Why:** Lua package manager.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ## Mobile Development
 
@@ -254,12 +254,12 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 ### docker
 
 - **Why:** Container platform.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### docker-compose
 
 - **Why:** Multi-container Docker apps.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ## Text Editors & IDEs
 
@@ -267,7 +267,7 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 - **Why:** Primary editor. Lua config with lazy.nvim, LSP, treesitter, conform formatting.
 - **Alternatives:** vim, helix, vscodium (GUI fallback)
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 - **Config:** [`.config/nvim/`](../.config/nvim/)
 
 ## Shell & Terminal Tools
@@ -276,19 +276,19 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 - **Why:** Backup multiplexer kept for SSH/remote boxes and muscle-memory compatibility; zellij is primary locally.
 - **Alternatives:** zellij (primary), screen
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 - **Config:** [`.config/tmux/`](../.config/tmux/)
 
 ### zsh-syntax-highlighting
 
 - **Why:** Zsh syntax highlighting (also loaded via zinit); styled with an OneDark `ZSH_HIGHLIGHT_STYLES` palette in `.zshrc`.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### starship
 
 - **Why:** Shell prompt: fast single binary, one TOML config, actively developed (Powerlevel10k, the previous prompt, is in maintenance mode).
 - **Alternatives:** powerlevel10k, oh-my-posh, pure
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 - **Config:** [`.config/starship/`](../.config/starship/)
 
 ### fzf
@@ -319,18 +319,18 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 - **Why:** Fast recursive grep used by editor pickers and scripts; grep itself is not shadowed.
 - **Alternatives:** grep, ag, ack
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### jq
 
 - **Why:** The standard JSON processor; scripted everywhere, so kept canonical (jnv adds interactivity).
 - **Alternatives:** jaq, gojq, dasel
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### tree
 
 - **Why:** Directory tree viewer.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ## Modern CLI Replacements (Rust-powered)
 
@@ -338,14 +338,14 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 - **Why:** Modern ls with icons, git status, and tree view; aliased to ls and used in fzf-tab previews.
 - **Alternatives:** lsd, plain ls
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 - **Config:** [`.config/eza/`](../.config/eza/)
 
 ### bat
 
 - **Why:** cat with syntax highlighting and paging; OneDark theme, used as fzf/dotfiles-why previewer.
 - **Alternatives:** cat, moar
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 - **Config:** [`.config/bat/`](../.config/bat/)
 
 ### zoxide
@@ -364,41 +364,41 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 - **Why:** Readable du with a usage graph; du itself is not shadowed.
 - **Alternatives:** du, ncdu, gdu
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### bottom
 
 - **Why:** Graphical process/system monitor (btm); top is not shadowed.
 - **Alternatives:** htop, btop, glances
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### procs
 
 - **Why:** Readable, searchable ps; ps itself is not shadowed.
 - **Alternatives:** ps
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### sd
 
 - **Why:** Intuitive find-and-replace; sed stays unshadowed because scripts depend on it.
 - **Alternatives:** sed
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### hyperfine
 
 - **Why:** Statistical CLI benchmarking; used to measure shell startup alongside dotfiles-bench-shell.
 - **Alternatives:** time, bench
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### tokei
 
 - **Why:** Code statistics tool.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### watchexec
 
 - **Why:** File watcher for development.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ## Next-Gen Modern Tools (2024+)
 
@@ -406,7 +406,7 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 - **Why:** Primary terminal file manager: async, image previews, OneDark theme.
 - **Alternatives:** ranger, lf, nnn, broot (kept for tree-jumps)
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 - **Config:** [`.config/yazi/`](../.config/yazi/)
 
 ### jj
@@ -420,76 +420,76 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 - **Why:** Primary terminal multiplexer: sane defaults, discoverable keybindings, floating panes, OneDark theme.
 - **Alternatives:** tmux (kept as backup)
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 - **Config:** [`.config/zellij/`](../.config/zellij/)
 
 ### navi
 
 - **Why:** Interactive cheatsheets at the prompt (ctrl-g) for rarely-used commands.
 - **Alternatives:** tldr/tealdeer (kept)
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### broot
 
 - **Why:** Tree navigation with fuzzy search for jumping deep into big repos.
 - **Alternatives:** yazi (primary file manager)
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### tealdeer
 
 - **Why:** Fast Rust tldr client for example-first help; man stays canonical.
 - **Alternatives:** tldr (node)
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### gping
 
 - **Why:** Graphical ping with history.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### ouch
 
 - **Why:** Universal archive compress/decompress.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ## Modern CLI Tools (2025+ additions)
 
 ### jnv
 
 - **Why:** Interactive JSON navigator with jq.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### glow
 
 - **Why:** Renders markdown in the terminal; used for README/doc reading.
 - **Alternatives:** bat (plain highlight)
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### csvlens
 
 - **Why:** Interactive CSV viewer.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### xsv
 
 - **Why:** Fast CSV toolkit (Rust).
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### duf
 
 - **Why:** Readable df with colored table output; df itself is not shadowed.
 - **Alternatives:** df
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### doggo
 
 - **Why:** Modern DNS client with readable output; dig is not shadowed since scripts parse it.
 - **Alternatives:** dig, dog
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### bandwhich
 
 - **Why:** Network utilization by process.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### viddy
 
@@ -500,24 +500,24 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 - **Why:** mtr-style network diagnostic TUI (aliased via sudo trip).
 - **Alternatives:** mtr, traceroute
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### just
 
 - **Why:** Ergonomic command runner for project-local recipes; make stays for this repo itself.
 - **Alternatives:** make, task
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### difftastic
 
 - **Why:** Structural, syntax-aware diffs for review; delta covers day-to-day paging.
 - **Alternatives:** git-delta (pager)
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### grex
 
 - **Why:** Generate regex from examples.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### topgrade
 
@@ -529,13 +529,13 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 - **Why:** Styled headers, prompts, and spinners for shell scripts; `bin/lib/ui.sh` upgrades script output with it when present (plain ANSI fallback keeps tests/CI stable).
 - **Alternatives:** hand-rolled ANSI escapes (the fallback)
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### fastfetch
 
 - **Why:** Fast, maintained neofetch successor for a system-info splash; run on demand via the `ff` alias rather than on shell start to protect startup time.
 - **Alternatives:** neofetch (unmaintained), macchina
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 - **Config:** [`.config/fastfetch/`](../.config/fastfetch/)
 
 ## Shell History & Environment
@@ -544,14 +544,14 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 - **Why:** SQLite-backed shell history with fuzzy search and optional sync; replaces plain ctrl-r. OneDark-themed via a custom theme file.
 - **Alternatives:** mcfly, plain HISTFILE (still kept as fallback)
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 - **Config:** [`.config/atuin/`](../.config/atuin/)
 
 ### direnv
 
 - **Why:** Per-directory env vars; loads per-project dev environments from `.envrc`.
 - **Alternatives:** shadowenv
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ## Version Management
 
@@ -559,55 +559,55 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 - **Why:** Single version manager for node/python/etc.; replaces asdf/pyenv/nvm sprawl (n is kept only for the Makefile bootstrap).
 - **Alternatives:** asdf, nvm+pyenv+rbenv
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ## File Transfer & Download
 
 ### aria2
 
 - **Why:** Download utility.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### transmission-cli
 
 - **Why:** Torrent client CLI.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### yt-dlp
 
 - **Why:** YouTube downloader.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ## Media Processing
 
 ### ffmpeg
 
 - **Why:** Video/audio processing.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### imagemagick
 
 - **Why:** Image processing.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ## Document Tools
 
 ### mupdf
 
 - **Why:** Lightweight PDF viewer.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### zathura
 
 - **Why:** Vim-keybinding document viewer for PDFs.
 - **Alternatives:** mupdf (kept as backend/light viewer), Preview.app
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 - **Config:** [`.config/zathura/`](../.config/zathura/)
 
 ### zathura-pdf-mupdf
 
 - **Why:** MuPDF backend for Zathura.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### pandoc
 
@@ -622,12 +622,12 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 ### typst
 
 - **Why:** Modern typesetting system.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### typstyle
 
 - **Why:** Typst formatter.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### manim
 
@@ -639,12 +639,12 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 ### jupyterlab
 
 - **Why:** Interactive notebooks.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### python-matplotlib
 
 - **Why:** Plotting library.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ## Communication & Email
 
@@ -652,22 +652,22 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 - **Why:** Terminal email client (paired with isync/msmtp).
 - **Alternatives:** himalaya (kept, modern alternative)
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### msmtp
 
 - **Why:** SMTP client.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### isync
 
 - **Why:** Mailbox synchronization.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### himalaya
 
 - **Why:** Modern terminal email client.
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ## Security & Privacy
 
@@ -675,7 +675,7 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 - **Why:** GPG-backed CLI password store for scripts and git-credential use.
 - **Alternatives:** keepassxc (GUI vault)
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ## Productivity & Utilities
 
@@ -697,7 +697,7 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 ### sl
 
 - **Why:** Steam Locomotive (fun).
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### telnet
 
@@ -708,7 +708,7 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 - **Why:** Friendly HTTP client for API poking.
 - **Alternatives:** curl (kept canonical), httpie
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### typos-cli
 
@@ -719,7 +719,7 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 - **Why:** Single fast formatter/linter for JS/TS; wired into nvim conform.
 - **Alternatives:** prettier+eslint
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ### cabin
 
@@ -748,7 +748,7 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 - **Why:** Local LLM runner for offline/private inference.
 - **Alternatives:** llama.cpp, lm-studio
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 
 ## Window Management & System Utilities (GUI)
 
@@ -783,7 +783,7 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 - **Why:** Primary terminal: GPU-accelerated, Zig-based, native macOS feel; adaptive Horizon Bright/Broadcast theme with frosted glass.
 - **Alternatives:** kitty, wezterm, alacritty
-- **Installed via:** Caskfile
+- **Installed via:** Caskfile, pacmanfile
 - **Config:** [`.config/ghostty/`](../.config/ghostty/)
 
 ## Web Browsers (GUI)
@@ -938,7 +938,7 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 ### npm
 
 - **Why:** Node's package manager itself, kept current globally (ships with node but updated independently).
-- **Installed via:** npmfile
+- **Installed via:** npmfile, pacmanfile
 
 ### pnpm
 
@@ -1039,6 +1039,13 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 ## Arch (pacman)
 
+Most of `install/pacmanfile` uses the same package name as the Brewfile and is
+documented in the sections above (their **Installed via** line names both
+manifests). Listed here are the packages that exist only on Arch, plus the ones
+Arch names differently from Homebrew — the rename is the reason the entry
+exists, since `bin/manifest` and `bin/validate-tool-docs` key on the literal
+package name.
+
 ### base-devel
 
 - **Why:** Arch meta-package: compilers and build tooling required for AUR builds.
@@ -1049,9 +1056,120 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 - **Why:** Completions for bash sessions on Arch boxes.
 - **Installed via:** pacmanfile
 
+### curl
+
+- **Why:** HTTP client used by `install.sh` and assorted scripts. macOS ships it; Arch's `base` does not, so it is explicit here.
+- **Installed via:** pacmanfile (system on macOS)
+- **Config:** [`.config/curl/`](../.config/curl/)
+
+### freetype2
+
+- **Why:** Font rendering. Arch's name for Homebrew's `freetype`.
+- **Installed via:** pacmanfile
+
+### github-cli
+
+- **Why:** GitHub from the terminal. Arch's name for Homebrew's `gh`.
+- **Installed via:** pacmanfile
+
+### glib2
+
+- **Why:** Core GLib library. Arch's name for Homebrew's `glib`.
+- **Installed via:** pacmanfile
+
+### inetutils
+
+- **Why:** Provides `telnet` (and friends) on Arch, where Homebrew ships a standalone `telnet` formula.
+- **Installed via:** pacmanfile
+
+### jujutsu
+
+- **Why:** Jujutsu VCS. Arch's name for Homebrew's `jj`; the binary is still `jj`.
+- **Installed via:** pacmanfile
+- **Config:** [`.config/jj/`](../.config/jj/)
+
 ### nano
 
 - **Why:** Tiny fallback editor for root/rescue shells where nvim isn't set up.
+- **Installed via:** pacmanfile
+
+### nodejs
+
+- **Why:** Node.js runtime. Arch's name for Homebrew's `node`; `npm` is a separate package on Arch.
+- **Installed via:** pacmanfile
+
+### onetbb
+
+- **Why:** Threading Building Blocks. Arch's current name for Homebrew's `tbb` (plain `tbb` no longer resolves).
+- **Installed via:** pacmanfile
+
+### openssh
+
+- **Why:** SSH client the `.config/ssh/` config is written for. macOS ships it; Arch does not install it by default.
+- **Installed via:** pacmanfile (system on macOS)
+- **Config:** [`.config/ssh/`](../.config/ssh/)
+
+### pandoc-cli
+
+- **Why:** Document converter. Arch splits the Haskell library from the executable and ships the binary as `pandoc-cli`; plain `pandoc` is not an installable package.
+- **Installed via:** pacmanfile
+
+### python
+
+- **Why:** Arch ships one current CPython rather than Homebrew's versioned `python@3.12` / `python@3.13` formulae; mise handles per-project versions on both platforms.
+- **Installed via:** pacmanfile
+
+### python-pipx
+
+- **Why:** Isolated installs of Python applications. Arch's name for Homebrew's `pipx`.
+- **Installed via:** pacmanfile
+
+### python-poetry
+
+- **Why:** Python dependency management. Arch's name for Homebrew's `poetry`.
+- **Installed via:** pacmanfile
+
+### python-sphinx
+
+- **Why:** Documentation generator. Arch's name for Homebrew's `sphinx-doc`.
+- **Installed via:** pacmanfile
+
+### spotify-player
+
+- **Why:** Spotify TUI. Arch spells it with a hyphen where Homebrew uses `spotify_player`.
+- **Installed via:** pacmanfile
+
+### stack
+
+- **Why:** Haskell build tool. Arch's name for Homebrew's `haskell-stack`.
+- **Installed via:** pacmanfile
+
+### timew
+
+- **Why:** Time tracking. Arch's name for Homebrew's `timewarrior`.
+- **Installed via:** pacmanfile
+
+### typos
+
+- **Why:** Source spell checker. Arch's name for Homebrew's `typos-cli`.
+- **Installed via:** pacmanfile
+
+### wget
+
+- **Why:** Non-interactive downloader the `.config/wget/` config is written for. _No macOS manifest installs it — add to Brewfile or drop the config._
+- **Installed via:** pacmanfile (nothing on macOS)
+- **Config:** [`.config/wget/`](../.config/wget/)
+
+### wl-clipboard
+
+- **Why:** Provides `wl-copy`/`wl-paste`, the Wayland branch of the `pbcopy`/`pbpaste` aliases in `.config/zsh/aliases.zsh`. This is the clipboard that matters on Omarchy (Hyprland).
+- **Alternatives:** xclip (X11, also installed)
+- **Installed via:** pacmanfile
+
+### xclip
+
+- **Why:** X11 clipboard, the fallback branch of the same `pbcopy`/`pbpaste` aliases when the session is not Wayland.
+- **Alternatives:** xsel, wl-clipboard (Wayland, also installed)
 - **Installed via:** pacmanfile
 
 ## Fonts (GUI)
@@ -1075,8 +1193,8 @@ package manifests. Documented here so the gap is visible.
 
 ### zsh
 
-- **Why:** Login shell (macOS default); config split across `.zshenv` / `.config/zsh/`.
-- **Installed via:** system
+- **Why:** Login shell; config split across `.zshenv` / `.config/zsh/`. Ships with macOS, so nothing installs it there; Arch does not, so it is a pacmanfile entry.
+- **Installed via:** system (macOS), pacmanfile
 - **Config:** [`.config/zsh/`](../.config/zsh/)
 
 ### zinit
@@ -1087,8 +1205,8 @@ package manifests. Documented here so the gap is visible.
 
 ### stow
 
-- **Why:** GNU Stow creates the symlink farm for all configs; installed on demand by `make stow-macos` / `stow-arch`.
-- **Installed via:** Makefile
+- **Why:** GNU Stow creates the symlink farm for all configs; bootstrapped on demand by `make stow-macos` / `stow-arch`, and a pacmanfile entry so `make arch` installs it outright rather than relying on that bootstrap.
+- **Installed via:** Makefile (macOS), pacmanfile
 
 ### bats
 
@@ -1103,14 +1221,14 @@ package manifests. Documented here so the gap is visible.
 
 ### newsboat
 
-- **Why:** Terminal RSS reader. _Config exists but no manifest installs it — add to Brewfile or drop the config._
-- **Installed via:** none (gap)
+- **Why:** Terminal RSS reader. _Installed on Arch; no macOS manifest installs it — add to Brewfile or drop the config._
+- **Installed via:** pacmanfile (nothing on macOS)
 - **Config:** [`.config/newsboat/`](../.config/newsboat/)
 
 ### mpd
 
-- **Why:** Music Player Daemon. _Config exists but no manifest installs it — add to Brewfile or drop the config._
-- **Installed via:** none (gap)
+- **Why:** Music Player Daemon. _Installed on Arch; no macOS manifest installs it — add to Brewfile or drop the config._
+- **Installed via:** pacmanfile (nothing on macOS)
 - **Config:** [`.config/mpd/`](../.config/mpd/)
 
 ### latexmk

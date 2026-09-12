@@ -11,6 +11,9 @@ Everything since 1.0.0 (2025-10-24), by theme.
 
 ### Added
 
+- `install/pacmanfile` brought to parity with the Brewfile: 8 packages to 124. A fresh Arch machine previously got no zsh, neovim, starship, eza, bat, ripgrep, yazi, zellij, atuin, jj, tmux or stow — so `.config/zsh/aliases.zsh` guarded almost all of itself off, there was no prompt, and the shell the whole repo is built around was not installed. Every name was checked with `pacman -Si` inside `test/Dockerfile.arch`; the Arch spellings (`jujutsu`, `github-cli`, `nodejs`, `pandoc-cli`, `onetbb`, `python-poetry`, `timew`, `typos`, …) have their own `docs/TOOLS.md` entries, and `wl-clipboard`/`xclip` supply the Linux branch of the `pbcopy`/`pbpaste` aliases
+- `.github/workflows/ci.yml`: a `Container` matrix job running the suite in both the Ubuntu and Arch images on every PR. `make test-docker-arch` had existed for a while in no gate at all, which is how the pacmanfile stayed at 8 packages without failing anything
+- `SKIP_ARCH_DOCKER=1` opts out of just the Arch container in `make verify`, for hosts where amd64 emulation makes it slow
 - `bin/firefox-user-js` (and `make firefox`): installs this checkout's `user.js` into the Firefox profiles that actually read it, discovering them from `profiles.ini` rather than by globbing `Profiles/*/`. Symlinks by default so edits reach Firefox at its next start, `--copy` for sandboxed builds, backs up a `user.js` it did not write, and warns when Firefox is running (`user.js` is read only at startup). `test/test_firefox_user_js.bats` covers it against a fixture profile tree — the real profiles are never touched by tests
 - `CONTEXT.md` § Firefox profile state: the `linked`/`installed`/`foreign`/`absent`/`missing` vocabulary, and why a profile's `default` role comes from an `[Install…]` section rather than `Default=1`
 - `bin/lib/git-sync.sh`: shared git fast-forward state machine behind one interface, with `dotfiles-update`, `dotfiles-sync` and `dotfiles-doctor` as three reporters over it; `test/test_git_sync.bats` covers it directly
@@ -40,6 +43,7 @@ Everything since 1.0.0 (2025-10-24), by theme.
 
 ### Changed
 
+- `make verify` now runs both container tests, not just Ubuntu. The Arch half of the repo's claimed platform support was never exercised by any gate
 - `bin/platform` is now the only place in `bin/` that reads `$OSTYPE` or `uname`: seven inline branches in `dotfiles-doctor` and `dotfiles-backup` go through it, and `install.sh` uses it once the checkout exists (its own copy remains for the pre-clone stretch, where nothing can be sourced)
 - `install.sh` now accepts `amd64` as `x86_64`, matching `bin/platform`
 - `bin/check-alias-references` now resolves aliases against every manifest kind that puts a command on PATH (previously 4 of 6: no `Caskfile.extra`, no `pacmanfile`) and matches tap-qualified formulae by their PATH name, so `sketchybar` resolves where `FelixKratz/formulae/sketchybar` did not. It therefore rejects fewer aliases; the ones it stopped rejecting were false positives
@@ -75,6 +79,9 @@ Everything since 1.0.0 (2025-10-24), by theme.
 
 ### Fixed
 
+- Both test Dockerfiles copied the checkout's `.git` verbatim. From a git worktree — which `bin/dotfiles-worktree` hands out — that is a pointer file naming a gitdir absent from the image, so every git command inside the container exited 128 and the two tests that ask git about the checkout (leaked identity, ignored SSH hosts) failed for a reason unrelated to the dotfiles. The image now rebuilds a real one-commit repo when it receives a pointer
+- `test/Dockerfile.arch` lacked `diffutils`, so `cmp` was missing and two `bin/firefox-user-js` tests failed only on Arch
+- `test/test_doctor_tools.bats` proved a removed package is caught by deleting it from the Brewfile alone. The validator asks whether a package is in _any_ manifest, so once `ripgrep` was in the pacmanfile too the test passed vacuously; it now removes it from both
 - `.config/firefox/user.js` had never taken effect. Stow links it to `~/.config/firefox/user.js`, which Firefox does not read: `user.js` is per-profile, loaded at startup from inside the profile directory, and neither profile on this machine had one. 81KB of arkenfox hardening was tracked, linked, and applying to nothing. `bin/firefox-user-js` installs it where Firefox looks; the stowed copy stays the source of truth
 - Picking the default Firefox profile by `Default=1` would have hardened the wrong one. `Default=1` in a `[Profile N]` section is the legacy fallback; an `[Install…]` section's `Default=` names the profile the installed Firefox actually opens. On this machine they disagree — `Default=1` points at a 4KB profile that has never been opened, while the live one holds 124MB — so `bin/firefox-user-js` reads the `[Install…]` entry first
 - `make link` appended a duplicate `Include ~/.config/ssh/config.d/*.conf` block to `~/.ssh/config` on every run. `link` and `link-dry-run` each carried their own copy of the match pattern with different escaping; make does not collapse `\\`, so `link`'s grep received an escaped backslash plus a quantifier instead of a literal `*` and never matched. Both targets now read one `SSH_INCLUDE_RE`, and `make link` is idempotent

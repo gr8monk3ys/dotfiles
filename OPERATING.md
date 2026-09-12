@@ -148,7 +148,7 @@ See `bin/README.md` for flags.
 | `make verify-stale-refs` | Grep for strings left over from past migrations. |
 | `make verify-doc-links` | Validate local Markdown links (`bin/validate-doc-links`). |
 | `make verify-tool-docs` | Check `docs/TOOLS.md` against the install manifests (`bin/validate-tool-docs`). |
-| `make test-docker` / `make test-docker-arch` | Run the install in an Ubuntu / Arch container. |
+| `make test-docker` / `make test-docker-arch` | Run the install in an Ubuntu / Arch container. `make verify` runs both; `SKIP_DOCKER=1` skips both, `SKIP_ARCH_DOCKER=1` only the Arch one. |
 
 ### Package-level targets
 

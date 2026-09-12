@@ -44,8 +44,13 @@ teardown() {
 }
 
 @test "fails when a mapped package is removed from its manifest" {
+    # ripgrep is in both the Brewfile and the pacmanfile, and the validator
+    # asks "is this package in *any* manifest" — so removing it from one
+    # proves nothing. Both have to go.
     grep -v '^brew "ripgrep"' "$FIXTURE/install/Brewfile" > "$FIXTURE/install/Brewfile.new"
     mv "$FIXTURE/install/Brewfile.new" "$FIXTURE/install/Brewfile"
+    grep -v '^ripgrep$' "$FIXTURE/install/pacmanfile" > "$FIXTURE/install/pacmanfile.new"
+    mv "$FIXTURE/install/pacmanfile.new" "$FIXTURE/install/pacmanfile"
     run "$FIXTURE/bin/validate-doctor-tools" "$FIXTURE"
     assert_failure
     assert_output --partial "ripgrep"
