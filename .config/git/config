@@ -193,11 +193,16 @@
 	insteadOf = "github:github"
 	insteadOf = "git://github.com/github"
 
-[url "git@github.com:"]
-
-	pushInsteadOf = "https://github.com/"
-	pushInsteadOf = "github:"
-	pushInsteadOf = "git://github.com/"
+# Rewriting pushes to SSH assumes an SSH key registered with GitHub. This
+# machine authenticates over HTTPS with a `gh` token (`gh auth status`:
+# "Git operations protocol: https"), and the fleet workflow in CLAUDE.md is
+# built on `gh`. With these enabled, every push to an https:// GitHub remote
+# failed with "Permission denied (publickey)". Re-enable them on a machine
+# whose key is registered.
+# [url "git@github.com:"]
+# 	pushInsteadOf = "https://github.com/"
+# 	pushInsteadOf = "github:"
+# 	pushInsteadOf = "git://github.com/"
 
 [url "git://github.com/"]
 
