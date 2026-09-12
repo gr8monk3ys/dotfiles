@@ -1,0 +1,12 @@
+# Example local jj identity.
+#
+# jj reads every *.toml in this directory after config.toml, so this is where
+# identity lives: the tracked config.toml carries none, and this directory is
+# gitignored apart from this template.
+#
+# Either run `make init` (which writes user.toml for you, defaulting to your
+# git identity) or copy this file to user.toml and uncomment the block below.
+
+# [user]
+# name = "Your Name"
+# email = "you@example.com"

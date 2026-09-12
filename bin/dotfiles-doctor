@@ -321,16 +321,41 @@ file_mode() {
     "$PLATFORM" file-mode "$1"
 }
 
+# Check the gitignored local files: git identity, jj identity, SSH snippets.
+#
+# A reporter over bin/dotfiles-init (CONTEXT.md § Reporter), which is also what
+# writes them — so the health check and the fix cannot disagree about what
+# "configured" means. Doctor used to ask `git config --global user.email`
+# itself and name the problem without being able to point at a fix.
+#
+# Warnings, never issues: `make link` installs nothing and configures nothing,
+# so a freshly linked box must still be able to pass.
+check_local_config() {
+    print_header "Local Configuration"
+
+    local state subject detail unconfigured=0
+    while IFS=$'\t' read -r state subject detail; do
+        case "$state" in
+            configured)
+                check_pass "$subject: $detail"
+                ;;
+            optional)
+                check_info "$subject: $detail"
+                ;;
+            unconfigured | incomplete | ineffective)
+                check_warn "$subject ($state): $detail"
+                unconfigured=1
+                ;;
+        esac
+    done < <("$SCRIPT_DIR/dotfiles-init" --status)
+
+    [[ "$unconfigured" -eq 1 ]] && check_info "Run 'make init' (or 'dotfiles-init') to fix the above"
+    return 0
+}
+
 # Check file permissions
 check_permissions() {
     print_header "File Permissions"
-
-    # Check SSH directory
-    if [[ -n "$(git config --global user.email 2>/dev/null)" ]]; then
-        check_pass "git identity set ($(git config --global user.email))"
-    else
-        check_warn "git identity not set: copy .config/git/config.local.example to config.local and fill [user]"
-    fi
 
     if [[ -d "$HOME/.ssh" ]]; then
         local ssh_perms
@@ -397,6 +422,7 @@ DESCRIPTION:
     - Package manager status
     - Core tool availability
     - Shell configuration
+    - Local configuration (git/jj identity, SSH host snippets)
     - File permissions
 
 EXIT CODES:
@@ -449,6 +475,7 @@ main() {
     check_core_tools
     check_modern_tools
     check_shell_config
+    check_local_config
     check_permissions
     print_summary
 }
