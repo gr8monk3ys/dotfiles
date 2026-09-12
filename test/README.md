@@ -182,9 +182,12 @@ teardown() {
 
 `.github/workflows/ci.yml` runs on every PR and push to `main`: `SKIP_DOCKER=1
 make verify` plus a link/unlink round-trip on macOS and Ubuntu, shellcheck and
-markdownlint with the doc-link/tool-catalog/stale-ref validators, and the real
-`curl | bash` installer on Ubuntu. `make verify` (which adds the Ubuntu container
-test when Docker is present) is the local equivalent — run it before pushing.
+markdownlint with the doc-link/tool-catalog/stale-ref validators, the suite in
+both the Ubuntu and Arch containers, and the real `curl | bash` installer on
+Ubuntu. `make verify` (which adds both container tests when Docker is present)
+is the local equivalent — run it before pushing. On an Apple Silicon host the
+Arch image runs under `linux/amd64` emulation and takes several minutes;
+`SKIP_ARCH_DOCKER=1` drops it locally without losing the CI coverage.
 
 ## Test Coverage
 

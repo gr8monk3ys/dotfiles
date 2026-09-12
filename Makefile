@@ -183,12 +183,25 @@ test-setup:
 verify: verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-doctor-tools verify-tests verify-docker
 	@echo "✓ Verification complete"
 
-# The container test is the only check that exercises the fresh-install path.
-# Runs when a Docker daemon is reachable; otherwise says so loudly and moves on.
+# The container tests are the only checks that exercise the fresh-install path,
+# and the only ones that run the suite on Linux at all. Both distros run:
+# the repo claims macOS *and* Arch support, and for a long time nothing
+# verified the Arch half — install/pacmanfile listed 8 packages and no test
+# ever noticed. Run when a Docker daemon is reachable; otherwise say so
+# loudly and move on.
+#
+# Cost: on an Apple Silicon host the Arch image has to run under linux/amd64
+# emulation (upstream publishes no arm64 archlinux image), which puts it at
+# roughly 4-5 minutes against well under a minute for the native Ubuntu one.
+# If that becomes intolerable locally, SKIP_ARCH_DOCKER=1 drops it and the
+# Arch job in .github/workflows/ci.yml still covers it on every PR.
 verify-docker:
-	@if [ -n "$(SKIP_DOCKER)" ]; then echo "Skipping container test (SKIP_DOCKER set)"; \
-	elif docker info >/dev/null 2>&1; then $(MAKE) test-docker; \
-	else echo "⚠️  Docker not reachable; fresh-install container test SKIPPED (run 'make test-docker' where Docker exists)"; fi
+	@if [ -n "$(SKIP_DOCKER)" ]; then echo "Skipping container tests (SKIP_DOCKER set)"; \
+	elif docker info >/dev/null 2>&1; then \
+		$(MAKE) test-docker; \
+		if [ -n "$(SKIP_ARCH_DOCKER)" ]; then echo "Skipping Arch container test (SKIP_ARCH_DOCKER set)"; \
+		else $(MAKE) test-docker-arch; fi; \
+	else echo "⚠️  Docker not reachable; fresh-install container tests SKIPPED (run 'make test-docker test-docker-arch' where Docker exists)"; fi
 
 verify-shell:
 	@echo "Running shell syntax checks..."
@@ -515,7 +528,9 @@ help:
 	@echo "  SKIP_KINDS=\"rust pacman\"  - Skip these manifest kinds"
 	@echo "                          (brew cask cask-extra npm rust pacman code)"
 	@echo "  STRICT_PACKAGES=1       - Make a package install failure fatal"
-	@echo "  SKIP_DOCKER=1           - Skip the container test in make verify"
+	@echo "  SKIP_DOCKER=1           - Skip both container tests in make verify"
+	@echo "  SKIP_ARCH_DOCKER=1      - Skip only the Arch container (slow under"
+	@echo "                          amd64 emulation on Apple Silicon; CI still runs it)"
 	@echo "  SKIP_LINTERS=1          - Skip shellcheck/markdownlint in make verify"
 	@echo "  GIT_USER_NAME=...       - Git identity for make init (else it prompts)"
 	@echo "  GIT_USER_EMAIL=...      - Git email for make init"

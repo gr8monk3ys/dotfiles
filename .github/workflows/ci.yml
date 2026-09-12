@@ -73,6 +73,29 @@ jobs:
           make unlink
           test ! -L "$HOME/.zshenv"
 
+  # The repo claims Arch (incl. Omarchy) support, but nothing verified it:
+  # `make test-docker-arch` existed and was in no gate, so install/pacmanfile
+  # sat at 8 packages — no zsh, no neovim, no starship — without failing
+  # anything. This job is that gate. GitHub's runners are amd64, so the
+  # linux/amd64 image is native here and costs about as much as Ubuntu.
+  container:
+    name: Container (${{ matrix.distro }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        distro: [ubuntu, arch]
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: make test-docker (${{ matrix.distro }})
+        run: |
+          if [ "${{ matrix.distro }}" = "arch" ]; then
+            make test-docker-arch
+          else
+            make test-docker
+          fi
+
   installer:
     name: Installer
     runs-on: ubuntu-latest

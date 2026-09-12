@@ -10,7 +10,8 @@
 # installs. bin/validate-doctor-tools checks both directions against it.
 #
 # Format: one entry per line, `command package  # justification`.
-# Use `-` as the package for a command no manifest tracks.
+# Use `-` as the package for a command no manifest is expected to guarantee on
+# every platform — the machine gets it from the OS or from a bootstrap step.
 
 # --- command differs from the package that provides it ---
 rg       ripgrep     # ripgrep installs the `rg` binary
@@ -18,6 +19,6 @@ delta    git-delta   # git-delta installs the `delta` binary
 nvim     neovim      # neovim installs the `nvim` binary
 tldr     tealdeer    # tealdeer is the Rust tldr client; installs `tldr`
 
-# --- tracked by no manifest, deliberately ---
-zsh      -           # login shell; ships with macOS and is a base package on Arch
-stow     -           # bootstrapped by `make link` (brew/pacman), never a manifest entry
+# --- not guaranteed by a manifest on every platform ---
+zsh      -           # ships with macOS; pacmanfile installs it on Arch, which does not
+stow     -           # bootstrapped by `make link` on macOS; a pacmanfile entry on Arch
