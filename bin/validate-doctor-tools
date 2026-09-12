@@ -48,7 +48,11 @@ map_entries() {
 }
 
 packages="$(all_packages | sort -u)"
-has_package() { printf '%s\n' "$packages" | grep -Fxq "$1"; }
+# Herestring, not a pipeline: `grep -q` exits on the first match and SIGPIPEs
+# the producer, which `set -o pipefail` then reports as a failed pipeline. The
+# race only shows with enough output to still be writing when grep quits, so
+# it flakes rather than failing outright.
+has_package() { grep -Fxq -- "$1" <<< "$packages"; }
 
 mapped_package() {
     local cmd="$1" c p

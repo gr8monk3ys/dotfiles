@@ -26,7 +26,7 @@ teardown() {
 @test "git delta and neovim are configured for onedark" {
 	# git's own parser, not a regex over git's syntax: this passes only if
 	# the setting is in a section git actually reads.
-	run git config --file .config/git/.gitconfig --get delta.syntax-theme
+	run git config --file .config/git/config --get delta.syntax-theme
 	assert_success
 	assert_output "base16-onedark"
 
@@ -294,7 +294,7 @@ EOS
 
 # Public-readiness: tracked config must carry no personal identity or hosts.
 @test "tracked git, jj and ssh config contain no personal identity" {
-	run git -C "$DOTFILES_DIR" grep -nE '^\s*(email|name)\s*=' -- .config/git/.gitconfig
+	run git -C "$DOTFILES_DIR" grep -nE '^\s*(email|name)\s*=' -- .config/git/config
 	assert_failure
 	run git -C "$DOTFILES_DIR" grep -nE '^\s*(email|name)\s*=' -- .config/jj/config.toml
 	assert_failure

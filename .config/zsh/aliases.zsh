@@ -389,7 +389,7 @@ fi
 # Quick edit configs
 alias zshrc='${EDITOR:-nvim} ~/.config/zsh/.zshrc'
 alias aliases='${EDITOR:-nvim} ~/.config/zsh/aliases.zsh'
-alias gitconfig='${EDITOR:-nvim} ~/.config/git/.gitconfig'
+alias gitconfig='${EDITOR:-nvim} ~/.config/git/config'
 alias ghosttyconf='${EDITOR:-nvim} ~/.config/ghostty/config'
 alias yaziconf='${EDITOR:-nvim} ~/.config/yazi/yazi.toml'
 alias jjconf='${EDITOR:-nvim} ~/.config/jj/config.toml'
