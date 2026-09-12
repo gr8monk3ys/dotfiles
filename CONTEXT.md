@@ -59,9 +59,50 @@ preserve. This is the opposite of the tool lists in **command vs package**,
 where the severity tiers are a real editorial choice and the validator checks
 a curated list instead of replacing it.
 
+## Local config
+
+The gitignored per-machine files the **checkout** expects but deliberately does
+not track, because they carry identity or real hosts (`CLAUDE.md` § Gotchas,
+enforced by `test_regressions.bats`). `bin/dotfiles-init` classifies and writes
+them; `dotfiles-doctor` reports the classification.
+
+Four subjects, each with a tracked template beside it:
+
+| Subject | Local file | Template |
+| --- | --- | --- |
+| `git-identity` | `~/.config/git/config.local` | `config.local.example` |
+| `jj-identity` | `~/.config/jj/conf.d/user.toml` | `user.toml.example` |
+| `ssh-include` | the `Include` line in `~/.ssh/config` | — |
+| `ssh-hosts` | `~/.config/ssh/config.d/*.conf` | `*.conf.example` |
+
+| State | Meaning |
+| --- | --- |
+| `configured` | The local file is there and carries everything required |
+| `incomplete` | Present, but missing a field |
+| `unconfigured` | Nothing local exists |
+| `ineffective` | Written and complete, but the tool does not read it |
+| `optional` | Nothing local exists, and that is a legitimate end state |
+
+`ineffective` exists because git reaches `config.local` through an `[include]`
+in whichever global config it loads, and a chain can be complete at one end and
+unread at the other. Only git can answer that, so git identity is classified by
+asking `git config --global --includes` rather than by reading the file — note
+the flag: under `--global`, git does **not** follow includes by default, which
+is why the check this replaced could not see an identity that lived only in the
+local file. jj needs no equivalent: it reads `conf.d/*.toml` directly.
+
+`optional` keeps `ssh-hosts` from ever failing a check. A machine that reaches
+nothing over SSH is correctly configured with no snippets, and a state that
+cannot be satisfied is a state people learn to ignore.
+
+Writing is one-shot per file: an existing local file is never rewritten, not
+even to complete it. This is the one place on a machine whose contents nothing
+else can reproduce, so `incomplete` is reported and left alone.
+
 ## Reporter
 
-A caller that maps **sync state** to output. The reporter is the seam:
+A caller that maps a state vocabulary — **sync state**, **link state**,
+**local config** — to output. The reporter is the seam:
 `dotfiles-update` uses `bin/lib/ui.sh`'s printers, `dotfiles-sync` uses a
 local `notify()` over `osascript`, `dotfiles-doctor` uses `check_warn`.
 Reporters live on the caller side of the seam; platform-specific output

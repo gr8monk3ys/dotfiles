@@ -102,15 +102,20 @@ and `nano` are new. Nothing in it conflicts with an Omarchy package.
 After installation completes:
 
 - **Set machine type:** `echo personal > ~/.machine_type` (or `work` / `server`).
-- **Create local override files** (git-ignored, machine-specific):
+- **Configure identity:** `make init`. It creates the git-ignored
+  `~/.config/git/config.local` and `~/.config/jj/conf.d/user.toml` from their
+  templates, prompting for name and email. It is safe to re-run and never
+  rewrites a file that already exists. For a scripted setup, pass the values
+  instead of being prompted:
 
   ```bash
-  cp ~/.config/zsh/zshrc.local.example ~/.config/zsh/zshrc.local
-  cp ~/.config/git/config.local.example ~/.config/git/config.local
+  make init GIT_USER_NAME="Your Name" GIT_USER_EMAIL=you@example.com
+  make init check=1   # report what is still unconfigured; non-zero if any
   ```
 
+- **Shell overrides** (optional): `cp ~/.config/zsh/zshrc.local.example ~/.config/zsh/zshrc.local`.
 - **SSH config:** drop any machine-specific snippets into `~/.config/ssh/config.d/`. `make link` ensures `~/.ssh/config` includes that directory.
-- **Run health check:** `make doctor`.
+- **Run health check:** `make doctor`. Its Local Configuration section reports the same thing `make init check=1` does.
 - **Verify:** `make verify` should pass end-to-end.
 
 ---
@@ -123,7 +128,8 @@ Commands you re-run routinely.
 | --- | --- |
 | `make link` | Create/refresh all symlinks via Stow. Safe to re-run. |
 | `make link-dry-run` | Preview symlink changes without applying. |
-| `make doctor` | Comprehensive health check (symlinks, package managers, shell config, tool presence). |
+| `make init` | Create the git-ignored identity files (git, jj). Safe to re-run; never overwrites. |
+| `make doctor` | Comprehensive health check (symlinks, package managers, shell config, local config, tool presence). |
 | `make update` | Update all packages (Homebrew, npm, Cargo, Zinit plugins). |
 | `make backup` | Snapshot configs + package lists. `backup-compress` / `backup-cleanup` variants exist. |
 | `make bench-shell` | Benchmark interactive zsh startup against a budget (default 900ms). |
@@ -249,10 +255,13 @@ Edit `.config/zsh/aliases.zsh` (~400 lines, organized by tool). Find the relevan
 
 - `~/.config/zsh/zshrc.local` — extra env vars, work-only PATH entries, secrets-shaped config.
 - `~/.config/git/config.local` — user name/email, signing key.
+- `~/.config/jj/conf.d/user.toml` — jj name/email.
 - `~/.config/ssh/config.d/*.conf` — host-specific SSH snippets (gitignored; `pi-lab.conf.example` is the template).
 
-Templates: `.config/zsh/zshrc.local.example` and `.config/git/config.local.example`
-(the `cp` commands are in the fresh-laptop checklist above).
+Each has a tracked template beside it (`zshrc.local.example`,
+`config.local.example`, `user.toml.example`, `pi-lab.conf.example`).
+`make init` writes the two identity files from theirs; the other two are a
+`cp` away. `make init check=1` and `make doctor` both report which are missing.
 
 ### Machine profiles
 

@@ -28,7 +28,7 @@ export ACCEPT_EULA=Y
 
 .PHONY: all macos arch link unlink link-dry-run test test-setup verify \
         verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-doctor-tools verify-tests \
-        doctor update backup firefox worktree-add worktree-list worktree-remove worktree-prune \
+        doctor init update backup firefox worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
         brew git packages-macos packages-arch core-macos core-arch \
         stow-arch stow-macos stow-linux linux unknown cask-apps cask-apps-extra vscode-extensions node-packages \
@@ -276,6 +276,18 @@ daily: verify-shell verify-doc-links verify-tests
 doctor:
 	@bin/dotfiles-doctor
 
+## Create the gitignored local files `make` cannot: git and jj identity
+# The values are named here rather than left to leak through the environment so
+# that `make init GIT_USER_NAME=…` and `GIT_USER_NAME=… make init` behave the
+# same, and so the documentation check in test_dotfiles_init.bats can see which
+# variables this Makefile reads. Resolved from MAKEFILE_DIR like every other
+# tool here, never looked up inside DOTFILES_DIR.
+init:
+	@GIT_USER_NAME="$(GIT_USER_NAME)" GIT_USER_EMAIL="$(GIT_USER_EMAIL)" \
+	 GIT_SIGNING_KEY="$(GIT_SIGNING_KEY)" \
+	 JJ_USER_NAME="$(JJ_USER_NAME)" JJ_USER_EMAIL="$(JJ_USER_EMAIL)" \
+	 $(MAKEFILE_DIR)/bin/dotfiles-init $(if $(check),--check)
+
 update:
 	@bin/dotfiles-update
 
@@ -470,6 +482,8 @@ help:
 	@echo "  make duti             - Set macOS default apps from install/duti"
 	@echo ""
 	@echo "Maintenance:"
+	@echo "  make init [check=1] - Create the gitignored local files (git/jj identity);"
+	@echo "                      check=1 only reports and exits non-zero if unconfigured"
 	@echo "  make doctor       - Run health check"
 	@echo "  make update       - Update all packages"
 	@echo "  make backup       - Backup configurations"
@@ -503,5 +517,10 @@ help:
 	@echo "  STRICT_PACKAGES=1       - Make a package install failure fatal"
 	@echo "  SKIP_DOCKER=1           - Skip the container test in make verify"
 	@echo "  SKIP_LINTERS=1          - Skip shellcheck/markdownlint in make verify"
+	@echo "  GIT_USER_NAME=...       - Git identity for make init (else it prompts)"
+	@echo "  GIT_USER_EMAIL=...      - Git email for make init"
+	@echo "  GIT_SIGNING_KEY=...     - Optional GPG signing key for make init"
+	@echo "  JJ_USER_NAME=...        - jj identity for make init (defaults to GIT_USER_NAME)"
+	@echo "  JJ_USER_EMAIL=...       - jj email for make init (defaults to GIT_USER_EMAIL)"
 	@echo ""
 	@echo "See README.md for full documentation."

@@ -1,0 +1,461 @@
+#!/usr/bin/env bash
+# dotfiles-init - Configure the local files this checkout deliberately does not track.
+#
+# `make` produces a linked machine. It cannot produce a configured one: the
+# tracked config carries no identity and no real hosts (CLAUDE.md § Gotchas,
+# enforced by test_regressions.bats), so name, email and SSH hosts have to come
+# from files git never sees. Until this module existed the only thing that knew
+# those files were missing was one warning line in `dotfiles-doctor` and a
+# checklist in OPERATING.md, and neither could do anything about it.
+#
+# This module both classifies and writes. `dotfiles-doctor` is a reporter over
+# `--status` (CONTEXT.md § Reporter) and carries no detection of its own.
+#
+# Usage:
+#   dotfiles-init [VALUE OPTIONS]  configure what is missing, leave the rest alone
+#   dotfiles-init --check          report; exit 1 if anything is unconfigured
+#   dotfiles-init --status         one `state<TAB>subject<TAB>detail` row per subject
+#   dotfiles-init --states         the state vocabulary, one per line
+#
+# Value options. Each also reads an environment variable; the flag wins:
+#   --git-name NAME          GIT_USER_NAME
+#   --git-email EMAIL        GIT_USER_EMAIL
+#   --git-signing-key KEY    GIT_SIGNING_KEY   optional
+#   --jj-name NAME           JJ_USER_NAME      defaults to the git name
+#   --jj-email EMAIL         JJ_USER_EMAIL     defaults to the git email
+#
+# With a value missing, an interactive run prompts for it and a non-interactive
+# run fails naming both the flag and the variable — so CI and a scripted setup
+# never block on a prompt.
+#
+# An existing local file is never rewritten, not even partially: this is the one
+# place on the machine whose contents nothing else can reproduce. A file that is
+# there but incomplete is reported, never patched.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/preamble.sh
+source "$SCRIPT_DIR/lib/preamble.sh"
+# shellcheck source=lib/ui.sh
+source "$SCRIPT_DIR/lib/ui.sh"
+
+# The state vocabulary. Tests use --states to assert dotfiles-doctor handles
+# every one of them, the same drift check bin/link-state carries.
+#
+#   configured    the local file is there and carries everything required
+#   incomplete    present, but missing a field
+#   unconfigured  nothing local exists
+#   ineffective   written and complete, but the tool does not read it
+#   optional      nothing local exists, and that is a legitimate end state
+readonly LOCAL_STATES="configured incomplete unconfigured ineffective optional"
+
+# Where the local files go. XDG_CONFIG_HOME, not a hardcoded ~/.config: the
+# shell exports it and the Docker fresh-install image sets it, and a fixture
+# HOME in the tests sets both. DOTFILES_DIR is the subject checkout the
+# templates are read from — never where tools are resolved from.
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+readonly CONFIG_HOME
+readonly GIT_LOCAL="$CONFIG_HOME/git/config.local"
+readonly GIT_EXAMPLE="$DOTFILES_DIR/.config/git/config.local.example"
+readonly JJ_LOCAL="$CONFIG_HOME/jj/conf.d/user.toml"
+readonly JJ_EXAMPLE="$DOTFILES_DIR/.config/jj/conf.d/user.toml.example"
+readonly SSH_CONFIG="$HOME/.ssh/config"
+readonly SSH_SNIPPET_DIR="$CONFIG_HOME/ssh/config.d"
+
+# The same Include line `make link` appends, and the same pattern it matches
+# with. Deliberately duplicated rather than shared: make cannot source a shell
+# library, and the alternative — a flag on this script that exists only so the
+# Makefile can call it — is more interface than the duplication is worth.
+# test_dotfiles_init.bats asserts the two copies still agree.
+readonly SSH_INCLUDE_LINE='Include ~/.config/ssh/config.d/*.conf'
+readonly SSH_INCLUDE_RE='^[[:space:]]*Include[[:space:]]+~/\.config/ssh/config\.d/\*\.conf([[:space:]]|$)'
+
+# --- values ----------------------------------------------------------------
+
+GIT_NAME="${GIT_USER_NAME:-}"
+GIT_EMAIL="${GIT_USER_EMAIL:-}"
+GIT_KEY="${GIT_SIGNING_KEY:-}"
+JJ_NAME="${JJ_USER_NAME:-}"
+JJ_EMAIL="${JJ_USER_EMAIL:-}"
+
+# --- classification --------------------------------------------------------
+
+emit() { printf '%s\t%s\t%s\n' "$1" "$2" "$3"; }
+
+# Every git call below reads global or explicit-file config, neither of which
+# needs a repository — but git still discovers one from the working directory
+# first, and a broken `.git` there (a worktree pointer whose gitdir is gone,
+# say) makes it refuse to start at all. Anchoring at $HOME means where the
+# caller happens to be standing cannot change the answer.
+git_config() {
+    git -C "$HOME" config "$@"
+}
+
+# Read one key out of a git-syntax file with git's own parser rather than a
+# regex, so a value this script did not write is read the way git reads it.
+git_file_value() {
+    local file="$1" key="$2"
+    [[ -f "$file" ]] || return 0
+    command_exists git || return 0
+    git_config --file "$file" "$key" 2> /dev/null || true
+}
+
+# Read one key out of the [user] table of a TOML file. Scoped to that table so
+# a `name` under some other table cannot be mistaken for the identity; quotes
+# are stripped because jj reads basic strings and this script writes them.
+toml_user_value() {
+    local file="$1" key="$2"
+    [[ -f "$file" ]] || return 0
+    awk -v key="$key" -v sq="'" '
+        /^[[:space:]]*\[/ { in_user = ($0 ~ /^[[:space:]]*\[user\][[:space:]]*(#.*)?$/); next }
+        in_user {
+            line = $0
+            sub(/[[:space:]]*#.*$/, "", line)
+            if (line ~ "^[[:space:]]*" key "[[:space:]]*=") {
+                sub(/^[^=]*=[[:space:]]*/, "", line)
+                gsub("[\"" sq "]", "", line)
+                sub(/[[:space:]]+$/, "", line)
+                print line
+                exit
+            }
+        }
+    ' "$file"
+}
+
+# git identity is checked through git, not by reading config.local, because the
+# chain from the tracked config to the local file is an `[include]` directive —
+# only git can say whether it actually resolved. jj needs no equivalent: it
+# reads conf.d/*.toml directly, with no indirection to be broken.
+status_git() {
+    if ! command_exists git; then
+        emit unconfigured git-identity "git is not installed"
+        return 0
+    fi
+
+    local name email file_name file_email origin includes
+    # --includes is not the default under --global (it is only on when git is
+    # searching the whole config stack), and the whole point of config.local is
+    # that it arrives through an [include]. Without this flag an identity that
+    # lives only in the local file reads as no identity at all — which is what
+    # dotfiles-doctor used to ask, and so used to get wrong.
+    name="$(git_config --global --includes user.name 2> /dev/null || true)"
+    email="$(git_config --global --includes user.email 2> /dev/null || true)"
+
+    if [[ -n "$name" && -n "$email" ]]; then
+        # Where did that come from? On a checkout whose local file is live the
+        # answer is config.local; when it is not, saying so here is the only
+        # warning anyone gets that config.local is being read by nothing.
+        includes="$(git_config --global --get-all include.path 2> /dev/null || true)"
+        case "$includes" in
+            *config.local*)
+                emit configured git-identity "$name <$email>"
+                ;;
+            *)
+                origin="$(git_config --global --includes --show-origin --get user.email 2> /dev/null | cut -f1 || true)"
+                origin="${origin#file:}"
+                [[ -n "$origin" ]] || origin="the global git config"
+                emit configured git-identity \
+                    "$name <$email> (from $origin; $GIT_LOCAL is not in the include chain)"
+                ;;
+        esac
+        return 0
+    fi
+
+    file_name="$(git_file_value "$GIT_LOCAL" user.name)"
+    file_email="$(git_file_value "$GIT_LOCAL" user.email)"
+
+    if [[ ! -e "$GIT_LOCAL" ]]; then
+        emit unconfigured git-identity "no $GIT_LOCAL"
+    elif [[ -n "$file_name" && -n "$file_email" ]]; then
+        emit ineffective git-identity \
+            "$GIT_LOCAL is complete but git does not read it — $(git_chain_diagnosis)"
+    else
+        emit incomplete git-identity "$GIT_LOCAL is missing user.name or user.email"
+    fi
+}
+
+# Why a complete config.local is reaching git as nothing. Computed rather than
+# spelled out, so the message stays true if the checkout's git config is ever
+# moved to a path git reads: config.local is only ever reached by an
+# `[include]` from one of git's two global config paths.
+git_chain_diagnosis() {
+    local xdg="$CONFIG_HOME/git/config" home_config="$HOME/.gitconfig"
+    if [[ -e "$xdg" || -e "$home_config" ]]; then
+        echo "neither $xdg nor $home_config includes it"
+        return 0
+    fi
+    if [[ -e "$DOTFILES_DIR/.config/git/.gitconfig" ]]; then
+        echo "git reads $xdg or $home_config and neither exists; this checkout ships its config as .config/git/.gitconfig, which is not one of them"
+        return 0
+    fi
+    echo "git reads $xdg or $home_config and neither exists"
+}
+
+status_jj() {
+    local name email
+    name="$(toml_user_value "$JJ_LOCAL" name)"
+    email="$(toml_user_value "$JJ_LOCAL" email)"
+
+    if [[ -n "$name" && -n "$email" ]]; then
+        emit configured jj-identity "$name <$email>"
+    elif [[ ! -e "$JJ_LOCAL" ]]; then
+        emit unconfigured jj-identity "no $JJ_LOCAL"
+    else
+        emit incomplete jj-identity "$JJ_LOCAL is missing name or email under [user]"
+    fi
+}
+
+status_ssh_include() {
+    # grep against a file, not a pipeline: `producer | grep -q` under
+    # `set -o pipefail` reports failure when grep exits on the first match.
+    if [[ -f "$SSH_CONFIG" ]] && grep -Eq "$SSH_INCLUDE_RE" "$SSH_CONFIG"; then
+        emit configured ssh-include "$SSH_CONFIG includes $SSH_SNIPPET_DIR"
+    else
+        emit unconfigured ssh-include "$SSH_CONFIG does not include $SSH_SNIPPET_DIR (run 'make link')"
+    fi
+}
+
+# Host snippets are `optional`, not `unconfigured`: a machine that reaches
+# nothing over SSH is correctly configured with none, so this must never be
+# what makes --check fail.
+status_ssh_hosts() {
+    local count=0 example="" hint=""
+    if [[ -d "$SSH_SNIPPET_DIR" ]]; then
+        count="$(find "$SSH_SNIPPET_DIR" -maxdepth 1 -name '*.conf' -type f 2> /dev/null | wc -l | tr -d ' ')"
+        example="$(find "$SSH_SNIPPET_DIR" -maxdepth 1 -name '*.conf.example' -type f 2> /dev/null | sort | head -n1 || true)"
+    fi
+    if [[ "$count" -gt 0 ]]; then
+        emit configured ssh-hosts "$count host snippet(s) in $SSH_SNIPPET_DIR"
+        return 0
+    fi
+    if [[ -n "$example" ]]; then
+        example="$(basename "$example")"
+        hint=" (copy $example to ${example%.example})"
+    fi
+    emit optional ssh-hosts "no host snippets in $SSH_SNIPPET_DIR$hint"
+}
+
+print_status() {
+    status_git
+    status_jj
+    status_ssh_include
+    status_ssh_hosts
+}
+
+# --- reporting -------------------------------------------------------------
+
+# Maps the states onto lib/ui.sh's printers and answers "is anything still
+# unconfigured?" through the exit status. Both --check and the tail of a
+# configure run go through here, so the two can never disagree.
+report() {
+    local state subject detail incomplete=0
+    while IFS=$'\t' read -r state subject detail; do
+        case "$state" in
+            configured) print_success "$subject: $detail" ;;
+            optional) print_info "$subject: $detail" ;;
+            *)
+                print_warn "$subject ($state): $detail"
+                incomplete=1
+                ;;
+        esac
+    done < <(print_status)
+    return "$incomplete"
+}
+
+# --- value resolution ------------------------------------------------------
+
+# Ask, but only when there is someone to ask. A non-interactive run has to fail
+# instead: a prompt written to a CI log is a hang, not a question.
+resolve() {
+    local current="$1" label="$2" flag="$3" envvar="$4" answer=""
+    if [[ -n "$current" ]]; then
+        printf '%s\n' "$current"
+        return 0
+    fi
+    if [[ ! -t 0 ]]; then
+        print_error "$label is not set — pass $flag or set $envvar" >&2
+        return 1
+    fi
+    read -r -p "$label: " answer
+    if [[ -z "$answer" ]]; then
+        print_error "$label cannot be empty" >&2
+        return 1
+    fi
+    printf '%s\n' "$answer"
+}
+
+# --- writing ---------------------------------------------------------------
+
+# Start the local file from its tracked template, so the menu of machine-local
+# options the template documents survives into the file the user will edit
+# next. The generated block goes after it; the template's own [user] block is
+# commented out, so nothing collides.
+start_from_example() {
+    local dest="$1" example="$2"
+    mkdir -p "$(dirname "$dest")"
+    if [[ -f "$example" ]]; then
+        cp "$example" "$dest"
+    else
+        : > "$dest"
+    fi
+}
+
+configure_git() {
+    if [[ -e "$GIT_LOCAL" ]]; then
+        print_info "$GIT_LOCAL exists; left untouched"
+        return 0
+    fi
+
+    GIT_NAME="$(resolve "$GIT_NAME" "Git user name" --git-name GIT_USER_NAME)"
+    GIT_EMAIL="$(resolve "$GIT_EMAIL" "Git email" --git-email GIT_USER_EMAIL)"
+
+    start_from_example "$GIT_LOCAL" "$GIT_EXAMPLE"
+    {
+        echo ""
+        echo "# --- written by dotfiles-init ---"
+        echo "[user]"
+        printf '\tname = %s\n' "$GIT_NAME"
+        printf '\temail = %s\n' "$GIT_EMAIL"
+        if [[ -n "$GIT_KEY" ]]; then
+            printf '\tsigningkey = %s\n' "$GIT_KEY"
+        else
+            # The tracked config sets commit.gpgsign = true. Without a signing
+            # key that makes every commit fail, which is the exact failure this
+            # module exists to prevent — so turn it off rather than hand over a
+            # git that still cannot commit.
+            echo ""
+            echo "# No signing key was given, and the tracked config turns on commit signing."
+            echo "# Set user.signingkey above and delete this block to sign commits."
+            echo "[commit]"
+            printf '\tgpgsign = false\n'
+        fi
+    } >> "$GIT_LOCAL"
+
+    print_success "wrote $GIT_LOCAL"
+}
+
+configure_jj() {
+    if [[ -e "$JJ_LOCAL" ]]; then
+        print_info "$JJ_LOCAL exists; left untouched"
+        return 0
+    fi
+
+    # jj identity is the git identity on every machine anyone has used this on;
+    # the flags exist for the machine where it is not.
+    JJ_NAME="$(resolve "${JJ_NAME:-$GIT_NAME}" "Jujutsu user name" --jj-name JJ_USER_NAME)"
+    JJ_EMAIL="$(resolve "${JJ_EMAIL:-$GIT_EMAIL}" "Jujutsu email" --jj-email JJ_USER_EMAIL)"
+
+    start_from_example "$JJ_LOCAL" "$JJ_EXAMPLE"
+    {
+        echo ""
+        echo "# --- written by dotfiles-init ---"
+        echo "[user]"
+        printf 'name = "%s"\n' "$JJ_NAME"
+        printf 'email = "%s"\n' "$JJ_EMAIL"
+    } >> "$JJ_LOCAL"
+
+    print_success "wrote $JJ_LOCAL"
+}
+
+# --- main ------------------------------------------------------------------
+
+show_help() {
+    cat << EOF
+Usage: dotfiles-init [OPTIONS]
+
+Configure the gitignored local files this checkout expects but cannot track:
+git identity, jj identity, and the SSH host snippets it can only report on.
+
+MODES:
+    (none)              Create what is missing; never rewrite what is there
+    --check             Report, and exit 1 if anything is unconfigured
+    --status            One 'state<TAB>subject<TAB>detail' row per subject
+    --states            The state vocabulary, one per line
+    -h, --help          Show this help
+
+VALUES (the flag wins over the environment variable):
+    --git-name NAME             GIT_USER_NAME
+    --git-email EMAIL           GIT_USER_EMAIL
+    --git-signing-key KEY       GIT_SIGNING_KEY   optional
+    --jj-name NAME              JJ_USER_NAME      defaults to the git name
+    --jj-email EMAIL            JJ_USER_EMAIL     defaults to the git email
+
+A missing value is prompted for when stdin is a terminal, and is an error
+otherwise, so an automated run fails loudly instead of blocking on a prompt.
+
+EXIT CODES:
+    0    Configured (or, with --check, nothing is unconfigured)
+    1    A value could not be resolved, or --check found something unconfigured
+    2    Bad usage
+
+EXAMPLES:
+    dotfiles-init                                  # prompts for what it needs
+    dotfiles-init --git-name Ada --git-email a@b.c # non-interactive
+    GIT_USER_NAME=Ada GIT_USER_EMAIL=a@b.c dotfiles-init
+    dotfiles-init --check                          # assert, e.g. in a test
+    make init                                      # the same thing through make
+
+EOF
+}
+
+main() {
+    local mode=configure
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --check) mode=check ;;
+            --status) mode=status ;;
+            --states) mode=states ;;
+            --git-name) GIT_NAME="${2:-}"; shift ;;
+            --git-name=*) GIT_NAME="${1#*=}" ;;
+            --git-email) GIT_EMAIL="${2:-}"; shift ;;
+            --git-email=*) GIT_EMAIL="${1#*=}" ;;
+            --git-signing-key) GIT_KEY="${2:-}"; shift ;;
+            --git-signing-key=*) GIT_KEY="${1#*=}" ;;
+            --jj-name) JJ_NAME="${2:-}"; shift ;;
+            --jj-name=*) JJ_NAME="${1#*=}" ;;
+            --jj-email) JJ_EMAIL="${2:-}"; shift ;;
+            --jj-email=*) JJ_EMAIL="${1#*=}" ;;
+            -h | --help)
+                show_help
+                return 0
+                ;;
+            *)
+                print_error "Unknown option: $1" >&2
+                echo "Use --help for usage information" >&2
+                return 2
+                ;;
+        esac
+        shift
+    done
+
+    case "$mode" in
+        states)
+            local st
+            for st in $LOCAL_STATES; do echo "$st"; done
+            return 0
+            ;;
+        status)
+            print_status
+            return 0
+            ;;
+        check)
+            print_header "Local Configuration"
+            if report; then return 0; fi
+            return 1
+            ;;
+    esac
+
+    print_header "Local Configuration"
+    configure_git
+    configure_jj
+    echo ""
+    # The report is advisory here, not the verdict: `make link` owns the SSH
+    # Include line and host snippets are the machine's business, so neither is
+    # this command's to fail over. --check is the gate.
+    report || true
+    return 0
+}
+
+main "$@"

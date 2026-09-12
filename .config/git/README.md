@@ -25,13 +25,30 @@ The file is organized into sections:
 
 ### [user]
 
-Defines your identity for commits:
+Defines your identity for commits. It is **not** in the tracked config — that
+carries no identity — and lives in the gitignored `config.local`, which the
+tracked config `[include]`s at the bottom:
 
 ```ini
 [user]
     name = Your Name
     email = your.email@example.com
 ```
+
+Write it with `make init` rather than by hand:
+
+```bash
+make init                                              # prompts
+make init GIT_USER_NAME="Your Name" GIT_USER_EMAIL=you@example.com
+make init check=1                                      # report only
+```
+
+`make init` copies `config.local.example` and appends the `[user]` block, so
+the template's menu of machine-local options survives into the file you edit
+next. It never rewrites a `config.local` that already exists. Without a signing
+key it also writes `commit.gpgsign = false`, because the tracked config turns
+commit signing on and a machine with no GPG key would otherwise fail every
+commit.
 
 ### [core]
 

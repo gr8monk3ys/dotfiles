@@ -37,7 +37,14 @@ DOTFILES_ASSUME_YES=1 DOTFILES_MACHINE_TYPE=personal \
 ```
 
 Machine-specific values (git/jj identity, SSH hosts, work overrides) live in
-gitignored local files; `OPERATING.md` lists them.
+gitignored local files; `OPERATING.md` lists them. `make` links a machine but
+cannot configure one, so finish with:
+
+```bash
+make init          # git and jj identity, from their templates; prompts for what it needs
+make init GIT_USER_NAME="Your Name" GIT_USER_EMAIL=you@example.com   # non-interactive
+make init check=1  # report only; non-zero if anything is still unconfigured
+```
 
 ## Verify
 

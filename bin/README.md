@@ -72,6 +72,37 @@ make doctor
 - Shell configuration
 - File permissions
 
+### [dotfiles-init](dotfiles-init)
+
+Creates the gitignored local files `make` cannot: git identity, jj identity,
+and a report on the SSH host snippets it can only look at. See
+[CONTEXT.md](../CONTEXT.md) § Local config for the subjects and states.
+
+**Usage:**
+
+```bash
+dotfiles-init                                    # prompts for what is missing
+dotfiles-init --git-name Ada --git-email a@b.c   # non-interactive
+GIT_USER_NAME=Ada GIT_USER_EMAIL=a@b.c dotfiles-init
+dotfiles-init --check                            # exit 1 if anything is unconfigured
+dotfiles-init --status                           # state<TAB>subject<TAB>detail rows
+# or
+make init
+make init check=1
+```
+
+Every value takes a flag or an environment variable (`--git-name` /
+`GIT_USER_NAME`, `--git-email` / `GIT_USER_EMAIL`, `--git-signing-key` /
+`GIT_SIGNING_KEY`, `--jj-name` / `JJ_USER_NAME`, `--jj-email` /
+`JJ_USER_EMAIL`), the flag winning. jj identity defaults to the git identity.
+A missing value is prompted for on a terminal and is an error otherwise, so an
+automated run fails loudly rather than hanging on a prompt.
+
+Safe to re-run. An existing local file is never rewritten — not even to
+complete it — because it is the one thing on the machine nothing else can
+reproduce. `dotfiles-doctor` is a reporter over `--status` and carries no
+detection of its own.
+
 ### [dotfiles-update](dotfiles-update)
 
 Update all packages and configurations.
@@ -423,6 +454,7 @@ Helps non-root installations on Arch Linux.
 | --- | --- | --- | --- |
 | platform | ✓ | ✓ | ✓ |
 | dotfiles-doctor | ✓ | ✓ | ✓ |
+| dotfiles-init | ✓ | ✓ | ✓ |
 | dotfiles-update | ✓ | ✓ | ✓ |
 | dotfiles-backup | ✓ | ✓ | ✓ |
 | dotfiles-restore | ✓ | ✓ | ✓ |

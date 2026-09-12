@@ -212,5 +212,8 @@ credentials.json
 ##
 .config/age/key.txt
 
-# jj identity stays local (see .config/jj/config.toml header)
-.config/jj/conf.d/
+# jj identity stays local (see .config/jj/config.toml header); only the
+# template is tracked. Ignoring the directory itself would stop git descending
+# into it, and the negation below would never be reached.
+.config/jj/conf.d/*
+!.config/jj/conf.d/*.toml.example

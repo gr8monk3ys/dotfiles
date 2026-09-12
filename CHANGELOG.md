@@ -11,6 +11,10 @@ Everything since 1.0.0 (2025-10-24), by theme.
 
 ### Added
 
+- `bin/dotfiles-init` (and `make init`): creates the gitignored local files `make` cannot — git identity and jj identity — from their tracked templates, and reports on the SSH Include line and host snippets it can only look at. Idempotent, and it never rewrites an existing local file, not even to complete it. Values come from flags or from `GIT_USER_NAME`/`GIT_USER_EMAIL`/`GIT_SIGNING_KEY`/`JJ_USER_NAME`/`JJ_USER_EMAIL`, so CI and a scripted setup never block on a prompt; `--check` reports and exits non-zero, so the state can be asserted. `test/test_dotfiles_init.bats` covers it against fixture HOMEs, and never touches the real `~/.gitconfig`, `~/.config/jj` or `~/.ssh`
+- `.config/jj/conf.d/user.toml.example`: the template jj identity had never had, even though `config.toml` has always pointed at `conf.d/user.toml` for it. `.gitignore` now excludes `conf.d/*` rather than `conf.d/`, because ignoring the directory stops git descending into it and would swallow the template with it
+- `CONTEXT.md` § Local config: the `configured`/`incomplete`/`unconfigured`/`ineffective`/`optional` vocabulary, the four subjects it applies to, and why git identity is classified by asking git rather than by reading the file
+
 - `bin/firefox-user-js` (and `make firefox`): installs this checkout's `user.js` into the Firefox profiles that actually read it, discovering them from `profiles.ini` rather than by globbing `Profiles/*/`. Symlinks by default so edits reach Firefox at its next start, `--copy` for sandboxed builds, backs up a `user.js` it did not write, and warns when Firefox is running (`user.js` is read only at startup). `test/test_firefox_user_js.bats` covers it against a fixture profile tree — the real profiles are never touched by tests
 - `CONTEXT.md` § Firefox profile state: the `linked`/`installed`/`foreign`/`absent`/`missing` vocabulary, and why a profile's `default` role comes from an `[Install…]` section rather than `Default=1`
 - `bin/lib/git-sync.sh`: shared git fast-forward state machine behind one interface, with `dotfiles-update`, `dotfiles-sync` and `dotfiles-doctor` as three reporters over it; `test/test_git_sync.bats` covers it directly
@@ -39,6 +43,10 @@ Everything since 1.0.0 (2025-10-24), by theme.
 - Baseline repo files: `LICENSE` (GPL-3.0), `SECURITY.md`, `CODE_OF_CONDUCT.md`, `.editorconfig`, `.shellcheckrc`, `.pre-commit-config.yaml`, this changelog
 
 ### Changed
+
+- `dotfiles-doctor` now has a Local Configuration section and is a reporter over `bin/dotfiles-init --status`, carrying no detection of its own. It used to name the problem ("git identity not set") without being able to point at a fix, and asked `git config --global user.email` to find out — which, because `--global` defaults to `--no-includes`, could not see an identity that arrived through `config.local`'s `[include]`, the only place this repo puts one
+- `make help` documents `GIT_USER_NAME`, `GIT_USER_EMAIL`, `GIT_SIGNING_KEY`, `JJ_USER_NAME` and `JJ_USER_EMAIL`, with a test that fails if an identity variable the Makefile reads is missing from it
+- The fresh-laptop checklist in `OPERATING.md` is now `make init` rather than two `cp` commands and a note about jj that had no template behind it
 
 - `bin/platform` is now the only place in `bin/` that reads `$OSTYPE` or `uname`: seven inline branches in `dotfiles-doctor` and `dotfiles-backup` go through it, and `install.sh` uses it once the checkout exists (its own copy remains for the pre-clone stretch, where nothing can be sourced)
 - `install.sh` now accepts `amd64` as `x86_64`, matching `bin/platform`
