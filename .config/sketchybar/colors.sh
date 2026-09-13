@@ -1,21 +1,47 @@
 #!/bin/bash
 
-# OneDark color palette for SketchyBar
-# Same hexes as .config/starship/starship.toml and the zsh highlight styles,
-# so the bar matches the prompt, Ghostty and Neovim.
+# SketchyBar's view of the shared palette.
+#
+# The hexes are NOT written here. They come from .config/palette/danse.conf,
+# the one place this checkout defines a colour, so the bar cannot drift from
+# the prompt, Ghostty, Neovim and the desktop background. This file only maps
+# palette names onto the role names the item scripts already use.
+#
+# Read inline rather than through bin/palette: sketchybar execs its scripts
+# with a minimal environment and this checkout's bin/ is not reliably on that
+# PATH. The file is two fields and a comment character; a parser is overkill.
 
-export BAR_COLOR=0xff282c34         # bg
-export BAR_BORDER_COLOR=0xff3e4451  # visual/selection grey
-export BACKGROUND=0xff3e4451        # visual/selection grey
-export FOREGROUND=0xffabb2bf        # fg
-export ACCENT=0xffc678dd            # magenta
-export GREEN=0xff98c379             # green
-export RED=0xffe06c75               # red
-export YELLOW=0xffe5c07b            # yellow
-export BLUE=0xff61afef              # blue
-export PEACH=0xffd19a66             # orange (dark yellow)
-export TEAL=0xff56b6c2              # cyan
-export LAVENDER=0xff61afef          # blue (light accent)
-export SUBTEXT=0xff5c6370           # comment
-export OVERLAY=0xff5c6370           # comment
+PALETTE_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/palette/danse.conf"
+
+# name -> 0xaarrggbb, as $PAL_<NAME> with kebab-case folded to underscores.
+if [ -r "$PALETTE_FILE" ]; then
+    while IFS='|' read -r _name _hex _role; do
+        case "$_name" in '' | \#*) continue ;; esac
+        _var="PAL_$(printf '%s' "$_name" | tr '[:lower:]-' '[:upper:]_')"
+        eval "$_var=0xff${_hex#\#}"
+    done < "$PALETTE_FILE"
+    unset _name _hex _role _var
+else
+    echo "sketchybar/colors.sh: cannot read $PALETTE_FILE" >&2
+fi
+
+export BAR_COLOR="$PAL_BG"
+export BAR_BORDER_COLOR="$PAL_SURFACE"
+export BACKGROUND="$PAL_SURFACE"
+export FOREGROUND="$PAL_FG"
+export ACCENT="$PAL_MAGENTA"
+export GREEN="$PAL_GREEN"
+export RED="$PAL_VERMILION"
+export YELLOW="$PAL_YELLOW"
+export BLUE="$PAL_BLUE"
+export PEACH="$PAL_TERRACOTTA"
+export TEAL="$PAL_CYAN"
+export LAVENDER="$PAL_BLUE"
+export SUBTEXT="$PAL_COMMENT"
+export OVERLAY="$PAL_COMMENT"
+
+# Matisse fills, for chrome that sits behind text rather than being text.
+export ULTRAMARINE="$PAL_ULTRAMARINE"
+export VIRIDIAN="$PAL_VIRIDIAN"
+
 export TRANSPARENT=0x00000000
