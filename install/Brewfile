@@ -14,7 +14,7 @@ tap "psharma04/dorion"
 tap "stripe/stripe-cli"                # Stripe CLI                 # Discord client
 tap "sylvanfranklin/srhd"              # Simple hotkey daemon
 tap "vldmrkl/formulae"                 # Additional tools
-tap "FelixKratz/formulae"              # SketchyBar status bar
+tap "FelixKratz/formulae"              # SketchyBar status bar, JankyBorders
 
 # ============================================================================
 # Core System Dependencies
@@ -273,6 +273,7 @@ brew "mysql@8.4"                       # MySQL 8.4
 # Status Bar
 # ============================================================================
 brew "FelixKratz/formulae/sketchybar"  # Customizable macOS status bar
+brew "FelixKratz/formulae/borders"     # Focused-window borders for the tiling WM
 
 # ============================================================================
 # AI & Machine Learning
