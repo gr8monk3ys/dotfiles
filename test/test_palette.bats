@@ -112,3 +112,19 @@ load test_helper/common
     ' _ "$DOTFILES_DIR"
     assert_success
 }
+
+@test "every colour in the ghostty theme is a palette colour" {
+    # ghostty/themes/danse is derived from the palette by hand-running
+    # `palette get`. Nothing re-runs that, so this is what keeps it true.
+    run bash -c '
+        set -euo pipefail
+        repo="$1"
+        allowed="$("$repo/bin/palette" list | cut -f2)"
+        status=0
+        for hex in $(grep -oE "#[0-9a-f]{6}" "$repo/.config/ghostty/themes/danse" | sort -u); do
+            printf "%s\n" "$allowed" | grep -Fxq "$hex" || { echo "ghostty theme uses $hex, which is not in the palette"; status=1; }
+        done
+        exit $status
+    ' _ "$DOTFILES_DIR"
+    assert_success
+}

@@ -21,10 +21,10 @@ font-feature = dlig
 # Theme & Colors
 # ============================================================================
 # OneDark everywhere (matches zsh-syntax-highlighting, fzf, bat, starship)
-theme = Atom One Dark
+theme = danse
 
 # Frosted glass effect
-background-opacity = 0.8
+background-opacity = 0.86
 background-blur = 90
 
 # Wide color gamut for richer colors on Apple displays
@@ -46,7 +46,7 @@ window-save-state = always
 unfocused-split-opacity = 0.85
 
 # macOS specific
-macos-titlebar-style = transparent
+macos-titlebar-style = hidden
 macos-option-as-alt = true
 
 # ============================================================================
@@ -129,3 +129,31 @@ confirm-close-surface = false
 mouse-hide-while-typing = true
 focus-follows-mouse = false
 link-url = true
+
+# --- rice ------------------------------------------------------------------
+# The desktop background is a painting (bin/wallpaper), so the terminal has to
+# sit on top of something busy. Opacity is a touch higher than the usual 0.8
+# for that reason; opacity-cells extends it to cells that carry their own
+# background, which otherwise read as opaque patches over the blur.
+background-opacity-cells = true
+
+# Chrome, from .config/palette/danse.conf.
+unfocused-split-fill = #21252b
+split-divider-color = #2b4468
+
+# The titlebar is hidden rather than the decoration removed: AeroSpace tiles
+# these windows so the titlebar is dead space, but keeping the decoration
+# leaves the window usable on a machine where the WM is not running.
+resize-overlay = never
+minimum-contrast = 1.1
+
+# A drop-down terminal, the way Guake and yakuake do it. The global bind needs
+# Accessibility permission the first time Ghostty sees it.
+quick-terminal-position = top
+quick-terminal-animation-duration = 0.15
+keybind = global:ctrl+grave_accent=toggle_quick_terminal
+
+# The Dock icon matches the palette too.
+macos-icon = glass
+macos-icon-ghost-color = #61afef
+macos-icon-screen-color = #282c34
