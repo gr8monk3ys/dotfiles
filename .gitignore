@@ -220,3 +220,11 @@ credentials.json
 
 # Agent worktrees (transient; created by the Agent tool)
 .claude/worktrees/
+
+# Karabiner-Elements writes these into its config dir, which stow folds into
+# the checkout — so the GUI's generated state lands in the repo. It also
+# rewrites karabiner.json itself on launch (canonicalising key order and
+# dropping settings it now manages in-app); that file stays tracked because
+# the remap rules are ours, but its churn is expected.
+.config/karabiner/automatic_backups/
+.config/karabiner/assets/
