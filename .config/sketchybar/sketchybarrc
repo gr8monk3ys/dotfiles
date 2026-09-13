@@ -54,9 +54,13 @@ sketchybar --default \
 # Left side
 source "$ITEM_DIR/apple.sh"
 source "$ITEM_DIR/spaces.sh"
+source "$ITEM_DIR/front_app.sh"
 
-# Right side
+# Right side, outermost first: calendar sits at the far right.
 source "$ITEM_DIR/calendar.sh"
+source "$ITEM_DIR/battery.sh"
+source "$ITEM_DIR/volume.sh"
+source "$ITEM_DIR/cpu.sh"
 
 # ============================================================================
 # Finalize
