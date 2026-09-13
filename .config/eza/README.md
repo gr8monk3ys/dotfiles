@@ -53,3 +53,21 @@ brew install eza
 
 - [eza GitHub](https://github.com/eza-community/eza)
 - [eza Themes](https://github.com/eza-community/eza-themes)
+
+## theme.yml is inert on Homebrew builds
+
+`theme.yml` requires a build feature Homebrew's bottle does not enable. This
+machine's eza reports:
+
+```
+v0.23.5 [+git]
+```
+
+`git` is the only feature compiled in. eza silently ignores `theme.yml` —
+malformed YAML included, which is how to check: if a deliberately broken
+`theme.yml` produces no error, theme support is absent.
+
+`EZA_COLORS` is what this build honours, so the same OneDark palette is
+expressed there in `.zshenv`. `theme.yml` is kept because it is the upstream
+format and will work on a build with the feature enabled, but **editing it
+changes nothing today** — change `EZA_COLORS` instead.

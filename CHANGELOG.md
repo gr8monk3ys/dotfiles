@@ -88,6 +88,8 @@ Everything since 1.0.0 (2025-10-24), by theme.
 
 ### Fixed
 
+- eza was unthemed. `.config/eza/theme.yml` needs a build feature Homebrew's bottle does not enable — this eza reports `v0.23.5 [+git]` and nothing else — so it ignores the file silently, malformed YAML included. No schema fix would have helped; the earlier theory that the keys were wrong (`filekinds` vs `filetype`) was chasing the wrong problem. The OneDark palette is now expressed through `EZA_COLORS`, which this build honours, and a booted-shell test asserts eza emits `#61afef` for directories
+
 - Homebrew tap drift in both directions, surfaced by Homebrew refusing to load from untrusted taps. `sshpass` and `stripe` were installed from `hudochenkov/sshpass` and `stripe/stripe-cli`, neither of which the Brewfile declared — so `bin/install-kind` never trusted them, Homebrew ignored them, and a fresh machine would not have got either. Both taps and formulae are now declared, with `docs/TOOLS.md` entries. `koekeishiya/formulae` was declared but referenced by no formula and not even tapped, left over from before the move to AeroSpace; removed. `asmvik/formulae` was tapped with nothing installed from it; untapped
 
 - Both test Dockerfiles copied the checkout's `.git` verbatim. From a git worktree — which `bin/dotfiles-worktree` hands out — that is a pointer file naming a gitdir absent from the image, so every git command inside the container exited 128 and the two tests that ask git about the checkout (leaked identity, ignored SSH hosts) failed for a reason unrelated to the dotfiles. The image now rebuilds a real one-commit repo when it receives a pointer

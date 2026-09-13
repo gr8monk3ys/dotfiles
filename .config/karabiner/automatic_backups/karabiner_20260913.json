@@ -1,12 +1,18 @@
 {
+    "global": {
+        "show_in_menu_bar": true
+    },
     "profiles": [
         {
+            "name": "Default",
+            "selected": true,
             "complex_modifications": {
                 "rules": [
                     {
                         "description": "Left Ctrl + hjkl to Arrow Keys (Vim navigation)",
                         "manipulators": [
                             {
+                                "type": "basic",
                                 "from": {
                                     "key_code": "h",
                                     "modifiers": {
@@ -14,10 +20,10 @@
                                         "optional": ["any"]
                                     }
                                 },
-                                "to": [{ "key_code": "left_arrow" }],
-                                "type": "basic"
+                                "to": [{ "key_code": "left_arrow" }]
                             },
                             {
+                                "type": "basic",
                                 "from": {
                                     "key_code": "j",
                                     "modifiers": {
@@ -25,10 +31,10 @@
                                         "optional": ["any"]
                                     }
                                 },
-                                "to": [{ "key_code": "down_arrow" }],
-                                "type": "basic"
+                                "to": [{ "key_code": "down_arrow" }]
                             },
                             {
+                                "type": "basic",
                                 "from": {
                                     "key_code": "k",
                                     "modifiers": {
@@ -36,10 +42,10 @@
                                         "optional": ["any"]
                                     }
                                 },
-                                "to": [{ "key_code": "up_arrow" }],
-                                "type": "basic"
+                                "to": [{ "key_code": "up_arrow" }]
                             },
                             {
+                                "type": "basic",
                                 "from": {
                                     "key_code": "l",
                                     "modifiers": {
@@ -47,8 +53,7 @@
                                         "optional": ["any"]
                                     }
                                 },
-                                "to": [{ "key_code": "right_arrow" }],
-                                "type": "basic"
+                                "to": [{ "key_code": "right_arrow" }]
                             }
                         ]
                     },
@@ -56,6 +61,7 @@
                         "description": "Right Cmd + hjkl to Arrow Keys (alternative Vim navigation)",
                         "manipulators": [
                             {
+                                "type": "basic",
                                 "from": {
                                     "key_code": "h",
                                     "modifiers": {
@@ -63,10 +69,10 @@
                                         "optional": ["any"]
                                     }
                                 },
-                                "to": [{ "key_code": "left_arrow" }],
-                                "type": "basic"
+                                "to": [{ "key_code": "left_arrow" }]
                             },
                             {
+                                "type": "basic",
                                 "from": {
                                     "key_code": "j",
                                     "modifiers": {
@@ -74,10 +80,10 @@
                                         "optional": ["any"]
                                     }
                                 },
-                                "to": [{ "key_code": "down_arrow" }],
-                                "type": "basic"
+                                "to": [{ "key_code": "down_arrow" }]
                             },
                             {
+                                "type": "basic",
                                 "from": {
                                     "key_code": "k",
                                     "modifiers": {
@@ -85,10 +91,10 @@
                                         "optional": ["any"]
                                     }
                                 },
-                                "to": [{ "key_code": "up_arrow" }],
-                                "type": "basic"
+                                "to": [{ "key_code": "up_arrow" }]
                             },
                             {
+                                "type": "basic",
                                 "from": {
                                     "key_code": "l",
                                     "modifiers": {
@@ -96,16 +102,12 @@
                                         "optional": ["any"]
                                     }
                                 },
-                                "to": [{ "key_code": "right_arrow" }],
-                                "type": "basic"
+                                "to": [{ "key_code": "right_arrow" }]
                             }
                         ]
                     }
                 ]
-            },
-            "name": "Default",
-            "selected": true,
-            "virtual_hid_keyboard": { "keyboard_type_v2": "ansi" }
+            }
         }
     ]
 }
