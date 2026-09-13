@@ -79,3 +79,28 @@ anything tagged `[SETUP-WEB]`, which can break sites.
 - [arkenfox wiki](https://github.com/arkenfox/user.js/wiki) - what each section does
 - [Firefox user.js documentation](https://kb.mozillazine.org/User.js_file)
 - [about:config entries](https://kb.mozillazine.org/About:config_entries)
+
+## Updating arkenfox
+
+`user.js` is arkenfox, unmodified, followed by a fenced `[SECTION 9999]`
+override block. arkenfox applies prefs in order and the last write wins, so
+the block needs no tooling — but it does mean an update is "replace
+everything above, re-append the block":
+
+```bash
+curl -fL -o .config/firefox/user.js \
+  https://raw.githubusercontent.com/arkenfox/user.js/<version>/user.js
+# then re-append SECTION 9999 from git history:
+git show HEAD:.config/firefox/user.js | sed -n '/SECTION 9999/,$p' \
+  >> .config/firefox/user.js
+bin/firefox-user-js install
+```
+
+Check the newest release against your Firefox version first — arkenfox tracks
+ESR, so it can lag the release channel.
+
+### Current overrides
+
+- `privacy.clearOnShutdown_v2.cookiesAndStorage = false`. arkenfox 2811 sets
+  this `true`, which logs you out of every site whenever Firefox closes.
+  Cache and form-data clearing stay on; only session persistence changes.
