@@ -104,3 +104,10 @@ ESR, so it can lag the release channel.
 - `privacy.clearOnShutdown_v2.cookiesAndStorage = false`. arkenfox 2811 sets
   this `true`, which logs you out of every site whenever Firefox closes.
   Cache and form-data clearing stay on; only session persistence changes.
+- `browser.startup.page = 3`. arkenfox 0102 sets `0` (blank page), so a
+  restart silently discards every open tab.
+- `browser.sessionstore.privacy_level = 0`. arkenfox 1003 sets `2`, which
+  refuses to save session data for any site and would defeat the above.
+
+These three go together: if sessions are worth keeping across a restart, so
+are the tabs and the logins.

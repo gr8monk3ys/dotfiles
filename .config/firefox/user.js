@@ -1279,3 +1279,14 @@ user_pref("_user.js.parrot", "9999 syntax error: the parrot's pushing up daisies
  * Firefox closes. Cache, form data and the 2800 section's other clearing all
  * stay enabled — this changes only whether sessions survive a restart. ***/
 user_pref("privacy.clearOnShutdown_v2.cookiesAndStorage", false);
+
+/* 9999.2: restore the previous session on startup.
+ * arkenfox 0102 sets browser.startup.page=0 (blank page), so a restart
+ * silently discards every open tab. Paired with 9999.1 — if sessions are
+ * worth keeping across a restart, so are the tabs. ***/
+user_pref("browser.startup.page", 3);
+
+/* 9999.3: let the session store persist enough to actually restore.
+ * arkenfox 1003 sets privacy_level=2, which refuses to save session data for
+ * any site, defeating 9999.2. 0 = save for all sites. ***/
+user_pref("browser.sessionstore.privacy_level", 0);
