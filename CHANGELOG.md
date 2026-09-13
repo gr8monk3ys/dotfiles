@@ -88,6 +88,8 @@ Everything since 1.0.0 (2025-10-24), by theme.
 
 ### Fixed
 
+- Homebrew tap drift in both directions, surfaced by Homebrew refusing to load from untrusted taps. `sshpass` and `stripe` were installed from `hudochenkov/sshpass` and `stripe/stripe-cli`, neither of which the Brewfile declared — so `bin/install-kind` never trusted them, Homebrew ignored them, and a fresh machine would not have got either. Both taps and formulae are now declared, with `docs/TOOLS.md` entries. `koekeishiya/formulae` was declared but referenced by no formula and not even tapped, left over from before the move to AeroSpace; removed. `asmvik/formulae` was tapped with nothing installed from it; untapped
+
 - Both test Dockerfiles copied the checkout's `.git` verbatim. From a git worktree — which `bin/dotfiles-worktree` hands out — that is a pointer file naming a gitdir absent from the image, so every git command inside the container exited 128 and the two tests that ask git about the checkout (leaked identity, ignored SSH hosts) failed for a reason unrelated to the dotfiles. The image now rebuilds a real one-commit repo when it receives a pointer
 - `test/Dockerfile.arch` lacked `diffutils`, so `cmp` was missing and two `bin/firefox-user-js` tests failed only on Arch
 - `test/test_doctor_tools.bats` proved a removed package is caught by deleting it from the Brewfile alone. The validator asks whether a package is in _any_ manifest, so once `ripgrep` was in the pacmanfile too the test passed vacuously; it now removes it from both

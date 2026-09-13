@@ -7,10 +7,11 @@
 # ============================================================================
 tap "dominikbraun/timetrace"           # Time tracking
 tap "homebrew-zathura/zathura"         # Zathura plugins
-tap "koekeishiya/formulae"             # Window management tools
 tap "nikitabobko/tap"                  # AeroSpace window manager
+tap "hudochenkov/sshpass"              # sshpass (not in homebrew/core by policy)
 tap "oven-sh/bun"                      # Bun JavaScript runtime
-tap "psharma04/dorion"                 # Discord client
+tap "psharma04/dorion"
+tap "stripe/stripe-cli"                # Stripe CLI                 # Discord client
 tap "sylvanfranklin/srhd"              # Simple hotkey daemon
 tap "vldmrkl/formulae"                 # Additional tools
 tap "FelixKratz/formulae"              # SketchyBar status bar
@@ -111,6 +112,8 @@ brew "neovim"                          # Primary editor (LSP, treesitter, plugin
 brew "tmux"                            # Terminal multiplexer
 brew "zsh-syntax-highlighting"         # Zsh syntax highlighting
 brew "starship"                        # Cross-shell prompt
+brew "hudochenkov/sshpass/sshpass"      # Non-interactive ssh password auth
+brew "stripe/stripe-cli/stripe"         # Stripe CLI
 brew "fzf"                             # Fuzzy finder
 brew "dockutil"                        # Scripted Dock layout (.config/macos/dock.sh)
 brew "duti"                            # Default-app associations from install/duti (make duti)

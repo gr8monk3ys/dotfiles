@@ -89,6 +89,11 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 - **Why:** Static analysis for shell scripts; `make verify` and CI both gate on it.
 - **Installed via:** Brewfile, pacmanfile
 
+### stripe
+
+- **Why:** Stripe CLI for testing webhooks and API calls locally; from the `stripe/stripe-cli` tap.
+- **Installed via:** Brewfile
+
 ### tbb
 
 - **Why:** Threading Building Blocks.
@@ -676,6 +681,11 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 - **Why:** GPG-backed CLI password store for scripts and git-credential use.
 - **Alternatives:** keepassxc (GUI vault)
 - **Installed via:** Brewfile, pacmanfile
+
+### sshpass
+
+- **Why:** Non-interactive SSH password auth for scripted access to hosts without key auth; from `hudochenkov/sshpass`, as homebrew/core declines to carry it.
+- **Installed via:** Brewfile
 
 ## Productivity & Utilities
 
