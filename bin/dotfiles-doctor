@@ -3,65 +3,100 @@
 
 set -euo pipefail
 
-# Default to the checkout this script lives in (works through symlinks), so
-# running bin/dotfiles-* from any clone operates on that clone.
-readonly DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)}"
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/preamble.sh
+source "$SCRIPT_DIR/lib/preamble.sh"
 # shellcheck source=lib/ui.sh
 source "$SCRIPT_DIR/lib/ui.sh"
+# shellcheck source=lib/git-sync.sh
+source "$SCRIPT_DIR/lib/git-sync.sh"
+
+# Resolved once: bin/platform is an executable (the Makefile cannot source
+# it), so cache the answer rather than forking per branch. Resolved from this
+# script's own directory, not DOTFILES_DIR: DOTFILES_DIR is the checkout being
+# inspected, which may be a fixture with no bin/.
+PLATFORM="$SCRIPT_DIR/platform"
+PLATFORM_OS="$("$PLATFORM" detect)"
+readonly PLATFORM PLATFORM_OS
 
 # Track overall health
 ISSUES=0
 WARNINGS=0
 
+# On PATH is not the same as working. zathura sat installed-but-broken with a
+# dyld error (`Library not loaded: libgirara.5.dylib`) and every existence
+# check passed, because the binary was right there — it just could not start.
+tool_runs() {
+    local tool="$1"
+    command_exists "$tool" || return 1
+    "$tool" --version > /dev/null 2>&1
+}
+
+# The commands this health check probes, by severity. These are *command*
+# names, not package names: `rg` ships in the `ripgrep` package. The mapping
+# and the exemptions live in test/allowlist/command-packages.txt, and
+# bin/validate-doctor-tools fails when these lists and the install manifests
+# drift apart in either direction.
+readonly DOCTOR_CORE_TOOLS=("git" "zsh" "nvim" "stow")
+readonly DOCTOR_ESSENTIAL_TOOLS=("eza" "bat" "fd" "rg" "zoxide" "fzf")
+readonly DOCTOR_NEXTGEN_TOOLS=("yazi" "zellij" "jj" "delta" "atuin")
+readonly DOCTOR_ADDITIONAL_TOOLS=("navi" "broot" "tldr" "gping" "ouch")
+
+# Every probed command, one per line. Consumed by bin/validate-doctor-tools.
+list_checked_tools() {
+    printf '%s\n' \
+        "${DOCTOR_CORE_TOOLS[@]}" \
+        "${DOCTOR_ESSENTIAL_TOOLS[@]}" \
+        "${DOCTOR_NEXTGEN_TOOLS[@]}" \
+        "${DOCTOR_ADDITIONAL_TOOLS[@]}"
+}
+
+# Thin counters over lib/ui.sh's printers: the tally is doctor's own state,
+# the formatting is not.
 check_pass() {
-    echo -e "${GREEN}✓${NC} $1"
+    print_success "$1"
 }
 
 check_fail() {
-    echo -e "${RED}✗${NC} $1"
+    print_error "$1"
     ((++ISSUES))
 }
 
 check_warn() {
-    echo -e "${YELLOW}⚠${NC} $1"
+    print_warn "$1"
     ((++WARNINGS))
 }
 
 check_info() {
-    echo -e "${BLUE}ℹ${NC} $1"
-}
-
-# Check if command exists
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
+    print_info "$1"
 }
 
 # Check System Information
 check_system() {
     print_header "System Information"
 
-    if [[ "$OSTYPE" == "darwin"* ]]; then
+    if [[ "$PLATFORM_OS" == "macos" ]]; then
         check_pass "Operating System: macOS $(sw_vers -productVersion)"
 
         # Check architecture
-        if [[ $(uname -m) == "arm64" ]]; then
+        if [[ "$("$PLATFORM" arch)" == "arm64" ]]; then
             check_pass "Architecture: Apple Silicon (ARM64)"
         else
             check_pass "Architecture: Intel (x86_64)"
         fi
-    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    elif [[ "$PLATFORM_OS" == "arch" || "$PLATFORM_OS" == "linux" ]]; then
         check_pass "Operating System: Linux"
         local distro="Unknown"
         if [[ -r /etc/os-release ]]; then
             distro="$(. /etc/os-release && echo "${PRETTY_NAME:-${NAME:-Unknown}}")"
         fi
         check_info "Distribution: $distro"
-        if "$DOTFILES_DIR/bin/platform" is-omarchy; then
+        if "$PLATFORM" is-omarchy; then
             check_info "Omarchy detected (~/.local/share/omarchy) — see OPERATING.md § Omarchy"
         fi
     else
+        # The module answers the question; the raw value stays as detail,
+        # because "unknown" alone is useless in a bug report.
         check_warn "Operating System: $OSTYPE (Limited support)"
     fi
 
@@ -96,6 +131,22 @@ check_dotfiles() {
             else
                 check_warn "No remote origin configured"
             fi
+
+            # Sync state, offline: compares against the last fetch rather than
+            # contacting the remote, so `doctor` stays fast and works on a
+            # plane. Same module dotfiles-update and dotfiles-sync act on.
+            git_sync_status "$DOTFILES_DIR" no-fetch
+            case "$GIT_SYNC_STATE" in
+                "$GIT_SYNC_CLEAN_BEHIND")
+                    check_warn "Behind origin by $GIT_SYNC_BEHIND commit(s) as of last fetch (run 'dotfiles-update')"
+                    ;;
+                "$GIT_SYNC_DIVERGED")
+                    check_warn "Local and remote have diverged - manual merge required"
+                    ;;
+                "$GIT_SYNC_NO_UPSTREAM")
+                    check_warn "No upstream configured - this checkout can never sync"
+                    ;;
+            esac
         else
             check_warn "Not a git repository"
         fi
@@ -105,71 +156,44 @@ check_dotfiles() {
 }
 
 # Check symlinks
+#
+# A reporter over bin/link-state: the classification lives there, where it is
+# tested directly. This used to carry its own folded/unfolded logic plus a
+# hand-written list of 8 directories, while stow links all 26 the checkout
+# ships — so 18 were never judged at all.
 check_symlinks() {
     print_header "Symlink Status"
 
-    # Check .zshenv
-    if [[ -L "$HOME/.zshenv" ]]; then
-        if [[ -e "$HOME/.zshenv" ]]; then
-            check_pass ".zshenv symlink exists and valid"
-        else
-            check_fail ".zshenv symlink broken"
-        fi
-    else
-        if [[ -f "$HOME/.zshenv" ]]; then
-            check_warn ".zshenv exists but is not a symlink"
-        else
-            check_fail ".zshenv not found"
-        fi
-    fi
-
-    # Check .config directory
-    if [[ -d "$HOME/.config" ]]; then
-        check_pass ".config directory exists"
-
-        # Physical path of the checkout, so link targets compare cleanly
-        local repo_config
-        repo_config="$(cd "$DOTFILES_DIR/.config" 2>/dev/null && pwd -P || true)"
-
-        # Check common config symlinks (including new modern tools)
-        local config_dirs=("zsh" "git" "nvim" "ghostty" "yazi" "zellij" "jj" "tmux")
-        for dir in "${config_dirs[@]}"; do
-            # Only judge dirs this checkout actually ships
-            [[ -n "$repo_config" && -d "$repo_config/$dir" ]] || continue
-            if [[ -L "$HOME/.config/$dir" ]]; then
-                # Folded: the dir itself is a link into the repo
-                if links_into_repo "$HOME/.config/$dir" "$repo_config/$dir"; then
-                    check_pass ".config/$dir linked"
-                else
-                    check_fail ".config/$dir is a symlink but does not resolve into $DOTFILES_DIR"
-                fi
-            elif [[ -d "$HOME/.config/$dir" ]]; then
-                # Unfolded: every file the repo ships must be a link into it
-                local missing=0 f
-                while IFS= read -r f; do
-                    links_into_repo "$HOME/.config/$dir/${f#"$repo_config/$dir/"}" "$f" || ((++missing))
-                done < <(find "$repo_config/$dir" -type f)
-                if [[ $missing -eq 0 ]]; then
-                    check_pass ".config/$dir linked"
-                else
-                    check_fail ".config/$dir: $missing file(s) not linked into $DOTFILES_DIR (run 'make link')"
-                fi
-            else
-                check_fail ".config/$dir not linked (run 'make link')"
-            fi
-        done
-    else
+    if [[ ! -d "$HOME/.config" ]]; then
         check_fail ".config directory not found"
+        return 0
     fi
-}
+    check_pass ".config directory exists"
 
-# links_into_repo <path> <expected> — true if <path> is a symlink that
-# resolves to the physical path <expected>.
-links_into_repo() {
-    local path="$1" expected="$2" resolved
-    [[ -L "$path" ]] || return 1
-    resolved="$(readlink -f "$path" 2>/dev/null)" || return 1
-    [[ "$resolved" == "$expected" ]]
+    local state path rel
+    while IFS=$'\t' read -r state path; do
+        rel="${path#"$HOME"/}"
+        case "$state" in
+            linked)
+                check_pass "$rel linked"
+                ;;
+            partial)
+                check_fail "$rel: some files not linked into $DOTFILES_DIR (run 'make link')"
+                ;;
+            unlinked)
+                check_fail "$rel not linked (run 'make link')"
+                ;;
+            unmanaged)
+                check_warn "$rel exists but is not linked into $DOTFILES_DIR"
+                ;;
+            broken-ours)
+                check_fail "$rel is a broken link into $DOTFILES_DIR (run 'make clean')"
+                ;;
+            broken-foreign)
+                # Someone else's broken link; not ours to judge.
+                ;;
+        esac
+    done < <("$SCRIPT_DIR/link-state")
 }
 
 # Check package managers
@@ -189,7 +213,7 @@ check_package_managers() {
             check_pass "All Homebrew packages up to date"
         fi
     else
-        if [[ "$OSTYPE" == "darwin"* ]]; then
+        if [[ "$PLATFORM_OS" == "macos" ]]; then
             check_fail "Homebrew not installed"
         else
             check_info "Homebrew not installed (macOS only)"
@@ -224,11 +248,11 @@ check_package_managers() {
 check_core_tools() {
     print_header "Core Tools"
 
-    local tools=("git" "zsh" "nvim" "stow")
-
-    for tool in "${tools[@]}"; do
-        if command_exists "$tool"; then
+    for tool in "${DOCTOR_CORE_TOOLS[@]}"; do
+        if tool_runs "$tool"; then
             check_pass "$tool installed"
+        elif command_exists "$tool"; then
+            check_fail "$tool is on PATH but fails to run (broken install?)"
         else
             check_warn "$tool not installed"
         fi
@@ -240,18 +264,18 @@ check_modern_tools() {
     print_header "Modern CLI Tools"
 
     # Essential modern tools
-    local essential=("eza" "bat" "fd" "rg" "zoxide" "fzf")
-    for tool in "${essential[@]}"; do
-        if command_exists "$tool"; then
+    for tool in "${DOCTOR_ESSENTIAL_TOOLS[@]}"; do
+        if tool_runs "$tool"; then
             check_pass "$tool installed"
+        elif command_exists "$tool"; then
+            check_fail "$tool is on PATH but fails to run (broken install?)"
         else
             check_warn "$tool not installed (recommended)"
         fi
     done
 
     # Next-gen tools (optional but nice to have)
-    local nextgen=("yazi" "zellij" "jj" "delta" "atuin")
-    for tool in "${nextgen[@]}"; do
+    for tool in "${DOCTOR_NEXTGEN_TOOLS[@]}"; do
         if command_exists "$tool"; then
             check_pass "$tool installed"
         else
@@ -260,8 +284,7 @@ check_modern_tools() {
     done
 
     # Additional modern tools
-    local additional=("navi" "broot" "tldr" "gping" "ouch")
-    for tool in "${additional[@]}"; do
+    for tool in "${DOCTOR_ADDITIONAL_TOOLS[@]}"; do
         if command_exists "$tool"; then
             check_pass "$tool installed"
         else
@@ -281,7 +304,7 @@ check_shell_config() {
     login_shell="${login_shell:-$SHELL}"
     if [[ "$login_shell" == *"zsh"* ]]; then
         check_pass "Zsh is login shell"
-    elif "$DOTFILES_DIR/bin/platform" is-omarchy; then
+    elif "$PLATFORM" is-omarchy; then
         # Omarchy ships bash as login shell and its boot chain (SDDM session,
         # ~/.bashrc, omarchy-* helpers) assumes it. Upstream advises against
         # chsh; point the terminal at zsh instead. Details in OPERATING.md.
@@ -308,23 +331,44 @@ check_shell_config() {
 # Octal mode of a path. BSD stat is `-f FORMAT`; on GNU `-f` means
 # "filesystem status" and succeeds, so an `||` fallback never fires.
 file_mode() {
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        stat -f "%Lp" "$1" 2>/dev/null
-    else
-        stat -c "%a" "$1" 2>/dev/null
-    fi
+    "$PLATFORM" file-mode "$1"
+}
+
+# Check the gitignored local files: git identity, jj identity, SSH snippets.
+#
+# A reporter over bin/dotfiles-init (CONTEXT.md § Reporter), which is also what
+# writes them — so the health check and the fix cannot disagree about what
+# "configured" means. Doctor used to ask `git config --global user.email`
+# itself and name the problem without being able to point at a fix.
+#
+# Warnings, never issues: `make link` installs nothing and configures nothing,
+# so a freshly linked box must still be able to pass.
+check_local_config() {
+    print_header "Local Configuration"
+
+    local state subject detail unconfigured=0
+    while IFS=$'\t' read -r state subject detail; do
+        case "$state" in
+            configured)
+                check_pass "$subject: $detail"
+                ;;
+            optional)
+                check_info "$subject: $detail"
+                ;;
+            unconfigured | incomplete | ineffective)
+                check_warn "$subject ($state): $detail"
+                unconfigured=1
+                ;;
+        esac
+    done < <("$SCRIPT_DIR/dotfiles-init" --status)
+
+    [[ "$unconfigured" -eq 1 ]] && check_info "Run 'make init' (or 'dotfiles-init') to fix the above"
+    return 0
 }
 
 # Check file permissions
 check_permissions() {
     print_header "File Permissions"
-
-    # Check SSH directory
-    if [[ -n "$(git config --global user.email 2>/dev/null)" ]]; then
-        check_pass "git identity set ($(git config --global user.email))"
-    else
-        check_warn "git identity not set: copy .config/git/config.local.example to config.local and fill [user]"
-    fi
 
     if [[ -d "$HOME/.ssh" ]]; then
         local ssh_perms
@@ -391,6 +435,7 @@ DESCRIPTION:
     - Package manager status
     - Core tool availability
     - Shell configuration
+    - Local configuration (git/jj identity, SSH host snippets)
     - File permissions
 
 EXIT CODES:
@@ -401,6 +446,8 @@ EXAMPLES:
     dotfiles-doctor              Run health check
     dotfiles-doctor --help       Show this help
     dotfiles-doctor --verbose    Run with detailed output
+    dotfiles-doctor --list-checked-tools
+                                 List the commands this check probes
 
 EOF
 }
@@ -417,6 +464,10 @@ main() {
             -v|--verbose)
                 set -x
                 shift
+                ;;
+            --list-checked-tools)
+                list_checked_tools
+                exit 0
                 ;;
             *)
                 echo "Unknown option: $1"
@@ -437,6 +488,7 @@ main() {
     check_core_tools
     check_modern_tools
     check_shell_config
+    check_local_config
     check_permissions
     print_summary
 }

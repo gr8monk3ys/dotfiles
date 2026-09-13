@@ -8,10 +8,24 @@ repo-root `.zshenv`), so everything zsh loads lives in this directory.
 
 - `.zshrc` — main interactive-shell config: prompt selection, zinit
   plugins, history, completion styling, tool integrations
+- `lib.zsh` — helpers both of the files below need, sourced first
 - `aliases.zsh` — aliases (modern CLI replacements, macOS-only block,
   utility shortcuts); sourced by `.zshrc`
 - `functions.zsh` — fzf-powered helper functions (`f`, `fv`, `cx`, …)
 - `zshrc.local.example` — template for machine-local overrides
+
+### Load order
+
+`.zshrc` sources `lib.zsh`, then `aliases.zsh`, then `functions.zsh`, and the
+order is load-bearing rather than incidental:
+
+1. `aliases.zsh` builds the `copy` alias out of `lib.zsh`'s
+   `_dotfiles_clipboard`.
+2. zsh expands aliases when a function body is _parsed_, so `functions.zsh`
+   must come after `aliases.zsh` for `cx` to pick up `l`.
+
+`test_shell_boot.bats` asserts the helper is live in a booted shell, which is
+what makes this a checked constraint instead of a comment.
 
 ## Prompt
 

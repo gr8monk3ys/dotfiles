@@ -35,17 +35,6 @@ teardown() {
     assert_failure
 }
 
-@test "platform is-arch detects Arch Linux" {
-    skip_if_not_linux
-    if [[ -f /etc/arch-release ]]; then
-        run bin/platform is-arch
-        assert_success
-    else
-        run bin/platform is-arch
-        assert_failure
-    fi
-}
-
 @test "platform is-omarchy fails without the Omarchy checkout" {
     HOME="$TEST_HOME" run bin/platform is-omarchy
     assert_failure
@@ -91,6 +80,33 @@ teardown() {
     run bin/platform select "yes" "no" "false"
     assert_success
     assert_output "no"
+}
+
+@test "platform file-mode returns octal permission bits" {
+    local f="$TEST_TEMP_DIR/modetest"
+    touch "$f"
+    chmod 640 "$f"
+    run bin/platform file-mode "$f"
+    assert_success
+    assert_output "640"
+}
+
+@test "platform file-mode reports the same bits after chmod" {
+    local f="$TEST_TEMP_DIR/modetest2"
+    touch "$f"
+    chmod 755 "$f"
+    run bin/platform file-mode "$f"
+    assert_output "755"
+    chmod 600 "$f"
+    run bin/platform file-mode "$f"
+    assert_output "600"
+}
+
+@test "platform rejects the removed run-if and is-arch subcommands" {
+    run bin/platform run-if ls
+    assert_failure
+    run bin/platform is-arch
+    assert_failure
 }
 
 @test "platform help shows usage" {

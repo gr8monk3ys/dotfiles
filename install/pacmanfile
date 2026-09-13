@@ -1,8 +1,242 @@
+# Arch Linux packages (pacman)
+#
+# The Linux half of install/Brewfile. Read only through `bin/manifest list
+# pacman`; installed by `bin/install-kind pacman` (`make arch`).
+#
+# One bare lowercase package name per line. Every name here was checked with
+# `pacman -Si` inside test/Dockerfile.arch: all of them resolve in the
+# official core/extra repos, because `pacman -S` cannot reach the AUR.
+# Anything Arch ships only in the AUR is listed in docs/TOOLS.md under
+# "Not installed by manifests" instead of here.
+#
+# Arch names differ from Homebrew's. The renames are deliberate:
+#   gh -> github-cli    jj -> jujutsu        node -> nodejs
+#   poetry -> python-poetry                  pipx -> python-pipx
+#   haskell-stack -> stack                   sphinx-doc -> python-sphinx
+#   pandoc -> pandoc-cli                     tbb -> onetbb
+#   typos-cli -> typos  timewarrior -> timew spotify_player -> spotify-player
+#   telnet -> inetutils freetype -> freetype2  glib -> glib2
+
+# ============================================================================
+# Core System Dependencies
+# ============================================================================
 base-devel
+ca-certificates
+dbus
+gnupg
+openssh
+curl
+wget
+
+# ============================================================================
+# Shell
+# The repo is built around zsh; without these `make arch` leaves a machine
+# with no login shell config, no prompt and no symlink farm.
+# ============================================================================
+zsh
+zsh-syntax-highlighting
 bash-completion
-fd
-fzf
+starship
+stow
+
+# ============================================================================
+# Graphics & UI Libraries
+# ============================================================================
+freetype2
+glib2
+harfbuzz
+librsvg
+adwaita-icon-theme
+at-spi2-core
+gsettings-desktop-schemas
+
+# ============================================================================
+# Terminals & Multiplexers
+# ============================================================================
+ghostty
+tmux
+zellij
+
+# ============================================================================
+# Text Editors
+# ============================================================================
+neovim
+nano
+
+# ============================================================================
+# Version Control & Git Tools
+# ============================================================================
 git
 git-delta
-nano
+jujutsu
+lazygit
+github-cli
+difftastic
+
+# ============================================================================
+# Build Systems & Compilers
+# ============================================================================
+bear
+meson
+onetbb
+shellcheck
+
+# ============================================================================
+# Language Servers
+# ============================================================================
+rust-analyzer
+lua-language-server
+python-lsp-server
+typescript
+
+# ============================================================================
+# Programming Languages & Runtimes
+# ============================================================================
+nodejs
+npm
+deno
+bun
+python
+python-poetry
+python-pipx
+uv
+uvicorn
+ghc
+stack
+ruby
+r
+zig
+luarocks
+rustup
+
+# ============================================================================
+# Containerization
+# ============================================================================
+docker
+docker-compose
+lazydocker
+
+# ============================================================================
+# File & Text Search
+# ============================================================================
+fd
+fzf
+ripgrep
+jq
+tree
+
+# ============================================================================
+# Modern CLI Replacements (Rust-powered)
+# ============================================================================
+eza
+bat
 zoxide
+dust
+bottom
+procs
+sd
+hyperfine
+tokei
+watchexec
+
+# ============================================================================
+# Next-Gen Modern Tools
+# ============================================================================
+yazi
+navi
+broot
+tealdeer
+gping
+ouch
+fastfetch
+
+# ============================================================================
+# Data, System & Network
+# ============================================================================
+jnv
+glow
+csvlens
+xsv
+duf
+doggo
+bandwhich
+trippy
+just
+grex
+gum
+
+# ============================================================================
+# Shell History & Environment
+# ============================================================================
+atuin
+direnv
+mise
+
+# ============================================================================
+# Clipboard
+# The Linux branch of the pbcopy/pbpaste aliases in .config/zsh/aliases.zsh:
+# wl-copy under Wayland (Omarchy/Hyprland), xclip under X11.
+# ============================================================================
+wl-clipboard
+xclip
+
+# ============================================================================
+# File Transfer & Download
+# ============================================================================
+aria2
+transmission-cli
+yt-dlp
+
+# ============================================================================
+# Media Processing
+# ============================================================================
+ffmpeg
+imagemagick
+
+# ============================================================================
+# Document Tools
+# ============================================================================
+mupdf
+zathura
+zathura-pdf-mupdf
+pandoc-cli
+python-sphinx
+typst
+typstyle
+
+# ============================================================================
+# Data Science & Jupyter
+# ============================================================================
+jupyterlab
+python-matplotlib
+
+# ============================================================================
+# Communication & Email
+# ============================================================================
+neomutt
+msmtp
+isync
+himalaya
+newsboat
+
+# ============================================================================
+# Security & Privacy
+# ============================================================================
+pass
+
+# ============================================================================
+# Music & Media
+# ============================================================================
+mpd
+spotify-player
+
+# ============================================================================
+# Productivity & Utilities
+# ============================================================================
+timew
+sl
+inetutils
+xh
+typos
+biome
+ollama

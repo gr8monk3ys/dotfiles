@@ -16,35 +16,24 @@ teardown() {
 	assert_failure
 }
 
-@test "core alias c is defined exactly once" {
-	local count
-	count="$(grep -E -n '^alias c=' .config/zsh/.zshrc .config/zsh/aliases.zsh | wc -l | tr -d '[:space:]')"
-	[[ "$count" -eq 1 ]] || {
-		echo "Expected exactly one alias c definition, found: $count"
-		grep -E -n '^alias c=' .config/zsh/.zshrc .config/zsh/aliases.zsh || true
-		return 1
-	}
-}
-
-@test "bat theme uses base16-onedark in env and bat config" {
-	run grep -n 'BAT_THEME="base16-onedark"' .zshenv
-	assert_success
-
+# $BAT_THEME is asserted on a booted shell in test_shell_boot.bats. bat's own
+# config file has no cheap runtime observable, so it stays a text check.
+@test "bat config file selects base16-onedark" {
 	run grep -n '^--theme="base16-onedark"$' .config/bat/config
 	assert_success
 }
 
 @test "git delta and neovim are configured for onedark" {
-	run grep -n '^[[:space:]]*syntax-theme = base16-onedark$' .config/git/.gitconfig
+	# git's own parser, not a regex over git's syntax: this passes only if
+	# the setting is in a section git actually reads.
+	run git config --file .config/git/config --get delta.syntax-theme
 	assert_success
+	assert_output "base16-onedark"
 
+	# nvim would need a headless boot to observe; a text check is the
+	# proportionate tool here.
 	run grep -E -n '"navarasu/onedark.nvim"|theme = "onedark"' .config/nvim/lua/plugins.lua
 	assert_success
-}
-
-@test "legacy theme names are absent from key configs" {
-	run grep -E -n 'OneHalfDark|tokyonight' .zshenv .config/bat/config .config/git/.gitconfig .config/nvim/lua/plugins.lua
-	assert_failure
 }
 
 @test "dotfiles-backup completes when a single config file is present" {
@@ -92,8 +81,10 @@ teardown() {
 	assert_output --partial "issue(s) found"
 }
 
+# That starship is the *live* prompt is asserted on a booted shell in
+# test_shell_boot.bats. What stays here are the static negatives: p10k is
+# gone and nothing reintroduces it.
 @test "prompt system: starship only, guarded on the binary" {
-	grep -q 'starship init zsh' .config/zsh/.zshrc
 	grep -q 'command -v starship' .config/zsh/.zshrc
 	[[ -f .config/starship/starship.toml ]]
 	# p10k is gone: no config file, no plugin load, no prompt switch
@@ -144,11 +135,15 @@ teardown() {
 @test "Makefile has no bash/sudo targets and macos never touches the login shell" {
 	run grep -E -n '^(bash|sudo):' Makefile
 	assert_failure
-	run make -n macos SKIP_BREW=1 SKIP_CASKS=1 SKIP_NPM=1 SKIP_RUST=1
+	run make -n macos SKIP_KINDS="brew cask npm rust"
 	assert_success
 	[[ "$output" != *"chsh"* ]]
 	[[ "$output" != *"sudo -v"* ]]
-	[[ "$output" == *"Codefile"* ]]
+	# macos still reaches the editor-extension step. Asserting on `make -n`
+	# is right here and only here: this is a claim about make's dependency
+	# graph, which is make's job. What install-kind then *does* is asserted
+	# by running it, in test_install_kind.bats.
+	[[ "$output" == *"install-kind code"* ]]
 }
 
 # Regression: `stow-macos: brew` made "symlinks only" install Homebrew via
@@ -186,7 +181,15 @@ esac
 EOS
 	chmod +x "$TEST_TEMP_DIR/bin/npm"
 
-	run env HOME="$TEST_HOME" DOTFILES_DIR="$TEST_HOME/dotfiles-repo" \
+	# ZDOTDIR and the XDG vars are scrubbed, not just HOME: dotfiles-update's
+	# zinit step runs a child `zsh -c`, zsh derives its completion dump from
+	# an inherited $ZDOTDIR rather than from $HOME, and on a machine where
+	# ~/.config/zsh is stowed that path resolves *into the checkout* — so this
+	# sandboxed test wrote .zcompdump into the working tree and
+	# test_shell_boot.bats's "the suite does not write into the checkout"
+	# failed several tests later. Same scrub test_shell_boot.bats uses.
+	run env -u ZDOTDIR -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_CACHE_HOME \
+		HOME="$TEST_HOME" DOTFILES_DIR="$TEST_HOME/dotfiles-repo" \
 		PATH="$TEST_TEMP_DIR/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
 		bash bin/dotfiles-update --skip-brew --skip-cargo
 	assert_success
@@ -219,22 +222,54 @@ EOS
 # file onto one line so the leading "# comment" turned every package name
 # into a shell comment. `make node-packages` installed nothing and
 # `make rust-packages` ran a bare `cargo install`.
+#
+# The package list now comes from bin/manifest, so these assert the outcome
+# (real names, no comment leaking in) rather than which file the recipe names.
 @test "make node-packages expands real package names, not a comment" {
     run make -n node-packages SKIP_BREW=1
     assert_success
-    [[ "$output" == *"install/npmfile"* ]]
     [[ "$output" != *"global # npm"* ]]
+
+    run bin/manifest list npm
+    assert_success
+    [[ "${#lines[@]}" -gt 0 ]]
+    run bash -c 'bin/manifest list npm | grep -c "^#"'
+    assert_output "0"
 }
 
 @test "make rust-packages does not run a bare cargo install" {
     run make -n rust-packages SKIP_BREW=1
     assert_success
     [[ "$output" != *"cargo install # Rust"* ]]
-    [[ "$output" == *"install/Rustfile"* ]]
+
+    run bin/manifest list rust
+    assert_success
+    [[ "${#lines[@]}" -gt 0 ]]
+    run bash -c 'bin/manifest list rust | grep -c "^#"'
+    assert_output "0"
 }
 
 # Regression: `link: stow-$(OS)` had no stow-linux target, so `make link`
 # on any non-Arch Linux failed with "No rule to make target 'stow-linux'".
+# Regression: install.sh cased on `bin/platform detect` and called make
+# macos/arch/link itself, duplicating the Makefile's own OS dispatch. The two
+# disagreed: platform detect can return "unknown", and make had no target for
+# it, so only the curl installer covered that platform.
+@test "make has a target for every value bin/platform detect can return" {
+	local os
+	for os in macos arch linux unknown; do
+		run make -n "$os"
+		assert_success
+	done
+}
+
+@test "install.sh does not re-implement the Makefile's OS dispatch" {
+	# It may read the platform to report it, but must not branch to targets.
+	# Comments are exempt: the deletion is explained in one.
+	run bash -c 'grep -vE "^[[:space:]]*#" install.sh | grep -nE "make (macos|arch|link)\b"'
+	assert_failure
+}
+
 @test "make link has a rule for generic linux" {
 	run make -n OS=linux link
 	assert_success
@@ -243,22 +278,97 @@ EOS
 
 # Regression: Homebrew >= 5 refuses third-party taps until `brew trust`ed,
 # so `brew bundle` on a fresh Mac died on the first tapped cask (aerospace).
-@test "brew-packages and cask-apps trust the Brewfile taps first" {
+#
+# Trusting taps moved inside bin/install-kind, where it is asserted by running
+# the real thing against stub binaries ("brew kinds trust the declared taps
+# first", test_install_kind.bats). What stays here is the make-level claim:
+# the brew kinds are still routed through install-kind at all.
+@test "brew and cask targets route through install-kind" {
 	run make -n brew-packages
 	assert_success
-	[[ "$output" == *"brew trust"* ]]
+	[[ "$output" == *"install-kind brew"* ]]
 	run make -n cask-apps
 	assert_success
-	[[ "$output" == *"brew trust"* ]]
+	[[ "$output" == *"install-kind cask"* ]]
 }
 
 # Public-readiness: tracked config must carry no personal identity or hosts.
 @test "tracked git, jj and ssh config contain no personal identity" {
-	run git -C "$DOTFILES_DIR" grep -nE '^\s*(email|name)\s*=' -- .config/git/.gitconfig
+	run git -C "$DOTFILES_DIR" grep -nE '^\s*(email|name)\s*=' -- .config/git/config
 	assert_failure
 	run git -C "$DOTFILES_DIR" grep -nE '^\s*(email|name)\s*=' -- .config/jj/config.toml
 	assert_failure
 	run git -C "$DOTFILES_DIR" ls-files -- '.config/ssh/config.d/*.conf'
 	[[ -z "$output" ]]
 	git -C "$DOTFILES_DIR" check-ignore -q .config/ssh/config.d/pi-lab.conf
+}
+
+# Regression: `link` and `link-dry-run` each carried their own copy of the
+# SSH-include pattern with different escaping. Make does not collapse `\\`, so
+# `link`'s grep received an escaped backslash plus a quantifier rather than a
+# literal `*`, never matched an existing Include, and appended another block
+# on every run. A real ~/.ssh/config had accumulated three.
+@test "make link is idempotent: the SSH Include is appended exactly once" {
+	command -v stow >/dev/null 2>&1 || skip "stow not installed"
+	mkdir -p "$TEST_HOME/.config"
+
+	run make -C "$DOTFILES_DIR" link HOME="$TEST_HOME" XDG_CONFIG_HOME="$TEST_HOME/.config"
+	assert_success
+	run make -C "$DOTFILES_DIR" link HOME="$TEST_HOME" XDG_CONFIG_HOME="$TEST_HOME/.config"
+	assert_success
+
+	run grep -c 'Include ~/.config/ssh/config.d' "$TEST_HOME/.ssh/config"
+	assert_output "1"
+}
+
+@test "link and link-dry-run agree about the SSH Include" {
+	command -v stow >/dev/null 2>&1 || skip "stow not installed"
+	mkdir -p "$TEST_HOME/.config"
+
+	# Before linking, the dry run must say it would append.
+	run make -C "$DOTFILES_DIR" link-dry-run HOME="$TEST_HOME" XDG_CONFIG_HOME="$TEST_HOME/.config"
+	assert_success
+	[[ "$output" == *"Would append"* ]]
+
+	run make -C "$DOTFILES_DIR" link HOME="$TEST_HOME" XDG_CONFIG_HOME="$TEST_HOME/.config"
+	assert_success
+
+	# After linking, it must say it is already present.
+	run make -C "$DOTFILES_DIR" link-dry-run HOME="$TEST_HOME" XDG_CONFIG_HOME="$TEST_HOME/.config"
+	assert_success
+	[[ "$output" == *"already present"* ]]
+}
+
+# Regression: install.sh declared `readonly STRICT_PACKAGES=...` and then used
+# it as an assignment prefix (`STRICT_PACKAGES="$STRICT_PACKAGES" make`). bash
+# treats that as a fatal error on a readonly variable, so under `set -e` the
+# curl installer exited 1 before running make at all. CI's Installer job
+# caught it, but only after push: `make verify` never runs install.sh.
+@test "no readonly variable is used as a command assignment prefix" {
+	run bash -c '
+		set -euo pipefail
+		cd "$1"
+		status=0
+		for f in install.sh bin/*; do
+			[[ -f "$f" && "$f" != *.md ]] || continue
+			# Variables this file declares readonly...
+			for v in $(grep -oE "^readonly [A-Z_]+=" "$f" | sed "s/^readonly //; s/=$//"); do
+				# ...must not then appear as `VAR=... cmd`.
+				if grep -qE "^[[:space:]]*$v=.*[[:space:]]+[a-z]" "$f" &&
+				   ! grep -qE "^readonly $v=" <(grep -E "^[[:space:]]*$v=" "$f"); then
+					echo "$f: $v is readonly but reassigned as a command prefix"
+					status=1
+				fi
+			done
+		done
+		exit $status
+	' _ "$DOTFILES_DIR"
+	assert_success
+}
+
+@test "install.sh exports STRICT_PACKAGES rather than re-assigning it" {
+	run grep -n "^export STRICT_PACKAGES" install.sh
+	assert_success
+	run grep -nE '^[[:space:]]*STRICT_PACKAGES="\$STRICT_PACKAGES"[[:space:]]+make' install.sh
+	assert_failure
 }

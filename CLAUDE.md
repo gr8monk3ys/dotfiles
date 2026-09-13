@@ -7,9 +7,10 @@ into `~/.config/`; `make` drives install, link and verification.
 
 - `make` — detect platform (`bin/platform detect`) and install + link.
 - `make link` / `make link-dry-run` / `make unlink` — Stow only.
-- `make verify` — the gate: shell syntax, shell-surface tests, stale-ref grep,
-  doc-link and tool-catalog validators, BATS, and a Docker fresh-install
-  (`SKIP_DOCKER=1` to skip). `make test` is just BATS (`bats test`).
+- `make verify` — the gate: shell syntax, shellcheck, markdownlint, shell-surface
+  tests, stale-ref grep, doc-link, tool-catalog and doctor-tool validators, BATS,
+  and a Docker fresh-install (`SKIP_DOCKER=1`, `SKIP_LINTERS=1` to skip parts).
+  It is a superset of CI. `make test` is just BATS (`bats test`).
 - CI (`.github/workflows/ci.yml`) runs the same checks plus the curl installer.
 
 ## Where things live
@@ -34,4 +35,22 @@ into `~/.config/`; `make` drives install, link and verification.
   `test/allowlist/system-tools.txt` — `check-alias-references` fails otherwise.
 - Portable shell only in anything sourced on macOS (no GNU-only flags).
 - Conventional commits; one change per commit; update `docs/TOOLS.md` in the
-  same commit that adds or removes a package.
+  same commit that adds or removes a package. If that package provides a
+  command `dotfiles-doctor` probes, `make verify-doctor-tools` will tell you
+  what else to update.
+- Manifests under `install/` are read only through `bin/manifest`, never
+  parsed inline.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live as GitHub issues in `gr8monk3ys/dotfiles`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical triage roles, each label string equal to its name. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` and `docs/adr/` at the repo root, created lazily. See `docs/agents/domain.md`.

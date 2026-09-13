@@ -29,6 +29,11 @@ teardown() {
     assert_success
 }
 
+@test "shell-surface: lib.zsh parses as valid zsh" {
+    run zsh -n "$DOTFILES_DIR/.config/zsh/lib.zsh"
+    assert_success
+}
+
 @test "shell-surface: functions.zsh parses as valid zsh" {
     run zsh -n "$DOTFILES_DIR/.config/zsh/functions.zsh"
     assert_success
@@ -48,6 +53,30 @@ teardown() {
     run zsh -c "HOME='$TEST_HOME' source '$DOTFILES_DIR/.config/zsh/aliases.zsh'"
     assert_success
     assert_output ""
+}
+
+@test "shell-surface: lib.zsh sources cleanly in a clean subshell" {
+    run zsh -c "HOME='$TEST_HOME' source '$DOTFILES_DIR/.config/zsh/lib.zsh'"
+    assert_success
+}
+
+@test "shell-surface: every file .zshrc sources is covered above" {
+    # Drift guard: a new sourced file must gain both a parse test and a
+    # source test here. Matches on test NAMES, not on the path appearing
+    # anywhere in the file, which a grep for the path alone would satisfy.
+    run bash -c '
+        set -euo pipefail
+        cd "$1"
+        status=0
+        for f in $(grep -oE "ZDOTDIR/[a-z]+\.zsh" .config/zsh/.zshrc | sed "s|ZDOTDIR/||" | sort -u); do
+            grep -q "^@test \"shell-surface: $f parses" test/test_shell_surface.bats ||
+                { echo "no parse test for: $f"; status=1; }
+            grep -q "^@test \"shell-surface: $f sources" test/test_shell_surface.bats ||
+                { echo "no source test for: $f"; status=1; }
+        done
+        exit $status
+    ' _ "$DOTFILES_DIR"
+    assert_success
 }
 
 @test "shell-surface: functions.zsh sources cleanly in a clean subshell" {

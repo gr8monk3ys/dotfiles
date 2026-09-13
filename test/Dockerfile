@@ -20,9 +20,18 @@ RUN apt-get update && apt-get install -y \
     zsh \
     sudo \
     make \
-    bats \
     locales \
     && rm -rf /var/lib/apt/lists/*
+
+# Ubuntu's `bats` package is 1.2.1, which predates
+# bats_require_minimum_version and `run --separate-stderr`. Installing it
+# made test_shell_boot.bats die with status 127 and silently cost the run
+# two tests. Install bats-core from source instead.
+ARG BATS_VERSION=1.11.0
+RUN git clone --depth 1 --branch "v${BATS_VERSION}" \
+        https://github.com/bats-core/bats-core.git /tmp/bats-core \
+    && /tmp/bats-core/install.sh /usr/local \
+    && rm -rf /tmp/bats-core
 
 # Set up locale
 RUN locale-gen en_US.UTF-8
@@ -40,6 +49,21 @@ WORKDIR /home/testuser
 
 # Copy dotfiles repository
 COPY --chown=testuser:testuser . /home/testuser/.dotfiles
+
+# Several tests ask git about the checkout (`git grep` for leaked identity,
+# `git check-ignore` for untracked SSH hosts). In a git *worktree* — which
+# bin/dotfiles-worktree hands out — `.git` is a pointer file naming a gitdir
+# that does not exist inside the image, so every git command exits 128 and
+# those tests fail for a reason that has nothing to do with the dotfiles.
+# Replace the pointer with a real one-commit repo of the same tree.
+RUN if [ ! -d /home/testuser/.dotfiles/.git ]; then \
+        rm -f /home/testuser/.dotfiles/.git && \
+        git -C /home/testuser/.dotfiles init -q && \
+        git -C /home/testuser/.dotfiles add -A && \
+        git -C /home/testuser/.dotfiles \
+            -c user.email=test@example.invalid -c user.name=Container \
+            commit -qm "container snapshot"; \
+    fi
 
 # Set environment variables
 ENV HOME=/home/testuser

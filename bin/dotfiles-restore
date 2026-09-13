@@ -9,12 +9,20 @@ readonly BACKUP_DIR="${BACKUP_DIR:-$HOME/dotfiles-backup}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/ui.sh
 source "$SCRIPT_DIR/lib/ui.sh"
+# shellcheck source=lib/snapshot.sh
+source "$SCRIPT_DIR/lib/snapshot.sh"
 
 usage() {
     cat << EOF
 Usage: $SCRIPT_NAME [BACKUP_PATH] [OPTIONS]
 
 Restore files from a dotfiles backup created by dotfiles-backup.
+
+A snapshot is a forensic record, not a replayable installer. Directory
+artifacts (configs/, ssh/) are restored; package records (Brewfile,
+npm-global-list.txt, ...) are preserved for reference and never replayed —
+reinstalling packages is the job of make, from install/. Run with --dry-run
+to see exactly which is which.
 
 Arguments:
   BACKUP_PATH         Path to a specific backup directory (optional).
@@ -132,21 +140,47 @@ main() {
     print_info "Target HOME: $HOME"
     print_info "Mode: $([[ "$dry_run" == "true" ]] && echo "dry-run" || echo "apply")"
 
-    # Restore non-symlinked user config snapshots.
-    restore_tree "$backup_path/configs" "$HOME" "$force" "$dry_run" restored
-
-    # Restore SSH config snapshots (config + known_hosts only).
-    restore_tree "$backup_path/ssh" "$HOME/.ssh" "$force" "$dry_run" restored
+    # Restorable artifacts, driven by the snapshot table.
+    local name path target
+    while IFS= read -r name; do
+        path="$(snapshot_present "$backup_path" "$name")" || continue
+        case "$name" in
+            ssh) target="$HOME/.ssh" ;;
+            *) target="$HOME" ;;
+        esac
+        restore_tree "$path" "$target" "$force" "$dry_run" restored
+    done < <(snapshot_names_of_class tree)
 
     if [[ "$restored" -eq 0 ]]; then
         print_warn "No restorable files found in backup."
+    elif [[ "$dry_run" == "true" ]]; then
+        print_success "Dry run complete. Files that would be restored: $restored"
     else
-        if [[ "$dry_run" == "true" ]]; then
-            print_success "Dry run complete. Files that would be restored: $restored"
-        else
-            print_success "Restore complete. Files restored: $restored"
-        fi
+        print_success "Restore complete. Files restored: $restored"
     fi
+
+    # Say plainly what was left alone, rather than walking past it in silence.
+    local preserved=()
+    while IFS= read -r name; do
+        snapshot_present "$backup_path" "$name" > /dev/null && preserved+=("$name")
+    done < <(snapshot_names_of_class record)
+
+    if [[ "${#preserved[@]}" -gt 0 ]]; then
+        print_info "Preserved, not replayed (reinstall with 'make' from install/):"
+        for name in "${preserved[@]}"; do
+            print_info "  $name - $(snapshot_description "$name")"
+        done
+    fi
+
+    # An artifact the table does not know: warn, never abort. A restore is run
+    # under pressure; an unexpected file is not a reason to stop.
+    local entry base
+    for entry in "$backup_path"/*; do
+        [[ -e "$entry" ]] || continue
+        base="$(basename "$entry")"
+        snapshot_class "$base" > /dev/null 2>&1 ||
+            print_warn "Present in backup but not restorable: $base"
+    done
 }
 
 main "$@"

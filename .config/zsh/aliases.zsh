@@ -22,9 +22,6 @@ else # macOS `ls`
 	export LSCOLORS='BxBxhxDxfxhxhxhxhxcxcx'
 fi
 
-# List all files colorized in long format
-alias l="ls -lF ${colorflag}"
-
 # List all files colorized in long format, excluding . and ..
 alias la="ls -lAF ${colorflag}"
 
@@ -117,14 +114,9 @@ jscbin="/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Resources
 [ -e "${jscbin}" ] && alias jsc="${jscbin}";
 unset jscbin;
 
-# Trim new lines and copy to clipboard
-if command -v pbcopy &> /dev/null; then
-    alias copy="tr -d '\n' | pbcopy"
-elif command -v wl-copy &> /dev/null; then
-    alias copy="tr -d '\n' | wl-copy"
-elif command -v xclip &> /dev/null; then
-    alias copy="tr -d '\n' | xclip -selection clipboard"
-fi
+# Trim new lines and copy to clipboard. The tool chain lives in lib.zsh,
+# which .zshrc sources first; `copy` fails loudly when none is available.
+alias copy="tr -d '\n' | _dotfiles_clipboard"
 
 # Recursively delete `.DS_Store` files
 alias cleanup="find . -type f -name '*.DS_Store' -ls -delete"
@@ -171,6 +163,14 @@ if command -v eza &> /dev/null; then
     alias lt='eza --tree --icons --git -L 2'
     alias lta='eza --tree --icons --git -L 2 -a'
     alias tree='eza --tree --icons'
+else
+    # Real fallbacks, not dead ones. `l` used to be defined here AND at the
+    # top of this file unconditionally, so on any machine with eza the
+    # unconditional one was overwritten and never applied — and on a machine
+    # without eza, `l` still existed only by accident of that duplicate.
+    alias l="ls -lF ${colorflag}"
+    alias la="ls -lAF ${colorflag}"
+    alias ll="ls -lAF ${colorflag}"
 fi
 
 # bat - Cat with syntax highlighting (use bat directly, don't shadow cat)
@@ -389,7 +389,7 @@ fi
 # Quick edit configs
 alias zshrc='${EDITOR:-nvim} ~/.config/zsh/.zshrc'
 alias aliases='${EDITOR:-nvim} ~/.config/zsh/aliases.zsh'
-alias gitconfig='${EDITOR:-nvim} ~/.config/git/.gitconfig'
+alias gitconfig='${EDITOR:-nvim} ~/.config/git/config'
 alias ghosttyconf='${EDITOR:-nvim} ~/.config/ghostty/config'
 alias yaziconf='${EDITOR:-nvim} ~/.config/yazi/yazi.toml'
 alias jjconf='${EDITOR:-nvim} ~/.config/jj/config.toml'

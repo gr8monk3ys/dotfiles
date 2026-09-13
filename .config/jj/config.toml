@@ -70,7 +70,6 @@ ab = ["abandon"]
 
 # Working with changes
 desc = ["describe"]
-show = ["show"]
 
 # Rebase operations
 rb = ["rebase"]

@@ -1,4 +1,9 @@
-DOTFILES_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+# Where this Makefile lives, always. DOTFILES_DIR is the checkout being
+# operated on and tests override it on the command line, so tools must be
+# resolved from MAKEFILE_DIR and pointed at DOTFILES_DIR — not looked up
+# inside the subject.
+MAKEFILE_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+DOTFILES_DIR := $(MAKEFILE_DIR)
 OS := $(shell bin/platform detect)
 HOMEBREW_PREFIX := $(shell bin/platform select /opt/homebrew /usr/local "bin/platform is-arm64")
 PATH := $(HOMEBREW_PREFIX)/bin:$(DOTFILES_DIR)/bin:$(PATH)
@@ -7,29 +12,46 @@ SHELL := env PATH=$(PATH) /bin/bash
 # nothing extra when stow is present, the Homebrew bootstrap when it is not.
 HAVE_STOW := $(shell bin/platform has stow && echo yes)
 BIN := $(HOMEBREW_PREFIX)/bin
+
+# Written once because `link` and `link-dry-run` each used to carry their own
+# copy. The copies had different escaping and only the dry-run one worked:
+# make does not collapse `\\`, so `link`'s grep received an escaped backslash
+# plus a quantifier instead of a literal `*`, never matched, and appended a
+# fresh Include block to ~/.ssh/config on every single `make link`.
+# Deferred (=) not immediate (:=) so `$$` survives to recipe expansion.
+SSH_INCLUDE_LINE = Include ~/.config/ssh/config.d/*.conf
+SSH_INCLUDE_RE = ^[[:space:]]*Include[[:space:]]+~/\.config/ssh/config\.d/\*\.conf([[:space:]]|$$)
+ZSHENV_NEEDS_BACKUP = [ -f "$(HOME)/.zshenv" ] && [ ! -h "$(HOME)/.zshenv" ]
 export XDG_CONFIG_HOME = $(HOME)/.config
 export STOW_DIR = $(DOTFILES_DIR)
 export ACCEPT_EULA=Y
 
 .PHONY: all macos arch link unlink link-dry-run test test-setup verify \
-        verify-shell verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-tests \
-        doctor update backup worktree-add worktree-list worktree-remove worktree-prune \
+        verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-doctor-tools verify-tests \
+        doctor init update backup firefox worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
         brew git packages-macos packages-arch core-macos core-arch \
-        stow-arch stow-macos stow-linux linux brew-taps cask-apps cask-apps-extra vscode-extensions node-packages \
-        rust-packages duti bun pacman-packages brew-packages \
+        stow-arch stow-macos stow-linux linux unknown cask-apps cask-apps-extra vscode-extensions node-packages \
+        rust-packages duti pacman-packages brew-packages \
         help \
         sync-install sync-uninstall sync-status sync-run \
         test-docker test-docker-arch test-docker-interactive verify-docker
 
 all: $(OS)
 
-macos: core-macos packages-macos link vscode-extensions duti bun
+macos: core-macos packages-macos link vscode-extensions duti
 
 arch: core-arch packages-arch link
 
 # Generic Linux (Debian, Fedora, …): no package manifests here; link only.
 linux: link
+
+# bin/platform detect returns a fourth value, "unknown", and without a target
+# for it `make` on an unsupported OS died with "No rule to make target". Only
+# install.sh covered for that, which is why its dispatch could disagree with
+# this one.
+unknown: link
+	@echo "Unknown platform: linked configs only, no package manifests apply."
 
 core-macos: brew git
 
@@ -61,7 +83,7 @@ link: stow-$(OS)
 	@echo "Linking dotfiles..."
 	mkdir -p "$(XDG_CONFIG_HOME)"
 	# Backup existing .zshenv if it exists and is not a symlink
-	if [ -f "$(HOME)/.zshenv" ] && [ ! -h "$(HOME)/.zshenv" ]; then \
+	if $(ZSHENV_NEEDS_BACKUP); then \
 		mv -v "$(HOME)/.zshenv" "$(HOME)/.zshenv.bak"; \
 	fi
 	# Link .zshenv to home directory
@@ -73,8 +95,8 @@ link: stow-$(OS)
 	chmod 700 "$(HOME)/.ssh"
 	touch "$(HOME)/.ssh/config"
 	chmod 600 "$(HOME)/.ssh/config"
-	if ! grep -Eq '^[[:space:]]*Include[[:space:]]+~/.config/ssh/config.d/\\*\\.conf([[:space:]]|$$)' "$(HOME)/.ssh/config"; then \
-		printf "\n# Dotfiles managed SSH host snippets\nInclude ~/.config/ssh/config.d/*.conf\n" >> "$(HOME)/.ssh/config"; \
+	if ! grep -Eq '$(SSH_INCLUDE_RE)' "$(HOME)/.ssh/config"; then \
+		printf "\n# Dotfiles managed SSH host snippets\n%s\n" '$(SSH_INCLUDE_LINE)' >> "$(HOME)/.ssh/config"; \
 	fi
 	mkdir -p "$(HOME)/.local/runtime"
 	chmod 700 "$(HOME)/.local/runtime"
@@ -92,7 +114,7 @@ unlink: stow-$(OS)
 	@echo "Dotfiles unlinked successfully!"
 
 brew:
-	is-executable brew || curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh | bash
+	bin/platform has brew || curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh | bash
 
 git: brew
 	brew install git git-extras
@@ -102,78 +124,27 @@ packages-macos: brew-packages cask-apps node-packages rust-packages
 packages-arch: pacman-packages
 
 pacman-packages:
-	pacman -S --noconfirm - < $(DOTFILES_DIR)/install/pacmanfile
+	@$(DOTFILES_DIR)/bin/install-kind pacman
 
-# Homebrew >= 5 refuses to install from third-party taps until they are
-# trusted ("Refusing to load cask … from untrusted tap"). Trust exactly the
-# taps the Brewfile declares; a no-op on Homebrew versions without `trust`.
-brew-taps: brew
-	@if [ -z "$(SKIP_BREW)" ] && brew help trust >/dev/null 2>&1; then \
-		grep -oE '^tap "[^"]+"' $(DOTFILES_DIR)/install/Brewfile | cut -d'"' -f2 | \
-			while read -r tap; do brew trust "$$tap" >/dev/null 2>&1 || brew trust "$$tap"; done; \
-	fi
+brew-packages: brew
+	@$(DOTFILES_DIR)/bin/install-kind brew
 
-brew-packages: brew brew-taps
-	if [ -n "$(SKIP_BREW)" ]; then \
-		echo "Skipping Homebrew formulae"; \
-	elif [ -n "$(BREW_BUNDLE_STRICT)" ]; then \
-		brew bundle --file=$(DOTFILES_DIR)/install/Brewfile; \
-	else \
-		brew bundle --file=$(DOTFILES_DIR)/install/Brewfile || true; \
-	fi
-
-cask-apps: brew brew-taps
-	if [ -n "$(SKIP_CASKS)" ]; then \
-		echo "Skipping Homebrew casks"; \
-	elif [ -n "$(BREW_BUNDLE_STRICT)" ]; then \
-		brew bundle --file=$(DOTFILES_DIR)/install/Caskfile; \
-	else \
-		brew bundle --file=$(DOTFILES_DIR)/install/Caskfile || true; \
-	fi
+cask-apps: brew
+	@$(DOTFILES_DIR)/bin/install-kind cask
 
 # Optional apps (games, media production, misc). Not part of `make macos`.
-cask-apps-extra: brew brew-taps
-	if [ -n "$(SKIP_CASKS)" ]; then \
-		echo "Skipping Homebrew casks (extra)"; \
-	elif [ -n "$(BREW_BUNDLE_STRICT)" ]; then \
-		brew bundle --file=$(DOTFILES_DIR)/install/Caskfile.extra; \
-	else \
-		brew bundle --file=$(DOTFILES_DIR)/install/Caskfile.extra || true; \
-	fi
+cask-apps-extra: brew
+	@$(DOTFILES_DIR)/bin/install-kind cask-extra
 
 vscode-extensions: cask-apps
-	@if command -v codium >/dev/null 2>&1; then \
-		echo "Installing extensions with VSCodium..."; \
-		while IFS= read -r ext || [[ -n "$$ext" ]]; do \
-			[[ -z "$$ext" || "$$ext" =~ ^# ]] && continue; \
-			codium --install-extension "$$ext" || true; \
-		done < install/Codefile; \
-	elif command -v code >/dev/null 2>&1; then \
-		echo "Installing extensions with VS Code..."; \
-		while IFS= read -r ext || [[ -n "$$ext" ]]; do \
-			[[ -z "$$ext" || "$$ext" =~ ^# ]] && continue; \
-			code --install-extension "$$ext" || true; \
-		done < install/Codefile; \
-	else \
-		echo "⚠️  Neither code nor codium found. Skipping extension installation."; \
-	fi
+	@$(DOTFILES_DIR)/bin/install-kind code
 
 # Node itself comes from the Brewfile (`brew "node"`), so npm is on PATH.
 node-packages: brew-packages
-	@if [ -n "$(SKIP_NPM)" ]; then \
-		echo "Skipping npm packages"; \
-	else \
-		grep -Ev '^\s*(#|$$)' install/npmfile | xargs npm install --force --location global; \
-	fi
+	@$(DOTFILES_DIR)/bin/install-kind npm
 
 rust-packages: brew-packages
-	@if [ -n "$(SKIP_RUST)" ]; then \
-		echo "Skipping Rust packages"; \
-	else \
-		export PATH="$$HOME/.cargo/bin:$$(brew --prefix rustup 2>/dev/null)/bin:$$PATH"; \
-		command -v cargo >/dev/null 2>&1 || rustup default stable; \
-		grep -Ev '^\s*(#|$$)' install/Rustfile | xargs -n1 cargo install; \
-	fi
+	@$(DOTFILES_DIR)/bin/install-kind rust
 
 duti:
 	@if command -v duti >/dev/null 2>&1; then \
@@ -184,13 +155,6 @@ duti:
 		echo "   Install with: brew install duti"; \
 	fi
 
-bun:
-	@if command -v bun >/dev/null 2>&1; then \
-		echo "✓ Bun already installed"; \
-	else \
-		echo "Installing Bun..."; \
-		curl -fsSL https://bun.sh/install | bash; \
-	fi
 
 test:
 	@if ! command -v bats >/dev/null 2>&1; then \
@@ -216,15 +180,28 @@ test-setup:
 		exit 1; \
 	fi
 
-verify: verify-shell verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-tests verify-docker
+verify: verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-doctor-tools verify-tests verify-docker
 	@echo "✓ Verification complete"
 
-# The container test is the only check that exercises the fresh-install path.
-# Runs when a Docker daemon is reachable; otherwise says so loudly and moves on.
+# The container tests are the only checks that exercise the fresh-install path,
+# and the only ones that run the suite on Linux at all. Both distros run:
+# the repo claims macOS *and* Arch support, and for a long time nothing
+# verified the Arch half — install/pacmanfile listed 8 packages and no test
+# ever noticed. Run when a Docker daemon is reachable; otherwise say so
+# loudly and move on.
+#
+# Cost: on an Apple Silicon host the Arch image has to run under linux/amd64
+# emulation (upstream publishes no arm64 archlinux image), which puts it at
+# roughly 4-5 minutes against well under a minute for the native Ubuntu one.
+# If that becomes intolerable locally, SKIP_ARCH_DOCKER=1 drops it and the
+# Arch job in .github/workflows/ci.yml still covers it on every PR.
 verify-docker:
-	@if [ -n "$(SKIP_DOCKER)" ]; then echo "Skipping container test (SKIP_DOCKER set)"; \
-	elif docker info >/dev/null 2>&1; then $(MAKE) test-docker; \
-	else echo "⚠️  Docker not reachable; fresh-install container test SKIPPED (run 'make test-docker' where Docker exists)"; fi
+	@if [ -n "$(SKIP_DOCKER)" ]; then echo "Skipping container tests (SKIP_DOCKER set)"; \
+	elif docker info >/dev/null 2>&1; then \
+		$(MAKE) test-docker; \
+		if [ -n "$(SKIP_ARCH_DOCKER)" ]; then echo "Skipping Arch container test (SKIP_ARCH_DOCKER set)"; \
+		else $(MAKE) test-docker-arch; fi; \
+	else echo "⚠️  Docker not reachable; fresh-install container tests SKIPPED (run 'make test-docker test-docker-arch' where Docker exists)"; fi
 
 verify-shell:
 	@echo "Running shell syntax checks..."
@@ -269,6 +246,39 @@ verify-tool-docs:
 	@echo "Validating tool catalog..."
 	@bin/validate-tool-docs
 
+# Mirrors the Lint job in .github/workflows/ci.yml. Kept here so `make verify`
+# is a superset of CI rather than a subset of it: shellcheck and markdownlint
+# used to run only in CI, which meant a green local gate could still fail on
+# push. SKIP_LINTERS=1 opts out; a missing linter warns rather than failing,
+# so a fresh checkout without npm still gets a usable `make verify`.
+verify-shellcheck:
+	@echo "Running shellcheck on bin/..."
+	@if [ -n "$(SKIP_LINTERS)" ]; then \
+		echo "Skipping shellcheck (SKIP_LINTERS set)"; \
+	elif command -v shellcheck >/dev/null 2>&1; then \
+		find bin -type f ! -name '*.md' -print0 \
+			| xargs -0 grep -l '^#!.*\(bash\|sh\)' \
+			| xargs shellcheck --severity=warning -x; \
+	else \
+		echo "⚠️  shellcheck not found; SKIPPED (CI runs it — brew install shellcheck)"; \
+	fi
+
+verify-markdown:
+	@echo "Running markdownlint..."
+	@if [ -n "$(SKIP_LINTERS)" ]; then \
+		echo "Skipping markdownlint (SKIP_LINTERS set)"; \
+	elif command -v markdownlint >/dev/null 2>&1; then \
+		markdownlint -c .markdownlint.json --ignore .github --ignore test "**/*.md"; \
+	elif [ -x "$$(npm config get prefix 2>/dev/null)/bin/markdownlint" ]; then \
+		"$$(npm config get prefix)/bin/markdownlint" -c .markdownlint.json --ignore .github --ignore test "**/*.md"; \
+	else \
+		echo "⚠️  markdownlint not found; SKIPPED (CI runs it — npm i -g markdownlint-cli)"; \
+	fi
+
+verify-doctor-tools:
+	@echo "Validating dotfiles-doctor tool lists against manifests..."
+	@bin/validate-doctor-tools
+
 verify-tests:
 	@$(MAKE) test
 
@@ -279,11 +289,32 @@ daily: verify-shell verify-doc-links verify-tests
 doctor:
 	@bin/dotfiles-doctor
 
+## Create the gitignored local files `make` cannot: git and jj identity
+# The values are named here rather than left to leak through the environment so
+# that `make init GIT_USER_NAME=…` and `GIT_USER_NAME=… make init` behave the
+# same, and so the documentation check in test_dotfiles_init.bats can see which
+# variables this Makefile reads. Resolved from MAKEFILE_DIR like every other
+# tool here, never looked up inside DOTFILES_DIR.
+init:
+	@GIT_USER_NAME="$(GIT_USER_NAME)" GIT_USER_EMAIL="$(GIT_USER_EMAIL)" \
+	 GIT_SIGNING_KEY="$(GIT_SIGNING_KEY)" \
+	 JJ_USER_NAME="$(JJ_USER_NAME)" JJ_USER_EMAIL="$(JJ_USER_EMAIL)" \
+	 $(MAKEFILE_DIR)/bin/dotfiles-init $(if $(check),--check)
+
 update:
 	@bin/dotfiles-update
 
 backup:
 	@bin/dotfiles-backup
+
+## Install this checkout's user.js into the Firefox profiles that read it
+# Not folded into `link`: stow's target (~/.config/firefox/user.js) is a path
+# Firefox never opens, and a browser profile is not something `make link`
+# should reach into unasked. Resolved from MAKEFILE_DIR like every other tool
+# here — never looked up inside DOTFILES_DIR, which tests point elsewhere.
+firefox:
+	@DOTFILES_DIR="$(DOTFILES_DIR)" $(MAKEFILE_DIR)/bin/firefox-user-js install \
+		$(if $(filter all,$(profiles)),--all) $(if $(copy),--copy) $(if $(dry),--dry-run)
 
 ## Benchmark interactive zsh startup against a performance budget
 bench-shell:
@@ -365,24 +396,15 @@ sync-status:
 sync-run:
 	@bin/dotfiles-sync
 
-# Only removes broken links that pointed into this checkout; broken links
-# owned by other tools under ~/.config are left alone. Targets are resolved
-# lexically (readlink + ../ collapsing) because a broken link's target
-# cannot be canonicalised on disk.
+# Removes only broken links that pointed into this checkout; broken links
+# owned by other tools under ~/.config are left alone. The ownership rule
+# (lexical resolution, because a broken link's target cannot be canonicalised
+# on disk) lives in bin/link-state, which dotfiles-doctor reads too.
 clean:
 	@echo "Cleaning broken symlinks..."
-	@find "$(HOME)/.config" -type l ! -exec test -e {} \; -print 2>/dev/null | while IFS= read -r link; do \
-		target="$$(readlink "$$link")"; \
-		[ "$${target#/}" = "$$target" ] && target="$$(dirname "$$link")/$$target"; \
-		norm=""; IFS=/; for part in $$target; do \
-			case "$$part" in ''|.) ;; ..) norm="$${norm%/*}" ;; *) norm="$$norm/$$part" ;; esac; \
-		done; unset IFS; \
-		case "$$norm" in "$(DOTFILES_DIR)"/*) rm -f "$$link"; echo "Removed $$link" ;; esac; \
-	done
-	@if [ -h "$(HOME)/.zshenv" ] && [ ! -e "$(HOME)/.zshenv" ]; then \
-		rm -f "$(HOME)/.zshenv"; \
-		echo "Removed broken .zshenv symlink"; \
-	fi
+	@DOTFILES_DIR="$(DOTFILES_DIR)" $(MAKEFILE_DIR)/bin/link-state | \
+		awk -F'\t' '$$1 == "broken-ours" { print $$2 }' | \
+		while IFS= read -r link; do rm -f "$$link"; echo "Removed $$link"; done
 	@echo "✓ Cleanup complete"
 
 ## Restore files from a dotfiles-backup snapshot (default: latest)
@@ -414,7 +436,7 @@ link-dry-run: stow-$(OS)
 	@echo "Dry run - the following symlinks would be created:"
 	@echo ""
 	@echo "==> .zshenv symlink:"
-	@if [ -f "$(HOME)/.zshenv" ] && [ ! -h "$(HOME)/.zshenv" ]; then \
+	@if $(ZSHENV_NEEDS_BACKUP); then \
 		echo "    Would backup: $(HOME)/.zshenv -> $(HOME)/.zshenv.bak"; \
 	fi
 	@echo "    Would create: $(HOME)/.zshenv -> $(DOTFILES_DIR)/.zshenv"
@@ -423,10 +445,10 @@ link-dry-run: stow-$(OS)
 	@stow -n -v -t "$(XDG_CONFIG_HOME)" .config 2>&1 | grep -E "^(LINK|UNLINK)" || echo "    (no changes needed)"
 	@echo ""
 	@echo "==> SSH include:"
-	@if grep -Eq '^[[:space:]]*Include[[:space:]]+~/.config/ssh/config.d/\*\.conf([[:space:]]|$$)' "$(HOME)/.ssh/config" 2>/dev/null; then \
+	@if grep -Eq '$(SSH_INCLUDE_RE)' "$(HOME)/.ssh/config" 2>/dev/null; then \
 		echo "    Include already present in $(HOME)/.ssh/config"; \
 	else \
-		echo "    Would append: Include ~/.config/ssh/config.d/*.conf"; \
+		echo "    Would append: $(SSH_INCLUDE_LINE)"; \
 	fi
 	@echo ""
 	@echo "Run 'make link' to apply these changes."
@@ -473,9 +495,14 @@ help:
 	@echo "  make duti             - Set macOS default apps from install/duti"
 	@echo ""
 	@echo "Maintenance:"
+	@echo "  make init [check=1] - Create the gitignored local files (git/jj identity);"
+	@echo "                      check=1 only reports and exits non-zero if unconfigured"
 	@echo "  make doctor       - Run health check"
 	@echo "  make update       - Update all packages"
 	@echo "  make backup       - Backup configurations"
+	@echo "  make firefox [profiles=all] [copy=1] [dry=1] - Install user.js into"
+	@echo "                      the Firefox profiles that read it (bin/firefox-user-js status"
+	@echo "                      reports where it landed)"
 	@echo "  make restore [backup=/path] - Restore latest/specified backup snapshot"
 	@echo "  make restore-zshenv - Restore legacy .zshenv backup only"
 	@echo "  make bench-shell [runs=7] [budget=900] - Benchmark zsh startup budget"
@@ -496,5 +523,19 @@ help:
 	@echo "  make sync-uninstall - Disable auto-sync"
 	@echo "  make sync-status    - Check sync service status"
 	@echo "  make sync-run       - Run sync manually"
+	@echo ""
+	@echo "Environment:"
+	@echo "  SKIP_KINDS=\"rust pacman\"  - Skip these manifest kinds"
+	@echo "                          (brew cask cask-extra npm rust pacman code)"
+	@echo "  STRICT_PACKAGES=1       - Make a package install failure fatal"
+	@echo "  SKIP_DOCKER=1           - Skip both container tests in make verify"
+	@echo "  SKIP_ARCH_DOCKER=1      - Skip only the Arch container (slow under"
+	@echo "                          amd64 emulation on Apple Silicon; CI still runs it)"
+	@echo "  SKIP_LINTERS=1          - Skip shellcheck/markdownlint in make verify"
+	@echo "  GIT_USER_NAME=...       - Git identity for make init (else it prompts)"
+	@echo "  GIT_USER_EMAIL=...      - Git email for make init"
+	@echo "  GIT_SIGNING_KEY=...     - Optional GPG signing key for make init"
+	@echo "  JJ_USER_NAME=...        - jj identity for make init (defaults to GIT_USER_NAME)"
+	@echo "  JJ_USER_EMAIL=...       - jj email for make init (defaults to GIT_USER_EMAIL)"
 	@echo ""
 	@echo "See README.md for full documentation."

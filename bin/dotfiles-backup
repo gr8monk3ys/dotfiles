@@ -9,13 +9,12 @@ readonly TIMESTAMP
 readonly BACKUP_PATH="$BACKUP_DIR/$TIMESTAMP"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/preamble.sh
+source "$SCRIPT_DIR/lib/preamble.sh"
 # shellcheck source=lib/ui.sh
 source "$SCRIPT_DIR/lib/ui.sh"
-
-# Check if command exists
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
-}
+# shellcheck source=lib/snapshot.sh
+source "$SCRIPT_DIR/lib/snapshot.sh"
 
 # Setup backup directory
 setup_backup_dir() {
@@ -37,10 +36,12 @@ backup_homebrew() {
 
     print_info "Backing up Homebrew formulae..."
     brew bundle dump --force --file="$BACKUP_PATH/Brewfile"
+    snapshot_provenance "$BACKUP_PATH/Brewfile" "brew bundle dump"
     print_success "Brewfile saved"
 
     print_info "Backing up Homebrew casks..."
     brew bundle dump --force --file="$BACKUP_PATH/Caskfile" --cask
+    snapshot_provenance "$BACKUP_PATH/Caskfile" "brew bundle dump --cask"
     print_success "Caskfile saved"
 }
 
@@ -53,8 +54,11 @@ backup_npm() {
         return 0
     fi
 
+    # Named npm-global-list.txt, not npmfile.txt: this is `npm list` tree
+    # output, not the bare-name format of install/npmfile.
     print_info "Backing up global npm packages..."
-    npm list -g --depth=0 > "$BACKUP_PATH/npmfile.txt"
+    npm list -g --depth=0 > "$BACKUP_PATH/npm-global-list.txt"
+    snapshot_provenance "$BACKUP_PATH/npm-global-list.txt" "npm list -g --depth=0"
     print_success "npm packages saved"
 }
 
@@ -67,8 +71,11 @@ backup_cargo() {
         return 0
     fi
 
+    # Named cargo-installed.txt, not Rustfile.txt: this is
+    # `cargo install --list` output, not the format of install/Rustfile.
     print_info "Backing up cargo packages..."
-    cargo install --list > "$BACKUP_PATH/Rustfile.txt"
+    cargo install --list > "$BACKUP_PATH/cargo-installed.txt"
+    snapshot_provenance "$BACKUP_PATH/cargo-installed.txt" "cargo install --list"
     print_success "Cargo packages saved"
 }
 
@@ -76,15 +83,28 @@ backup_cargo() {
 backup_vscode() {
     print_header "Backing Up VSCode Extensions"
 
+    # Both, when both exist. A backup has no reason to choose an editor;
+    # the installer's preference is a separate decision that lives in the
+    # Makefile.
+    local found=0
+
     if command_exists code; then
         print_info "Backing up VSCode extensions..."
         code --list-extensions > "$BACKUP_PATH/vscode-extensions.txt"
+        snapshot_provenance "$BACKUP_PATH/vscode-extensions.txt" "code --list-extensions"
         print_success "VSCode extensions saved"
-    elif command_exists codium; then
+        found=1
+    fi
+
+    if command_exists codium; then
         print_info "Backing up VSCodium extensions..."
         codium --list-extensions > "$BACKUP_PATH/vscodium-extensions.txt"
+        snapshot_provenance "$BACKUP_PATH/vscodium-extensions.txt" "codium --list-extensions"
         print_success "VSCodium extensions saved"
-    else
+        found=1
+    fi
+
+    if [[ "$found" -eq 0 ]]; then
         print_info "VSCode/VSCodium not installed, skipping..."
     fi
 }
@@ -175,23 +195,23 @@ EOF
     } >> "$manifest"
 
     # Add system info
-    if [[ "$OSTYPE" == "darwin"* ]]; then
+    if "$SCRIPT_DIR/platform" is-macos; then
         echo "" >> "$manifest"
         echo "macOS Version: $(sw_vers -productVersion)" >> "$manifest"
     fi
 
-    # Add package counts
-    if [[ -f "$BACKUP_PATH/Brewfile" ]]; then
-        local brew_count
-        brew_count=$(grep -c '^brew' "$BACKUP_PATH/Brewfile" || echo "0")
-        echo "Homebrew Formulae: $brew_count" >> "$manifest"
-    fi
-
-    if [[ -f "$BACKUP_PATH/Caskfile" ]]; then
-        local cask_count
-        cask_count=$(grep -c '^cask' "$BACKUP_PATH/Caskfile" || echo "0")
-        echo "Homebrew Casks: $cask_count" >> "$manifest"
-    fi
+    # Record line counts for every record artifact that was written, driven
+    # by the snapshot table so a new artifact is counted without editing here.
+    {
+        echo ""
+        echo "Records:"
+        local name path lines
+        while IFS= read -r name; do
+            path="$(snapshot_present "$BACKUP_PATH" "$name")" || continue
+            lines=$(grep -cv '^[[:space:]]*\(#\|$\)' "$path" || true)
+            printf '  %-26s %s line(s)  %s\n' "$name" "${lines:-0}" "$(snapshot_description "$name")"
+        done < <(snapshot_names_of_class record)
+    } >> "$manifest"
 
     print_success "Manifest created"
 }
@@ -232,16 +252,20 @@ generate_summary() {
     print_info "To restore from this backup, see OPERATING.md"
     echo ""
 
-    # List backup contents
-    echo "Backup includes:"
-    [[ -f "$BACKUP_PATH/Brewfile" ]] && echo "  • Homebrew formulae"
-    [[ -f "$BACKUP_PATH/Caskfile" ]] && echo "  • Homebrew casks"
-    [[ -f "$BACKUP_PATH/npmfile.txt" ]] && echo "  • npm packages"
-    [[ -f "$BACKUP_PATH/Rustfile.txt" ]] && echo "  • Cargo packages"
-    [[ -f "$BACKUP_PATH/vscode-extensions.txt" ]] && echo "  • VSCode extensions"
-    [[ -f "$BACKUP_PATH/vscodium-extensions.txt" ]] && echo "  • VSCodium extensions"
-    [[ -d "$BACKUP_PATH/configs" ]] && echo "  • Configuration files"
-    [[ -d "$BACKUP_PATH/ssh" ]] && echo "  • SSH configuration"
+    # Driven by the snapshot table: adding an artifact there lists it here.
+    local name class
+    echo "Restorable by dotfiles-restore:"
+    while IFS= read -r name; do
+        snapshot_present "$BACKUP_PATH" "$name" > /dev/null &&
+            echo "  • $name — $(snapshot_description "$name")"
+    done < <(snapshot_names_of_class tree)
+
+    echo ""
+    echo "Preserved for reference (not replayed):"
+    while IFS= read -r name; do
+        snapshot_present "$BACKUP_PATH" "$name" > /dev/null &&
+            echo "  • $name — $(snapshot_description "$name")"
+    done < <(snapshot_names_of_class record)
     echo ""
 }
 
@@ -266,9 +290,12 @@ cleanup_old_backups() {
         print_info "Found $backup_count backups, keeping latest $keep_count"
         remove_count=$((backup_count - keep_count))
 
-        # Remove oldest backups
+        # Remove oldest backups, and the archive --compress made from each:
+        # cleanup used to remove only directories, so archives accumulated
+        # unbounded and nothing ever read them.
         for ((i = 0; i < remove_count; i++)); do
             rm -rf "${backups[$i]}"
+            rm -f "$BACKUP_DIR/backup_$(basename "${backups[$i]}").tar.gz"
         done
 
         print_success "Old backups removed"

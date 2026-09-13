@@ -241,7 +241,10 @@ return {
 			-- Automatically install LSP servers (optional, e.g., mason.nvim could be used here)
 		},
 		config = function()
-			local lspconfig = require("lspconfig")
+			-- nvim 0.11+ API. The `require("lspconfig").<server>.setup()` framework
+			-- is deprecated and goes away in nvim-lspconfig v3.0.0; nvim-lspconfig
+			-- now only ships the server definitions, and they are turned on with
+			-- vim.lsp.enable(). See :help lspconfig-nvim-0.11.
 
 			-- Customize diagnostic display (virtual text, signs, etc.)
 			vim.diagnostic.config({ virtual_text = false, signs = true, float = { border = "rounded" } })
@@ -252,66 +255,64 @@ return {
 				end,
 			})
 
-			-- Common on_attach function for LSP (maps for LSP features)
-			local on_attach = function(client, bufnr)
-				local bufmap = function(mode, lhs, rhs, desc)
-					vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, silent = true, desc = desc })
+			-- Buffer-local LSP maps. LspAttach replaces the per-server on_attach
+			-- the old framework threaded through every setup() call.
+			vim.api.nvim_create_autocmd("LspAttach", {
+				callback = function(args)
+					local bufmap = function(mode, lhs, rhs, desc)
+						vim.keymap.set(mode, lhs, rhs, { buffer = args.buf, silent = true, desc = desc })
+					end
+					bufmap("n", "gd", vim.lsp.buf.definition, "Go to definition")
+					bufmap("n", "gD", vim.lsp.buf.declaration, "Go to declaration")
+					bufmap("n", "gr", vim.lsp.buf.references, "Go to references")
+					bufmap("n", "gi", vim.lsp.buf.implementation, "Go to implementation")
+					bufmap("n", "K", "<cmd>Lspsaga hover_doc<CR>", "Hover documentation")
+					bufmap("n", "<Leader>ca", "<cmd>Lspsaga code_action<CR>", "Code Action")
+					bufmap("n", "<Leader>rn", "<cmd>Lspsaga rename<CR>", "Rename symbol")
+					bufmap("n", "<Leader>f", function()
+						vim.lsp.buf.format({ async = true })
+					end, "Format file")
+				end,
+			})
+
+			-- Completion capabilities for nvim-cmp, applied to every server.
+			vim.lsp.config("*", {
+				capabilities = require("cmp_nvim_lsp").default_capabilities(),
+			})
+
+			-- KittyCAD KCL: no definition ships with nvim-lspconfig, so declare it.
+			vim.lsp.config("kcl_ls", {
+				cmd = { "kcl-language-server", "server", "--stdio" },
+				filetypes = { "kcl" },
+				root_markers = { ".git" },
+			})
+
+			-- Enable only servers whose binary is actually installed, so a missing
+			-- toolchain is silence rather than a startup error.
+			local servers = {
+				gopls = "gopls",
+				pyright = "pyright",
+				rust_analyzer = "rust-analyzer",
+				ts_ls = "typescript-language-server",
+				clangd = "clangd",
+				nixd = "nixd",
+				kcl_ls = "kcl-language-server",
+			}
+			for server, binary in pairs(servers) do
+				if vim.fn.executable(binary) == 1 then
+					vim.lsp.enable(server)
 				end
-				bufmap("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", "Go to definition")
-				bufmap("n", "gD", "<cmd>lua vim.lsp.buf.declaration()<CR>", "Go to declaration")
-				bufmap("n", "gr", "<cmd>lua vim.lsp.buf.references()<CR>", "Go to references")
-				bufmap("n", "gi", "<cmd>lua vim.lsp.buf.implementation()<CR>", "Go to implementation")
-				bufmap("n", "K", "<cmd>Lspsaga hover_doc<CR>", "Hover documentation") -- Use Lspsaga for hover doc
-				bufmap("n", "<Leader>ca", "<cmd>Lspsaga code_action<CR>", "Code Action") -- Show code actions
-				bufmap("n", "<Leader>rn", "<cmd>Lspsaga rename<CR>", "Rename symbol") -- Rename via Lspsaga
-				-- Format on command
-				bufmap("n", "<Leader>f", "<cmd>lua vim.lsp.buf.format({ async=true })<CR>", "Format file")
 			end
 
-			-- Additional completion capabilities for nvim-cmp:contentReference[oaicite:16]{index=16}
-			local capabilities = require("cmp_nvim_lsp").default_capabilities()
-
-			-- Enable language servers with the above on_attach and capabilities
-			-- Go (gopls)
-			if vim.fn.executable("gopls") == 1 then
-				lspconfig.gopls.setup({ on_attach = on_attach, capabilities = capabilities })
-			end
-			-- Python (pyright)
-			if vim.fn.executable("pyright") == 1 then
-				lspconfig.pyright.setup({ on_attach = on_attach, capabilities = capabilities })
-			end
-			-- Rust (rust-analyzer)
-			if vim.fn.executable("rust-analyzer") == 1 then
-				lspconfig.rust_analyzer.setup({ on_attach = on_attach, capabilities = capabilities })
-			end
-			-- JavaScript/TypeScript (tsserver via typescript-language-server)
-			if vim.fn.executable("typescript-language-server") == 1 then
-				lspconfig.ts_ls.setup({ on_attach = on_attach, capabilities = capabilities })
-			end
-			-- C/C++ (clangd)
-			if vim.fn.executable("clangd") == 1 then
-				lspconfig.clangd.setup({ on_attach = on_attach, capabilities = capabilities })
-			end
-			-- Nix (nixd)
-			if vim.fn.executable("nixd") == 1 then
-				lspconfig.nixd.setup({ on_attach = on_attach, capabilities = capabilities })
-			end
-
-			-- KittyCAD KCL language server (custom, if available):contentReference[oaicite:17]{index=17}:contentReference[oaicite:18]{index=18}
-			if vim.fn.executable("kcl-language-server") == 1 then
-				-- If not already defined in lspconfig, define it
-				local configs = require("lspconfig.configs")
-				if not configs.kcl_ls then
-					configs.kcl_ls = {
-						default_config = {
-							cmd = { "kcl-language-server", "server", "--stdio" },
-							filetypes = { "kcl" },
-							root_dir = lspconfig.util.root_pattern(".git"),
-							single_file_support = true,
-						},
-					}
+			-- vim.lsp.enable() attaches via a FileType autocmd, but this plugin
+			-- lazy-loads on BufReadPre — FileType has already fired for the buffer
+			-- that triggered the load, so without this nudge the first file you
+			-- open gets no LSP at all. The old setup() framework started the
+			-- client itself, which is why the naive migration silently lost it.
+			for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+				if vim.api.nvim_buf_is_loaded(buf) and vim.bo[buf].filetype ~= "" then
+					vim.api.nvim_exec_autocmds("FileType", { buffer = buf })
 				end
-				lspconfig.kcl_ls.setup({ on_attach = on_attach, capabilities = capabilities })
 			end
 		end,
 	},
@@ -409,12 +410,22 @@ return {
 	-- Syntax and Language Support (Tree-sitter and filetype plugins)
 	{
 		"nvim-treesitter/nvim-treesitter",
+		-- Pinned to master: the `main` branch is a ground-up rewrite that
+		-- removed `nvim-treesitter.configs`, so the declarative setup below
+		-- (ensure_installed / highlight / indent) does not exist there. lazy
+		-- had resolved main, so this block errored on every startup and
+		-- treesitter highlighting and indent were silently off.
+		branch = "master",
 		build = ":TSUpdate",
 		event = { "BufReadPost", "BufNewFile" },
 		config = function()
 			require("nvim-treesitter.configs").setup({
 				ensure_installed = {
-					"zsh",
+					-- "bash", not "zsh": there is no zsh parser, and the bash
+					-- one handles zsh files. The old entry made treesitter
+					-- print "Parser not available for language \"zsh\"" on every
+					-- startup while shell files got no highlighting at all.
+					"bash",
 					"c",
 					"cmake",
 					"cpp",

@@ -23,6 +23,29 @@ brew install jj
 cargo install jj-cli
 ```
 
+## Identity
+
+The tracked `config.toml` carries no name or email. jj reads every `*.toml` in
+`~/.config/jj/conf.d/` after `config.toml`, so identity lives there instead:
+
+```toml
+[user]
+name = "Your Name"
+email = "you@example.com"
+```
+
+`conf.d/` is gitignored apart from `user.toml.example`. Write the real file
+with `make init`, which defaults jj's identity to the git identity you give it:
+
+```bash
+make init                                              # prompts
+make init GIT_USER_NAME="Your Name" GIT_USER_EMAIL=you@example.com
+make init check=1                                      # report only
+```
+
+Pass `JJ_USER_NAME` / `JJ_USER_EMAIL` on the machine where the two differ. An
+existing `user.toml` is never rewritten.
+
 ## Quick Start
 
 ### Initialize in Existing Git Repo

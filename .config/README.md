@@ -31,6 +31,7 @@ The `.config` directory centralizes application configurations in a single locat
 ├── mpd/                  # Music Player Daemon
 ├── newsboat/             # RSS/Atom feed reader
 ├── nvim/                 # Neovim text editor (has its own README)
+├── npm/                  # npm global prefix (keeps globals out of the Cellar)
 ├── sketchybar/           # SketchyBar status bar
 ├── ssh/                  # OpenSSH host snippets (config.d includes)
 ├── starship/             # Starship prompt

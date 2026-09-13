@@ -32,7 +32,14 @@ readonly DIM='\033[2m'
 readonly DOTFILES_REPO="${DOTFILES_REPO:-https://github.com/gr8monk3ys/dotfiles.git}"
 readonly DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
 readonly DOTFILES_BRANCH="${DOTFILES_BRANCH:-main}"
-readonly DOTFILES_STRICT_PACKAGES="${DOTFILES_STRICT_PACKAGES:-1}"
+# A fresh, unattended machine should fail loudly on a broken package install;
+# plain `make` stays tolerant because it is interactive and `make doctor`
+# reports what is missing. DOTFILES_STRICT_PACKAGES is the old spelling.
+# Exported, not readonly: `make` needs it in its environment, and a
+# `STRICT_PACKAGES=... make` assignment prefix on a readonly variable is a
+# fatal error in bash — which broke the curl installer outright.
+STRICT_PACKAGES="${STRICT_PACKAGES:-${DOTFILES_STRICT_PACKAGES:-1}}"
+export STRICT_PACKAGES
 
 # ============================================================================
 # ASCII Art Banner
@@ -95,6 +102,10 @@ is_interactive() {
 # ============================================================================
 # System Detection
 # ============================================================================
+# Deliberately duplicates bin/platform: this script runs via `curl | bash`
+# before the repo exists, so it cannot source or exec anything from the
+# checkout. Used only for the pre-clone stretch; after the clone,
+# run_installation() asks bin/platform instead.
 detect_os() {
     case "$(uname -s)" in
         Darwin)
@@ -118,7 +129,7 @@ detect_arch() {
         arm64|aarch64)
             echo "arm64"
             ;;
-        x86_64)
+        x86_64|amd64)
             echo "x86_64"
             ;;
         *)
@@ -273,31 +284,21 @@ run_installation() {
 
     cd "$DOTFILES_DIR"
 
+    # No dispatch here: the Makefile already selects a target from
+    # `bin/platform detect` (OS := ..., all: $(OS)). This used to case on the
+    # same value and call make macos / make arch / make link, which meant two
+    # implementations of one decision — and they disagreed, because make had
+    # no target for the "unknown" platform.
     local os
-    os=$(detect_os)
+    os=$("$DOTFILES_DIR/bin/platform" detect)
+    print_substep "Detected $os - running make"
 
-    case "$os" in
-        macos)
-            print_substep "Detected macOS - running full installation"
-            print_info "This may take a while..."
-            if [[ "$DOTFILES_STRICT_PACKAGES" == "1" ]]; then
-                print_info "Strict package mode enabled (installation fails on package errors)"
-                BREW_BUNDLE_STRICT=1 make macos
-            else
-                make macos
-            fi
-            ;;
-        arch)
-            print_substep "Detected Arch Linux - running full installation"
-            make arch
-            ;;
-        *)
-            print_warning "Unknown OS - running symlink-only installation"
-            print_info "Package installation is not configured for this OS."
-            make link
-            ;;
-    esac
+    if [[ "$STRICT_PACKAGES" == "1" ]]; then
+        print_info "Strict package mode enabled (installation fails on package errors)"
+    fi
+    make
 }
+
 
 # ============================================================================
 # Post-Installation

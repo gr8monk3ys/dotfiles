@@ -3,63 +3,61 @@
 
 set -euo pipefail
 
-# Default to the checkout this script lives in (works through symlinks), so
-# running bin/dotfiles-* from any clone operates on that clone.
-readonly DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)}"
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/preamble.sh
+source "$SCRIPT_DIR/lib/preamble.sh"
 # shellcheck source=lib/ui.sh
 source "$SCRIPT_DIR/lib/ui.sh"
+# shellcheck source=lib/git-sync.sh
+source "$SCRIPT_DIR/lib/git-sync.sh"
 
-# Check if command exists
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
-}
+# Set when the repository step was skipped for a benign reason, so the
+# summary can say so instead of claiming an unqualified success.
+REPO_SKIPPED=""
 
 # Update dotfiles repository
 update_dotfiles() {
     print_header "Updating Dotfiles Repository"
 
-    if [[ ! -d "$DOTFILES_DIR" ]]; then
-        print_error "Dotfiles directory not found: $DOTFILES_DIR"
-        return 1
-    fi
+    git_sync_apply "$DOTFILES_DIR"
 
-    cd "$DOTFILES_DIR"
-
-    if [[ ! -d ".git" ]]; then
-        print_error "Not a git repository"
-        return 1
-    fi
-
-    # Check for uncommitted changes
-    if [[ -n $(git status --porcelain) ]]; then
-        print_error "Uncommitted changes detected. Commit or stash changes first."
-        git status --short
-        return 1
-    fi
-
-    print_info "Fetching updates..."
-    if git fetch origin; then
-        # Check if we're behind
-        LOCAL=$(git rev-parse @)
-        REMOTE=$(git rev-parse '@{u}' 2>/dev/null || echo "$LOCAL")
-        BASE=$(git merge-base @ '@{u}' 2>/dev/null || echo "$LOCAL")
-
-        if [[ "$LOCAL" = "$REMOTE" ]]; then
+    case "$GIT_SYNC_STATE" in
+        "$GIT_SYNC_PULLED")
+            print_success "Updated successfully ($GIT_SYNC_BEHIND commit(s))"
+            ;;
+        "$GIT_SYNC_CLEAN_UPTODATE")
             print_success "Already up to date"
-        elif [[ "$LOCAL" = "$BASE" ]]; then
-            print_info "Pulling changes..."
-            git pull --rebase
-            print_success "Updated successfully"
-        else
+            ;;
+        "$GIT_SYNC_DIRTY")
+            # Uncommitted work in the checkout is no reason to skip the
+            # Homebrew, npm and cargo upgrades that follow.
+            print_warn "Uncommitted changes detected - skipping repository update"
+            echo "$GIT_SYNC_DETAIL"
+            REPO_SKIPPED="uncommitted changes"
+            ;;
+        "$GIT_SYNC_NO_UPSTREAM")
+            print_warn "No upstream configured - skipping repository update"
+            REPO_SKIPPED="no upstream configured"
+            ;;
+        "$GIT_SYNC_DIVERGED")
             print_error "Local and remote have diverged. Manual merge required."
             return 1
-        fi
-    else
-        print_error "Failed to fetch updates"
-        return 1
-    fi
+            ;;
+        "$GIT_SYNC_FETCH_FAILED")
+            print_error "Failed to fetch updates"
+            echo "$GIT_SYNC_DETAIL"
+            return 1
+            ;;
+        "$GIT_SYNC_PULL_FAILED")
+            print_error "Failed to pull changes"
+            echo "$GIT_SYNC_DETAIL"
+            return 1
+            ;;
+        *)
+            print_error "$GIT_SYNC_DETAIL"
+            return 1
+            ;;
+    esac
 }
 
 # Update Homebrew packages
@@ -191,7 +189,11 @@ generate_report() {
     print_header "Update Summary"
 
     echo ""
-    print_success "Update complete!"
+    if [[ -n "$REPO_SKIPPED" ]]; then
+        print_warn "Update complete - repository not updated ($REPO_SKIPPED)"
+    else
+        print_success "Update complete!"
+    fi
     echo ""
     print_info "Run 'dotfiles-doctor' to check system health"
     echo ""

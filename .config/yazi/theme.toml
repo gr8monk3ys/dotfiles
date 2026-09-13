@@ -2,7 +2,7 @@
 # https://yazi-rs.github.io/docs/configuration/theme
 # Consistent with Neovim, bat, eza, git-delta, and zellij
 
-[manager]
+[mgr]
 # Active file/directory
 cwd = { fg = "#61afef" }
 
@@ -35,7 +35,7 @@ border_symbol = "│"
 border_style  = { fg = "#5c6370" }
 
 # Highlighting
-[manager.highlighting]
+[mgr.highlighting]
 # File types use OneDark palette
 directory = { fg = "#61afef", bold = true }
 symlink   = { fg = "#56b6c2", italic = true }

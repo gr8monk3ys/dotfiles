@@ -19,15 +19,14 @@ platform arch                # Output: arm64, x86_64, or unknown
 
 # Boolean checks (exit codes)
 platform is-macos            # Exit 0 if macOS
-platform is-arch             # Exit 0 if Arch Linux
 platform is-linux            # Exit 0 if Linux
 platform is-arm64            # Exit 0 if ARM64
 
 # Command existence
 platform has brew            # Exit 0 if brew exists
 
-# Conditional execution
-platform run-if brew update  # Only runs if brew exists
+# Platform-specific behaviour behind one interface
+platform file-mode <path>    # Octal permission bits (BSD stat vs GNU stat)
 
 # Value selection
 platform select /opt/homebrew /usr/local "platform is-arm64"
@@ -72,6 +71,37 @@ make doctor
 - Modern CLI tools (eza, bat, fd, rg, yazi, jj, etc.)
 - Shell configuration
 - File permissions
+
+### [dotfiles-init](dotfiles-init)
+
+Creates the gitignored local files `make` cannot: git identity, jj identity,
+and a report on the SSH host snippets it can only look at. See
+[CONTEXT.md](../CONTEXT.md) § Local config for the subjects and states.
+
+**Usage:**
+
+```bash
+dotfiles-init                                    # prompts for what is missing
+dotfiles-init --git-name Ada --git-email a@b.c   # non-interactive
+GIT_USER_NAME=Ada GIT_USER_EMAIL=a@b.c dotfiles-init
+dotfiles-init --check                            # exit 1 if anything is unconfigured
+dotfiles-init --status                           # state<TAB>subject<TAB>detail rows
+# or
+make init
+make init check=1
+```
+
+Every value takes a flag or an environment variable (`--git-name` /
+`GIT_USER_NAME`, `--git-email` / `GIT_USER_EMAIL`, `--git-signing-key` /
+`GIT_SIGNING_KEY`, `--jj-name` / `JJ_USER_NAME`, `--jj-email` /
+`JJ_USER_EMAIL`), the flag winning. jj identity defaults to the git identity.
+A missing value is prompted for on a terminal and is an error otherwise, so an
+automated run fails loudly rather than hanging on a prompt.
+
+Safe to re-run. An existing local file is never rewritten — not even to
+complete it — because it is the one thing on the machine nothing else can
+reproduce. `dotfiles-doctor` is a reporter over `--status` and carries no
+detection of its own.
 
 ### [dotfiles-update](dotfiles-update)
 
@@ -242,12 +272,169 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/ui.sh"
 ```
 
+### [lib/snapshot.sh](lib/snapshot.sh)
+
+The layout of a `dotfiles-backup` snapshot, described once. Backup writes a
+snapshot and restore reads one; before this they each knew the filenames
+separately and had drifted, so backup wrote nine artifacts and restore
+handled two.
+
+Artifacts have a class — `tree` (restore replays it), `record` (preserved,
+never replayed) and `metadata`. See CONTEXT.md § Snapshot for the table and
+the reasoning. Rows may carry a legacy filename so older snapshots still
+resolve after a rename.
+
+```bash
+snapshot_names_of_class tree      # configs, ssh
+snapshot_class Brewfile           # record
+snapshot_present "$dir" npm-global-list.txt   # path, or legacy name, or 1
+```
+
+### [lib/preamble.sh](lib/preamble.sh)
+
+Checkout resolution (`DOTFILES_DIR`) and the `command_exists` predicate,
+sourced by the `dotfiles-*` scripts. `SCRIPT_DIR` is deliberately _not_ here —
+a script needs it to find this file — so every caller starts with:
+
+```bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/preamble.sh"
+```
+
+Non-bash callers use `bin/platform has` for the same predicate; `install.sh`
+keeps its own copy because it runs before the checkout exists.
+
+### [lib/git-sync.sh](lib/git-sync.sh)
+
+Shared git fast-forward state machine, sourced by `dotfiles-update`,
+`dotfiles-sync` and `dotfiles-doctor`. One module decides whether a checkout
+is safe to fast-forward; each caller maps the resulting state to its own
+output. See CONTEXT.md § Sync state for the vocabulary.
+
+Both entry points always return 0 — the result is `GIT_SYNC_STATE`, not the
+exit code — and neither ever `cd`s or suppresses git's stderr (captured into
+`GIT_SYNC_DETAIL` instead).
+
+**Usage (inside a script):**
+
+```bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/git-sync.sh"
+
+git_sync_status "$DOTFILES_DIR"           # diagnose only; fetches
+git_sync_status "$DOTFILES_DIR" no-fetch  # diagnose against the last fetch
+git_sync_apply  "$DOTFILES_DIR"           # diagnose, then pull when safe
+
+case "$GIT_SYNC_STATE" in
+    "$GIT_SYNC_PULLED") echo "pulled $GIT_SYNC_BEHIND commit(s)" ;;
+esac
+```
+
+### [manifest](manifest)
+
+The single reader of the `install/` package manifests. Every consumer that
+needs to know what this system installs asks here: the Makefile installer
+targets, `validate-tool-docs`, `check-alias-references` and
+`test/test_packages.bats`. Replaced five separate parsers that disagreed
+about tap-qualified names and which manifests to read.
+
+```bash
+manifest list <kind>   # one normalized package name per line
+manifest kinds         # brew cask cask-extra npm rust pacman code
+manifest taps          # Homebrew taps declared in the Brewfile
+```
+
+`list` exits non-zero on a line it cannot parse, or a name that breaks that
+ecosystem's grammar — that strictness is what lets the format tests be a
+single `assert_success`. Tap-qualified formulae are reduced to the last
+segment (`oven-sh/bun/bun` -> `bun`), the name that lands on PATH.
+`install/duti` is not a kind: it lists file associations, not packages.
+Point it at another checkout with `DOTFILES_DIR`.
+
+### [link-state](link-state)
+
+Classifies the link state of every path this checkout manages, one
+`state<TAB>path` row per path, sorted. `dotfiles-doctor` reports it and
+`make clean` removes the `broken-ours` rows.
+
+```bash
+link-state                 # classify against $HOME
+link-state /tmp/fixture    # classify against another root (used by tests)
+link-state --states        # the state vocabulary
+```
+
+See CONTEXT.md § Link state for the vocabulary. The directory list is derived
+from what the checkout ships; doctor previously carried a hand-written list of
+8 while stow links all 26.
+
+### [install-kind](install-kind)
+
+Installs one manifest **kind**. How a kind installs — which manifest, which
+command, whether to skip it, whether a failure is fatal — used to be
+re-derived in six Makefile targets, which is why the only way to test any of
+it was to grep `make -n` output.
+
+```bash
+install-kind brew          # trust taps, then brew bundle the Brewfile
+install-kind code          # extensions, preferring codium over code
+SKIP_KINDS="rust pacman" install-kind rust   # skipped
+STRICT_PACKAGES=1 install-kind npm           # a failure is fatal
+```
+
+The Makefile keeps every dependency edge between kinds — ordering is what
+make is genuinely deep at. A missing tool is not a failure: `install-kind
+rust` with no cargo warns and exits 0.
+
+### [firefox-user-js](firefox-user-js)
+
+Installs this checkout's `user.js` into the Firefox profiles that actually
+read it. `make link` stows `.config/firefox/` to `~/.config/firefox/`, a path
+Firefox never opens — `user.js` is per-profile, read at startup from inside
+the profile directory. 81KB of arkenfox hardening sat at the stow target
+taking effect on nothing.
+
+```bash
+firefox-user-js profiles      # role<TAB>path, one row per profile
+firefox-user-js status        # state<TAB>path, one row per profile
+firefox-user-js install       # symlink it into the default profile
+firefox-user-js install --all --copy --dry-run
+firefox-user-js --states      # the state vocabulary
+# or
+make firefox [profiles=all] [copy=1] [dry=1]
+```
+
+See CONTEXT.md § Firefox profile state for the vocabulary. Three things it
+does not do the obvious way, each for a reason:
+
+- Profiles come from `profiles.ini`, never a `Profiles/*/` glob. An
+  `[Install…]` section's `Default=` names the profile Firefox actually opens
+  and beats a `[Profile N]` section's `Default=1`, which is only the legacy
+  fallback. On the machine this was written for the two disagree, and the
+  `Default=1` one has never been opened.
+- It symlinks rather than copies, so editing the checkout's `user.js` reaches
+  Firefox at its next start. That Firefox follows a symlinked `user.js` was
+  tested, not assumed. `--copy` exists for sandboxed builds (Flatpak, Snap),
+  which cannot see a path outside the sandbox.
+- A `user.js` it did not write is moved to `user.js.bak.<timestamp>` before
+  being replaced, and a profile already in the requested state is left
+  untouched — so a second run takes no second backup.
+
+`user.js` is read once, at startup, so `install` warns when Firefox is
+running instead of quietly doing nothing visible.
+
+### [validate-doctor-tools](validate-doctor-tools)
+
+Fails when `dotfiles-doctor`'s probed tool lists and the `install/` manifests
+drift apart. Doctor probes _commands_ (`rg`); manifests list _packages_
+(`ripgrep`), so the mapping and the deliberate exemptions live in
+`test/allowlist/command-packages.txt`.
+
+Checks both directions: every probed command must resolve to a manifest
+package (directly, via the mapping, or as an explicit `-` exemption), and
+every mapping entry must still name a package that exists and a command
+doctor still probes. Run by `make verify-doctor-tools`.
+
 ## Compatibility Helpers
-
-### [is-executable](is-executable)
-
-Legacy compatibility shim for older Makefile references. Returns success if a
-command exists on PATH.
 
 ### [pacman](pacman)
 
@@ -267,9 +454,11 @@ Helps non-root installations on Arch Linux.
 | --- | --- | --- | --- |
 | platform | ✓ | ✓ | ✓ |
 | dotfiles-doctor | ✓ | ✓ | ✓ |
+| dotfiles-init | ✓ | ✓ | ✓ |
 | dotfiles-update | ✓ | ✓ | ✓ |
 | dotfiles-backup | ✓ | ✓ | ✓ |
 | dotfiles-restore | ✓ | ✓ | ✓ |
 | dotfiles-bench-shell | ✓ | ✓ | ✓ |
 | dotfiles-worktree | ✓ | ✓ | ✓ |
 | dotfiles-sync | ✓ | — | — |
+| firefox-user-js | ✓ | ✓ | ✓ |

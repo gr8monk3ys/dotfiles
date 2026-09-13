@@ -8,7 +8,8 @@ hand on a new machine after `brew bundle`.
 - `defaults.sh` - user-level `defaults write` settings (no sudo)
 - `dock.sh` - rebuilds the Dock from the daily apps in `install/Caskfile`
 - `com.dotfiles.sync.plist` - LaunchAgent for the periodic dotfiles sync
-- `.env.macos`, `.screenrc` - macOS-only shell environment and `screen` settings
+- `.screenrc` - `screen` settings; found via `$SCREENRC`, exported by `.zshenv`,
+  because `screen` looks in `$HOME` and would never see it here otherwise
 
 ## defaults.sh
 

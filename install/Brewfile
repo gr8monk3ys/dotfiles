@@ -120,6 +120,7 @@ brew "duti"                            # Default-app associations from install/d
 # ============================================================================
 brew "fd"                              # Fast find alternative
 brew "ripgrep"                         # Fast grep alternative (rg)
+brew "shellcheck"                      # Shell script static analysis (run by make verify and CI)
 brew "jq"                              # JSON processor
 brew "tree"                            # Directory tree viewer
 
@@ -137,6 +138,7 @@ brew "sd"                              # Modern sed replacement
 brew "hyperfine"                       # Command-line benchmarking tool
 brew "tokei"                           # Code statistics tool
 brew "watchexec"                       # File watcher for development
+brew "wget"                            # Network downloader (.config/wget/.wgetrc configures it)
 
 # ============================================================================
 # Next-Gen Modern Tools (2024+)
