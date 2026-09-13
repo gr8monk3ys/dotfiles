@@ -37,6 +37,13 @@ export ZDOTDIR="$XDG_CONFIG_HOME/zsh"
 # global prefix out of the Homebrew Cellar (see .config/npm/README.md).
 export NPM_CONFIG_USERCONFIG="$XDG_CONFIG_HOME/npm/npmrc"
 
+# curl and wget predate XDG and look in $HOME. Without these, the tracked
+# .curlrc and .wgetrc are linked into ~/.config/ and read by nothing — the
+# same defect that left git's config and Firefox's user.js inert.
+export CURL_HOME="$XDG_CONFIG_HOME/curl"
+export WGETRC="$XDG_CONFIG_HOME/wget/.wgetrc"
+export SCREENRC="$XDG_CONFIG_HOME/macos/.screenrc"
+
 # colors!
 export BAT_THEME="base16-onedark"
 export MANPAGER="nvim +Man!"

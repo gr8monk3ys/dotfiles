@@ -156,3 +156,37 @@ teardown() {
     # And the dump the boot produced must live in the fixture.
     [[ -f "$FAKE_HOME/.config/zsh/.zcompdump" ]]
 }
+
+# Several tools predate XDG and look in $HOME, so a config tracked under
+# .config/<tool>/ is read by nothing unless an env var points them at it.
+# That defect has now been found four times in this repo (git, Firefox, curl,
+# wget), so it gets a test rather than another discovery.
+@test "shell-boot: config-discovery env vars are exported" {
+    run --separate-stderr env -u ZDOTDIR -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_CACHE_HOME \
+        -u CURL_HOME -u WGETRC -u NPM_CONFIG_USERCONFIG HOME="$FAKE_HOME" TERM=xterm \
+        zsh -ic 'print -r -- "$CURL_HOME|$WGETRC|$NPM_CONFIG_USERCONFIG"'
+    assert_success
+    [[ "$output" == *"/.config/curl"* ]]
+    [[ "$output" == *"/.config/wget/.wgetrc"* ]]
+    [[ "$output" == *"/.config/npm/npmrc"* ]]
+}
+
+@test "every .config dir shipping a dotfile-named config has a way to be found" {
+    # A tool whose config is named .foorc under .config/foo/ almost certainly
+    # looks in $HOME by default. Require an env var naming it in .zshenv.
+    run bash -c '
+        set -euo pipefail
+        cd "$1"
+        status=0
+        for f in .config/*/.[a-z]*; do
+            [[ -f "$f" ]] || continue
+            tool="$(basename "$(dirname "$f")")"
+            base="$(basename "$f")"
+            # .zshenv must reference this tool or file somehow.
+            grep -qiE "(${tool}_HOME|${tool}RC|/${tool}/)" .zshenv ||
+                { echo "no discovery mechanism in .zshenv for $f"; status=1; }
+        done
+        exit $status
+    ' _ "$DOTFILES_DIR"
+    assert_success
+}

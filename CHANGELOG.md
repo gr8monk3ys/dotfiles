@@ -75,6 +75,7 @@ Everything since 1.0.0 (2025-10-24), by theme.
 - `install.sh`'s OS dispatch: it cased on `bin/platform detect` and called `make macos`/`make arch`/`make link` itself, duplicating the Makefile's own `OS := $(shell bin/platform detect)` / `all: $(OS)`. It now just runs `make`
 - The `bun` make target: bun is already in the Brewfile (`brew "oven-sh/bun/bun"`), so the target only ever printed "already installed" — and it put a `curl | bash` in the default install path for no gain
 - The `brew-taps` make target: trusting taps is a step within installing a brew kind, not ordering between kinds, so it moved inside `bin/install-kind`
+- `.config/macos/.env.macos`: nothing sourced it, so it was dead. Its `EDITOR`/`VISUAL` duplicated `.zshenv`, its `FIREFOX_BIN` was referenced nowhere, and its `ulimit -S -n 8192` would have *lowered* the open-file limit from 1048576 had anyone "fixed" it by sourcing it
 - `bin/is-executable`: a one-line `command -v` wrapper with a single caller; `make brew` uses `bin/platform has brew` instead
 - `platform run-if` and `platform is-arch`: no callers; `platform has` and `platform is-omarchy` cover their uses
 - `test_regressions.bats` "legacy theme names are absent": duplicated `make verify-stale-refs`, which checks 9 patterns over more paths in the same `make verify`
@@ -108,6 +109,7 @@ Everything since 1.0.0 (2025-10-24), by theme.
 - nvim-treesitter was pinned by the lockfile to its `main` branch — a ground-up rewrite with no `nvim-treesitter.configs` module — while the config uses the `master` API, so the whole block errored on every startup and treesitter highlighting and indent were silently off. Pinned to `master`, the branch the config is written for
 - `ensure_installed` asked for a `zsh` parser, which does not exist, so every startup printed "Parser not available" — and `bash`, the parser that actually handles shell files, was not in the list at all
 - Two `:contentReference[oaicite:N]` artifacts left in `plugins.lua` by whatever generated it
+- `.config/curl/.curlrc`, `.config/wget/.wgetrc` and `.config/macos/.screenrc` were linked into `~/.config/` and read by nothing: all three tools predate XDG and look in `$HOME`. `.zshenv` now exports `CURL_HOME`, `WGETRC` and `SCREENRC`. Proven, not assumed — `.curlrc` sets a custom user-agent, and `curl https://httpbin.org/user-agent` reported `curl/8.7.1` before and the configured value after
 - Worktrees are no longer reported as "Not a git repository": the sync state machine uses `git rev-parse --show-prefix` instead of `[[ -d .git ]]`, which is false in any checkout made by `bin/dotfiles-worktree`
 - A checkout with no upstream no longer reports "up to date" forever; it is now a distinct `no-upstream` state that `dotfiles-doctor` surfaces
 - `dotfiles-sync` no longer discards git's stderr into `/dev/null`, so `make sync-log` can show why a sync failed
