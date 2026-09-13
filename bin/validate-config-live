@@ -48,9 +48,9 @@ source "$SCRIPT_DIR/lib/ui.sh"
 readonly PROBES='git|git|git config --includes --get alias.lg|log --color --decorate --graph
 jj|jj|jj --ignore-working-copy config get ui.default-command|log
 bat|bat|bat --config-file|/.config/bat/config
-bat-theme|bat|bat --list-themes|base16-onedark
+bat-theme|bat|bat --list-themes|danse
 eza|eza|printf %s "$EZA_COLORS"|di=38;2;97;175;239
-atuin|atuin|atuin config get theme.name|onedark
+atuin|atuin|atuin config get theme.name|danse
 starship|starship|printf %s "$STARSHIP_CONFIG"|/.config/starship/starship.toml
 ghostty|ghostty|ghostty +show-config --default=false|Atom One Dark
 fastfetch|fastfetch|fastfetch --list-config-paths|/.config/fastfetch

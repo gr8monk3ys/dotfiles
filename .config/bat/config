@@ -3,7 +3,7 @@
 # Syntax: bat --help
 
 # Use OneDark theme
---theme="base16-onedark"
+--theme="danse"
 
 # Show line numbers
 --style="numbers,changes,header"

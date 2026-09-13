@@ -1,7 +1,7 @@
-# OneDark theme for Atuin's search UI.
-# Hexes match the repo theme table in the root README.
+# danse theme for Atuin's search UI (OneDark retuned to Matisse).
+# Hexes come from .config/palette/danse.conf.
 [theme]
-name = "onedark"
+name = "danse"
 
 [colors]
 Base = "#abb2bf"
@@ -11,4 +11,4 @@ Guidance = "#5c6370"
 Important = "#c678dd"
 AlertInfo = "#98c379"
 AlertWarn = "#e5c07b"
-AlertError = "#e06c75"
+AlertError = "#e06a51"

@@ -5,13 +5,13 @@
 # OneDark Color Palette:
 # Background:  #282c34
 # Foreground:  #abb2bf
-# Red:         #e06c75
+# Vermilion:   #e06a51
 # Green:       #98c379
 # Yellow:      #e5c07b
 # Blue:        #61afef
 # Magenta:     #c678dd
 # Cyan:        #56b6c2
-# Orange:      #d19a66
+# Terracotta:  #d98c5c
 # Comment:     #5c6370
 
 # File types
@@ -35,7 +35,7 @@ filetype:
   char_device:
     foreground: "#e5c07b"
   special:
-    foreground: "#d19a66"
+    foreground: "#d98c5c"
 
 # Permissions
 permissions:
@@ -44,21 +44,21 @@ permissions:
   user_write:
     foreground: "#e5c07b"
   user_execute_file:
-    foreground: "#e06c75"
+    foreground: "#e06a51"
   user_execute_other:
-    foreground: "#e06c75"
+    foreground: "#e06a51"
   group_read:
     foreground: "#98c379"
   group_write:
     foreground: "#e5c07b"
   group_execute:
-    foreground: "#e06c75"
+    foreground: "#e06a51"
   other_read:
     foreground: "#98c379"
   other_write:
     foreground: "#e5c07b"
   other_execute:
-    foreground: "#e06c75"
+    foreground: "#e06a51"
   special_user_file:
     foreground: "#c678dd"
   special_other:
@@ -106,13 +106,13 @@ git:
   modified:
     foreground: "#e5c07b"
   deleted:
-    foreground: "#e06c75"
+    foreground: "#e06a51"
   renamed:
     foreground: "#c678dd"
   ignored:
     foreground: "#5c6370"
   conflicted:
-    foreground: "#e06c75"
+    foreground: "#e06a51"
     bold: true
 
 # Links
@@ -128,11 +128,11 @@ punctuation:
 
 # Control characters
 control:
-  foreground: "#e06c75"
+  foreground: "#e06a51"
 
 # Broken symlinks
 broken_symlink:
-  foreground: "#e06c75"
+  foreground: "#e06a51"
   bold: true
 
 # Git repo header

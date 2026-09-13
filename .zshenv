@@ -53,10 +53,10 @@ export EZA_CONFIG_DIR="$XDG_CONFIG_HOME/eza"
 # the OneDark palette from .config/eza/theme.yml is expressed here too.
 # Keys: di=dir ln=symlink ex=executable pi=pipe so=socket bd/cd=devices
 #       fi=file u*=permission bits g*=git status da=date uu/gu=user/group
-export EZA_COLORS="di=38;2;97;175;239:ln=38;2;86;182;194:ex=38;2;152;195;121:pi=38;2;229;192;123:so=38;2;198;120;221:bd=38;2;229;192;123:cd=38;2;229;192;123:fi=38;2;171;178;191:ur=38;2;229;192;123:uw=38;2;224;108;117:ux=38;2;152;195;121:gm=38;2;152;195;121:ga=38;2;229;192;123:gd=38;2;224;108;117:da=38;2;92;99;112:uu=38;2;171;178;191:gu=38;2;92;99;112"
+export EZA_COLORS="di=38;2;97;175;239:ln=38;2;86;182;194:ex=38;2;152;195;121:pi=38;2;229;192;123:so=38;2;198;120;221:bd=38;2;229;192;123:cd=38;2;229;192;123:fi=38;2;171;178;191:ur=38;2;229;192;123:uw=38;2;224;106;81:ux=38;2;152;195;121:gm=38;2;152;195;121:ga=38;2;229;192;123:gd=38;2;224;106;81:da=38;2;92;99;112:uu=38;2;171;178;191:gu=38;2;92;99;112"
 
 # colors!
-export BAT_THEME="base16-onedark"
+export BAT_THEME="danse"
 export MANPAGER="nvim +Man!"
 
 # set the localization. LANG (not LC_ALL) so finer LC_* settings still

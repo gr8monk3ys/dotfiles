@@ -218,7 +218,7 @@ verify-shell:
 
 verify-stale-refs:
 	@echo "Checking for stale migration references..."
-	@PATTERN='OneHalfDark|\.config/\.aliases|org\.alacritty|tokyonight|LF_ICONS|CODE_QUALITY_REPORT|lorenozsca7|oh-my-zsh|Oh My Zsh'; \
+	@PATTERN='OneHalfDark|base16-onedark|e06c75|d19a66|\.config/\.aliases|org\.alacritty|tokyonight|LF_ICONS|CODE_QUALITY_REPORT|lorenozsca7|oh-my-zsh|Oh My Zsh'; \
 	SCAN_PATHS='README.md OPERATING.md CLAUDE.md .config bin .zshenv'; \
 	if command -v rg >/dev/null 2>&1; then \
 		if rg -n "$$PATTERN" $$SCAN_PATHS >/dev/null; then \
