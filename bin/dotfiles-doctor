@@ -23,6 +23,15 @@ readonly PLATFORM PLATFORM_OS
 ISSUES=0
 WARNINGS=0
 
+# On PATH is not the same as working. zathura sat installed-but-broken with a
+# dyld error (`Library not loaded: libgirara.5.dylib`) and every existence
+# check passed, because the binary was right there — it just could not start.
+tool_runs() {
+    local tool="$1"
+    command_exists "$tool" || return 1
+    "$tool" --version > /dev/null 2>&1
+}
+
 # The commands this health check probes, by severity. These are *command*
 # names, not package names: `rg` ships in the `ripgrep` package. The mapping
 # and the exemptions live in test/allowlist/command-packages.txt, and
@@ -240,8 +249,10 @@ check_core_tools() {
     print_header "Core Tools"
 
     for tool in "${DOCTOR_CORE_TOOLS[@]}"; do
-        if command_exists "$tool"; then
+        if tool_runs "$tool"; then
             check_pass "$tool installed"
+        elif command_exists "$tool"; then
+            check_fail "$tool is on PATH but fails to run (broken install?)"
         else
             check_warn "$tool not installed"
         fi
@@ -254,8 +265,10 @@ check_modern_tools() {
 
     # Essential modern tools
     for tool in "${DOCTOR_ESSENTIAL_TOOLS[@]}"; do
-        if command_exists "$tool"; then
+        if tool_runs "$tool"; then
             check_pass "$tool installed"
+        elif command_exists "$tool"; then
+            check_fail "$tool is on PATH but fails to run (broken install?)"
         else
             check_warn "$tool not installed (recommended)"
         fi

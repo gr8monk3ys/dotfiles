@@ -77,3 +77,15 @@ teardown() {
     assert_failure
     assert_output --partial "Missing"
 }
+
+@test "doctor reports a tool that is on PATH but cannot run" {
+    # Regression: zathura was installed but died with a dyld error, and every
+    # existence check passed because the binary was present. On PATH is not
+    # the same as working.
+    mkdir -p "$TEST_TEMP_DIR/brokenbin"
+    printf '#!/bin/sh\nexit 1\n' > "$TEST_TEMP_DIR/brokenbin/eza"
+    chmod +x "$TEST_TEMP_DIR/brokenbin/eza"
+
+    run env PATH="$TEST_TEMP_DIR/brokenbin:$PATH" bin/dotfiles-doctor
+    assert_output --partial "eza is on PATH but fails to run"
+}
