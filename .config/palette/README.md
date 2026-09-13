@@ -9,9 +9,13 @@ The palette used to be the same six hex literals re-typed in ten files:
 `yazi/theme.toml`, `eza/theme.yml`, `atuin`'s theme, `.zshrc`'s highlight
 styles, `git/config`'s delta colours, `bin/lib/ui.sh`, and a vendored bat
 `.tmTheme`. Nothing connected them, so "everything matches" was a claim no
-command could check — and a retune that rewrote every `#e06c75` still left the
-old red behind in `.zshenv`, where `EZA_COLORS` spells colours as decimal SGR
-triples a hex grep cannot see.
+command could check — and a retune that rewrote every hex occurrence of the
+old red still left it behind in `.zshenv`, where `EZA_COLORS` spells colours
+as decimal SGR triples that a hex grep cannot see.
+
+(The retired values themselves are not quoted here on purpose: they live in
+the Makefile's `verify-stale-refs` pattern, which fails the build on any copy
+left anywhere under `.config`, `bin` or `.zshenv` — including in prose.)
 
 `danse.conf` is the one place a colour is defined. `bin/palette` reads it.
 
