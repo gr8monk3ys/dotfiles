@@ -75,7 +75,7 @@ Everything since 1.0.0 (2025-10-24), by theme.
 - `install.sh`'s OS dispatch: it cased on `bin/platform detect` and called `make macos`/`make arch`/`make link` itself, duplicating the Makefile's own `OS := $(shell bin/platform detect)` / `all: $(OS)`. It now just runs `make`
 - The `bun` make target: bun is already in the Brewfile (`brew "oven-sh/bun/bun"`), so the target only ever printed "already installed" — and it put a `curl | bash` in the default install path for no gain
 - The `brew-taps` make target: trusting taps is a step within installing a brew kind, not ordering between kinds, so it moved inside `bin/install-kind`
-- `.config/macos/.env.macos`: nothing sourced it, so it was dead. Its `EDITOR`/`VISUAL` duplicated `.zshenv`, its `FIREFOX_BIN` was referenced nowhere, and its `ulimit -S -n 8192` would have *lowered* the open-file limit from 1048576 had anyone "fixed" it by sourcing it
+- `.config/macos/.env.macos`: nothing sourced it, so it was dead. Its `EDITOR`/`VISUAL` duplicated `.zshenv`, its `FIREFOX_BIN` was referenced nowhere, and its `ulimit -S -n 8192` would have _lowered_ the open-file limit from 1048576 had anyone "fixed" it by sourcing it
 - `bin/is-executable`: a one-line `command -v` wrapper with a single caller; `make brew` uses `bin/platform has brew` instead
 - `platform run-if` and `platform is-arch`: no callers; `platform has` and `platform is-omarchy` cover their uses
 - `test_regressions.bats` "legacy theme names are absent": duplicated `make verify-stale-refs`, which checks 9 patterns over more paths in the same `make verify`

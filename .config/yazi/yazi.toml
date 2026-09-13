@@ -1,7 +1,7 @@
 # Yazi File Manager Configuration
 # https://yazi-rs.github.io/docs/configuration/yazi
 
-[manager]
+[mgr]
 # Show hidden files by default
 show_hidden = true
 # Sort directories first
@@ -50,7 +50,7 @@ archive = [
 [open]
 rules = [
     # Folders - enter them
-    { name = "*/", use = [ "edit", "open", "reveal" ] },
+    { url = "*/", use = [ "edit", "open", "reveal" ] },
 
     # Text files
     { mime = "text/*", use = [ "edit", "reveal" ] },
@@ -84,7 +84,7 @@ rules = [
     { mime = "application/pdf", use = [ "open", "reveal" ] },
 
     # Fallback
-    { name = "*", use = [ "open", "reveal" ] }
+    { url = "*", use = [ "open", "reveal" ] }
 ]
 
 [tasks]
@@ -105,7 +105,7 @@ preloaders = [
     { mime = "application/pdf", run = "pdf" },
 ]
 previewers = [
-    { name = "*/", run = "folder", sync = true },
+    { url = "*/", run = "folder", sync = true },
     # Code/Text with syntax highlighting (via bat)
     { mime = "text/*", run = "code" },
     { mime = "*/xml", run = "code" },
@@ -129,7 +129,7 @@ previewers = [
     { mime = "application/x-rar", run = "archive" },
     { mime = "application/x-xz", run = "archive" },
     # Fallback
-    { name = "*", run = "file" }
+    { url = "*", run = "file" }
 ]
 
 [input]

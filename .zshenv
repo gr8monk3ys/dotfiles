@@ -43,6 +43,8 @@ export NPM_CONFIG_USERCONFIG="$XDG_CONFIG_HOME/npm/npmrc"
 export CURL_HOME="$XDG_CONFIG_HOME/curl"
 export WGETRC="$XDG_CONFIG_HOME/wget/.wgetrc"
 export SCREENRC="$XDG_CONFIG_HOME/macos/.screenrc"
+# eza reads ONLY $EZA_CONFIG_DIR; it does not fall back to $XDG_CONFIG_HOME.
+export EZA_CONFIG_DIR="$XDG_CONFIG_HOME/eza"
 
 # colors!
 export BAT_THEME="base16-onedark"

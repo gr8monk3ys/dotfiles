@@ -1156,8 +1156,8 @@ package name.
 
 ### wget
 
-- **Why:** Non-interactive downloader the `.config/wget/` config is written for. _No macOS manifest installs it — add to Brewfile or drop the config._
-- **Installed via:** pacmanfile (nothing on macOS)
+- **Why:** Non-interactive downloader; `.config/wget/.wgetrc` sets timestamping, retries and timeouts, and is found via `$WGETRC` exported from `.zshenv`.
+- **Installed via:** Brewfile, pacmanfile
 - **Config:** [`.config/wget/`](../.config/wget/)
 
 ### wl-clipboard

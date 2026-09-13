@@ -70,3 +70,20 @@ bat integrates well with:
 
 - [bat GitHub](https://github.com/sharkdp/bat)
 - [Available Themes](https://github.com/sharkdp/bat#highlighting-theme)
+
+## The theme is vendored
+
+`base16-onedark` is **not** one of bat's built-in themes. `themes/base16-onedark.tmTheme`
+is vendored here and compiled into bat's cache:
+
+```bash
+bat cache --build
+```
+
+Without that step bat silently falls back to its default and prints
+`Unknown theme 'base16-onedark', using default` — which is what it did for as
+long as this config has existed. `make link` puts the theme in place;
+`bat cache --build` is the part a fresh machine still needs.
+
+The same name is used by delta (`.config/git/config` `syntax-theme`), which
+shares bat's syntect engine and the same cache.

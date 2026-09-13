@@ -138,6 +138,7 @@ brew "sd"                              # Modern sed replacement
 brew "hyperfine"                       # Command-line benchmarking tool
 brew "tokei"                           # Code statistics tool
 brew "watchexec"                       # File watcher for development
+brew "wget"                            # Network downloader (.config/wget/.wgetrc configures it)
 
 # ============================================================================
 # Next-Gen Modern Tools (2024+)
