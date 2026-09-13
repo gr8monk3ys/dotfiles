@@ -1,0 +1,137 @@
+#!/usr/bin/env bash
+# validate-config-live - Assert that tools honour the configs this repo tracks.
+#
+# `make link` proves a file is in place. `bin/link-state` proves it resolves
+# into the checkout. Neither proves the *tool reads it* — and twelve configs
+# in this repo were tracked, linked, documented and applying to nothing:
+#
+#   firefox   user.js is per-profile; ~/.config/firefox/ is not a path Firefox reads
+#   git       git reads $XDG_CONFIG_HOME/git/config, not .gitconfig
+#   npm       npm has no XDG support; needs NPM_CONFIG_USERCONFIG
+#   curl      reads ~/.curlrc or $CURL_HOME
+#   wget      reads ~/.wgetrc or $WGETRC
+#   screen    reads ~/.screenrc or $SCREENRC
+#   bat       the configured theme did not exist in the build
+#   eza       theme.yml needs a build feature Homebrew omits
+#   yazi      the config failed to parse; yazi ran on stock defaults
+#   jj        an alias shadowed a builtin and warned on every invocation
+#
+# Every one was found by hand. This is that question as a gate.
+#
+# Usage:
+#   validate-config-live [tool...]   # default: every tool in the table
+#   validate-config-live --list      # the tools it knows how to probe
+#
+# A probe must be offline, fast, and fail when the config is NOT honoured.
+# Tools that cannot meet that bar are deliberately absent rather than probed
+# badly. yazi is the example: it has no headless config check, `--debug` needs
+# a TTY, and giving it one via `script` launches the TUI and hangs. Its schema
+# is guarded statically in test_regressions.bats instead, which is honest
+# about being a text check rather than a liveness one.
+# Asserting a file exists is not a probe — that is the mistake this catches.
+# A tool that is not installed is skipped, not failed: a config for a tool
+# this machine does not have is not a defect.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/preamble.sh
+source "$SCRIPT_DIR/lib/preamble.sh"
+# shellcheck source=lib/ui.sh
+source "$SCRIPT_DIR/lib/ui.sh"
+
+# tool|binary|probe command|expected (fixed substring)
+#
+# The probe runs under `bash -c`. Keep it offline: CI has no network for these
+# and a probe that needs one is a flake waiting to happen.
+# shellcheck disable=SC2016 # probes are shell source, expanded at run time
+readonly PROBES='git|git|git config --includes --get alias.lg|log --color --decorate --graph
+jj|jj|jj --ignore-working-copy config get ui.default-command|log
+bat|bat|bat --config-file|/.config/bat/config
+bat-theme|bat|bat --list-themes|base16-onedark
+eza|eza|printf %s "$EZA_COLORS"|di=38;2;97;175;239
+atuin|atuin|atuin config get theme.name|onedark
+starship|starship|printf %s "$STARSHIP_CONFIG"|/.config/starship/starship.toml
+ghostty|ghostty|ghostty +show-config --default=false|Atom One Dark
+fastfetch|fastfetch|fastfetch --list-config-paths|/.config/fastfetch
+curl|curl|printf %s "$CURL_HOME"|/.config/curl
+wget|wget|printf %s "$WGETRC"|/.config/wget/.wgetrc
+screen|screen|printf %s "$SCREENRC"|/.config/macos/.screenrc
+npm|npm|printf %s "$NPM_CONFIG_USERCONFIG"|/.config/npm/npmrc
+nvim|nvim|nvim --headless -c "lua io.stderr:write(vim.g.mapleader or 0)" -c qa|,'
+
+cmd_list() {
+    local name rest
+    while IFS='|' read -r name rest; do
+        [[ -n "$name" ]] && echo "$name"
+    done <<< "$PROBES"
+    return 0
+}
+
+# Run one probe. Echoes a status word; never aborts the run.
+run_probe() {
+    local want="$1" name binary probe expect out
+    while IFS='|' read -r name binary probe expect; do
+        [[ "$name" == "$want" ]] || continue
+
+        if ! command_exists "$binary"; then
+            printf 'skip\t%s\t%s not installed\n' "$name" "$binary"
+            return 0
+        fi
+
+        # Probes read the environment the caller has; a login shell exports the
+        # discovery variables several of them assert on.
+        if ! out="$(bash -c "$probe" 2>&1)"; then
+            printf 'fail\t%s\tprobe exited non-zero: %s\n' "$name" "${out:0:80}"
+            return 1
+        fi
+
+        if [[ "$out" == *"$expect"* ]]; then
+            printf 'ok\t%s\t%s\n' "$name" "$expect"
+            return 0
+        fi
+
+        printf 'fail\t%s\texpected %q, got %q\n' "$name" "$expect" "${out:0:120}"
+        return 1
+    done <<< "$PROBES"
+
+    printf 'fail\t%s\tno such probe\n' "$want"
+    return 1
+}
+
+main() {
+    if [[ "${1:-}" == "--list" ]]; then
+        cmd_list
+        return 0
+    fi
+
+    local -a tools
+    if [[ $# -gt 0 ]]; then
+        tools=("$@")
+    else
+        local t
+        while IFS= read -r t; do tools+=("$t"); done < <(cmd_list)
+    fi
+
+    local status=0 skipped=0 passed=0 failed=0 line state
+    for t in "${tools[@]}"; do
+        line="$(run_probe "$t" || true)"
+        state="${line%%$'\t'*}"
+        case "$state" in
+            ok) ((++passed)) ;;
+            skip) ((++skipped)) ;;
+            *) ((++failed)); status=1 ;;
+        esac
+        printf '%s\n' "$line"
+    done
+
+    printf '\n'
+    if [[ "$failed" -eq 0 ]]; then
+        print_success "$passed config(s) demonstrably live, $skipped skipped (tool absent)"
+    else
+        print_error "$failed config(s) not honoured, $passed live, $skipped skipped"
+    fi
+    return "$status"
+}
+
+main "$@"

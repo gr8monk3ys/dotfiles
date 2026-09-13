@@ -422,6 +422,28 @@ does not do the obvious way, each for a reason:
 `user.js` is read once, at startup, so `install` warns when Firefox is
 running instead of quietly doing nothing visible.
 
+### [validate-config-live](validate-config-live)
+
+Asserts that tools actually honour the configs this repo tracks. `make link`
+proves a file is in place and `bin/link-state` proves it resolves into the
+checkout; neither proves the tool reads it — and twelve configs here were
+tracked, linked, documented and applying to nothing.
+
+```bash
+validate-config-live          # every tool it knows
+validate-config-live git bat  # just these
+validate-config-live --list
+```
+
+Each probe must be offline, fast, and fail when the config is _not_ honoured.
+Asserting a file exists is not a probe — that is the mistake this catches. An
+absent tool is skipped, not failed. Tools with no probe meeting that bar are
+deliberately absent rather than probed badly; `yazi` is the example, guarded
+statically in `test_regressions.bats` instead.
+
+Not part of `make verify`: several probes read discovery variables that a
+login shell exports, and `make` does not run one. Use `make verify-config-live`.
+
 ### [validate-doctor-tools](validate-doctor-tools)
 
 Fails when `dotfiles-doctor`'s probed tool lists and the `install/` manifests

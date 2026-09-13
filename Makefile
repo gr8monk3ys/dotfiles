@@ -27,7 +27,7 @@ export STOW_DIR = $(DOTFILES_DIR)
 export ACCEPT_EULA=Y
 
 .PHONY: all macos arch link unlink link-dry-run test test-setup verify \
-        verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-doctor-tools verify-tests \
+        verify-config-live verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-doctor-tools verify-tests \
         doctor init update backup firefox worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
         brew git packages-macos packages-arch core-macos core-arch \
@@ -275,6 +275,13 @@ verify-markdown:
 		echo "⚠️  markdownlint not found; SKIPPED (CI runs it — npm i -g markdownlint-cli)"; \
 	fi
 
+# Not in `make verify`: the probes assert on discovery variables a login
+# shell exports, and `make` does not run one. It is a machine check — run it
+# after `make link` or when a tool stops behaving.
+verify-config-live:
+	@echo "Checking tracked configs are actually honoured..."
+	@$(MAKEFILE_DIR)/bin/validate-config-live
+
 verify-doctor-tools:
 	@echo "Validating dotfiles-doctor tool lists against manifests..."
 	@bin/validate-doctor-tools
@@ -517,6 +524,7 @@ help:
 	@echo "  make test-docker  - Run test suite in an Ubuntu container"
 	@echo "  make test-docker-arch - Run test suite in an Arch container"
 	@echo "  make verify       - Run full repository verification"
+	@echo "  make verify-config-live - Check tracked configs are actually honoured"
 	@echo ""
 	@echo "Automated Sync (macOS):"
 	@echo "  make sync-install   - Enable daily auto-sync"
