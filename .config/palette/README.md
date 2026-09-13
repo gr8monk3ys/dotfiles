@@ -22,7 +22,7 @@ left anywhere under `.config`, `bin` or `.zshenv` — including in prose.)
 ## The palette
 
 Structurally OneDark. Two accents and two fills are tuned to Henri Matisse,
-*La Danse* (1910, Hermitage) — also the desktop background, see `bin/wallpaper`.
+_La Danse_ (1910, Hermitage) — also the desktop background, see `bin/wallpaper`.
 The painting's three fields were sampled from the source scan:
 
 | Field | Sampled |

@@ -1,0 +1,174 @@
+#!/usr/bin/env bash
+# wallpaper - Build and set the desktop background.
+#
+# The background is Henri Matisse, "La Danse" (1910, Hermitage). The painting
+# is US public domain — it was published well before 1930 — but this checkout
+# is a public repository, so the pixels are NOT tracked here. This script
+# fetches the scan from Wikimedia Commons and composes the background locally.
+# What the repo carries is the recipe.
+#
+# The composition matters as much as the painting: a tiling window manager
+# shows the background through gaps and around edges, where busy artwork looks
+# like noise. So the painting is matted rather than stretched — fitted onto a
+# gradient that runs from the terminal's own ground at the top (dark, under
+# SketchyBar) to the painting's ultramarine at the bottom, with a soft shadow
+# so it reads as hung rather than pasted. It is never upscaled.
+#
+# The palette's accent colours are sampled from this same painting; see
+# .config/palette/README.md.
+#
+# Usage:
+#   wallpaper                 # build if needed, then set
+#   wallpaper build           # compose and print the path, do not set
+#   wallpaper set [PATH]      # set the desktop background
+#   wallpaper current         # print what is currently set
+#   wallpaper --force         # rebuild even if the output already exists
+#
+# Environment:
+#   WALLPAPER_WIDTH/HEIGHT    output size; defaults to the main display
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/preamble.sh
+source "$SCRIPT_DIR/lib/preamble.sh"
+# shellcheck source=lib/ui.sh
+source "$SCRIPT_DIR/lib/ui.sh"
+
+readonly SOURCE_URL="https://upload.wikimedia.org/wikipedia/commons/8/8a/La_Danse_II%2C_par_Henri_Matisse.jpg"
+readonly SOURCE_CREDIT="Henri Matisse, La Danse (1910), Hermitage. Public domain. Scan: Wikimedia Commons."
+readonly ART_NAME="danse"
+
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/wallpaper"
+OUT_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/wallpapers"
+readonly CACHE_DIR OUT_DIR
+
+# Palette colours, so the matte cannot drift from the terminal it sits behind.
+palette() { "$SCRIPT_DIR/palette" get "$1"; }
+
+display_size() {
+    local w h
+    w="$(system_profiler SPDisplaysDataType 2> /dev/null |
+        awk '/Resolution:/ {print $2; exit}')"
+    h="$(system_profiler SPDisplaysDataType 2> /dev/null |
+        awk '/Resolution:/ {print $4; exit}')"
+    if [[ "$w" =~ ^[0-9]+$ && "$h" =~ ^[0-9]+$ ]]; then
+        printf '%s %s\n' "$w" "$h"
+    else
+        printf '2560 1440\n'
+    fi
+}
+
+fetch_source() {
+    local dest="$CACHE_DIR/$ART_NAME-source.jpg"
+    if [[ -s "$dest" ]]; then
+        printf '%s\n' "$dest"
+        return 0
+    fi
+    mkdir -p "$CACHE_DIR"
+    print_info "Fetching source scan from Wikimedia Commons..." >&2
+    # Wikimedia rejects requests with no identifying User-Agent.
+    if ! curl -sSL --fail --max-time 120 \
+        -A "dotfiles-wallpaper (https://github.com/gr8monk3ys/dotfiles)" \
+        -o "$dest.part" "$SOURCE_URL"; then
+        rm -f "$dest.part"
+        print_error "Could not fetch the source image" >&2
+        return 1
+    fi
+    mv "$dest.part" "$dest"
+    printf '%s\n' "$dest"
+}
+
+build() {
+    local force="${1:-}"
+    command_exists magick || {
+        print_error "imagemagick is required (brew install imagemagick)" >&2
+        return 1
+    }
+
+    local w h
+    read -r w h < <(display_size)
+    w="${WALLPAPER_WIDTH:-$w}"
+    h="${WALLPAPER_HEIGHT:-$h}"
+
+    local out="$OUT_DIR/$ART_NAME-${w}x${h}.png"
+    if [[ -s "$out" && -z "$force" ]]; then
+        printf '%s\n' "$out"
+        return 0
+    fi
+
+    local src
+    src="$(fetch_source)" || return 1
+    mkdir -p "$OUT_DIR"
+
+    # The painting is fitted to ~70% of the canvas width and never enlarged:
+    # the source is 2000px wide, so on a 2560px display this is a downscale.
+    local art_w=$((w * 70 / 100))
+
+    local ground ultramarine
+    ground="$(palette bg-dark)"
+    ultramarine="$(palette ultramarine)"
+
+    print_info "Composing ${w}x${h} from $ART_NAME..." >&2
+    magick \
+        \( -size "${w}x${h}" "gradient:${ground}-${ultramarine}" \) \
+        \( "$src" \
+            -shave 2%x2% \
+            -resize "${art_w}x>" \
+            -modulate 90,106,100 \
+            \( +clone -background black -shadow 55x22+0+0 \) \
+            +swap -background none -layers merge +repage \
+        \) \
+        -gravity center -compose over -composite \
+        -depth 8 \
+        -set comment "$SOURCE_CREDIT" \
+        "$out"
+
+    printf '%s\n' "$out"
+}
+
+set_wallpaper() {
+    local path="$1"
+    [[ -s "$path" ]] || {
+        print_error "No such image: $path" >&2
+        return 1
+    }
+    osascript -e "tell application \"System Events\" to tell every desktop to set picture to \"$path\"" > /dev/null
+    # Trust the readback, not the exit status: setting a desktop picture
+    # succeeds quietly on paths it then ignores.
+    local now
+    now="$(current)"
+    if [[ "$now" != "$path" ]]; then
+        print_error "Desktop background is still $now" >&2
+        return 1
+    fi
+    print_success "Desktop background set: $path"
+}
+
+current() {
+    osascript -e 'tell application "System Events" to get picture of current desktop' 2> /dev/null
+}
+
+main() {
+    local force=""
+    [[ "${1:-}" == "--force" ]] && {
+        force=1
+        shift
+    }
+
+    case "${1:-}" in
+        build) build "$force" ;;
+        set) set_wallpaper "${2:-$(build "$force")}" ;;
+        current) current ;;
+        -h | --help)
+            sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//'
+            ;;
+        "") set_wallpaper "$(build "$force")" ;;
+        *)
+            print_error "Unknown command '${1}' (build|set|current)" >&2
+            return 2
+            ;;
+    esac
+}
+
+main "$@"

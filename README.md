@@ -65,14 +65,20 @@ make doctor    # health check of the linked machine
 | Packages | Homebrew, pacman, mise, cargo, npm |
 
 `ls`, `cat`, `cd` are aliased to their replacements; `grep`, `find`, `du`,
-`ps`, `top` deliberately are not. Everything is themed OneDark. Why each tool
-is here: `dotfiles-why <tool>` or [docs/TOOLS.md](docs/TOOLS.md).
+`ps`, `top` deliberately are not. Why each tool is here: `dotfiles-why <tool>`
+or [docs/TOOLS.md](docs/TOOLS.md).
+
+Everything is themed from one place. [`.config/palette/`](.config/palette/)
+holds the palette — OneDark, with two accents and two chrome fills tuned to
+Matisse's _La Danse_ (1910), which `bin/wallpaper` also composes into the
+desktop background. The artwork is public domain but is not tracked here;
+the script fetches it and the repo carries the recipe.
 
 ## Layout
 
 ```
 .config/     one directory per tool, each with a README
-bin/         dotfiles-doctor/update/backup/restore/sync/why, validators
+bin/         dotfiles-doctor/update/backup/restore/sync/why, palette, wallpaper, validators
 install/     Brewfile, Caskfile, Caskfile.extra, npmfile, Rustfile, pacmanfile, Codefile, duti
 test/        BATS suite
 docs/        TOOLS.md
