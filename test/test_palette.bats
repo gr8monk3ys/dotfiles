@@ -113,16 +113,63 @@ load test_helper/common
     assert_success
 }
 
-@test "every colour in the ghostty theme is a palette colour" {
-    # ghostty/themes/danse is derived from the palette by hand-running
-    # `palette get`. Nothing re-runs that, so this is what keeps it true.
+@test "every colour in a generated theme is a palette colour" {
+    # ghostty/themes/danse, btop/themes/danse.theme and cava/config are all
+    # derived from the palette by hand-running `palette get`. Nothing re-runs
+    # that, so this is what keeps them true — and it is what catches a colour
+    # typed straight into a theme instead of taken from the palette.
     run bash -c '
         set -euo pipefail
         repo="$1"
         allowed="$("$repo/bin/palette" list | cut -f2)"
         status=0
-        for hex in $(grep -oE "#[0-9a-f]{6}" "$repo/.config/ghostty/themes/danse" | sort -u); do
-            printf "%s\n" "$allowed" | grep -Fxq "$hex" || { echo "ghostty theme uses $hex, which is not in the palette"; status=1; }
+        for f in .config/ghostty/themes/danse \
+                 .config/btop/themes/danse.theme \
+                 .config/cava/config; do
+            [[ -f "$repo/$f" ]] || { echo "missing generated theme: $f"; status=1; continue; }
+            for hex in $(grep -oE "#[0-9a-f]{6}" "$repo/$f" | sort -u); do
+                printf "%s\n" "$allowed" | grep -Fxq "$hex" \
+                    || { echo "$f uses $hex, which is not in the palette"; status=1; }
+            done
+        done
+        exit $status
+    ' _ "$DOTFILES_DIR"
+    assert_success
+}
+
+@test "a booted neovim renders the palette's vermilion, not onedark.nvim's red" {
+    # Computed against the palette rather than a literal, so retuning a colour
+    # fails here instead of silently leaving the editor behind. nvim was the
+    # one window where "everything matches" was false: it inherited whatever
+    # navarasu/onedark.nvim shipped while every other tool had moved.
+    command -v nvim > /dev/null || skip "nvim not installed"
+    want="$("$DOTFILES_DIR/bin/palette" get vermilion)"
+    run bash -c 'nvim --headless -c "lua local v = vim.api.nvim_get_hl(0, { name = \"ErrorMsg\", link = false }); io.stderr:write(v.fg and string.format(\"#%06x\", v.fg) or \"none\")" -c qa 2>&1'
+    assert_success
+    assert_output "$want"
+}
+
+@test "every workspace sketchybar draws is declared persistent in aerospace" {
+    # config-version 2 made persistent-workspaces the source of truth: an
+    # undeclared workspace disappears when its last window closes. SketchyBar's
+    # items/spaces.sh draws one indicator per workspace regardless, so a
+    # workspace dropped from that list leaves a dead indicator on the bar and
+    # a keybinding that lands nowhere.
+    run bash -c '
+        set -euo pipefail
+        repo="$1"
+        toml="$repo/.config/aerospace/aerospace.toml"
+        # The declared list, one name per line.
+        declared="$(sed -n "/^persistent-workspaces = \[/,/^\]/p" "$toml" \
+            | grep -oE "\"[^\"]+\"" | tr -d "\"")"
+        status=0
+        # SPACE_ICONS in spaces.sh is what the bar actually draws.
+        drawn="$(grep -oE "^SPACE_ICONS=\(.*\)" "$repo/.config/sketchybar/items/spaces.sh" \
+            | grep -oE "\"[^\"]+\"" | tr -d "\"")"
+        [[ -n "$drawn" ]] || { echo "could not read SPACE_ICONS from spaces.sh"; exit 1; }
+        for ws in $drawn; do
+            printf "%s\n" "$declared" | grep -Fxq "$ws" \
+                || { echo "sketchybar draws workspace $ws, aerospace does not persist it"; status=1; }
         done
         exit $status
     ' _ "$DOTFILES_DIR"

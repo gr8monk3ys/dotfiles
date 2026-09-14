@@ -58,6 +58,7 @@ curl|curl|printf %s "$CURL_HOME"|/.config/curl
 wget|wget|printf %s "$WGETRC"|/.config/wget/.wgetrc
 screen|screen|printf %s "$SCREENRC"|/.config/macos/.screenrc
 npm|npm|printf %s "$NPM_CONFIG_USERCONFIG"|/.config/npm/npmrc
+nvim-theme|nvim|nvim --headless -c "lua local v = vim.api.nvim_get_hl(0, { name = \"ErrorMsg\", link = false }); io.stderr:write(v.fg and string.format(\"#%06x\", v.fg) or \"none\")" -c qa|#e06a51
 nvim|nvim|nvim --headless -c "lua io.stderr:write(vim.g.mapleader or 0)" -c qa|,'
 
 cmd_list() {
