@@ -148,3 +148,30 @@ load test_helper/common
     assert_success
     assert_output "$want"
 }
+
+@test "every workspace sketchybar draws is declared persistent in aerospace" {
+    # config-version 2 made persistent-workspaces the source of truth: an
+    # undeclared workspace disappears when its last window closes. SketchyBar's
+    # items/spaces.sh draws one indicator per workspace regardless, so a
+    # workspace dropped from that list leaves a dead indicator on the bar and
+    # a keybinding that lands nowhere.
+    run bash -c '
+        set -euo pipefail
+        repo="$1"
+        toml="$repo/.config/aerospace/aerospace.toml"
+        # The declared list, one name per line.
+        declared="$(sed -n "/^persistent-workspaces = \[/,/^\]/p" "$toml" \
+            | grep -oE "\"[^\"]+\"" | tr -d "\"")"
+        status=0
+        # SPACE_ICONS in spaces.sh is what the bar actually draws.
+        drawn="$(grep -oE "^SPACE_ICONS=\(.*\)" "$repo/.config/sketchybar/items/spaces.sh" \
+            | grep -oE "\"[^\"]+\"" | tr -d "\"")"
+        [[ -n "$drawn" ]] || { echo "could not read SPACE_ICONS from spaces.sh"; exit 1; }
+        for ws in $drawn; do
+            printf "%s\n" "$declared" | grep -Fxq "$ws" \
+                || { echo "sketchybar draws workspace $ws, aerospace does not persist it"; status=1; }
+        done
+        exit $status
+    ' _ "$DOTFILES_DIR"
+    assert_success
+}
