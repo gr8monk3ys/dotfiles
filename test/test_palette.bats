@@ -113,16 +113,24 @@ load test_helper/common
     assert_success
 }
 
-@test "every colour in the ghostty theme is a palette colour" {
-    # ghostty/themes/danse is derived from the palette by hand-running
-    # `palette get`. Nothing re-runs that, so this is what keeps it true.
+@test "every colour in a generated theme is a palette colour" {
+    # ghostty/themes/danse, btop/themes/danse.theme and cava/config are all
+    # derived from the palette by hand-running `palette get`. Nothing re-runs
+    # that, so this is what keeps them true — and it is what catches a colour
+    # typed straight into a theme instead of taken from the palette.
     run bash -c '
         set -euo pipefail
         repo="$1"
         allowed="$("$repo/bin/palette" list | cut -f2)"
         status=0
-        for hex in $(grep -oE "#[0-9a-f]{6}" "$repo/.config/ghostty/themes/danse" | sort -u); do
-            printf "%s\n" "$allowed" | grep -Fxq "$hex" || { echo "ghostty theme uses $hex, which is not in the palette"; status=1; }
+        for f in .config/ghostty/themes/danse \
+                 .config/btop/themes/danse.theme \
+                 .config/cava/config; do
+            [[ -f "$repo/$f" ]] || { echo "missing generated theme: $f"; status=1; continue; }
+            for hex in $(grep -oE "#[0-9a-f]{6}" "$repo/$f" | sort -u); do
+                printf "%s\n" "$allowed" | grep -Fxq "$hex" \
+                    || { echo "$f uses $hex, which is not in the palette"; status=1; }
+            done
         done
         exit $status
     ' _ "$DOTFILES_DIR"

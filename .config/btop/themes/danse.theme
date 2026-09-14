@@ -1,0 +1,59 @@
+# danse - btop's view of .config/palette/danse.conf.
+#
+# main_bg is deliberately empty: that is how btop leaves the background
+# transparent, so it inherits Ghostty's blur and the painting behind it
+# instead of punching an opaque rectangle through the middle of the rice.
+#
+# The gradients are where the Matisse colours actually earn their place —
+# load and temperature run viridian to ochre to vermilion, which is the
+# painting's own ground-to-figures progression.
+
+theme[main_bg]=""
+theme[main_fg]="#abb2bf"
+theme[title]="#abb2bf"
+theme[hi_fg]="#61afef"
+theme[selected_bg]="#3e4451"
+theme[selected_fg]="#61afef"
+theme[inactive_fg]="#5c6370"
+theme[graph_text]="#5c6370"
+theme[meter_bg]="#3e4451"
+theme[proc_misc]="#56b6c2"
+
+# Box outlines
+theme[cpu_box]="#2b4468"
+theme[mem_box]="#2b4468"
+theme[net_box]="#2b4468"
+theme[proc_box]="#2b4468"
+theme[div_line]="#3e4451"
+
+# Temperature: cool ground to hot figures
+theme[temp_start]="#476a62"
+theme[temp_mid]="#e5c07b"
+theme[temp_end]="#e06a51"
+
+# CPU load: the same progression
+theme[cpu_start]="#98c379"
+theme[cpu_mid]="#e5c07b"
+theme[cpu_end]="#e06a51"
+
+# Memory
+theme[free_start]="#476a62"
+theme[free_mid]=""
+theme[free_end]="#98c379"
+theme[cached_start]="#2b4468"
+theme[cached_mid]=""
+theme[cached_end]="#61afef"
+theme[available_start]="#d98c5c"
+theme[available_mid]=""
+theme[available_end]="#e5c07b"
+theme[used_start]="#c678dd"
+theme[used_mid]=""
+theme[used_end]="#e06a51"
+
+# Network
+theme[download_start]="#2b4468"
+theme[download_mid]="#61afef"
+theme[download_end]="#56b6c2"
+theme[upload_start]="#476a62"
+theme[upload_mid]="#98c379"
+theme[upload_end]="#e5c07b"
