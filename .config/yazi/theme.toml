@@ -16,7 +16,7 @@ find_position = { fg = "#c678dd", bg = "reset", bold = true, italic = true }
 
 # Markers
 marker_copied   = { fg = "#98c379", bg = "#98c379" }
-marker_cut      = { fg = "#e06c75", bg = "#e06c75" }
+marker_cut      = { fg = "#e06a51", bg = "#e06a51" }
 marker_marked   = { fg = "#56b6c2", bg = "#56b6c2" }
 marker_selected = { fg = "#e5c07b", bg = "#e5c07b" }
 
@@ -27,7 +27,7 @@ tab_width    = 1
 
 # Count indicators
 count_copied   = { fg = "#282c34", bg = "#98c379" }
-count_cut      = { fg = "#282c34", bg = "#e06c75" }
+count_cut      = { fg = "#282c34", bg = "#e06a51" }
 count_selected = { fg = "#282c34", bg = "#e5c07b" }
 
 # Borders
@@ -39,7 +39,7 @@ border_style  = { fg = "#5c6370" }
 # File types use OneDark palette
 directory = { fg = "#61afef", bold = true }
 symlink   = { fg = "#56b6c2", italic = true }
-orphan    = { fg = "#e06c75", italic = true }
+orphan    = { fg = "#e06a51", italic = true }
 executable = { fg = "#98c379", bold = true }
 hidden     = { fg = "#5c6370" }
 
@@ -56,12 +56,12 @@ mode_unset  = { fg = "#282c34", bg = "#c678dd", bold = true }
 # Progress
 progress_label  = { fg = "#abb2bf", bold = true }
 progress_normal = { fg = "#61afef", bg = "#3e4451" }
-progress_error  = { fg = "#e06c75", bg = "#3e4451" }
+progress_error  = { fg = "#e06a51", bg = "#3e4451" }
 
 # Permissions
 permissions_t = { fg = "#61afef" }
 permissions_r = { fg = "#e5c07b" }
-permissions_w = { fg = "#e06c75" }
+permissions_w = { fg = "#e06a51" }
 permissions_x = { fg = "#98c379" }
 permissions_s = { fg = "#5c6370" }
 
@@ -100,7 +100,7 @@ footer  = { fg = "#5c6370", bg = "#282c34" }
 [notify]
 title_info  = { fg = "#98c379" }
 title_warn  = { fg = "#e5c07b" }
-title_error = { fg = "#e06c75" }
+title_error = { fg = "#e06a51" }
 
 # Icons (requires Nerd Font)
 [icon]
@@ -109,7 +109,7 @@ title_error = { fg = "#e06c75" }
 [filetype]
 rules = [
     # Directories
-    { name = ".git",          text = "", fg = "#e06c75" },
+    { name = ".git",          text = "", fg = "#e06a51" },
     { name = ".github",       text = "", fg = "#abb2bf" },
     { name = "node_modules",  text = "", fg = "#98c379" },
     { name = ".config",       text = "", fg = "#61afef" },
@@ -121,13 +121,13 @@ rules = [
     { name = "Makefile",      text = "", fg = "#6d8086" },
     { name = "Dockerfile",    text = "󰡨", fg = "#61afef" },
     { name = ".dockerignore", text = "󰡨", fg = "#5c6370" },
-    { name = ".gitignore",    text = "", fg = "#e06c75" },
-    { name = ".gitmodules",   text = "", fg = "#e06c75" },
+    { name = ".gitignore",    text = "", fg = "#e06a51" },
+    { name = ".gitmodules",   text = "", fg = "#e06a51" },
     { name = "LICENSE",       text = "", fg = "#e5c07b" },
     { name = "README.md",     text = "", fg = "#61afef" },
 
     # Extensions - Languages
-    { name = "*.rs",      text = "", fg = "#e06c75" },
+    { name = "*.rs",      text = "", fg = "#e06a51" },
     { name = "*.go",      text = "", fg = "#56b6c2" },
     { name = "*.py",      text = "", fg = "#e5c07b" },
     { name = "*.js",      text = "", fg = "#e5c07b" },
@@ -135,7 +135,7 @@ rules = [
     { name = "*.tsx",     text = "", fg = "#61afef" },
     { name = "*.jsx",     text = "", fg = "#61afef" },
     { name = "*.lua",     text = "", fg = "#61afef" },
-    { name = "*.rb",      text = "", fg = "#e06c75" },
+    { name = "*.rb",      text = "", fg = "#e06a51" },
     { name = "*.zig",     text = "", fg = "#e5c07b" },
     { name = "*.nix",     text = "", fg = "#61afef" },
     { name = "*.sh",      text = "", fg = "#98c379" },
@@ -148,13 +148,13 @@ rules = [
     { name = "*.yaml",    text = "", fg = "#5c6370" },
     { name = "*.yml",     text = "", fg = "#5c6370" },
     { name = "*.json",    text = "", fg = "#e5c07b" },
-    { name = "*.xml",     text = "󰗀", fg = "#e06c75" },
+    { name = "*.xml",     text = "󰗀", fg = "#e06a51" },
     { name = "*.conf",    text = "", fg = "#5c6370" },
     { name = "*.ini",     text = "", fg = "#5c6370" },
 
     # Documents
     { name = "*.md",      text = "", fg = "#abb2bf" },
-    { name = "*.pdf",     text = "", fg = "#e06c75" },
+    { name = "*.pdf",     text = "", fg = "#e06a51" },
     { name = "*.tex",     text = "", fg = "#98c379" },
     { name = "*.typ",     text = "", fg = "#56b6c2" },
 

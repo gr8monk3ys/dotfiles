@@ -2,9 +2,9 @@
 # Only deviations from defaults are set; sync stays opt-in per machine
 # (run `atuin register`/`atuin login` manually if wanted).
 
-# Match the repo-wide OneDark theme (themes/onedark.toml).
+# Match the repo-wide danse theme (themes/danse.toml).
 [theme]
-name = "onedark"
+name = "danse"
 
 # Enter runs the selected command immediately; Tab only pastes it.
 enter_accept = true

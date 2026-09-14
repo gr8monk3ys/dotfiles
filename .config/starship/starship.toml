@@ -14,7 +14,7 @@ $python$character"""
 [username]
 format = '[$user]($style)[@](fg:#5c6370)'
 style_user = '#e5c07b'
-style_root = 'bold #e06c75'
+style_root = 'bold #e06a51'
 
 [hostname]
 ssh_only = true
@@ -38,7 +38,7 @@ style = '#e5c07b'
 [cmd_duration]
 min_time = 3000
 format = '[$duration]($style) '
-style = '#d19a66'
+style = '#d98c5c'
 
 # Active virtualenv only (no interpreter version noise), like p10k's
 # virtualenv segment on line 2.
@@ -51,4 +51,4 @@ detect_folders = []
 
 [character]
 success_symbol = '[❯](#c678dd)'
-error_symbol = '[❯](#e06c75)'
+error_symbol = '[❯](#e06a51)'

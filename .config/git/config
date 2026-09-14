@@ -124,13 +124,13 @@
 	side-by-side = true
 	line-numbers = true
 	# OneDark syntax theme (matches nvim/ghostty)
-	syntax-theme = base16-onedark
+	syntax-theme = danse
 	# OneDark colors for diff highlighting
 	plus-style = "syntax #2d3b2d"
 	plus-emph-style = "syntax #98c379"
 	minus-style = "syntax #3b2d2d"
-	minus-emph-style = "syntax #e06c75"
-	line-numbers-minus-style = "#e06c75"
+	minus-emph-style = "syntax #e06a51"
+	line-numbers-minus-style = "#e06a51"
 	line-numbers-plus-style = "#98c379"
 	line-numbers-zero-style = "#5c6370"
 	hunk-header-style = "file line-number syntax"

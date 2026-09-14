@@ -3,11 +3,11 @@
 <plist version="1.0">
 <dict>
 	<key>author</key>
-	<string>Template: Chris Kempson, Scheme: Lalit Magant (http://github.com/tilal6991)</string>
+	<string>Template: Chris Kempson; scheme: Lalit Magant; Matisse retune: this checkout (.config/palette/danse.conf)</string>
 	<key>name</key>
-	<string>Base16 OneDark</string>
+	<string>danse</string>
 	<key>semanticClass</key>
-	<string>theme.base16.onedark</string>
+	<string>theme.danse</string>
 	<key>colorSpaceName</key>
 	<string>sRGB</string>
 	<key>gutterSettings</key>
@@ -116,7 +116,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#e06c75</string>
+				<string>#e06a51</string>
 			</dict>
 		</dict>
 		<dict>
@@ -215,7 +215,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#d19a66</string>
+				<string>#d98c5c</string>
 			</dict>
 		</dict>
 		<dict>
@@ -226,7 +226,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#d19a66</string>
+				<string>#d98c5c</string>
 			</dict>
 		</dict>
 		<dict>
@@ -237,7 +237,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#d19a66</string>
+				<string>#d98c5c</string>
 			</dict>
 		</dict>
 		<dict>
@@ -248,7 +248,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#d19a66</string>
+				<string>#d98c5c</string>
 			</dict>
 		</dict>
 		<dict>
@@ -259,7 +259,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#e06c75</string>
+				<string>#e06a51</string>
 			</dict>
 		</dict>
 		<dict>
@@ -270,7 +270,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#d19a66</string>
+				<string>#d98c5c</string>
 			</dict>
 		</dict>
 		<dict>
@@ -303,7 +303,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#d19a66</string>
+				<string>#d98c5c</string>
 			</dict>
 		</dict>
 		<dict>
@@ -327,7 +327,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#d19a66</string>
+				<string>#d98c5c</string>
 			</dict>
 		</dict>
 		<dict>
@@ -375,7 +375,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#e06c75</string>
+				<string>#e06a51</string>
 			</dict>
 		</dict>
 		<dict>
@@ -386,7 +386,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#d19a66</string>
+				<string>#d98c5c</string>
 			</dict>
 		</dict>
 		<dict>
@@ -397,7 +397,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#e06c75</string>
+				<string>#e06a51</string>
 			</dict>
 		</dict>
 		<dict>
@@ -408,7 +408,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#d19a66</string>
+				<string>#d98c5c</string>
 			</dict>
 		</dict>
 		<dict>
@@ -443,7 +443,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#e06c75</string>
+				<string>#e06a51</string>
 			</dict>
 		</dict>
 		<dict>
@@ -509,7 +509,7 @@
 			<key>settings</key>
 			<dict>
 				<key>background</key>
-				<string>#e06c75</string>
+				<string>#e06a51</string>
 				<key>foreground</key>
 				<string>#c8ccd4</string>
 			</dict>
@@ -522,7 +522,7 @@
 			<key>settings</key>
 			<dict>
 				<key>background</key>
-				<string>#d19a66</string>
+				<string>#d98c5c</string>
 				<key>foreground</key>
 				<string>#282c34</string>
 			</dict>

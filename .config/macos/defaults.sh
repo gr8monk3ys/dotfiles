@@ -68,6 +68,14 @@ write com.apple.dock show-recents -bool false
 write com.apple.dock minimize-to-application -bool true
 write com.apple.dock mineffect -string "scale"
 
+# --- Menu bar ---------------------------------------------------------------
+# SketchyBar is the status bar on this machine (see .config/sketchybar/), so
+# the system menu bar is a second one stacked above it showing the same clock.
+# Hiding it leaves SketchyBar alone at the top, which is the whole point of
+# running it. The menu bar still slides down when the pointer reaches the top
+# edge, so nothing becomes unreachable.
+write NSGlobalDomain _HIHideMenuBar -bool true
+
 # --- Screenshots ------------------------------------------------------------
 run mkdir -p "$SCREENSHOT_DIR"
 write com.apple.screencapture location -string "$SCREENSHOT_DIR"

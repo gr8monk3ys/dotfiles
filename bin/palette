@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+# palette - Read the colour palette every themed tool in this checkout shares.
+#
+# The palette used to exist as the same six hex literals re-typed in ten
+# files: sketchybar's colors.sh, starship.toml, zellij's config.kdl, yazi's
+# theme.toml, eza's theme.yml, atuin's theme, .zshrc's highlight styles, git's
+# delta colours, bin/lib/ui.sh and a vendored bat .tmTheme. Nothing connected
+# them, so "everything matches" was a claim no command could check.
+#
+# This module owns the data. Formats differ per tool and always will — kdl,
+# toml, yaml, plist, `0xaarrggbb` for sketchybar — so this does not try to
+# generate every config. It gives them one place to read from, and gives the
+# Makefile's stale-ref grep a list of retired hexes to forbid.
+#
+# Usage:
+#   palette list                     # name<TAB>hex<TAB>role
+#   palette names                    # names only
+#   palette get <name> [--format F]  # F: hex (default) | raw | 0x | rgb
+#   palette export [prefix]          # PREFIX_NAME='#hex' shell assignments
+#
+# Formats:
+#   hex   #61afef      most config files
+#   raw   61afef       formats that supply their own prefix
+#   0x    0xff61afef   sketchybar
+#   rgb   97;175;239   EZA_COLORS and other SGR truecolor strings
+#
+# An unknown name is an error, not an empty string: a typo in a theme should
+# fail loudly rather than silently paint something black.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/preamble.sh
+source "$SCRIPT_DIR/lib/preamble.sh"
+
+PALETTE_FILE="${PALETTE_FILE:-$DOTFILES_DIR/.config/palette/danse.conf}"
+readonly PALETTE_FILE
+
+# Strip comments and blanks once; every subcommand reads this.
+rows() {
+    [[ -f "$PALETTE_FILE" ]] || {
+        printf 'palette: no such palette file: %s\n' "$PALETTE_FILE" >&2
+        return 1
+    }
+    grep -vE '^[[:space:]]*(#|$)' "$PALETTE_FILE"
+}
+
+cmd_list() { rows | tr '|' '\t'; }
+
+cmd_names() {
+    local name rest
+    while IFS='|' read -r name rest; do
+        [[ -n "$name" ]] && printf '%s\n' "$name"
+    done < <(rows)
+    return 0
+}
+
+format_hex() {
+    local hex="$1" fmt="$2" bare="${1#\#}"
+    case "$fmt" in
+        hex) printf '%s\n' "$hex" ;;
+        raw) printf '%s\n' "$bare" ;;
+        0x) printf '0xff%s\n' "$bare" ;;
+        rgb) printf '%d;%d;%d\n' "0x${bare:0:2}" "0x${bare:2:2}" "0x${bare:4:2}" ;;
+        *)
+            printf 'palette: unknown format %q (hex|raw|0x|rgb)\n' "$fmt" >&2
+            return 2
+            ;;
+    esac
+}
+
+cmd_get() {
+    local want="${1:-}" fmt=hex name hex rest
+    shift || true
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --format)
+                fmt="${2:-}"
+                shift 2
+                ;;
+            *)
+                printf 'palette: unexpected argument %q\n' "$1" >&2
+                return 2
+                ;;
+        esac
+    done
+
+    [[ -n "$want" ]] || {
+        printf 'palette: get needs a colour name\n' >&2
+        return 2
+    }
+
+    while IFS='|' read -r name hex rest; do
+        if [[ "$name" == "$want" ]]; then
+            format_hex "$hex" "$fmt"
+            return
+        fi
+    done < <(rows)
+
+    printf 'palette: no such colour %q (try: palette names)\n' "$want" >&2
+    return 1
+}
+
+# Shell assignments, for configs that are themselves shell.
+cmd_export() {
+    local prefix="${1:-PALETTE}" name hex rest var
+    while IFS='|' read -r name hex rest; do
+        # Names are kebab-case in the file; shell variables cannot be.
+        var="$(printf '%s' "$name" | tr '[:lower:]-' '[:upper:]_')"
+        printf "%s_%s='%s'\n" "$prefix" "$var" "$hex"
+    done < <(rows)
+    return 0
+}
+
+main() {
+    local cmd="${1:-}"
+    shift || true
+    case "$cmd" in
+        list) cmd_list ;;
+        names) cmd_names ;;
+        get) cmd_get "$@" ;;
+        export) cmd_export "$@" ;;
+        -h | --help | "")
+            sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'
+            [[ -z "$cmd" ]] && return 2
+            return 0
+            ;;
+        *)
+            printf 'palette: unknown command %q (list|names|get|export)\n' "$cmd" >&2
+            return 2
+            ;;
+    esac
+}
+
+main "$@"

@@ -117,7 +117,7 @@ Tests for previously-fixed regressions:
 
 - No GNU-only `find -printf` in shell configs
 - No duplicate core alias declarations
-- Theme consistency (`base16-onedark` / `onedark`)
+- Theme consistency (`danse`, from `.config/palette/`)
 
 ### test_packages.bats
 

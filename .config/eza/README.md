@@ -16,7 +16,7 @@ dotfiles color scheme.
 | Symlinks | Cyan | `#56b6c2` |
 | Modified (Git) | Yellow | `#e5c07b` |
 | New (Git) | Green | `#98c379` |
-| Deleted (Git) | Red | `#e06c75` |
+| Deleted (Git) | Vermilion | `#e06a51` |
 
 ## Usage
 

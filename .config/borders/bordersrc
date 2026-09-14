@@ -1,0 +1,23 @@
+#!/bin/bash
+# JankyBorders - draws the focused-window border macOS does not.
+#
+# Under a tiling window manager the border is how you know where focus is:
+# AeroSpace moves focus without moving the mouse, and macOS gives an unfocused
+# window almost no visual distinction. This is the single clearest signal in
+# the setup, so the active colour is the palette's primary accent.
+#
+# Launched from aerospace.toml's after-startup-command, not as a brew service,
+# so window-manager chrome starts and stops with the window manager.
+#
+# Colours are 0xAARRGGBB and come from .config/palette/danse.conf.
+
+options=(
+    style=round
+    width=5.0
+    hidpi=on
+    active_color=0xff61afef      # blue - focused
+    inactive_color=0xff3e4451 # surface - everything else
+    background_color=0x00000000
+)
+
+borders "${options[@]}"

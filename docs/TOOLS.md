@@ -745,9 +745,16 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 ## Status Bar
 
+### borders
+
+- **Why:** Draws the focused-window border macOS does not. Under AeroSpace, focus moves without the mouse and an unfocused macOS window is barely distinguishable, so this is the clearest focus signal in the setup.
+- **Alternatives:** none on macOS; yabai's built-in borders (needs SIP disabled)
+- **Installed via:** Brewfile
+- **Config:** [`.config/borders/`](../.config/borders/)
+
 ### sketchybar
 
-- **Why:** Customizable status bar showing AeroSpace workspaces; themed with the repo-wide OneDark palette.
+- **Why:** Customizable status bar showing AeroSpace workspaces; themed from the repo-wide palette (`.config/palette/`).
 - **Alternatives:** stock menu bar, übersicht
 - **Installed via:** Brewfile
 - **Config:** [`.config/sketchybar/`](../.config/sketchybar/)

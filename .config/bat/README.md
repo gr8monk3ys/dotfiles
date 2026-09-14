@@ -4,7 +4,7 @@ A `cat` clone with syntax highlighting and Git integration.
 
 ## Theme
 
-Configured to use `base16-onedark`, matching the OneDark color scheme
+Configured to use `danse`, matching the shared danse palette
 used throughout these dotfiles.
 
 ## Features
@@ -18,7 +18,7 @@ used throughout these dotfiles.
 
 The config file at `~/.config/bat/config` sets:
 
-- Theme: base16-onedark
+- Theme: danse
 - Style: numbers, changes, header
 - Tab width: 4 spaces
 - Custom syntax mappings for dotfiles
@@ -39,7 +39,7 @@ bat --plain file.txt
 bat --list-themes
 
 # Use a specific theme
-bat --theme="base16-onedark" file.py
+bat --theme="danse" file.py
 ```
 
 ## Aliases
@@ -73,7 +73,7 @@ bat integrates well with:
 
 ## The theme is vendored
 
-`base16-onedark` is **not** one of bat's built-in themes. `themes/base16-onedark.tmTheme`
+`danse` is **not** one of bat's built-in themes. `themes/danse.tmTheme`
 is vendored here and compiled into bat's cache:
 
 ```bash
@@ -81,7 +81,7 @@ bat cache --build
 ```
 
 Without that step bat silently falls back to its default and prints
-`Unknown theme 'base16-onedark', using default` — which is what it did for as
+`Unknown theme 'danse', using default` — which is what it did for as
 long as this config has existed. `make link` puts the theme in place;
 `bat cache --build` is the part a fresh machine still needs.
 

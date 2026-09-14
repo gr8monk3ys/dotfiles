@@ -7,7 +7,12 @@ default-root-container-orientation = 'auto'
 key-mapping.preset = 'qwerty'
 
 # Launch SketchyBar when AeroSpace starts
-after-startup-command = ['exec-and-forget sketchybar']
+after-startup-command = [
+  'exec-and-forget sketchybar',
+  # Window-manager chrome starts and stops with the window manager, rather
+  # than running as an independent brew service that outlives it.
+  'exec-and-forget $HOME/.config/borders/bordersrc',
+]
 
 # Notify SketchyBar on workspace change
 exec-on-workspace-change = ['/bin/bash', '-c',
@@ -17,13 +22,16 @@ exec-on-workspace-change = ['/bin/bash', '-c',
 # Mouse follows focus when focused monitor changes
 on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
 
+# Gaps are what make a tiled screen read as tiled rather than as maximised
+# windows: without them AeroSpace is invisible and the setup looks like stock
+# macOS. `outer.top` clears SketchyBar (height 37) plus a little air.
 [gaps]
-inner.horizontal = 0
-inner.vertical = 0
-outer.left = 0
-outer.bottom = 0
-outer.top = 0
-outer.right = 0
+inner.horizontal = 8
+inner.vertical = 8
+outer.left = 8
+outer.bottom = 8
+outer.top = 45
+outer.right = 8
 
 # 'main' binding mode declaration, always must be present
 [mode.main.binding]
