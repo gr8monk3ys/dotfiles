@@ -128,3 +128,15 @@ load test_helper/common
     ' _ "$DOTFILES_DIR"
     assert_success
 }
+
+@test "a booted neovim renders the palette's vermilion, not onedark.nvim's red" {
+    # Computed against the palette rather than a literal, so retuning a colour
+    # fails here instead of silently leaving the editor behind. nvim was the
+    # one window where "everything matches" was false: it inherited whatever
+    # navarasu/onedark.nvim shipped while every other tool had moved.
+    command -v nvim > /dev/null || skip "nvim not installed"
+    want="$("$DOTFILES_DIR/bin/palette" get vermilion)"
+    run bash -c 'nvim --headless -c "lua local v = vim.api.nvim_get_hl(0, { name = \"ErrorMsg\", link = false }); io.stderr:write(v.fg and string.format(\"#%06x\", v.fg) or \"none\")" -c qa 2>&1'
+    assert_success
+    assert_output "$want"
+}
