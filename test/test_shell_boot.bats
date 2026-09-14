@@ -93,11 +93,11 @@ teardown() {
     [[ "$output" == *"c="*clear* ]]
 }
 
-@test "shell-boot: BAT_THEME is exported as base16-onedark" {
+@test "shell-boot: BAT_THEME is exported as danse" {
     run --separate-stderr env -u ZDOTDIR -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_CACHE_HOME HOME="$FAKE_HOME" TERM=xterm \
         zsh -ic 'print -r -- $BAT_THEME'
     assert_success
-    assert_output "base16-onedark"
+    assert_output "danse"
 }
 
 @test "shell-boot: starship is registered as the live prompt hook" {
