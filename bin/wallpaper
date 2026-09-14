@@ -20,6 +20,7 @@
 # Usage:
 #   wallpaper                 # build if needed, then set
 #   wallpaper build           # compose and print the path, do not set
+#   wallpaper logo            # crop a square logo for fastfetch, print the path
 #   wallpaper set [PATH]      # set the desktop background
 #   wallpaper current         # print what is currently set
 #   wallpaper --force         # rebuild even if the output already exists
@@ -127,6 +128,39 @@ build() {
     printf '%s\n' "$out"
 }
 
+# A square crop of the painting, for fastfetch's logo. Ghostty speaks the
+# Kitty graphics protocol, so the neofetch slot can hold the actual artwork
+# rather than ASCII approximating it.
+logo() {
+    local force="${1:-}" size="${LOGO_SIZE:-600}"
+    command_exists magick || {
+        print_error "imagemagick is required (brew install imagemagick)" >&2
+        return 1
+    }
+
+    local out="$OUT_DIR/$ART_NAME-logo.png"
+    if [[ -s "$out" && -z "$force" ]]; then
+        printf '%s\n' "$out"
+        return 0
+    fi
+
+    local src
+    src="$(fetch_source)" || return 1
+    mkdir -p "$OUT_DIR"
+
+    # Centre crop to a square before resizing: the painting is landscape and
+    # a squashed logo reads as a mistake rather than a choice.
+    magick "$src" \
+        -shave 2%x2% \
+        -gravity center -crop 1:1 +repage \
+        -resize "${size}x${size}" \
+        -depth 8 \
+        -set comment "$SOURCE_CREDIT" \
+        "$out"
+
+    printf '%s\n' "$out"
+}
+
 set_wallpaper() {
     local path="$1"
     [[ -s "$path" ]] || {
@@ -158,6 +192,7 @@ main() {
 
     case "${1:-}" in
         build) build "$force" ;;
+        logo) logo "$force" ;;
         set) set_wallpaper "${2:-$(build "$force")}" ;;
         current) current ;;
         -h | --help)
@@ -165,7 +200,7 @@ main() {
             ;;
         "") set_wallpaper "$(build "$force")" ;;
         *)
-            print_error "Unknown command '${1}' (build|set|current)" >&2
+            print_error "Unknown command '${1}' (build|logo|set|current)" >&2
             return 2
             ;;
     esac

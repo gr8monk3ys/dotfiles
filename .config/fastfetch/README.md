@@ -1,23 +1,36 @@
-# Fastfetch Configuration
+# fastfetch
 
-System-info splash screen — the actively maintained successor to neofetch.
+System summary. `neofetch`'s replacement, and the thing that ends up in the
+screenshot.
 
-## Why fastfetch
+## The logo is the painting
 
-- **Role:** On-demand system overview (OS, uptime, packages, CPU/GPU/memory)
-  with the distro logo. Purely cosmetic, occasionally useful.
-- **Why not neofetch:** unmaintained since 2024; fastfetch is a faster C
-  rewrite with the same output style.
-- **Not run on shell startup** — it would add noticeable latency to every
-  new terminal. Use the `ff` alias (defined in
-  [`.config/zsh/aliases.zsh`](../zsh/aliases.zsh)) when you want it.
+Ghostty speaks the Kitty graphics protocol, so `logo.type = "kitty-direct"`
+hands it the image file and lets the terminal draw it — no ASCII approximation.
+The crop comes from `bin/wallpaper logo`, built from the same cached scan the
+desktop background uses, so the two cannot disagree.
 
-## Configuration choices
+```bash
+wallpaper logo        # build it; prints the path
+```
 
-- Key colors use blue/magenta to match the repo-wide OneDark accents.
-- Module list is trimmed to the useful subset; the trailing `colors` block
-  doubles as a terminal palette check.
+If the file is missing — a fresh machine where `wallpaper` has not run — the
+logo falls back to the built-in Apple ASCII art silently and fastfetch still
+exits 0. Verified by moving the file away.
 
-## Upstream
+## Colours are named, not hex
 
-- <https://github.com/fastfetch-cli/fastfetch>
+`keys`, `title` and the rest use names (`blue`, `magenta`, `cyan`), which
+resolve through the **terminal's** palette. Ghostty's palette is
+[`.config/palette/danse.conf`](../palette/danse.conf), so fastfetch inherits
+the retune automatically rather than carrying a copy that drifts. This is the
+one themed config here that does not need a generated colour table, and it is
+why there is no fastfetch entry in the generated-theme test.
+
+## Gotchas
+
+- `kitty-direct` renders nothing in a terminal without graphics support; the
+  logo silently becomes ASCII. That includes piping fastfetch's output
+  anywhere, which is expected.
+- The `width`/`height` in the logo block are **cells**, not pixels. Changing
+  the font size changes how large the painting appears.
