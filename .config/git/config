@@ -123,9 +123,9 @@
 	light = false
 	side-by-side = true
 	line-numbers = true
-	# OneDark syntax theme (matches nvim/ghostty)
+	# danse syntax theme, registered with bat (matches nvim/ghostty)
 	syntax-theme = danse
-	# OneDark colors for diff highlighting
+	# danse colors for diff highlighting (.config/palette/danse.conf)
 	plus-style = "syntax #2d3b2d"
 	plus-emph-style = "syntax #98c379"
 	minus-style = "syntax #3b2d2d"

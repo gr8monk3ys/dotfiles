@@ -1,8 +1,8 @@
-# eza OneDark Theme
+# eza danse theme — colours from .config/palette/danse.conf
 # Based on Atom's One Dark color scheme
 # https://github.com/eza-community/eza-themes
 
-# OneDark Color Palette:
+# Palette (see .config/palette/danse.conf):
 # Background:  #282c34
 # Foreground:  #abb2bf
 # Vermilion:   #e06a51

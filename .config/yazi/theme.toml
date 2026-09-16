@@ -1,4 +1,4 @@
-# Yazi Theme Configuration - OneDark
+# Yazi theme — danse palette, from .config/palette/danse.conf
 # https://yazi-rs.github.io/docs/configuration/theme
 # Consistent with Neovim, bat, eza, git-delta, and zellij
 
@@ -36,7 +36,7 @@ border_style  = { fg = "#5c6370" }
 
 # Highlighting
 [mgr.highlighting]
-# File types use OneDark palette
+# File types use the danse palette
 directory = { fg = "#61afef", bold = true }
 symlink   = { fg = "#56b6c2", italic = true }
 orphan    = { fg = "#e06a51", italic = true }

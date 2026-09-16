@@ -115,7 +115,7 @@ concat(
 '''
 
 # ============================================================================
-# Colors (OneDark-inspired, consistent with other tools)
+# Colors — danse palette (.config/palette/danse.conf), consistent with other tools
 # ============================================================================
 [colors]
 # Change IDs
