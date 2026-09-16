@@ -3,7 +3,7 @@
 // Modern terminal multiplexer as tmux alternative
 
 // ============================================================================
-// Theme (OneDark-inspired)
+// Theme — danse palette, from .config/palette/danse.conf
 // ============================================================================
 theme "custom"
 

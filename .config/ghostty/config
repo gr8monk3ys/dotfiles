@@ -20,7 +20,7 @@ font-feature = dlig
 # ============================================================================
 # Theme & Colors
 # ============================================================================
-# OneDark everywhere (matches zsh-syntax-highlighting, fzf, bat, starship)
+# danse everywhere (matches zsh-syntax-highlighting, fzf, bat, starship)
 theme = danse
 
 # Frosted glass effect

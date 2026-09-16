@@ -1,4 +1,4 @@
-# Starship prompt — OneDark, replicating the repo's lean Powerlevel10k
+# Starship prompt — danse palette (.config/palette/), replicating the repo's lean Powerlevel10k
 # layout: `user@host dir git duration` on line 1, `venv ❯` on line 2.
 # Initialised from .config/zsh/.zshrc.
 "$schema" = 'https://starship.rs/config-schema.json'

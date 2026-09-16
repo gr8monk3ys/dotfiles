@@ -2,7 +2,7 @@
 # Location: ~/.config/bat/config
 # Syntax: bat --help
 
-# Use OneDark theme
+# Use the danse theme (themes/danse.tmTheme, from .config/palette/)
 --theme="danse"
 
 # Show line numbers
