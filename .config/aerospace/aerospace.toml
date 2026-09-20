@@ -1,3 +1,19 @@
+# config-version 2 changes exactly one thing that matters here: the fallback
+# for `persistent-workspaces` became an empty array. Under version 1 it was
+# inferred from the right-hand side of the keybindings, so every workspace
+# named in a binding survived being empty. Under 2 an undeclared workspace
+# disappears the moment its last window closes — which would take the
+# SketchyBar indicators for 1-9 with it, since items/spaces.sh draws one per
+# workspace. So the list below is not boilerplate; it is what keeps the bar
+# honest.
+config-version = 2
+persistent-workspaces = [
+  "1", "2", "3", "4", "5", "6", "7", "8", "9",
+  "F", # finder
+  "K", # keepass
+  "P", # pdf
+]
+
 start-at-login = true
 enable-normalization-flatten-containers = true
 enable-normalization-opposite-orientation-for-nested-containers = true

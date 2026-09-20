@@ -9,7 +9,19 @@ return {
 		lazy = false,
 		priority = 1000,
 		config = function()
-			require("onedark").setup({ style = "dark" })
+			-- onedark.nvim's "dark" style already is this checkout's ground and
+			-- accents, with two exceptions: the red and orange were retuned to
+			-- Matisse vermilion and terracotta everywhere else. Override exactly
+			-- those two, read from the shared palette, so the editor stops being
+			-- the one window where "everything matches" is false.
+			local palette = require("palette").load()
+			require("onedark").setup({
+				style = "dark",
+				colors = {
+					red = palette.vermilion,
+					orange = palette.terracotta,
+				},
+			})
 			require("onedark").load()
 		end,
 	},

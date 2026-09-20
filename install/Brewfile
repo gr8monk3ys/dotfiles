@@ -136,6 +136,7 @@ brew "zoxide"                          # Smart cd replacement (frecency-based)
 brew "git-delta"                       # Beautiful git diffs with syntax highlighting
 brew "dust"                            # Modern du replacement (disk usage)
 brew "bottom"                          # Modern htop replacement (btm)
+brew "btop"                            # Resource monitor with a themed TUI
 brew "procs"                           # Modern ps replacement
 brew "sd"                              # Modern sed replacement
 brew "hyperfine"                       # Command-line benchmarking tool
@@ -279,3 +280,8 @@ brew "FelixKratz/formulae/borders"     # Focused-window borders for the tiling W
 # AI & Machine Learning
 # ============================================================================
 brew "ollama"                          # Local LLM runner
+
+# ============================================================================
+# Media
+# ============================================================================
+brew "cava"                            # Console audio visualiser

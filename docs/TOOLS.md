@@ -371,6 +371,13 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 - **Alternatives:** du, ncdu, gdu
 - **Installed via:** Brewfile, pacmanfile
 
+### btop
+
+- **Why:** Interactive resource monitor. Themed from `.config/palette/`, with a transparent background so it inherits Ghostty's blur rather than punching an opaque rectangle through it.
+- **Alternatives:** bottom (kept, non-interactive use), htop, top
+- **Installed via:** Brewfile
+- **Config:** [`.config/btop/`](../.config/btop/)
+
 ### bottom
 
 - **Why:** Graphical process/system monitor (btm); top is not shadowed.
@@ -758,6 +765,15 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 - **Alternatives:** stock menu bar, übersicht
 - **Installed via:** Brewfile
 - **Config:** [`.config/sketchybar/`](../.config/sketchybar/)
+
+## Media
+
+### cava
+
+- **Why:** Console audio visualiser, themed with the palette's eight-stop gradient. Pure rice — it does no work. On macOS it captures an input device, so it hears the microphone until a BlackHole loopback is set up; see the config README.
+- **Alternatives:** glava (Linux only), projectM
+- **Installed via:** Brewfile
+- **Config:** [`.config/cava/`](../.config/cava/)
 
 ## AI & Machine Learning
 
