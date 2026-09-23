@@ -118,7 +118,7 @@ rules = [
     { name = "tests",         text = "", fg = "#c678dd" },
 
     # Common files
-    { name = "Makefile",      text = "", fg = "#6d8086" },
+    { name = "Makefile",      text = "", fg = "#5c6370" },
     { name = "Dockerfile",    text = "󰡨", fg = "#61afef" },
     { name = ".dockerignore", text = "󰡨", fg = "#5c6370" },
     { name = ".gitignore",    text = "", fg = "#e06a51" },
