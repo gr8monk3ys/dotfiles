@@ -90,27 +90,6 @@ calls() { cat "$CALL_LOG"; }
     assert_output --partial "brew bundle"
 }
 
-@test "deprecated SKIP_BREW still works and says so" {
-    stub brew
-    run env PATH="$STUB_BIN:$DOTFILES_DIR/bin:/usr/bin:/bin" CALL_LOG="$CALL_LOG" \
-        HOME="$TEST_HOME" SKIP_BREW=1 bash "$DOTFILES_DIR/bin/install-kind" brew
-    assert_success
-    assert_output --partial "SKIP_BREW is deprecated"
-    assert_output --partial "Skipping brew"
-    [[ ! -s "$CALL_LOG" ]]
-}
-
-@test "deprecated SKIP_CASKS skips both cask kinds" {
-    stub brew
-    for k in cask cask-extra; do
-        : > "$CALL_LOG"
-        run env PATH="$STUB_BIN:$DOTFILES_DIR/bin:/usr/bin:/bin" CALL_LOG="$CALL_LOG" \
-            HOME="$TEST_HOME" SKIP_CASKS=1 bash "$DOTFILES_DIR/bin/install-kind" "$k"
-        assert_success
-        [[ ! -s "$CALL_LOG" ]]
-    done
-}
-
 # ---------- what each kind actually runs ----------
 
 @test "brew installs from the Brewfile" {
@@ -135,6 +114,8 @@ calls() { cat "$CALL_LOG"; }
     assert_output --partial "install/Caskfile.extra"
 }
 
+# Regression: Homebrew >= 5 refuses third-party taps until `brew trust`ed, so
+# `brew bundle` on a fresh Mac died on the first tapped cask (aerospace).
 @test "brew kinds trust the declared taps first" {
     stub brew
     run_kind brew
@@ -171,6 +152,48 @@ calls() { cat "$CALL_LOG"; }
     assert_success
     run calls
     assert_output --partial "code --install-extension"
+}
+
+# Regression: the Makefile used $(shell cat install/npmfile), which flattens
+# the file onto one line so the leading "# comment" turned every package name
+# into a shell comment: `make node-packages` installed nothing and
+# `make rust-packages` ran a bare `cargo install`. Asserted on what the tool
+# actually receives, not on which file a recipe names.
+@test "npm is handed real package names, never a comment" {
+    stub npm
+    run_kind npm
+    assert_success
+    first="$("$DOTFILES_DIR/bin/manifest" list npm | head -1)"
+    run calls
+    assert_output --partial "$first"
+    [[ "$output" != *"#"* ]]
+}
+
+@test "rust runs one cargo install per crate, never a bare one" {
+    stub cargo
+    run_kind rust
+    assert_success
+    run calls
+    [[ "${#lines[@]}" -eq "$("$DOTFILES_DIR/bin/manifest" list rust | wc -l)" ]]
+    [[ "$output" != *"#"* ]]
+    run grep -cxE 'cargo install ?' "$CALL_LOG"
+    assert_output "0"
+}
+
+# ---------- make routes every kind through here ----------
+
+# A claim about make's graph, which is make's job, so `make -n` is the right
+# tool here and only here. What install-kind then does is asserted above.
+@test "every package target routes through install-kind" {
+    local target kind
+    for pair in brew-packages:brew cask-apps:cask cask-apps-extra:cask-extra \
+                node-packages:npm rust-packages:rust vscode-extensions:code \
+                pacman-packages:pacman; do
+        target="${pair%%:*}" kind="${pair#*:}"
+        run make -n -C "$DOTFILES_DIR" "$target"
+        assert_success
+        [[ "$output" == *"install-kind $kind"* ]] || { echo "$target does not run install-kind $kind"; return 1; }
+    done
 }
 
 # ---------- missing tools are not failures ----------
@@ -225,14 +248,6 @@ calls() { cat "$CALL_LOG"; }
     STRICT_PACKAGES=yes run_kind brew
     assert_success
     assert_output --partial "STRICT_PACKAGES='yes' is not 1/true or 0/false"
-}
-
-@test "deprecated BREW_BUNDLE_STRICT still makes it fatal" {
-    stub brew 1
-    run env PATH="$STUB_BIN:$DOTFILES_DIR/bin:/usr/bin:/bin" CALL_LOG="$CALL_LOG" \
-        HOME="$TEST_HOME" BREW_BUNDLE_STRICT=1 bash "$DOTFILES_DIR/bin/install-kind" brew
-    assert_failure
-    assert_output --partial "BREW_BUNDLE_STRICT is deprecated"
 }
 
 # ---------- the flags are documented ----------

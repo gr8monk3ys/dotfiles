@@ -208,37 +208,6 @@ EOS
 	[[ "$output" != *"Oh My Zsh"* ]]
 }
 
-# Regression: Makefile used $(shell cat install/npmfile), which flattens the
-# file onto one line so the leading "# comment" turned every package name
-# into a shell comment. `make node-packages` installed nothing and
-# `make rust-packages` ran a bare `cargo install`.
-#
-# The package list now comes from bin/manifest, so these assert the outcome
-# (real names, no comment leaking in) rather than which file the recipe names.
-@test "make node-packages expands real package names, not a comment" {
-    run make -n node-packages SKIP_BREW=1
-    assert_success
-    [[ "$output" != *"global # npm"* ]]
-
-    run bin/manifest list npm
-    assert_success
-    [[ "${#lines[@]}" -gt 0 ]]
-    run bash -c 'bin/manifest list npm | grep -c "^#"'
-    assert_output "0"
-}
-
-@test "make rust-packages does not run a bare cargo install" {
-    run make -n rust-packages SKIP_BREW=1
-    assert_success
-    [[ "$output" != *"cargo install # Rust"* ]]
-
-    run bin/manifest list rust
-    assert_success
-    [[ "${#lines[@]}" -gt 0 ]]
-    run bash -c 'bin/manifest list rust | grep -c "^#"'
-    assert_output "0"
-}
-
 # Regression: install.sh cased on `bin/platform detect` and called make
 # macos/arch/link itself, duplicating the Makefile's own OS dispatch. The two
 # disagreed: platform detect can return "unknown", and make had no target for
@@ -256,22 +225,6 @@ EOS
 	# Comments are exempt: the deletion is explained in one.
 	run bash -c 'grep -vE "^[[:space:]]*#" install.sh | grep -nE "make (macos|arch|link)\b"'
 	assert_failure
-}
-
-# Regression: Homebrew >= 5 refuses third-party taps until `brew trust`ed,
-# so `brew bundle` on a fresh Mac died on the first tapped cask (aerospace).
-#
-# Trusting taps moved inside bin/install-kind, where it is asserted by running
-# the real thing against stub binaries ("brew kinds trust the declared taps
-# first", test_install_kind.bats). What stays here is the make-level claim:
-# the brew kinds are still routed through install-kind at all.
-@test "brew and cask targets route through install-kind" {
-	run make -n brew-packages
-	assert_success
-	[[ "$output" == *"install-kind brew"* ]]
-	run make -n cask-apps
-	assert_success
-	[[ "$output" == *"install-kind cask"* ]]
 }
 
 # Public-readiness: tracked config must carry no personal identity or hosts.
