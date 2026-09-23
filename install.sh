@@ -11,17 +11,21 @@
 set -euo pipefail
 
 # ============================================================================
-# OneDark Theme Colors
+# Colours - the danse palette. This runs before the checkout exists (curl |
+# bash), so it cannot read .config/palette at runtime; the values are
+# rendered in by bin/palette instead, and palette check keeps them current.
 # ============================================================================
-readonly BLACK='\033[38;2;40;44;52m'      # #282c34
-readonly RED='\033[38;2;224;108;117m'     # #e06c75
-readonly GREEN='\033[38;2;152;195;121m'   # #98c379
-readonly YELLOW='\033[38;2;229;192;123m'  # #e5c07b
-readonly BLUE='\033[38;2;97;175;239m'     # #61afef
-readonly MAGENTA='\033[38;2;198;120;221m' # #c678dd
-readonly CYAN='\033[38;2;86;182;194m'     # #56b6c2
-readonly WHITE='\033[38;2;171;178;191m'   # #abb2bf
-readonly ORANGE='\033[38;2;209;154;102m'  # #d19a66
+# palette:begin - rendered from .config/palette/templates/install.sh; edit it there, then run bin/palette render
+readonly BLACK='\033[38;2;40;44;52m'
+readonly RED='\033[38;2;224;106;81m'
+readonly GREEN='\033[38;2;152;195;121m'
+readonly YELLOW='\033[38;2;229;192;123m'
+readonly BLUE='\033[38;2;97;175;239m'
+readonly MAGENTA='\033[38;2;198;120;221m'
+readonly CYAN='\033[38;2;86;182;194m'
+readonly WHITE='\033[38;2;171;178;191m'
+readonly ORANGE='\033[38;2;217;140;92m'
+# palette:end
 readonly NC='\033[0m'                      # No Color
 readonly BOLD='\033[1m'
 readonly DIM='\033[2m'
