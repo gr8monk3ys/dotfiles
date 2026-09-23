@@ -2,23 +2,40 @@
 # manifest - The single reader of install/ package manifests.
 #
 # Every consumer that needs to know "what packages does this system install"
-# asks here: the Makefile installer targets, bin/validate-tool-docs,
-# bin/check-alias-references and test/test_packages.bats. Before this module
+# asks here: the installer (bin/install-kind), bin/dotfiles-why,
+# bin/dotfiles-doctor, bin/check-alias-references and the tests. Before this module
 # existed those were five separate parsers that disagreed with each other
 # about tap-qualified names and which manifests to read.
 #
 # Usage:
-#   manifest list <kind>   One normalized package name per line
-#   manifest kinds         The kind vocabulary, one per line
-#   manifest taps          Homebrew tap names declared in the Brewfile
+#   manifest list <kind>          One normalized package name per line
+#   manifest entries [kind]       kind<TAB>name<TAB>command<TAB>tier<TAB>rationale
+#   manifest describe <name|cmd>  The entries whose package or command matches
+#   manifest tier <tier>          Commands in one doctor tier, first-seen order
+#   manifest kinds                The kind vocabulary, one per line
+#   manifest tiers                The tier vocabulary, one per line
+#   manifest taps                 Homebrew tap names declared in the Brewfile
+#
+# Each entry carries its own documentation on its line (install/README.md
+# § Entry format):
+#
+#   brew "ripgrep"    # cmd=rg tier=essential Fast recursive grep ...
+#   jujutsu           # cmd=jj Arch's name for Homebrew's jj
+#
+# Leading `key=value` tokens in the comment are metadata, the rest is the
+# rationale. `cmd` is the command the package puts on PATH when that differs
+# from its name (`entries` reports the name otherwise); `tier` is the
+# dotfiles-doctor severity tier. An unknown key or tier is a parse error like
+# any other. A missing rationale is not — installing must never depend on
+# documentation — but test_manifest.bats fails on one.
 #
 # Parsing rules:
 #   - Blank lines and # comments are skipped everywhere.
-#   - Brewfile/Caskfile entries are `brew "name"` / `cask "name"`; a trailing
-#     comment is allowed. Tap-qualified names are reduced to the last segment
+#   - Brewfile/Caskfile entries are `brew "name"` / `cask "name"`, then any
+#     brew-bundle arguments, then the comment. Tap-qualified names are reduced to the last segment
 #     ("oven-sh/bun/bun" -> "bun"), because that is the name that lands on PATH.
-#   - npmfile/Rustfile/pacmanfile/Codefile hold one bare name per line, each
-#     validated against that ecosystem's own name grammar (npm scopes, cargo
+#   - npmfile/Rustfile/pacmanfile/Codefile hold one bare name per line, with
+#     an optional trailing comment, each validated against that ecosystem's own name grammar (npm scopes, cargo
 #     crate names, pacman names, publisher.extension ids).
 #   - A line that matches none of the above is an error, not something to
 #     skip: silently dropping unparseable lines is how the previous five
@@ -35,6 +52,11 @@ readonly INSTALL_DIR="$DOTFILES_DIR/install"
 
 # kind -> filename
 readonly KINDS="brew cask cask-extra npm rust pacman code"
+
+# dotfiles-doctor's severity tiers, most to least important. The vocabulary
+# lives here because the parser rejects a tier outside it; which commands sit
+# in which tier is editorial, and lives on the manifest lines.
+readonly TIERS="core essential next-gen additional"
 
 # Per-kind name grammar. These were seven hand-rolled regexes in
 # test/test_packages.bats; they live here so the rule that parses a manifest
@@ -63,77 +85,153 @@ kind_file() {
     esac
 }
 
+# Parse one entry's comment into ENTRY_CMD, ENTRY_TIER and ENTRY_WHY. Leading
+# `key=value` tokens are metadata; everything after them is the rationale.
+_parse_comment() {
+    local where="$1" rest="$2" key value
+    ENTRY_CMD="" ENTRY_TIER="" ENTRY_WHY=""
+    rest="${rest#"${rest%%[![:space:]]*}"}"
+    while [[ "$rest" =~ ^([a-z]+)=([^[:space:]]*)(.*)$ ]]; do
+        key="${BASH_REMATCH[1]}" value="${BASH_REMATCH[2]}" rest="${BASH_REMATCH[3]}"
+        rest="${rest#"${rest%%[![:space:]]*}"}"
+        case "$key" in
+            cmd)
+                if [[ -n "$ENTRY_CMD" || ! "$value" =~ ^[A-Za-z0-9._+-]+$ ]]; then
+                    echo "$where: invalid or repeated cmd=$value" >&2
+                    return 1
+                fi
+                ENTRY_CMD="$value"
+                ;;
+            tier)
+                if [[ -n "$ENTRY_TIER" || " $TIERS " != *" $value "* ]]; then
+                    echo "$where: invalid or repeated tier=$value (one of: $TIERS)" >&2
+                    return 1
+                fi
+                ENTRY_TIER="$value"
+                ;;
+            *)
+                echo "$where: unknown metadata key '$key' (known: cmd, tier)" >&2
+                return 1
+                ;;
+        esac
+    done
+    ENTRY_WHY="${rest%"${rest##*[![:space:]]}"}"
+}
+
+# _parse <kind> — one `name<TAB>command<TAB>tier<TAB>rationale` row per entry.
+#
 # Ruby-DSL manifests: `brew "name"` or `cask "name"`, optional trailing args
-# and comment. Emits the last path segment of the name.
-_list_dsl() {
-    local file="$1" keyword="$2" pattern="$3" lineno=0 line name status=0
+# and comment; the name is reduced to its last path segment. Bare manifests:
+# one name per line, optional comment.
+_parse() {
+    local kind="$1" file keyword="" pattern lineno=0 line name comment status=0
+    file="$(kind_file "$kind")"
+    pattern="$(kind_pattern "$kind")"
+    case "$kind" in
+        brew) keyword=brew ;;
+        cask | cask-extra) keyword=cask ;;
+    esac
+
     while IFS= read -r line || [[ -n "$line" ]]; do
         lineno=$((lineno + 1))
         [[ -z "${line//[[:space:]]/}" || "$line" =~ ^[[:space:]]*# ]] && continue
-        if [[ "$line" =~ ^[[:space:]]*${keyword}[[:space:]]+\"([^\"]+)\" ]]; then
-            name="${BASH_REMATCH[1]}"
-            name="${name##*/}"
-            if [[ ! "$name" =~ $pattern ]]; then
-                echo "$file:$lineno: invalid package name: $name" >&2
+        if [[ -n "$keyword" ]]; then
+            if [[ "$line" =~ ^[[:space:]]*${keyword}[[:space:]]+\"([^\"]+)\"[^#]*(#(.*))?$ ]]; then
+                name="${BASH_REMATCH[1]##*/}"
+                comment="${BASH_REMATCH[3]}"
+            elif [[ "$line" =~ ^[[:space:]]*tap[[:space:]]+\" ]]; then
+                # Taps live in the Brewfile but are not packages; `manifest
+                # taps` reads them instead.
+                continue
+            else
+                echo "$file:$lineno: not a '$keyword' entry: $line" >&2
                 status=1
                 continue
             fi
-            echo "$name"
-        elif [[ "$line" =~ ^[[:space:]]*tap[[:space:]]+\" ]]; then
-            # Taps live in the Brewfile but are not packages; `manifest taps`
-            # reads them instead.
-            continue
+        elif [[ "$line" =~ ^[[:space:]]*([^[:space:]#]+)[[:space:]]*(#(.*))?$ ]]; then
+            name="${BASH_REMATCH[1]}"
+            comment="${BASH_REMATCH[3]}"
         else
-            echo "$file:$lineno: not a '$keyword' entry: $line" >&2
-            status=1
-        fi
-    done < "$INSTALL_DIR/$file"
-    return "$status"
-}
-
-# Bare-name manifests: one package per line.
-_list_bare() {
-    local file="$1" pattern="$2" lineno=0 line name status=0
-    while IFS= read -r line || [[ -n "$line" ]]; do
-        lineno=$((lineno + 1))
-        [[ -z "${line//[[:space:]]/}" || "$line" =~ ^[[:space:]]*# ]] && continue
-        if [[ ! "$line" =~ ^[[:space:]]*([^[:space:]]+)[[:space:]]*$ ]]; then
             echo "$file:$lineno: not a bare package name: $line" >&2
             status=1
             continue
         fi
-        name="${BASH_REMATCH[1]}"
+
         if [[ ! "$name" =~ $pattern ]]; then
             echo "$file:$lineno: invalid package name: $name" >&2
             status=1
             continue
         fi
-        echo "$name"
+        if ! _parse_comment "$file:$lineno" "$comment"; then
+            status=1
+            continue
+        fi
+        printf '%s\t%s\t%s\t%s\n' "$name" "${ENTRY_CMD:-$name}" "$ENTRY_TIER" "$ENTRY_WHY"
     done < "$INSTALL_DIR/$file"
     return "$status"
 }
 
-cmd_list() {
-    local kind="${1:-}" file pattern
+# Resolve and check a kind argument; prints nothing on success.
+_check_kind() {
+    local cmd="$1" kind="$2" file
     if [[ -z "$kind" ]]; then
-        echo "manifest list: kind required (one of: $KINDS)" >&2
+        echo "manifest $cmd: kind required (one of: $KINDS)" >&2
         return 2
     fi
     if ! file="$(kind_file "$kind")"; then
-        echo "manifest list: unknown kind '$kind' (one of: $KINDS)" >&2
+        echo "manifest $cmd: unknown kind '$kind' (one of: $KINDS)" >&2
         return 2
     fi
     if [[ ! -f "$INSTALL_DIR/$file" ]]; then
-        echo "manifest list: missing manifest $INSTALL_DIR/$file" >&2
+        echo "manifest $cmd: missing manifest $INSTALL_DIR/$file" >&2
         return 1
     fi
+}
 
-    pattern="$(kind_pattern "$kind")"
-    case "$kind" in
-        brew) _list_dsl "$file" brew "$pattern" ;;
-        cask | cask-extra) _list_dsl "$file" cask "$pattern" ;;
-        *) _list_bare "$file" "$pattern" ;;
-    esac
+cmd_list() {
+    local kind="${1:-}" rows status=0
+    _check_kind list "$kind" || return
+    rows="$(_parse "$kind")" || status=$?
+    [[ -z "$rows" ]] || printf '%s\n' "$rows" | cut -f1
+    return "$status"
+}
+
+# entries [kind] — every kind when none is given.
+cmd_entries() {
+    local kinds="${1:-$KINDS}" kind rows status=0
+    for kind in $kinds; do
+        _check_kind entries "$kind" || return
+        rows="$(_parse "$kind")" || status=1
+        [[ -z "$rows" ]] || printf '%s\n' "$rows" | sed "s/^/$kind$(printf '\t')/"
+    done
+    return "$status"
+}
+
+cmd_describe() {
+    local query="${1:-}" rows
+    if [[ -z "$query" ]]; then
+        echo "manifest describe: package or command name required" >&2
+        return 2
+    fi
+    rows="$(cmd_entries)" || return
+    printf '%s\n' "$rows" | awk -F'\t' -v q="$query" '
+        $2 == q || $3 == q { print; found = 1 }
+        END { exit !found }'
+}
+
+cmd_tier() {
+    local tier="${1:-}" rows
+    if [[ " $TIERS " != *" $tier "* ]]; then
+        echo "manifest tier: unknown tier '$tier' (one of: $TIERS)" >&2
+        return 2
+    fi
+    rows="$(cmd_entries)" || return
+    printf '%s\n' "$rows" | awk -F'\t' -v t="$tier" '$4 == t && !seen[$3]++ { print $3 }'
+}
+
+cmd_tiers() {
+    local tier
+    for tier in $TIERS; do echo "$tier"; done
 }
 
 cmd_kinds() {
@@ -156,12 +254,19 @@ show_help() {
 manifest - read the install/ package manifests
 
 Usage:
-  manifest list <kind>   One normalized package name per line
-  manifest kinds         The kind vocabulary, one per line
-  manifest taps          Homebrew tap names declared in the Brewfile
+  manifest list <kind>          One normalized package name per line
+  manifest entries [kind]       kind<TAB>name<TAB>command<TAB>tier<TAB>rationale
+  manifest describe <name|cmd>  The entries whose package or command matches
+  manifest tier <tier>          Commands in one doctor tier
+  manifest kinds                The kind vocabulary, one per line
+  manifest tiers                The tier vocabulary, one per line
+  manifest taps                 Homebrew tap names declared in the Brewfile
 
 Kinds:
   $KINDS
+
+Tiers:
+  $TIERS
 
 Exits non-zero if a manifest contains a line it cannot parse.
 EOF
@@ -172,7 +277,11 @@ main() {
     shift || true
     case "$cmd" in
         list) cmd_list "$@" ;;
+        entries) cmd_entries "$@" ;;
+        describe) cmd_describe "$@" ;;
+        tier) cmd_tier "$@" ;;
         kinds) cmd_kinds ;;
+        tiers) cmd_tiers ;;
         taps) cmd_taps ;;
         help | --help | -h) show_help ;;
         *)
