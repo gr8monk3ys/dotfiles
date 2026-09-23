@@ -106,8 +106,8 @@ export FZF_DEFAULT_OPTS="
 
 # Prompt: starship (install/Brewfile). Until it is installed, a plain
 # two-line prompt so the shell is still usable.
+# STARSHIP_CONFIG is exported from .zshenv.
 if command -v starship &> /dev/null; then
-  export STARSHIP_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/starship/starship.toml"
   eval "$(starship init zsh)"
 else
   PROMPT='%F{blue}%~%f'$'\n''%F{green}❯%f '

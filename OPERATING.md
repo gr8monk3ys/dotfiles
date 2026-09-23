@@ -78,7 +78,7 @@ make link
 Or `stow --adopt` then `git checkout -- .config` to discard the adopted copies.
 `~/.config/git/config` (Omarchy's) does not collide: this repo ships `git/ignore` and a
 `config.local.example`, not `git/config`. Starship: Omarchy writes `~/.config/starship.toml`;
-`.zshrc` sets `STARSHIP_CONFIG` to `~/.config/starship/starship.toml`, so zsh uses ours.
+`.zshenv` sets `STARSHIP_CONFIG` to `~/.config/starship/starship.toml`, so zsh uses ours.
 
 **Shell.** Omarchy's login shell is bash and its boot chain (SDDM session script,
 `~/.bashrc` → `~/.local/share/omarchy/default/bash/rc`, the `omarchy-*` helpers)
