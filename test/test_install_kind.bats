@@ -87,14 +87,38 @@ calls() { cat "$CALL_LOG"; }
     assert_output --partial "SKIP_KINDS"
 }
 
-@test "every kind bin/manifest knows is accepted by install-kind" {
-    run bash -c '
-        set -euo pipefail
-        for k in $("$1/bin/manifest" kinds); do
-            grep -q "        $k)" "$1/bin/install-kind" || { echo "no case arm for kind: $k"; exit 1; }
+# Every verb must answer for every kind bin/manifest knows. Run for real
+# with every tool stubbed, so a kind with no function for a verb fails here
+# rather than on the first machine that asks.
+@test "every verb answers for every kind bin/manifest knows" {
+    for t in brew npm cargo cargo-install-update rustup code codium; do stub "$t"; done
+    stub_pacman
+    stub_sudo_as_uid 1000
+    local verb kind
+    for verb in install update; do
+        for kind in $("$DOTFILES_DIR/bin/manifest" kinds); do
+            run_kind "$verb" "$kind"
+            [[ "$status" -eq 0 ]] || { echo "$verb $kind exited $status: $output"; return 1; }
         done
-    ' _ "$DOTFILES_DIR"
+    done
+}
+
+@test "install is the default verb" {
+    stub brew
+    run_kind install brew
     assert_success
+    run calls
+    local explicit="$output"
+    : > "$CALL_LOG"
+    run_kind brew
+    run calls
+    [[ "$output" == "$explicit" ]]
+}
+
+@test "a verb with no kind fails" {
+    run_kind update
+    assert_failure
+    assert_output --partial "missing <kind>"
 }
 
 # ---------- skip policy ----------
@@ -245,6 +269,98 @@ calls() { cat "$CALL_LOG"; }
         assert_success
         [[ "$output" == *"install-kind $kind"* ]] || { echo "$target does not run install-kind $kind"; return 1; }
     done
+}
+
+# ---------- update ----------
+
+@test "update brew refreshes Homebrew, upgrades formulae, then cleans up" {
+    stub brew
+    run_kind update brew
+    assert_success
+    run calls
+    assert_output "brew update
+brew upgrade --formula
+brew cleanup"
+}
+
+@test "update cask upgrades casks greedily; cask-extra adds nothing" {
+    stub brew
+    run_kind update cask
+    assert_success
+    run calls
+    assert_output "brew upgrade --cask --greedy"
+
+    : > "$CALL_LOG"
+    run_kind update cask-extra
+    assert_success
+    assert_output --partial "upgraded with cask"
+    [[ ! -s "$CALL_LOG" ]]
+}
+
+# Regression (was in test_regressions.bats against dotfiles-update): npm
+# outdated exits 1 exactly when there is work to do, which under set -e used
+# to abort the update. Strict, so errexit is live inside the step.
+@test "update npm survives outdated packages under set -e" {
+    cat > "$STUB_BIN/npm" <<'STUB'
+#!/usr/bin/env bash
+printf 'npm %s\n' "$*" >> "$CALL_LOG"
+case "${1:-}" in
+    outdated) printf 'Package Current Wanted\nfoo 1.0.0 2.0.0\n'; exit 1 ;;
+esac
+exit 0
+STUB
+    chmod +x "$STUB_BIN/npm"
+    STRICT_PACKAGES=1 run_kind update npm
+    assert_success
+    assert_output --partial "npm packages updated"
+    run calls
+    assert_output --partial "npm update -g"
+}
+
+@test "update rust installs cargo-update when missing, then upgrades crates" {
+    stub cargo
+    stub rustup
+    run_kind update rust
+    assert_success
+    run calls
+    assert_output "rustup update
+cargo install cargo-update
+cargo install-update -a"
+}
+
+@test "update pacman upgrades the system through sudo when not root" {
+    stub_pacman
+    stub_sudo_as_uid 1000
+    run_kind update pacman
+    assert_success
+    run calls
+    assert_output --partial "sudo pacman -Syu --noconfirm"
+}
+
+@test "update code updates the preferred editor's extensions" {
+    stub codium
+    stub code
+    run_kind update code
+    assert_success
+    run calls
+    assert_output "codium --update-extensions"
+}
+
+@test "SKIP_KINDS applies to update too" {
+    stub brew
+    SKIP_KINDS="brew" run_kind update brew
+    assert_success
+    assert_output --partial "Skipping brew"
+    [[ ! -s "$CALL_LOG" ]]
+}
+
+@test "a failing update is tolerated by default and fatal under STRICT_PACKAGES" {
+    stub brew 1
+    run_kind update brew
+    assert_success
+    assert_output --partial "Continuing after failure"
+    STRICT_PACKAGES=1 run_kind update brew
+    assert_failure
 }
 
 # ---------- missing tools are not failures ----------

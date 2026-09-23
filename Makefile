@@ -58,8 +58,9 @@ core-macos: brew git
 # pacman on PATH (bin/pacman, now gone); install-kind does the same in bash.
 AS_ROOT := $(if $(filter 0,$(shell id -u)),,sudo)
 
+# The system upgrade is the pacman kind's update, so SKIP_KINDS=pacman skips it.
 core-arch:
-	$(AS_ROOT) pacman -Syu --noconfirm
+	@$(DOTFILES_DIR)/bin/install-kind update pacman
 
 # Only stow, never a system upgrade: `link` depends on this, and it used to
 # depend on core-arch, so refreshing symlinks on Arch ran `pacman -Syu`.
