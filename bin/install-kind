@@ -104,9 +104,9 @@ cargo_path() {
     export PATH="$HOME/.cargo/bin:$rustup_prefix/bin:$PATH"
 }
 
-# Two adapters, one interface. Prefers codium, matching what the Makefile
-# did; dotfiles-backup captures both because a backup has no reason to
-# choose, but an installer does.
+# Two adapters, one interface. Install and update prefer codium, matching
+# what the Makefile did; record_code captures both, because a record has no
+# reason to choose, but an installer does.
 EDITOR_CMD=""
 pick_editor() {
     if command_exists codium; then
