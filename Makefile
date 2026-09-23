@@ -441,7 +441,6 @@ brew-update:
 brew-cleanup:
 	@echo "Cleaning up Homebrew..."
 	@brew cleanup
-	@brew bundle cleanup --force
 	@echo "✓ Homebrew cleanup complete"
 
 ## Dry-run: Show what symlinks would be created without making changes
