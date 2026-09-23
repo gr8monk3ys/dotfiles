@@ -37,9 +37,8 @@ into `~/.config/`; `make` drives install, link and verification.
   `test/allowlist/system-tools.txt` — `check-alias-references` fails otherwise.
 - Portable shell only in anything sourced on macOS (no GNU-only flags).
 - Conventional commits; one change per commit; update `docs/TOOLS.md` in the
-  same commit that adds or removes a package. If that package provides a
-  command `dotfiles-doctor` probes, `make verify-doctor-tools` will tell you
-  what else to update.
+  same commit that adds or removes a package. Whether `dotfiles-doctor` probes
+  it is `tier=` on its manifest line (`install/README.md` § Entry format).
 - Manifests under `install/` are read only through `bin/manifest`, never
   parsed inline.
 
