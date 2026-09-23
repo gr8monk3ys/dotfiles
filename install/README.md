@@ -2,6 +2,39 @@
 
 This directory contains package lists for various package managers, making it easy to install all necessary tools and applications on a new system.
 
+## Entry format
+
+Every package entry documents itself on its own line: why it is here, and —
+where it matters — what command it provides and how much `dotfiles-doctor`
+cares about it. The line is the only place that rationale lives, so it cannot
+drift from the entry it describes.
+
+```text
+brew "ripgrep"                         # cmd=rg tier=essential Fast recursive grep ...
+cask "ghostty"                         # Primary terminal: ...
+jujutsu                                # cmd=jj Jujutsu VCS. Arch's name for Homebrew's `jj`.
+```
+
+The comment after `#` is zero or more `key=value` metadata tokens, then the
+rationale (the rest of the line). Keys:
+
+| Key | Value | Meaning |
+| --- | --- | --- |
+| `cmd` | a command name | The command the package puts on PATH, when it differs from the package name (`ripgrep` installs `rg`). |
+| `tier` | `core`, `essential`, `next-gen`, `additional` | `dotfiles-doctor` probes the command, at that severity. Absent: doctor does not probe it. |
+
+An unknown key, a tier outside that list, or a repeated key makes the line
+unparseable, and `bin/manifest` fails on it like any other malformed entry. A
+missing rationale does not stop an install, but `test/test_manifest.bats`
+fails on it: every package needs one on at least one of its lines. When the
+same package name is in two manifests (usually the Brewfile and the
+pacmanfile), the rationale and metadata go on one line — the Brewfile's, by
+convention — and the other stays bare.
+
+Read it with `dotfiles-why <package-or-command>`, or `bin/manifest describe`.
+Keep a rationale to one line; a note that needs paragraphs belongs in the
+tool's `.config/<app>/README.md`.
+
 ## Files Overview
 
 ### [Brewfile](Brewfile)
@@ -135,29 +168,33 @@ brew bundle --file=install/Caskfile.extra
 
 ```bash
 # Install global npm packages
-cat install/npmfile | xargs npm install -g
+bin/manifest list npm | xargs npm install -g
 
 # Or with pnpm
-cat install/npmfile | xargs pnpm add -g
+bin/manifest list npm | xargs pnpm add -g
 ```
 
 ### Installing Rust Packages
 
 ```bash
 # Install cargo packages
-cat install/Rustfile | xargs -n1 cargo install
+bin/manifest list rust | xargs -n1 cargo install
 ```
 
 ### Installing Arch Linux Packages
 
 ```bash
 # Install pacman packages
-cat install/pacmanfile | xargs sudo pacman -S --needed
+bin/manifest list pacman | xargs sudo pacman -S --needed
 ```
 
 ## Maintenance
 
 ### Updating Package Lists
+
+To see what is installed but not listed, dump to a scratch file and compare —
+never over the manifest itself: a dump carries no rationales, and overwriting
+would erase every one of them.
 
 To update these files with currently installed packages:
 
@@ -192,22 +229,22 @@ pacman -Qqe > install/pacmanfile
 ### To add a new Homebrew formula
 
 1. Install it: `brew install <package>`
-2. Add to Brewfile: `echo 'brew "<package>"' >> install/Brewfile`
+2. Add to Brewfile with its rationale: `brew "<package>"  # <why it is here>`
 
 ### To add a new Homebrew cask
 
 1. Install it: `brew install --cask <cask>`
-2. Add to Caskfile (day-one) or Caskfile.extra (optional): `echo 'cask "<cask>"' >> install/Caskfile.extra`
+2. Add to Caskfile (day-one) or Caskfile.extra (optional) with its rationale: `cask "<cask>"  # <why>`
 
 ### To add a new npm package
 
 1. Install it: `npm install -g <package>`
-2. Add to npmfile: `echo '<package>' >> install/npmfile`
+2. Add to npmfile with its rationale: `<package>  # <why>`
 
 ### To add a new Rust package
 
 1. Install it: `cargo install <package>`
-2. Add to Rustfile: `echo '<package>' >> install/Rustfile`
+2. Add to Rustfile with its rationale: `<package>  # <why>`
 
 ## Platform-Specific Notes
 

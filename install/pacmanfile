@@ -6,8 +6,10 @@
 # One bare lowercase package name per line. Every name here was checked with
 # `pacman -Si` inside test/Dockerfile.arch: all of them resolve in the
 # official core/extra repos, because `pacman -S` cannot reach the AUR.
-# Anything Arch ships only in the AUR is listed in docs/TOOLS.md under
-# "Not installed by manifests" instead of here.
+# Anything Arch ships only in the AUR is not listed here at all.
+#
+# A package also listed in another manifest carries its rationale there
+# (install/README.md § Entry format); only Arch-only names carry one here.
 #
 # Arch names differ from Homebrew's. The renames are deliberate:
 #   gh -> github-cli    jj -> jujutsu        node -> nodejs
@@ -20,12 +22,12 @@
 # ============================================================================
 # Core System Dependencies
 # ============================================================================
-base-devel
+base-devel                             # Arch meta-package: compilers and build tooling required for AUR builds.
 ca-certificates
 dbus
 gnupg
-openssh
-curl
+openssh                                # SSH client the `.config/ssh/` config is written for. macOS ships it; Arch does not install it by default.
+curl                                   # HTTP client used by `install.sh` and assorted scripts. macOS ships it; Arch's `base` does not, so it is explicit here.
 wget
 
 # ============================================================================
@@ -33,17 +35,17 @@ wget
 # The repo is built around zsh; without these `make arch` leaves a machine
 # with no login shell config, no prompt and no symlink farm.
 # ============================================================================
-zsh
+zsh                                    # Login shell; config split across `.zshenv` / `.config/zsh/`. macOS ships it, so only Arch lists it.
 zsh-syntax-highlighting
-bash-completion
+bash-completion                        # Completions for bash sessions on Arch boxes.
 starship
-stow
+stow                                   # GNU Stow creates the symlink farm for all configs. `make link` bootstraps it on macOS; listed here so `make arch` installs it outright.
 
 # ============================================================================
 # Graphics & UI Libraries
 # ============================================================================
-freetype2
-glib2
+freetype2                              # Font rendering. Arch's name for Homebrew's `freetype`.
+glib2                                  # Core GLib library. Arch's name for Homebrew's `glib`.
 harfbuzz
 librsvg
 adwaita-icon-theme
@@ -61,16 +63,16 @@ zellij
 # Text Editors
 # ============================================================================
 neovim
-nano
+nano                                   # Tiny fallback editor for root/rescue shells where nvim isn't set up.
 
 # ============================================================================
 # Version Control & Git Tools
 # ============================================================================
-git
+git                                    # Core VCS; jj wraps it locally, delta/difftastic provide the diff UX. macOS gets it from the Xcode CLT, so only Arch lists it.
 git-delta
-jujutsu
+jujutsu                                # cmd=jj Jujutsu VCS. Arch's name for Homebrew's `jj`; the binary is still `jj`.
 lazygit
-github-cli
+github-cli                             # cmd=gh GitHub from the terminal. Arch's name for Homebrew's `gh`.
 difftastic
 
 # ============================================================================
@@ -78,7 +80,7 @@ difftastic
 # ============================================================================
 bear
 meson
-onetbb
+onetbb                                 # Threading Building Blocks. Arch's current name for Homebrew's `tbb` (plain `tbb` no longer resolves).
 shellcheck
 
 # ============================================================================
@@ -92,17 +94,17 @@ typescript
 # ============================================================================
 # Programming Languages & Runtimes
 # ============================================================================
-nodejs
+nodejs                                 # cmd=node Node.js runtime. Arch's name for Homebrew's `node`; `npm` is a separate package on Arch.
 npm
 deno
 bun
-python
-python-poetry
-python-pipx
+python                                 # Arch ships one current CPython rather than Homebrew's versioned `python@3.12` / `python@3.13` formulae; mise handles per-project versions on both platforms.
+python-poetry                          # cmd=poetry Python dependency management. Arch's name for Homebrew's `poetry`.
+python-pipx                            # cmd=pipx Isolated installs of Python applications. Arch's name for Homebrew's `pipx`.
 uv
 uvicorn
 ghc
-stack
+stack                                  # Haskell build tool. Arch's name for Homebrew's `haskell-stack`.
 ruby
 r
 zig
@@ -177,8 +179,8 @@ mise
 # The Linux branch of the pbcopy/pbpaste aliases in .config/zsh/aliases.zsh:
 # wl-copy under Wayland (Omarchy/Hyprland), xclip under X11.
 # ============================================================================
-wl-clipboard
-xclip
+wl-clipboard                           # Provides `wl-copy`/`wl-paste`, the Wayland branch of the `pbcopy`/`pbpaste` aliases in `.config/zsh/aliases.zsh`. This is the clipboard that matters on Omarchy (Hyprland). Alternatives: xclip (X11, also installed).
+xclip                                  # X11 clipboard, the fallback branch of the same `pbcopy`/`pbpaste` aliases when the session is not Wayland. Alternatives: xsel, wl-clipboard (Wayland, also installed).
 
 # ============================================================================
 # File Transfer & Download
@@ -199,8 +201,8 @@ imagemagick
 mupdf
 zathura
 zathura-pdf-mupdf
-pandoc-cli
-python-sphinx
+pandoc-cli                             # cmd=pandoc Document converter. Arch splits the Haskell library from the executable and ships the binary as `pandoc-cli`; plain `pandoc` is not an installable package.
+python-sphinx                          # cmd=sphinx-build Documentation generator. Arch's name for Homebrew's `sphinx-doc`.
 typst
 typstyle
 
@@ -217,7 +219,7 @@ neomutt
 msmtp
 isync
 himalaya
-newsboat
+newsboat                               # Terminal RSS reader. Installed on Arch only: no macOS manifest installs it — add it to the Brewfile or drop the config.
 
 # ============================================================================
 # Security & Privacy
@@ -227,16 +229,16 @@ pass
 # ============================================================================
 # Music & Media
 # ============================================================================
-mpd
-spotify-player
+mpd                                    # Music Player Daemon. Installed on Arch only: no macOS manifest installs it — add it to the Brewfile or drop the config.
+spotify-player                         # cmd=spotify_player Spotify TUI. Arch spells it with a hyphen where Homebrew uses `spotify_player`.
 
 # ============================================================================
 # Productivity & Utilities
 # ============================================================================
-timew
+timew                                  # Time tracking. Arch's name for Homebrew's `timewarrior`.
 sl
-inetutils
+inetutils                              # cmd=telnet Provides `telnet` (and friends) on Arch, where Homebrew ships a standalone `telnet` formula.
 xh
-typos
+typos                                  # Source spell checker. Arch's name for Homebrew's `typos-cli`.
 biome
 ollama

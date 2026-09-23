@@ -55,9 +55,9 @@ difference, so it stays an implementation detail rather than interface.
 
 The directory list is **derived** from what the checkout ships, not curated —
 `stow` links all of `.config/`, so there is no editorial judgement to
-preserve. This is the opposite of the tool lists in **command vs package**,
-where the severity tiers are a real editorial choice and the validator checks
-a curated list instead of replacing it.
+preserve. This is the opposite of the tool tiers in **command vs package**,
+where the severity tiers are a real editorial choice, recorded per package
+rather than derived.
 
 ## Link
 
@@ -162,8 +162,12 @@ manifest: it lists file associations, not packages.
 
 A manifest **kind** is the abstract name for one of them (`brew`, `cask`,
 `cask-extra`, `npm`, `rust`, `pacman`, `code`); callers ask for a kind, not a
-path. `docs/TOOLS.md` carries one rationale entry per manifest entry, and
-`bin/validate-tool-docs` fails when the two disagree in either direction.
+path. Each entry carries its own rationale, and optionally `cmd=` and `tier=`
+metadata, in the comment on its line (install/README.md § Entry format);
+`bin/manifest` parses it, `dotfiles-why` shows it, and `test_packages.bats`
+fails on a package with no rationale. There is no separate catalog to keep in
+step: the one that existed (`docs/TOOLS.md`) had rotted in prose while its
+headings still matched.
 
 A kind answers three verbs, all in `bin/install-kind`: **install** from its
 manifest, **update** everything its tool manages (not only manifest entries),
@@ -177,8 +181,8 @@ cask". Boolean knobs share one truthiness rule, `knob_on` in
 `bin/lib/preamble.sh`: `1`/`true` is on; unset, `0` and `false` are off.
 
 Which kinds a caller cares about is that caller's policy, not the module's:
-`validate-tool-docs` excludes `font-*` casks (its Fonts section covers them),
-`check-alias-references` reads only the kinds that put a command on PATH.
+`check-alias-references` reads only the kinds that put a command on PATH, and
+`dotfiles-doctor` only the entries that carry a `tier=`.
 
 ## Snapshot
 
@@ -212,15 +216,18 @@ because it is `npm list` tree output, not the bare-name format of
 ## Command vs package
 
 A **package** is what a manifest installs (`ripgrep`); a **command** is what
-lands on PATH (`rg`). They usually match and sometimes do not, so
-`dotfiles-doctor` — which probes commands — cannot read its tool lists
-straight from the manifests. `test/allowlist/command-packages.txt` records
-the cases where they differ, plus the commands no manifest tracks (`zsh`,
-`stow`), and `bin/validate-doctor-tools` fails when the two drift apart.
+lands on PATH (`rg`). They usually match and sometimes do not, so the manifest
+line says so: `cmd=rg` on the entry (install/README.md § Entry format), and
+`bin/manifest entries` reports the package name as the command otherwise.
+`dotfiles-doctor` probes commands, and `dotfiles-why rg` finds ripgrep, both by
+reading that.
 
 Doctor's severity tiers (core / essential / next-gen / additional) stay a
-curated editorial judgement: the manifests say what is installed, not what
-matters.
+curated editorial judgement — the manifests say what is installed, not what
+matters — but the judgement is recorded where the package is: `tier=` on its
+manifest line. Removing a package removes its probe. The only commands doctor
+names itself are the core ones no macOS manifest installs (`git`, `zsh`,
+`stow`): macOS ships the first two and `make link` bootstraps the third.
 
 ## Firefox profile state
 

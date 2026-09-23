@@ -118,7 +118,7 @@ manifest() {
 }
 
 @test "DOTFILES_DIR redirects the module at another root" {
-    # validate-tool-docs relies on this to run against fixture roots.
+    # The tests below rely on this to run against fixture roots.
     echo 'brew "fixture-only-tool"' >> "$FIXTURE/install/Brewfile"
     manifest list brew
     assert_success
@@ -127,4 +127,82 @@ manifest() {
     run bin/manifest list brew
     assert_success
     [[ "$output" != *"fixture-only-tool"* ]]
+}
+
+# ---------- the entry line: rationale and metadata ----------
+
+@test "a bare manifest accepts a trailing comment" {
+    echo 'fixture-crate   # why it is here' >> "$FIXTURE/install/Rustfile"
+    manifest list rust
+    assert_success
+    assert_output --partial "fixture-crate"
+    [[ "$output" != *"why"* ]]
+}
+
+@test "entries splits metadata from the rationale" {
+    echo 'brew "fixture-grep"   # cmd=fg tier=essential Greps fixtures, fast.' >> "$FIXTURE/install/Brewfile"
+    manifest entries brew
+    assert_success
+    assert_output --partial "$(printf 'brew\tfixture-grep\tfg\tessential\tGreps fixtures, fast.')"
+}
+
+@test "entries reports the package name as the command when cmd= is absent" {
+    echo 'fixture-crate  # Plain rationale.' >> "$FIXTURE/install/Rustfile"
+    manifest entries rust
+    assert_success
+    assert_output --partial "$(printf 'rust\tfixture-crate\tfixture-crate\t\tPlain rationale.')"
+}
+
+@test "brew-bundle arguments before the comment are not rationale" {
+    echo 'brew "fixture-svc", restart_service: :changed  # Runs a service.' >> "$FIXTURE/install/Brewfile"
+    manifest entries brew
+    assert_success
+    assert_output --partial "$(printf 'fixture-svc\tfixture-svc\t\tRuns a service.')"
+}
+
+@test "an unknown metadata key is a parse error naming file and line" {
+    echo 'fixture-crate  # colour=red Rationale.' >> "$FIXTURE/install/Rustfile"
+    manifest list rust
+    assert_failure
+    assert_output --partial "Rustfile:"
+    assert_output --partial "unknown metadata key 'colour'"
+}
+
+@test "a tier outside the vocabulary is a parse error" {
+    echo 'brew "fixture-tool"  # tier=vital Rationale.' >> "$FIXTURE/install/Brewfile"
+    manifest list brew
+    assert_failure
+    assert_output --partial "tier=vital"
+}
+
+@test "a repeated metadata key is a parse error" {
+    echo 'brew "fixture-tool"  # cmd=a cmd=b Rationale.' >> "$FIXTURE/install/Brewfile"
+    manifest list brew
+    assert_failure
+    assert_output --partial "cmd=b"
+}
+
+@test "describe finds an entry by its command as well as its name" {
+    echo 'brew "fixture-grep"  # cmd=fg Greps fixtures.' >> "$FIXTURE/install/Brewfile"
+    manifest describe fg
+    assert_success
+    assert_output --partial "fixture-grep"
+    manifest describe fixture-grep
+    assert_success
+    assert_output --partial "Greps fixtures."
+}
+
+@test "describe fails when nothing matches" {
+    manifest describe no-such-package-anywhere
+    assert_failure
+}
+
+@test "tier lists commands, once each, and rejects an unknown tier" {
+    echo 'brew "fixture-grep"  # cmd=fg tier=additional Greps.' >> "$FIXTURE/install/Brewfile"
+    echo 'fixture-grep  # cmd=fg tier=additional Greps on Arch.' >> "$FIXTURE/install/pacmanfile"
+    manifest tier additional
+    assert_success
+    [[ "$(printf '%s\n' "$output" | grep -cx fg)" -eq 1 ]]
+    manifest tier vital
+    assert_failure
 }

@@ -36,15 +36,24 @@ PLATFORM="$SCRIPT_DIR/platform"
 PLATFORM_OS="$("$PLATFORM" detect)"
 readonly PLATFORM PLATFORM_OS
 
-# The commands this health check probes, by severity. These are *command*
-# names, not package names: `rg` ships in the `ripgrep` package. The mapping
-# and the exemptions live in test/allowlist/command-packages.txt, and
-# bin/validate-doctor-tools fails when these lists and the install manifests
-# drift apart in either direction.
-readonly DOCTOR_CORE_TOOLS=("git" "zsh" "nvim" "stow")
-readonly DOCTOR_ESSENTIAL_TOOLS=("eza" "bat" "fd" "rg" "zoxide" "fzf")
-readonly DOCTOR_NEXTGEN_TOOLS=("yazi" "zellij" "jj" "delta" "atuin")
-readonly DOCTOR_ADDITIONAL_TOOLS=("navi" "broot" "tldr" "gping" "ouch")
+# The commands this health check probes come from the `tier=` metadata on the
+# manifest lines (install/README.md § Entry format), with `cmd=` naming the
+# command where it differs from the package (`ripgrep` installs `rg`). A
+# package removed from the manifests stops being probed with it; nothing has
+# to be kept in step by hand.
+#
+# Read from the manifests shipped beside this script, not DOTFILES_DIR's: the
+# tiers are this doctor's policy, and DOTFILES_DIR may be a fixture.
+#
+# The exception is core commands no macOS manifest installs, because macOS
+# ships git and zsh and `make link` bootstraps stow. The pacmanfile lists all
+# three for Arch, but a tier has to hold on every platform, so they are named
+# here instead.
+readonly DOCTOR_UNMANIFESTED_CORE=("git" "zsh" "stow")
+
+tier_commands() {
+    env DOTFILES_DIR="$SCRIPT_DIR/.." "$SCRIPT_DIR/manifest" tier "$1"
+}
 
 # --- the state table ---------------------------------------------------------
 #
@@ -292,19 +301,24 @@ classify_managers() {
     fi
 }
 
+# The tier lists are read before probing, so an unreadable manifest fails the
+# classifier (reported as an issue) rather than yielding an empty section.
 classify_core_tools() {
-    local tool
-    for tool in "${DOCTOR_CORE_TOOLS[@]}"; do
+    local tools tool
+    tools="$(tier_commands core)" || return
+    for tool in "${DOCTOR_UNMANIFESTED_CORE[@]}" $tools; do
         probe_tool "$tool" missing "not installed (core)"
     done
 }
 
 classify_modern_tools() {
-    local tool
-    for tool in "${DOCTOR_ESSENTIAL_TOOLS[@]}"; do
+    local essential optional tool
+    essential="$(tier_commands essential)" || return
+    optional="$(tier_commands next-gen && tier_commands additional)" || return
+    for tool in $essential; do
         probe_tool "$tool" missing "not installed (recommended)"
     done
-    for tool in "${DOCTOR_NEXTGEN_TOOLS[@]}" "${DOCTOR_ADDITIONAL_TOOLS[@]}"; do
+    for tool in $optional; do
         probe_tool "$tool" optional "not installed (optional)"
     done
 }
@@ -387,13 +401,13 @@ print_summary() {
     echo ""
 }
 
-# Every probed command, one per line. Consumed by bin/validate-doctor-tools.
+# Every probed tool command, one per line, most important first.
 list_checked_tools() {
-    printf '%s\n' \
-        "${DOCTOR_CORE_TOOLS[@]}" \
-        "${DOCTOR_ESSENTIAL_TOOLS[@]}" \
-        "${DOCTOR_NEXTGEN_TOOLS[@]}" \
-        "${DOCTOR_ADDITIONAL_TOOLS[@]}"
+    local tier
+    printf '%s\n' "${DOCTOR_UNMANIFESTED_CORE[@]}"
+    for tier in core essential next-gen additional; do
+        tier_commands "$tier"
+    done
 }
 
 # The state table as `vocabulary<TAB>state<TAB>severity` rows, so tests can
