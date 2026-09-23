@@ -57,3 +57,23 @@ load 'test_helper/common'
 		assert_success
 	done
 }
+
+# Regression: make help advertised `daily` as running shell checks it no
+# longer ran, and omitted a dozen real targets. Both directions are checked:
+# every target help names exists, and every .PHONY target is either named in
+# help or listed here as internal plumbing.
+@test "make help names every public target and only real ones" {
+	local internal=" all core-macos core-arch packages-macos packages-arch"
+	internal+=" stow-macos stow-arch stow-linux linux unknown brew git help "
+	run make -s -C "$DOTFILES_DIR" help
+	assert_success
+	local help="$output" t status=0
+	for t in $(printf '%s\n' "$help" | grep -oE '(make |\| )[a-z][a-z-]*' | awk '{print $2}' | sort -u); do
+		grep -qE "^$t:" "$DOTFILES_DIR/Makefile" || { echo "help names a missing target: $t"; status=1; }
+	done
+	for t in $(sed -n '/^\.PHONY:/,/^$/p' "$DOTFILES_DIR/Makefile" | tr -d '\\' | tr ' ' '\n' | grep -E '^[a-z]'); do
+		[[ "$internal" == *" $t "* ]] && continue
+		printf '%s\n' "$help" | grep -qwE -- "$t" || { echo "public target missing from help: $t"; status=1; }
+	done
+	return $status
+}
