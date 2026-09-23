@@ -7,6 +7,7 @@
 // ============================================================================
 theme "custom"
 
+// palette:begin - rendered from .config/palette/templates/.config/zellij/config.kdl; edit it there, then run bin/palette render
 themes {
     custom {
         fg "#abb2bf"
@@ -22,6 +23,7 @@ themes {
         orange "#d98c5c"
     }
 }
+// palette:end
 
 // ============================================================================
 // UI Settings

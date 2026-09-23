@@ -138,8 +138,12 @@ link-url = true
 background-opacity-cells = true
 
 # Chrome, from .config/palette/danse.conf.
+# palette:begin - rendered from .config/palette/templates/.config/ghostty/config; edit it there, then run bin/palette render
 unfocused-split-fill = #21252b
 split-divider-color = #2b4468
+macos-icon-ghost-color = #61afef
+macos-icon-screen-color = #282c34
+# palette:end
 
 # The titlebar is hidden rather than the decoration removed: AeroSpace tiles
 # these windows so the titlebar is dead space, but keeping the decoration
@@ -153,7 +157,5 @@ quick-terminal-position = top
 quick-terminal-animation-duration = 0.15
 keybind = global:ctrl+grave_accent=toggle_quick_terminal
 
-# The Dock icon matches the palette too.
+# The Dock icon matches the palette too (its colours are with the chrome above).
 macos-icon = glass
-macos-icon-ghost-color = #61afef
-macos-icon-screen-color = #282c34

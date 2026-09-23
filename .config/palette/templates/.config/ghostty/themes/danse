@@ -8,26 +8,26 @@
 # Rendered by bin/palette from .config/palette/templates/.config/ghostty/themes/danse.
 # Edit the template, then run `palette render`; `palette check` fails on hand edits.
 
-palette = 0=#21252b
-palette = 1=#e06a51
-palette = 2=#98c379
-palette = 3=#e5c07b
-palette = 4=#61afef
-palette = 5=#c678dd
-palette = 6=#56b6c2
-palette = 7=#abb2bf
-palette = 8=#5c6370
-palette = 9=#e06a51
-palette = 10=#98c379
-palette = 11=#e5c07b
-palette = 12=#61afef
-palette = 13=#c678dd
-palette = 14=#56b6c2
-palette = 15=#abb2bf
+palette = 0={{bg-dark}}
+palette = 1={{vermilion}}
+palette = 2={{green}}
+palette = 3={{yellow}}
+palette = 4={{blue}}
+palette = 5={{magenta}}
+palette = 6={{cyan}}
+palette = 7={{fg}}
+palette = 8={{comment}}
+palette = 9={{vermilion}}
+palette = 10={{green}}
+palette = 11={{yellow}}
+palette = 12={{blue}}
+palette = 13={{magenta}}
+palette = 14={{cyan}}
+palette = 15={{fg}}
 
-background = #21252b
-foreground = #abb2bf
-cursor-color = #61afef
-cursor-text = #21252b
-selection-background = #3e4451
-selection-foreground = #abb2bf
+background = {{bg-dark}}
+foreground = {{fg}}
+cursor-color = {{blue}}
+cursor-text = {{bg-dark}}
+selection-background = {{surface}}
+selection-foreground = {{fg}}

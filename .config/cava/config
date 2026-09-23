@@ -33,6 +33,7 @@ background = default
 foreground = default
 gradient = 1
 gradient_count = 8
+# palette:begin - rendered from .config/palette/templates/.config/cava/config; edit it there, then run bin/palette render
 gradient_color_1 = '#2b4468'
 gradient_color_2 = '#61afef'
 gradient_color_3 = '#56b6c2'
@@ -41,3 +42,4 @@ gradient_color_5 = '#98c379'
 gradient_color_6 = '#e5c07b'
 gradient_color_7 = '#d98c5c'
 gradient_color_8 = '#e06a51'
+# palette:end
