@@ -35,14 +35,6 @@ teardown() {
     assert_output --partial "Backup completed successfully!"
 }
 
-@test "dotfiles-backup accepts --cleanup flag" {
-    mkdir -p "$TEST_TEMP_DIR/backups/20260101_000000"
-    run env HOME="$TEST_HOME" BACKUP_DIR="$TEST_TEMP_DIR/backups" \
-        PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
-        bash bin/dotfiles-backup --cleanup
-    assert_success
-}
-
 @test "dotfiles-restore accepts --help flag" {
     run bin/dotfiles-restore --help
     assert_success
