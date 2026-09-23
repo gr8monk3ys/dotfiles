@@ -3,6 +3,10 @@
 # Initialised from .config/zsh/.zshrc.
 "$schema" = 'https://starship.rs/config-schema.json'
 
+# Colour names below are the [palettes.danse] table at the end of this file,
+# which is rendered from the palette; styles name roles, never hexes.
+palette = 'danse'
+
 # Blank line between prompts, like POWERLEVEL9K_PROMPT_ADD_NEWLINE.
 add_newline = true
 
@@ -12,43 +16,55 @@ $python$character"""
 
 # user@host only over SSH or as root, matching p10k's lean context segment.
 [username]
-format = '[$user]($style)[@](fg:#5c6370)'
-style_user = '#e5c07b'
-style_root = 'bold #e06a51'
+format = '[$user]($style)[@](fg:comment)'
+style_user = 'yellow'
+style_root = 'bold vermilion'
 
 [hostname]
 ssh_only = true
 format = '[$hostname]($style) '
-style = '#e5c07b'
+style = 'yellow'
 
 [directory]
-style = '#61afef'
+style = 'blue'
 truncation_length = 4
 truncate_to_repo = false
 
 [git_branch]
 format = '[$branch]($style) '
-style = '#98c379'
+style = 'green'
 
 [git_status]
 format = '([$all_status$ahead_behind]($style) )'
-style = '#e5c07b'
+style = 'yellow'
 
 # Show duration of commands slower than 3s (p10k's default threshold).
 [cmd_duration]
 min_time = 3000
 format = '[$duration]($style) '
-style = '#d98c5c'
+style = 'terracotta'
 
 # Active virtualenv only (no interpreter version noise), like p10k's
 # virtualenv segment on line 2.
 [python]
 format = '[(\($virtualenv\) )]($style)'
-style = '#56b6c2'
+style = 'cyan'
 detect_extensions = []
 detect_files = []
 detect_folders = []
 
 [character]
-success_symbol = '[❯](#c678dd)'
-error_symbol = '[❯](#e06a51)'
+success_symbol = '[❯](magenta)'
+error_symbol = '[❯](vermilion)'
+
+# palette:begin - rendered from .config/palette/templates/.config/starship/starship.toml; edit it there, then run bin/palette render
+[palettes.danse]
+comment = '#5c6370'
+yellow = '#e5c07b'
+vermilion = '#e06a51'
+blue = '#61afef'
+green = '#98c379'
+terracotta = '#d98c5c'
+cyan = '#56b6c2'
+magenta = '#c678dd'
+# palette:end
