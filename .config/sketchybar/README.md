@@ -19,7 +19,7 @@ Floating macOS status bar with AeroSpace workspace integration.
 ```
 sketchybar/
 ├── sketchybarrc          # Main config — bar appearance, loads items
-├── colors.sh             # OneDark color palette
+├── colors.sh             # role names -> palette colours (rendered by bin/palette)
 ├── icons.sh              # Nerd Font icon constants
 ├── items/
 │   ├── apple.sh          # Apple logo popup menu
