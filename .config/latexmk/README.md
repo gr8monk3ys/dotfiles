@@ -1,98 +1,25 @@
-# Latexmk Configuration
+# latexmk
 
-This directory contains the configuration for [Latexmk](https://www.cantab.net/users/johncollins/latexmk/), a Perl script for automating LaTeX document compilation.
+Build defaults for [latexmk](https://ctan.org/pkg/latexmk), which reruns
+LaTeX, BibTeX and friends until a document settles. latexmk reads
+`$XDG_CONFIG_HOME/latexmk/latexmkrc` itself; a `latexmkrc` in a project
+directory overrides it.
 
-## Files
+## Why these choices
 
-- `latexmkrc` - Configuration file for Latexmk automation
+- **XeLaTeX** (`$pdf_mode = 5`): system fonts and UTF-8 input without
+  `fontenc`/`inputenc` boilerplate.
+- **Everything generated goes to `out/`** (`$out_dir`), so a document
+  directory holds only sources. The PDF is in `out/` too.
+- **`$bibtex_use = 1.5`:** run BibTeX only when the `.bib` files exist, and
+  let `latexmk -c` delete the `.bbl` only then, so a `.bbl` shipped without
+  its `.bib` (arXiv sources) survives a clean.
+- **SyncTeX on**, and its files counted as generated so `latexmk -c` removes
+  them. They let a viewer jump between source line and page
+  (`zathura --synctex-forward`).
+- **`$silent = 1`:** errors still print; the page of TeX chatter does not.
 
-## What is Latexmk?
+## Gotchas
 
-Latexmk is a build automation tool for LaTeX documents that:
-- Automatically runs LaTeX the correct number of times
-- Handles bibliography generation (BibTeX/Biber)
-- Manages index generation
-- Runs auxiliary tools as needed
-- Provides continuous preview mode
-- Cleans up auxiliary files
-
-## Configuration Overview
-
-The `latexmkrc` file uses Perl syntax to configure Latexmk's behavior.
-
-### Common Settings
-
-Typical configurations include:
-
-#### Output Format
-```perl
-$pdf_mode = 1;          # Generate PDF via pdflatex
-$pdf_mode = 4;          # Generate PDF via lualatex
-$pdf_mode = 5;          # Generate PDF via xelatex
-```
-
-#### PDF Viewer
-```perl
-$pdf_previewer = 'open';              # macOS
-$pdf_previewer = 'zathura';           # Linux
-$pdf_previewer = 'start';             # Windows
-```
-
-#### Continuous Preview
-```perl
-$preview_continuous_mode = 1;  # Enable auto-recompilation
-```
-
-#### Build Directory
-```perl
-$out_dir = 'build';            # Output directory for auxiliary files
-```
-
-#### Custom Commands
-- Define custom compilation sequences
-- Set environment variables
-- Configure tool-specific options
-
-## Usage
-
-Latexmk reads configuration from multiple locations in order:
-1. System-wide: `/etc/latexmkrc` or similar
-2. User-level: `~/.config/latexmk/latexmkrc` or `~/.latexmkrc`
-3. Project-level: `./latexmkrc` in the document directory
-
-### Basic Commands
-
-```bash
-# Compile document
-latexmk document.tex
-
-# Continuous preview mode (auto-recompile on changes)
-latexmk -pvc document.tex
-
-# Clean auxiliary files
-latexmk -c document.tex
-
-# Clean all generated files (including PDF)
-latexmk -C document.tex
-```
-
-## Benefits
-
-1. **Automation**: No need to manually run LaTeX multiple times
-2. **Dependency Tracking**: Automatically detects when to rebuild
-3. **Continuous Preview**: Live document updates while editing
-4. **Cleanup**: Easy removal of auxiliary files
-5. **Flexibility**: Supports multiple LaTeX engines and workflows
-
-## Integration
-
-Latexmk integrates well with:
-- **Text Editors**: Vim, Emacs, VS Code (with LaTeX Workshop)
-- **Build Systems**: Make, custom scripts
-- **PDF Viewers**: Zathura, Skim, Okular for forward/inverse search
-
-## Resources
-
-- [Latexmk Documentation](https://www.cantab.net/users/johncollins/latexmk/)
-- [Latexmk Manual](https://ctan.org/pkg/latexmk)
-- [LaTeX Project](https://www.latex-project.org/)
+- No manifest installs latexmk or a TeX distribution; this config waits for
+  one (MacTeX, or `texlive` on Arch).
