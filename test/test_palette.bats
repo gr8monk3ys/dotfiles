@@ -210,7 +210,7 @@ STUB
     # rest of the tree, where a new theme could type a colour straight in and
     # nothing would notice: every colour literal must be inside rendered
     # output (a whole rendered file, or the inside of a palette region).
-    # Exempt: the palette itself, prose, tests, and cava's vendored assets.
+    # Exempt: the palette itself, prose and tests.
     git -C "$DOTFILES_DIR" rev-parse --git-dir > /dev/null 2>&1 || skip "not a git checkout"
     run bash -c '
         set -euo pipefail
@@ -219,7 +219,7 @@ STUB
         status=0
         while IFS= read -r f; do
             case "$f" in
-                .config/palette/*|bin/palette|*.md|test/*|.config/cava/shaders/*|.config/cava/themes/*) continue ;;
+                .config/palette/*|bin/palette|*.md|test/*) continue ;;
             esac
             [[ -f "$f" ]] || continue
             if [[ -f ".config/palette/templates/$f" ]]; then
