@@ -256,15 +256,17 @@ make verify-tool-docs
 
 ### [dotfiles-why](dotfiles-why)
 
-Explains why a tool is part of these dotfiles, backed by
-[docs/TOOLS.md](../docs/TOOLS.md).
+Explains why a tool is part of these dotfiles, from the rationale on its
+manifest line ([install/README.md](../install/README.md) § Entry format), read
+through `manifest describe`.
 
 **Usage:**
 
 ```bash
 dotfiles-why                # fzf browser with entry preview
-dotfiles-why ripgrep        # print one tool's entry
-dotfiles-why --list         # list all documented tools
+dotfiles-why ripgrep        # print one package's rationale
+dotfiles-why rg             # the same, found by the command it provides
+dotfiles-why --list         # list every package
 ```
 
 ### [lib/ui.sh](lib/ui.sh)
