@@ -20,11 +20,11 @@ into `~/.config/`; `make` drives install, link and verification.
 - `.config/<app>/` — one dir per tool, each with a README. `.zshenv` at the root
   is the only file linked into `$HOME` directly.
 - `bin/` — `dotfiles-doctor/update/backup/restore/sync/why`, `platform`, and the
-  validators `validate-doc-links`, `validate-tool-docs`, `check-alias-references`.
+  validators `validate-doc-links`, `check-alias-references`; `manifest` reads `install/`.
 - `install/` — manifests: `Brewfile`, `Caskfile[.extra]`, `npmfile`, `Rustfile`,
-  `pacmanfile`, `Codefile`, `duti`.
-- `docs/TOOLS.md` — one rationale entry per package; `validate-tool-docs` fails
-  when a manifest and the catalog disagree in either direction.
+  `pacmanfile`, `Codefile`, `duti`. Each entry's rationale (and doctor tier) is
+  the comment on its line — `install/README.md` § Entry format; `dotfiles-why`
+  reads it.
 - `test/` — BATS (`test_*.bats`, helpers in `test_helper/`).
 - `OPERATING.md` — the runbook (install paths, profiles, troubleshooting, conventions).
 
@@ -36,9 +36,9 @@ into `~/.config/`; `make` drives install, link and verification.
 - Every unconditional alias must resolve to a manifest entry, builtin, or
   `test/allowlist/system-tools.txt` — `check-alias-references` fails otherwise.
 - Portable shell only in anything sourced on macOS (no GNU-only flags).
-- Conventional commits; one change per commit; update `docs/TOOLS.md` in the
-  same commit that adds or removes a package. Whether `dotfiles-doctor` probes
-  it is `tier=` on its manifest line (`install/README.md` § Entry format).
+- Conventional commits; one change per commit. A package is added with its
+  rationale on the same manifest line (`test_packages.bats` fails without one);
+  whether `dotfiles-doctor` probes it is `tier=` on that line.
 - Manifests under `install/` are read only through `bin/manifest`, never
   parsed inline.
 

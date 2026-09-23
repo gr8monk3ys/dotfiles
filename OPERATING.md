@@ -156,7 +156,6 @@ See `bin/README.md` for flags.
 | `make verify-shell-surface` | Source `.zshenv`/aliases/functions and check every alias resolves. |
 | `make verify-stale-refs` | Grep for strings left over from past migrations. |
 | `make verify-doc-links` | Validate local Markdown links (`bin/validate-doc-links`). |
-| `make verify-tool-docs` | Check `docs/TOOLS.md` against the install manifests (`bin/validate-tool-docs`). |
 | `make test-docker` / `make test-docker-arch` | Run the install in an Ubuntu / Arch container. `make verify` runs both; `SKIP_DOCKER=1` skips both, `SKIP_ARCH_DOCKER=1` only the Arch one. |
 
 ### Package-level targets
@@ -281,11 +280,11 @@ Set `~/.machine_type` to `personal`, `work`, or `server`. On shell startup, `.co
 Top-level directories, one sentence each.
 
 - **`.config/`** — XDG-compliant app configs (26 directories). Managed by Stow. Each has its own README.
-- **`bin/`** — Helper scripts: platform detection, `dotfiles-doctor/update/backup/restore/bench-shell/worktree/sync/why`, and the validators `validate-doc-links`, `validate-tool-docs`, `check-alias-references`. See `bin/README.md`.
+- **`bin/`** — Helper scripts: platform detection, `dotfiles-doctor/update/backup/restore/bench-shell/worktree/sync/why`, and the validators `validate-doc-links`, `check-alias-references`. See `bin/README.md`.
 - **`install/`** — Package manifests: `Brewfile`, `Caskfile`, `npmfile`, `Rustfile`, `pacmanfile`, `Codefile` (VSCodium extensions), `duti` (macOS file associations).
 - **`test/`** — BATS test suite. Run with `make test`. Pattern: `test_*.bats`, helpers in `test_helper/`.
 - **`.github/`** — `workflows/ci.yml` (shellcheck, markdownlint, validators, BATS on macOS and Ubuntu, the curl installer on Ubuntu) and `dependabot.yml`. `make verify` before pushing is still the local gate. `.pre-commit-config.yaml` is available for local hooks (`pre-commit install`).
-- **`docs/`** — `TOOLS.md` (the tool catalog).
+- **`docs/`** — `agents/`: notes the engineering skills read.
 
 The Stow target is `~/.config/`. The only exception is `.zshenv`, which is manually symlinked from the repo root to `~/.zshenv` because Zsh must find it in `$HOME`.
 
@@ -383,7 +382,6 @@ Style, testing, and PR rules. `CLAUDE.md` points here.
 - `.config/<app>/` — one directory per tool; keep tool-specific changes inside it.
 - `bin/` — portable helper scripts, kebab-case names (`dotfiles-update`).
 - `install/` — package manifests. `test/` — BATS tests (`test_*.bats`, helpers in `test_helper/`).
-- `docs/` — `TOOLS.md` (tool catalog).
 
 ### Style
 
@@ -420,9 +418,10 @@ its role (primary / backup / specialized), non-obvious choices (keybindings,
 overrides, themes), and a link to upstream. Required for new configs, in the same
 commit as the config.
 
-### Tool catalog
+### Package rationale
 
-Every package in the install manifests has an entry in [docs/TOOLS.md](docs/TOOLS.md)
-saying why it is in the stack. `bin/validate-tool-docs` (part of `make verify`)
-enforces this both ways — undocumented packages and stale entries fail. Update the
-catalog in the commit that adds or removes a package. Browse it with `dotfiles-why`.
+Every package in the install manifests says why it is in the stack, in the
+comment on its own line ([install/README.md](install/README.md) § Entry format).
+`test_packages.bats` (part of `make verify`) fails on a package without one, so
+the rationale is written in the same edit that adds the package, and goes when
+the line goes. Browse it with `dotfiles-why`.
