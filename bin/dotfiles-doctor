@@ -1,5 +1,22 @@
 #!/usr/bin/env bash
 # dotfiles-doctor - Check system health and configuration status
+#
+# One reporter over many classifiers (CONTEXT.md § Reporter). The pieces:
+#
+#   classifiers    one per section; each prints `state<TAB>subject<TAB>detail`
+#                  rows and makes no judgement. bin/link-state, bin/dotfiles-init
+#                  --status and lib/git-sync.sh plug in directly; the rest are
+#                  small probes below.
+#   DOCTOR_STATES  the one table mapping (vocabulary, state) to a severity and
+#                  an optional note — usually the remedy.
+#   report_row     the one printer; it also keeps the tally that decides the
+#                  exit code.
+#
+# Before this, each of nine sections invented its own probe *and* its own
+# output, three of them re-mapped a classifier's vocabulary with a private
+# `case`, and the only test of that mapping was grepping this file for case
+# arms. Now a state's severity is data (`dotfiles-doctor --states`), and a
+# state no row maps is reported as a failure rather than dropped.
 
 set -euo pipefail
 
@@ -19,19 +36,6 @@ PLATFORM="$SCRIPT_DIR/platform"
 PLATFORM_OS="$("$PLATFORM" detect)"
 readonly PLATFORM PLATFORM_OS
 
-# Track overall health
-ISSUES=0
-WARNINGS=0
-
-# On PATH is not the same as working. zathura sat installed-but-broken with a
-# dyld error (`Library not loaded: libgirara.5.dylib`) and every existence
-# check passed, because the binary was right there — it just could not start.
-tool_runs() {
-    local tool="$1"
-    command_exists "$tool" || return 1
-    "$tool" --version > /dev/null 2>&1
-}
-
 # The commands this health check probes, by severity. These are *command*
 # names, not package names: `rg` ships in the `ripgrep` package. The mapping
 # and the exemptions live in test/allowlist/command-packages.txt, and
@@ -42,361 +46,334 @@ readonly DOCTOR_ESSENTIAL_TOOLS=("eza" "bat" "fd" "rg" "zoxide" "fzf")
 readonly DOCTOR_NEXTGEN_TOOLS=("yazi" "zellij" "jj" "delta" "atuin")
 readonly DOCTOR_ADDITIONAL_TOOLS=("navi" "broot" "tldr" "gping" "ouch")
 
-# Every probed command, one per line. Consumed by bin/validate-doctor-tools.
-list_checked_tools() {
-    printf '%s\n' \
-        "${DOCTOR_CORE_TOOLS[@]}" \
-        "${DOCTOR_ESSENTIAL_TOOLS[@]}" \
-        "${DOCTOR_NEXTGEN_TOOLS[@]}" \
-        "${DOCTOR_ADDITIONAL_TOOLS[@]}"
-}
-
-# Thin counters over lib/ui.sh's printers: the tally is doctor's own state,
-# the formatting is not.
-check_pass() {
-    print_success "$1"
-}
-
-check_fail() {
-    print_error "$1"
-    ((++ISSUES))
-}
-
-check_warn() {
-    print_warn "$1"
-    ((++WARNINGS))
-}
-
-check_info() {
-    print_info "$1"
-}
-
-# Check System Information
-check_system() {
-    print_header "System Information"
-
-    if [[ "$PLATFORM_OS" == "macos" ]]; then
-        check_pass "Operating System: macOS $(sw_vers -productVersion)"
-
-        # Check architecture
-        if [[ "$("$PLATFORM" arch)" == "arm64" ]]; then
-            check_pass "Architecture: Apple Silicon (ARM64)"
-        else
-            check_pass "Architecture: Intel (x86_64)"
-        fi
-    elif [[ "$PLATFORM_OS" == "arch" || "$PLATFORM_OS" == "linux" ]]; then
-        check_pass "Operating System: Linux"
-        local distro="Unknown"
-        if [[ -r /etc/os-release ]]; then
-            distro="$(. /etc/os-release && echo "${PRETTY_NAME:-${NAME:-Unknown}}")"
-        fi
-        check_info "Distribution: $distro"
-        if "$PLATFORM" is-omarchy; then
-            check_info "Omarchy detected (~/.local/share/omarchy) — see OPERATING.md § Omarchy"
-        fi
-    else
-        # The module answers the question; the raw value stays as detail,
-        # because "unknown" alone is useless in a bug report.
-        check_warn "Operating System: $OSTYPE (Limited support)"
-    fi
-
-    check_info "Shell: $SHELL"
-    check_info "User: ${USER:-$(id -un)}"
-    check_info "Home: $HOME"
-}
-
-# Check dotfiles repository
-check_dotfiles() {
-    print_header "Dotfiles Repository"
-
-    if [[ -d "$DOTFILES_DIR" ]]; then
-        check_pass "Dotfiles directory found: $DOTFILES_DIR"
-
-        cd "$DOTFILES_DIR"
-
-        # Check if it's a git repository
-        if [[ -d ".git" ]]; then
-            check_pass "Git repository initialized"
-
-            # Check for uncommitted changes
-            if [[ -n $(git status --porcelain) ]]; then
-                check_warn "Uncommitted changes detected"
-            else
-                check_pass "Repository is clean"
-            fi
-
-            # Check remote
-            if git remote -v | grep -q origin; then
-                check_pass "Remote origin configured"
-            else
-                check_warn "No remote origin configured"
-            fi
-
-            # Sync state, offline: compares against the last fetch rather than
-            # contacting the remote, so `doctor` stays fast and works on a
-            # plane. Same module dotfiles-update and dotfiles-sync act on.
-            git_sync_status "$DOTFILES_DIR" no-fetch
-            case "$GIT_SYNC_STATE" in
-                "$GIT_SYNC_CLEAN_BEHIND")
-                    check_warn "Behind origin by $GIT_SYNC_BEHIND commit(s) as of last fetch (run 'dotfiles-update')"
-                    ;;
-                "$GIT_SYNC_DIVERGED")
-                    check_warn "Local and remote have diverged - manual merge required"
-                    ;;
-                "$GIT_SYNC_NO_UPSTREAM")
-                    check_warn "No upstream configured - this checkout can never sync"
-                    ;;
-            esac
-        else
-            check_warn "Not a git repository"
-        fi
-    else
-        check_fail "Dotfiles directory not found: $DOTFILES_DIR"
-    fi
-}
-
-# Check symlinks
+# --- the state table ---------------------------------------------------------
 #
-# A reporter over bin/link-state: the classification lives there, where it is
-# tested directly. This used to carry its own folded/unfolded logic plus a
-# hand-written list of 8 directories, while stow links all 26 the checkout
-# ships — so 18 were never judged at all.
-check_symlinks() {
-    print_header "Symlink Status"
+# vocabulary  state  severity  note (the rest of the line; "-" for none)
+#
+# The note is printed after the detail, in parentheses: the remedy where
+# there is one, otherwise what the state means.
+#
+# Severities: pass, info, warn, fail (counts as an issue, exits 1), skip
+# (printed nothing). Missing tools and local config are warnings, never issues:
+# `make link` installs and configures nothing, so a freshly linked box must
+# still be able to pass.
+#
+# `sync` is every state lib/git-sync.sh can produce, including the two only
+# git_sync_apply reaches: doctor never applies, but a mapping that silently
+# lacks a state is how the old `case` came to cover three of ten.
+DOCTOR_STATES="$(
+    cat << 'EOF'
+platform supported             pass -
+platform unsupported           warn limited support
+platform fact                  info -
+sync     missing-dir           fail clone it, or point DOTFILES_DIR at a checkout
+sync     not-a-repo            warn -
+sync     dirty                 warn -
+sync     no-upstream           warn this checkout can never sync
+sync     fetch-failed          warn -
+sync     clean-uptodate        pass -
+sync     clean-behind          warn run 'dotfiles-update'
+sync     diverged              warn merge by hand
+sync     pulled                pass -
+sync     pull-failed           warn resolve the pull by hand
+link     linked                pass -
+link     partial               fail run 'make link'
+link     unlinked              fail run 'make link'
+link     unmanaged             warn exists, but is not linked into this checkout
+link     broken-ours           fail run 'make clean'
+link     broken-foreign        skip -
+manager  runs                  pass -
+manager  current               pass -
+manager  outdated              warn run 'dotfiles-update'
+manager  missing               warn -
+manager  required-missing      fail -
+manager  not-applicable        info -
+tool     runs                  pass -
+tool     broken                fail on PATH but fails to run; broken install?
+tool     missing               warn -
+tool     optional              info -
+shell    configured            pass -
+shell    not-zsh               warn run: chsh -s $(which zsh)
+shell    not-zsh-omarchy       warn point the terminal at zsh instead; Omarchy upstream discourages chsh
+shell    unset                 warn -
+shell    not-bootstrapped      warn bootstraps on the next zsh start
+local    configured            pass -
+local    optional              info -
+local    unconfigured          warn -
+local    incomplete            warn -
+local    ineffective           warn -
+local    hint                  info -
+perms    expected              pass -
+perms    unexpected            warn -
+EOF
+)"
+readonly DOCTOR_STATES
 
-    if [[ ! -d "$HOME/.config" ]]; then
-        check_fail ".config directory not found"
+# The sections, in order: classifier, vocabulary, title. `--only` selects by
+# vocabulary.
+DOCTOR_SECTIONS="$(
+    cat << 'EOF'
+classify_platform     platform System Information
+classify_checkout     sync     Dotfiles Repository
+classify_links        link     Symlink Status
+classify_managers     manager  Package Managers
+classify_core_tools   tool     Core Tools
+classify_modern_tools tool     Modern CLI Tools
+classify_shell        shell    Shell Configuration
+classify_local        local    Local Configuration
+classify_perms        perms    File Permissions
+EOF
+)"
+readonly DOCTOR_SECTIONS
+
+# --- the engine --------------------------------------------------------------
+
+ISSUES=0
+WARNINGS=0
+
+emit() { printf '%s\t%s\t%s\n' "$1" "$2" "${3:-}"; }
+
+# Sets SEVERITY and NOTE for one (vocabulary, state). An unmapped state is
+# a failure: a classifier that grew a state nobody mapped must be loud.
+lookup_state() {
+    local vocab state severity note
+    while read -r vocab state severity note; do
+        [[ "$vocab" == "$1" && "$state" == "$2" ]] || continue
+        SEVERITY="$severity"
+        NOTE="$note"
+        [[ "$NOTE" == "-" ]] && NOTE=""
         return 0
-    fi
-    check_pass ".config directory exists"
-
-    local state path rel
-    while IFS=$'\t' read -r state path; do
-        rel="${path#"$HOME"/}"
-        case "$state" in
-            linked)
-                check_pass "$rel linked"
-                ;;
-            partial)
-                check_fail "$rel: some files not linked into $DOTFILES_DIR (run 'make link')"
-                ;;
-            unlinked)
-                check_fail "$rel not linked (run 'make link')"
-                ;;
-            unmanaged)
-                check_warn "$rel exists but is not linked into $DOTFILES_DIR"
-                ;;
-            broken-ours)
-                check_fail "$rel is a broken link into $DOTFILES_DIR (run 'make clean')"
-                ;;
-            broken-foreign)
-                # Someone else's broken link; not ours to judge.
-                ;;
-        esac
-    done < <("$SCRIPT_DIR/link-state")
+    done <<< "$DOCTOR_STATES"
+    SEVERITY=fail
+    NOTE="doctor maps no severity to state '$2'"
 }
 
-# Check package managers
-check_package_managers() {
-    print_header "Package Managers"
+# The one printer. Also the only thing that touches the tally.
+report_row() {
+    local severity="$1" msg="$2${3:+: $3}${4:+ ($4)}"
+    case "$severity" in
+        pass) print_success "$msg" ;;
+        info) print_info "$msg" ;;
+        warn)
+            print_warn "$msg"
+            ((++WARNINGS))
+            ;;
+        fail)
+            print_error "$msg"
+            ((++ISSUES))
+            ;;
+        skip) ;;
+    esac
+}
 
-    # Homebrew
-    if command_exists brew; then
-        check_pass "Homebrew installed ($(brew --version | head -n1))"
+# run_section <classifier> <vocabulary> <title>
+#
+# The classifier runs to completion before anything prints, so a classifier
+# that dies is reported as an issue instead of truncating the section
+# silently. Rows it printed before dying are still reported.
+run_section() {
+    local classifier="$1" vocab="$2" rows state subject detail
+    print_header "$3"
+    if ! rows="$("$classifier")"; then
+        report_row fail "$classifier" "classifier exited non-zero"
+    fi
+    while IFS=$'\t' read -r state subject detail; do
+        [[ -n "$state" ]] || continue
+        lookup_state "$vocab" "$state"
+        report_row "$SEVERITY" "$subject" "${detail:-$state}" "$NOTE"
+    done <<< "$rows"
+}
 
-        # Check for outdated packages
+# A path as a person would read it in a report.
+tilde() {
+    case "$1" in
+        "$HOME"/*) printf '%s/%s\n' '~' "${1#"$HOME"/}" ;;
+        *) printf '%s\n' "$1" ;;
+    esac
+}
+
+# --- classifiers -------------------------------------------------------------
+
+classify_platform() {
+    case "$PLATFORM_OS" in
+        macos | arch | linux) emit supported os "$("$PLATFORM" describe)" ;;
+        *) emit unsupported os "$("$PLATFORM" describe)" ;;
+    esac
+    emit fact arch "$("$PLATFORM" arch)"
+    if "$PLATFORM" is-omarchy; then
+        emit fact omarchy "detected (~/.local/share/omarchy) — see OPERATING.md § Omarchy"
+    fi
+    emit fact shell "$SHELL"
+    emit fact user "${USER:-$(id -un)}"
+    emit fact home "$HOME"
+}
+
+# Sync state, offline: compares against the last fetch rather than contacting
+# the remote, so `doctor` stays fast and works on a plane. The state is the
+# module's; only the wording of the detail is decided here.
+classify_checkout() {
+    git_sync_status "$DOTFILES_DIR" no-fetch
+    local detail="${GIT_SYNC_DETAIL%%$'\n'*}"
+    case "$GIT_SYNC_STATE" in
+        "$GIT_SYNC_MISSING_DIR") detail="not found" ;;
+        "$GIT_SYNC_NOT_A_REPO") detail="not a git repository (or not its root)" ;;
+        "$GIT_SYNC_DIRTY")
+            detail="$(printf '%s\n' "$GIT_SYNC_DETAIL" | wc -l | tr -d ' ') uncommitted change(s)"
+            ;;
+        "$GIT_SYNC_CLEAN_UPTODATE") detail="level with upstream as of last fetch" ;;
+        "$GIT_SYNC_CLEAN_BEHIND")
+            detail="behind upstream by $GIT_SYNC_BEHIND commit(s) as of last fetch"
+            ;;
+    esac
+    emit "$GIT_SYNC_STATE" "$(tilde "$DOTFILES_DIR")" "$detail"
+}
+
+# Link state, from bin/link-state as-is; only the path is shortened.
+classify_links() {
+    local state path
+    "$SCRIPT_DIR/link-state" | while IFS=$'\t' read -r state path; do
+        emit "$state" "$(tilde "$path")"
+    done
+}
+
+# On PATH is not the same as working. zathura sat installed-but-broken with a
+# dyld error (`Library not loaded: libgirara.5.dylib`) and every existence
+# check passed, because the binary was right there — it just could not start.
+tool_runs() {
+    command_exists "$1" || return 1
+    "$1" --version > /dev/null 2>&1
+}
+
+# probe_tool <command> <state-when-absent> <detail-when-absent>
+probe_tool() {
+    if tool_runs "$1"; then
+        emit runs "$1" installed
+    elif command_exists "$1"; then
+        emit broken "$1" "$(command -v "$1")"
+    else
+        emit "$2" "$1" "$3"
+    fi
+}
+
+# Which managers are required is a platform question: Homebrew on macOS,
+# pacman on Arch. Asked of bin/platform, so a pacman on PATH anywhere else —
+# the repo's own sudo wrapper used to be one — is not reported.
+classify_managers() {
+    if tool_runs brew; then
+        emit runs brew "$(brew --version 2> /dev/null | sed -n 1p)"
         # No auto-update: a bare `brew outdated` first refreshes every tap (>60s)
-        outdated=$(HOMEBREW_NO_AUTO_UPDATE=1 brew outdated | wc -l | tr -d ' ')
+        local outdated
+        outdated="$(HOMEBREW_NO_AUTO_UPDATE=1 brew outdated 2> /dev/null | wc -l | tr -d ' ')"
         if [[ "$outdated" -gt 0 ]]; then
-            check_warn "$outdated Homebrew packages need updating"
+            emit outdated brew "$outdated package(s) need updating"
         else
-            check_pass "All Homebrew packages up to date"
+            emit current brew "all packages up to date"
         fi
+    elif [[ "$PLATFORM_OS" == "macos" ]]; then
+        probe_tool brew required-missing "Homebrew not installed"
     else
-        if [[ "$PLATFORM_OS" == "macos" ]]; then
-            check_fail "Homebrew not installed"
-        else
-            check_info "Homebrew not installed (macOS only)"
-        fi
+        probe_tool brew not-applicable "Homebrew not installed (macOS only)"
     fi
 
-    # npm
-    if command_exists npm; then
-        check_pass "npm installed ($(npm --version))"
+    if tool_runs npm; then
+        emit runs npm "npm $(npm --version 2> /dev/null)"
     else
-        check_warn "npm not installed"
+        probe_tool npm missing "not installed"
     fi
 
-    # Cargo
-    if command_exists cargo; then
-        check_pass "Cargo installed ($(cargo --version | cut -d' ' -f2))"
+    if tool_runs cargo; then
+        emit runs cargo "$(cargo --version 2> /dev/null)"
     else
-        check_warn "Cargo not installed"
+        probe_tool cargo missing "not installed"
     fi
 
-    # pacman: the repo ships a bin/pacman sudo wrapper that satisfies a bare
-    # command_exists on any OS via make's PATH, so only count a real one.
-    local pacman_bin
-    pacman_bin="$(command -v pacman 2>/dev/null || true)"
-    if [[ -n "$pacman_bin" && "$pacman_bin" != "$DOTFILES_DIR/bin/pacman" && -f /etc/arch-release ]]; then
-        check_pass "pacman installed"
+    if [[ "$PLATFORM_OS" == "arch" ]]; then
+        probe_tool pacman required-missing "not installed"
     fi
 }
 
-# Check core tools. Missing tools are warnings, not issues: `make link`
-# installs nothing, so a freshly linked box must still be able to pass.
-check_core_tools() {
-    print_header "Core Tools"
-
+classify_core_tools() {
+    local tool
     for tool in "${DOCTOR_CORE_TOOLS[@]}"; do
-        if tool_runs "$tool"; then
-            check_pass "$tool installed"
-        elif command_exists "$tool"; then
-            check_fail "$tool is on PATH but fails to run (broken install?)"
-        else
-            check_warn "$tool not installed"
-        fi
+        probe_tool "$tool" missing "not installed (core)"
     done
 }
 
-# Check modern CLI tools
-check_modern_tools() {
-    print_header "Modern CLI Tools"
-
-    # Essential modern tools
+classify_modern_tools() {
+    local tool
     for tool in "${DOCTOR_ESSENTIAL_TOOLS[@]}"; do
-        if tool_runs "$tool"; then
-            check_pass "$tool installed"
-        elif command_exists "$tool"; then
-            check_fail "$tool is on PATH but fails to run (broken install?)"
-        else
-            check_warn "$tool not installed (recommended)"
-        fi
+        probe_tool "$tool" missing "not installed (recommended)"
     done
-
-    # Next-gen tools (optional but nice to have)
-    for tool in "${DOCTOR_NEXTGEN_TOOLS[@]}"; do
-        if command_exists "$tool"; then
-            check_pass "$tool installed"
-        else
-            check_info "$tool not installed (optional)"
-        fi
-    done
-
-    # Additional modern tools
-    for tool in "${DOCTOR_ADDITIONAL_TOOLS[@]}"; do
-        if command_exists "$tool"; then
-            check_pass "$tool installed"
-        else
-            check_info "$tool not installed (optional)"
-        fi
+    for tool in "${DOCTOR_NEXTGEN_TOOLS[@]}" "${DOCTOR_ADDITIONAL_TOOLS[@]}"; do
+        probe_tool "$tool" optional "not installed (optional)"
     done
 }
 
-# Check shell configuration
-check_shell_config() {
-    print_header "Shell Configuration"
-
-    # Check if zsh is the login shell. Prefer the passwd entry over $SHELL:
-    # a terminal launched with `command = zsh` sets neither.
+classify_shell() {
+    # Prefer the passwd entry over $SHELL: a terminal launched with
+    # `command = zsh` sets neither.
     local login_shell
-    login_shell="$(getent passwd "${USER:-$(id -un)}" 2>/dev/null | cut -d: -f7 || true)"
+    login_shell="$(getent passwd "${USER:-$(id -un)}" 2> /dev/null | cut -d: -f7 || true)"
     login_shell="${login_shell:-$SHELL}"
     if [[ "$login_shell" == *"zsh"* ]]; then
-        check_pass "Zsh is login shell"
+        emit configured login-shell "$login_shell"
     elif "$PLATFORM" is-omarchy; then
         # Omarchy ships bash as login shell and its boot chain (SDDM session,
-        # ~/.bashrc, omarchy-* helpers) assumes it. Upstream advises against
-        # chsh; point the terminal at zsh instead. Details in OPERATING.md.
-        check_warn "Login shell is $login_shell, not zsh. On Omarchy set 'command = $(command -v zsh || echo /usr/bin/zsh)' in ~/.config/ghostty/config (upstream discourages chsh -s \$(which zsh))"
+        # ~/.bashrc, omarchy-* helpers) assumes it. Details in OPERATING.md.
+        emit not-zsh-omarchy login-shell \
+            "$login_shell; set 'command = $(command -v zsh || echo /usr/bin/zsh)' in ~/.config/ghostty/config"
     else
-        check_warn "Login shell is $login_shell, not zsh (run: chsh -s \$(which zsh))"
+        emit not-zsh login-shell "$login_shell"
     fi
 
-    # Check ZDOTDIR
     if [[ -n "${ZDOTDIR:-}" ]]; then
-        check_pass "ZDOTDIR set: $ZDOTDIR"
+        emit configured ZDOTDIR "$ZDOTDIR"
     else
-        check_warn "ZDOTDIR not set"
+        emit unset ZDOTDIR "not set"
     fi
 
-    # Check Zinit (plugin manager used by .zshrc; it self-installs on first run)
+    # Zinit is the plugin manager .zshrc uses; it self-installs on first run.
     if [[ -d "${XDG_DATA_HOME:-$HOME/.local/share}/zinit/zinit.git" ]]; then
-        check_pass "Zinit installed"
+        emit configured zinit "installed"
     else
-        check_warn "Zinit not installed (will bootstrap on next zsh start)"
+        emit not-bootstrapped zinit "not installed"
     fi
 }
 
-# Octal mode of a path. BSD stat is `-f FORMAT`; on GNU `-f` means
-# "filesystem status" and succeeds, so an `||` fallback never fires.
-file_mode() {
-    "$PLATFORM" file-mode "$1"
+# Local config, from bin/dotfiles-init as-is: its rows are already in the
+# engine's format. It is also what writes the files, so the health check and
+# the fix cannot disagree about what "configured" means. Whether to suggest
+# running it is its own verdict too (--check), not a judgement made here.
+classify_local() {
+    "$SCRIPT_DIR/dotfiles-init" --status || return
+    if ! "$SCRIPT_DIR/dotfiles-init" --check > /dev/null 2>&1; then
+        emit hint dotfiles-init "run 'make init' (or 'dotfiles-init') to fix what it can"
+    fi
 }
 
-# Check the gitignored local files: git identity, jj identity, SSH snippets.
-#
-# A reporter over bin/dotfiles-init (CONTEXT.md § Reporter), which is also what
-# writes them — so the health check and the fix cannot disagree about what
-# "configured" means. Doctor used to ask `git config --global user.email`
-# itself and name the problem without being able to point at a fix.
-#
-# Warnings, never issues: `make link` installs nothing and configures nothing,
-# so a freshly linked box must still be able to pass.
-check_local_config() {
-    print_header "Local Configuration"
+# expect_mode <path> <octal>
+expect_mode() {
+    local mode
+    mode="$("$PLATFORM" file-mode "$1")"
+    if [[ "$mode" == "$2" ]]; then
+        emit expected "$(tilde "$1")" "$mode"
+    else
+        emit unexpected "$(tilde "$1")" "$mode (should be $2)"
+    fi
+}
 
-    local state subject detail unconfigured=0
-    while IFS=$'\t' read -r state subject detail; do
-        case "$state" in
-            configured)
-                check_pass "$subject: $detail"
-                ;;
-            optional)
-                check_info "$subject: $detail"
-                ;;
-            unconfigured | incomplete | ineffective)
-                check_warn "$subject ($state): $detail"
-                unconfigured=1
-                ;;
-        esac
-    done < <("$SCRIPT_DIR/dotfiles-init" --status)
-
-    [[ "$unconfigured" -eq 1 ]] && check_info "Run 'make init' (or 'dotfiles-init') to fix the above"
+classify_perms() {
+    [[ -d "$HOME/.ssh" ]] || return 0
+    expect_mode "$HOME/.ssh" 700
+    local key
+    while IFS= read -r key; do
+        [[ -f "$key" ]] && expect_mode "$key" 600
+    done < <(find "$HOME/.ssh" -name "id_*" -not -name "*.pub" 2> /dev/null | sort)
     return 0
 }
 
-# Check file permissions
-check_permissions() {
-    print_header "File Permissions"
+# --- output ------------------------------------------------------------------
 
-    if [[ -d "$HOME/.ssh" ]]; then
-        local ssh_perms
-        ssh_perms=$(file_mode "$HOME/.ssh")
-        if [[ "$ssh_perms" == "700" ]]; then
-            check_pass ".ssh directory permissions: 700"
-        else
-            check_warn ".ssh directory permissions: $ssh_perms (should be 700)"
-        fi
-    fi
-
-    # Check for private keys with wrong permissions
-    if [[ -d "$HOME/.ssh" ]]; then
-        while IFS= read -r key; do
-            if [[ -f "$key" ]]; then
-                local key_perms
-                key_perms=$(file_mode "$key")
-                if [[ "$key_perms" == "600" ]]; then
-                    check_pass "$(basename "$key") permissions: 600"
-                else
-                    check_warn "$(basename "$key") permissions: $key_perms (should be 600)"
-                fi
-            fi
-        done < <(find "$HOME/.ssh" -name "id_*" -not -name "*.pub" 2>/dev/null)
-    fi
-}
-
-# Summary
 print_summary() {
     print_header "Summary"
 
@@ -408,15 +385,27 @@ print_summary() {
         [[ $WARNINGS -gt 0 ]] && echo -e "${YELLOW}⚠ $WARNINGS warning(s) found${NC}"
     fi
     echo ""
+}
 
-    # Return non-zero if there are issues
-    if [[ $ISSUES -gt 0 ]]; then
-        return 1
-    fi
+# Every probed command, one per line. Consumed by bin/validate-doctor-tools.
+list_checked_tools() {
+    printf '%s\n' \
+        "${DOCTOR_CORE_TOOLS[@]}" \
+        "${DOCTOR_ESSENTIAL_TOOLS[@]}" \
+        "${DOCTOR_NEXTGEN_TOOLS[@]}" \
+        "${DOCTOR_ADDITIONAL_TOOLS[@]}"
+}
+
+# The state table as `vocabulary<TAB>state<TAB>severity` rows, so tests can
+# check it covers every state each classifier's own --states lists.
+list_states() {
+    local vocab state severity note
+    while read -r vocab state severity note; do
+        [[ -n "$vocab" ]] && printf '%s\t%s\t%s\n' "$vocab" "$state" "$severity"
+    done <<< "$DOCTOR_STATES"
     return 0
 }
 
-# Show help message
 show_help() {
     cat << EOF
 Usage: dotfiles-doctor [OPTIONS]
@@ -424,46 +413,58 @@ Usage: dotfiles-doctor [OPTIONS]
 Comprehensive health check for dotfiles system and configurations.
 
 OPTIONS:
-    -h, --help      Show this help message
-    -v, --verbose   Show verbose output (detailed checks)
+    -h, --help              Show this help message
+    -v, --verbose           Trace execution (set -x)
+    --only VOCABULARY       Run only the sections for one vocabulary:
+                            platform sync link manager tool shell local perms
+    --states                Print the state table: vocabulary, state, severity
+    --list-checked-tools    List the commands this check probes
 
 DESCRIPTION:
     Checks system health including:
     - System information and platform
-    - Dotfiles repository status
-    - Symlink integrity
+    - Dotfiles repository sync state
+    - Link state of every managed path
     - Package manager status
-    - Core tool availability
+    - Core and modern CLI tool availability
     - Shell configuration
     - Local configuration (git/jj identity, SSH host snippets)
     - File permissions
 
 EXIT CODES:
-    0    All checks passed
-    1    Issues found
+    0    No issues (warnings alone do not fail)
+    1    Issues found, or bad usage
 
 EXAMPLES:
     dotfiles-doctor              Run health check
-    dotfiles-doctor --help       Show this help
-    dotfiles-doctor --verbose    Run with detailed output
-    dotfiles-doctor --list-checked-tools
-                                 List the commands this check probes
+    dotfiles-doctor --only sync  Check just the checkout against its upstream
 
 EOF
 }
 
-# Main
 main() {
-    # Parse arguments
+    local only=""
     while [[ $# -gt 0 ]]; do
         case $1 in
-            -h|--help)
+            -h | --help)
                 show_help
                 exit 0
                 ;;
-            -v|--verbose)
+            -v | --verbose)
                 set -x
                 shift
+                ;;
+            --only)
+                only="${2:-}"
+                if ! list_states | cut -f1 | grep -qxF -- "$only"; then
+                    echo "Unknown vocabulary for --only: '$only'" >&2
+                    exit 1
+                fi
+                shift 2
+                ;;
+            --states)
+                list_states
+                exit 0
                 ;;
             --list-checked-tools)
                 list_checked_tools
@@ -481,16 +482,15 @@ main() {
     echo -e "${BLUE}║                  Dotfiles Health Check                        ║${NC}"
     echo -e "${BLUE}╚═══════════════════════════════════════════════════════════════╝${NC}"
 
-    check_system
-    check_dotfiles
-    check_symlinks
-    check_package_managers
-    check_core_tools
-    check_modern_tools
-    check_shell_config
-    check_local_config
-    check_permissions
+    # fd 3, not stdin: a classifier that reads stdin would eat the list.
+    local classifier vocab title
+    while read -r classifier vocab title <&3; do
+        [[ -z "$only" || "$only" == "$vocab" ]] || continue
+        run_section "$classifier" "$vocab" "$title"
+    done 3<<< "$DOCTOR_SECTIONS"
+
     print_summary
+    [[ $ISSUES -eq 0 ]]
 }
 
 main "$@"

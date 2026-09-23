@@ -126,9 +126,31 @@ else can reproduce, so `incomplete` is reported and left alone.
 A caller that maps a state vocabulary — **sync state**, **link state**,
 **local config** — to output. The reporter is the seam:
 `dotfiles-update` uses `bin/lib/ui.sh`'s printers, `dotfiles-sync` uses a
-local `notify()` over `osascript`, `dotfiles-doctor` uses `check_warn`.
+local `notify()` over `osascript`, `dotfiles-doctor` uses its engine (below).
 Reporters live on the caller side of the seam; platform-specific output
 (`osascript`) stays out of the shared module.
+
+`dotfiles-doctor` is one reporter over many classifiers. Each section is a
+**classifier** that prints `state<TAB>subject<TAB>detail` rows and judges
+nothing — `bin/link-state`, `dotfiles-init --status` and `git_sync_status`
+plug in unchanged, and the system, package-manager, tool, shell and
+permission probes emit the same shape. One table maps (vocabulary, state) to
+a severity and an optional note:
+
+| Severity | Printed | Effect |
+| --- | --- | --- |
+| `pass` | ✓ | — |
+| `info` | ℹ | — |
+| `warn` | ⚠ | counted; never fails the run |
+| `fail` | ✗ | counted; exit 1 |
+| `skip` | nothing | — (`broken-foreign`: not ours to judge) |
+
+The table is the interface: `dotfiles-doctor --states` prints it, and a test
+checks it covers every state each classifier's own vocabulary lists. A state
+the table does not map is reported as `fail`, so a classifier that grows a
+state cannot pass silently. Missing tools and local config are `warn`, never
+`fail`: `make link` installs and configures nothing, so a freshly linked
+machine must be able to pass.
 
 ## Manifest
 

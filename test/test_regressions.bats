@@ -72,15 +72,6 @@ teardown() {
 	[[ "$backup_count" -eq 5 ]]
 }
 
-@test "dotfiles-doctor reaches the summary when issues are present" {
-	run env HOME="$TEST_HOME" DOTFILES_DIR="$TEST_HOME/.dotfiles" \
-		PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
-		bash bin/dotfiles-doctor
-	assert_failure
-	assert_output --partial "Summary"
-	assert_output --partial "issue(s) found"
-}
-
 # That starship is the *live* prompt is asserted on a booted shell in
 # test_shell_boot.bats. What stays here are the static negatives: p10k is
 # gone and nothing reintroduces it.
@@ -151,17 +142,6 @@ teardown() {
 	run bash -c 'bin/dotfiles-why </dev/null'
 	assert_failure
 	assert_output --partial "Usage:"
-}
-
-@test "dotfiles-doctor checks Zinit instead of Oh My Zsh" {
-	mkdir -p "$TEST_HOME/.local/share/zinit/zinit.git"
-
-	run env HOME="$TEST_HOME" DOTFILES_DIR="$TEST_HOME/.dotfiles" \
-		XDG_DATA_HOME="$TEST_HOME/.local/share" \
-		PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
-		bash bin/dotfiles-doctor
-	assert_output --partial "Zinit installed"
-	[[ "$output" != *"Oh My Zsh"* ]]
 }
 
 # Regression: install.sh cased on `bin/platform detect` and called make
