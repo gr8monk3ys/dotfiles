@@ -1,31 +1,37 @@
 #!/usr/bin/env bash
-# palette - Read the colour palette every themed tool in this checkout shares.
+# palette - Render every themed config in this checkout from one palette.
 #
-# The palette used to exist as the same six hex literals re-typed in ten
-# files: sketchybar's colors.sh, starship.toml, zellij's config.kdl, yazi's
-# theme.toml, eza's theme.yml, atuin's theme, .zshrc's highlight styles, git's
-# delta colours, bin/lib/ui.sh and a vendored bat .tmTheme. Nothing connected
-# them, so "everything matches" was a claim no command could check.
+# The palette used to be the same hex literals re-typed in fifteen files, in
+# three spellings (#61afef, 0xff61afef, 97;175;239). Nothing connected them,
+# so "everything matches" was a claim no command could check: a retune that
+# rewrote every hex still left the decimal copy behind in EZA_COLORS, and
+# colours that were never on the palette at all slipped in unnoticed.
 #
-# This module owns the data. Formats differ per tool and always will — kdl,
-# toml, yaml, plist, `0xaarrggbb` for sketchybar — so this does not try to
-# generate every config. It gives them one place to read from, and gives the
-# Makefile's stale-ref grep a list of retired hexes to forbid.
+# So nothing is re-typed any more. danse.conf holds the colours; each themed
+# file has a template under .config/palette/templates/, at the same path
+# relative to the checkout root, with named slots where the colours go. The
+# rendered files stay committed at their real paths, because stow links them
+# and the tools read them; `check` is what keeps them honest.
 #
 # Usage:
-#   palette list                     # name<TAB>hex<TAB>role
-#   palette names                    # names only
-#   palette get <name> [--format F]  # F: hex (default) | raw | 0x | rgb
-#   palette export [prefix]          # PREFIX_NAME='#hex' shell assignments
+#   palette render      rewrite every rendered file from its template
+#   palette check       exit 1, with a diff, if any rendered file is stale
+#   palette fill        expand slots on stdin to stdout (for scripts)
 #
-# Formats:
-#   hex   #61afef      most config files
-#   raw   61afef       formats that supply their own prefix
-#   0x    0xff61afef   sketchybar
-#   rgb   97;175;239   EZA_COLORS and other SGR truecolor strings
+# Slots (the only three spellings any consumer needs):
+#   {{blue}}            #61afef      most config formats
+#   {{blue:0x}}         0xff61afef   sketchybar, JankyBorders
+#   {{blue:rgb}}        97;175;239   SGR truecolor (EZA_COLORS, install.sh)
 #
-# An unknown name is an error, not an empty string: a typo in a theme should
-# fail loudly rather than silently paint something black.
+# Regions: when the rendered file already contains a line mentioning
+# palette:begin, the template fills only the lines between it and the next
+# palette:end, and the rest of the file stays hand-edited. That is for files
+# like .zshrc, where the colours are twenty lines out of two hundred.
+# Otherwise the template is the whole file.
+#
+# A literal colour in a template is an error: that is exactly how off-palette
+# colours used to get in. The one exception is 0x00000000, fully transparent,
+# which is the absence of a colour rather than one.
 
 set -euo pipefail
 
@@ -33,17 +39,160 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/preamble.sh
 source "$SCRIPT_DIR/lib/preamble.sh"
 
-PALETTE_FILE="${PALETTE_FILE:-$DOTFILES_DIR/.config/palette/danse.conf}"
-readonly PALETTE_FILE
+readonly PALETTE_FILE="$DOTFILES_DIR/.config/palette/danse.conf"
+readonly TEMPLATE_DIR="$DOTFILES_DIR/.config/palette/templates"
+readonly LITERAL_COLOUR='#[0-9A-Fa-f]{6}|0x[0-9A-Fa-f]{8}|38;2;[0-9]'
 
-# Strip comments and blanks once; every subcommand reads this.
-rows() {
-    [[ -f "$PALETTE_FILE" ]] || {
-        printf 'palette: no such palette file: %s\n' "$PALETTE_FILE" >&2
-        return 1
-    }
-    grep -vE '^[[:space:]]*(#|$)' "$PALETTE_FILE"
+WORK_DIR=""
+cleanup() { [[ -z "$WORK_DIR" ]] || rm -rf "$WORK_DIR"; }
+trap cleanup EXIT
+
+die() {
+    printf 'palette: %s\n' "$*" >&2
+    exit 1
 }
+
+# One sed program, three substitutions per colour. Validating here rather than
+# trusting the file means a typo in danse.conf fails every command loudly
+# instead of rendering a half-substituted theme.
+build_program() {
+    [[ -f "$PALETTE_FILE" ]] || die "no such palette file: $PALETTE_FILE"
+    local name hex role bare seen=" " n=0
+    while IFS='|' read -r name hex role; do
+        case "$name" in '' | \#*) continue ;; esac
+        [[ "$name" =~ ^[a-z][a-z0-9-]*$ ]] || die "bad colour name '$name' in $PALETTE_FILE"
+        [[ "$hex" =~ ^#[0-9a-f]{6}$ ]] || die "bad hex '$hex' for $name (want lowercase #rrggbb)"
+        [[ -n "$role" ]] || die "no role documented for $name"
+        case "$seen" in *" $name "*) die "colour $name is defined twice" ;; esac
+        seen="$seen$name "
+        bare="${hex#\#}"
+        printf 's|{{%s}}|%s|g\n' "$name" "$hex"
+        printf 's|{{%s:0x}}|0xff%s|g\n' "$name" "$bare"
+        printf 's|{{%s:rgb}}|%d;%d;%d|g\n' "$name" "0x${bare:0:2}" "0x${bare:2:2}" "0x${bare:4:2}"
+        n=$((n + 1))
+    done < "$PALETTE_FILE"
+    [[ "$n" -gt 0 ]] || die "no colours in $PALETTE_FILE"
+}
+
+setup_work() {
+    WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/palette.XXXXXX")"
+    build_program > "$WORK_DIR/program.sed"
+}
+
+# expand SRC DEST LABEL - substitute every slot. A slot left over is a name or
+# format the palette does not have, and fails rather than rendering "{{blu}}".
+expand() {
+    local src="$1" dest="$2" label="$3" left
+    sed -f "$WORK_DIR/program.sed" "$src" > "$dest"
+    if left="$(grep -n '{{[^}]*}}' "$dest")"; then
+        die "$label: unknown slot (names are in danse.conf; formats are hex, 0x, rgb):
+$left"
+    fi
+}
+
+# splice TARGET FRAGMENT - the target with its palette:begin/end region
+# replaced by the fragment. Exactly one region per file; anything else is
+# refused rather than guessed at.
+splice() {
+    awk -v frag="$2" '
+        /palette:begin/ {
+            if (state != 0) { print "second palette:begin" > "/dev/stderr"; exit 3 }
+            print
+            while ((getline line < frag) > 0) print line
+            close(frag)
+            state = 1
+            next
+        }
+        /palette:end/ {
+            if (state != 1) { print "palette:end without palette:begin" > "/dev/stderr"; exit 3 }
+            state = 2
+            print
+            next
+        }
+        state == 1 { next }
+        { print }
+        END { if (state == 1) { print "palette:begin without palette:end" > "/dev/stderr"; exit 3 } }
+    ' "$1"
+}
+
+# render_one TEMPLATE OUT - what the file at the template's path should be.
+render_one() {
+    local template="$1" out="$2" rel target literal
+    rel="${template#"$TEMPLATE_DIR"/}"
+    target="$DOTFILES_DIR/$rel"
+
+    if literal="$(sed 's/0x00000000//g' "$template" | grep -nE "$LITERAL_COLOUR")"; then
+        die "templates/$rel: literal colour, use a slot instead:
+$literal"
+    fi
+
+    expand "$template" "$WORK_DIR/fragment" "templates/$rel"
+    if [[ -f "$target" ]] && grep -q 'palette:begin' "$target"; then
+        splice "$target" "$WORK_DIR/fragment" > "$out" || die "$rel: malformed palette region"
+    else
+        cp "$WORK_DIR/fragment" "$out"
+    fi
+}
+
+templates() {
+    [[ -d "$TEMPLATE_DIR" ]] || die "no template directory: $TEMPLATE_DIR"
+    find "$TEMPLATE_DIR" -type f | LC_ALL=C sort
+}
+
+cmd_render() {
+    setup_work
+    local template rel target changed=0
+    while IFS= read -r template; do
+        rel="${template#"$TEMPLATE_DIR"/}"
+        target="$DOTFILES_DIR/$rel"
+        render_one "$template" "$WORK_DIR/out"
+        cmp -s "$WORK_DIR/out" "$target" 2> /dev/null && continue
+        mkdir -p "$(dirname "$target")"
+        # cat, not mv: keeps the target's inode and mode, so an executable
+        # stays executable and an open editor buffer is not orphaned.
+        cat "$WORK_DIR/out" > "$target"
+        [[ -x "$template" ]] && chmod +x "$target"
+        printf 'rendered %s\n' "$rel"
+        changed=$((changed + 1))
+    done < <(templates)
+    printf '%d file(s) changed\n' "$changed"
+}
+
+cmd_check() {
+    setup_work
+    local template rel target stale=0
+    while IFS= read -r template; do
+        rel="${template#"$TEMPLATE_DIR"/}"
+        target="$DOTFILES_DIR/$rel"
+        render_one "$template" "$WORK_DIR/out"
+        if [[ ! -f "$target" ]]; then
+            printf 'missing: %s (run palette render)\n' "$rel"
+            stale=$((stale + 1))
+        elif ! cmp -s "$WORK_DIR/out" "$target"; then
+            diff -u --label "$rel (committed)" --label "$rel (rendered)" \
+                "$target" "$WORK_DIR/out" || true
+            stale=$((stale + 1))
+        fi
+    done < <(templates)
+
+    if [[ "$stale" -gt 0 ]]; then
+        printf '\npalette: %d rendered file(s) differ from their templates.\n' "$stale" >&2
+        printf 'Edit the template under .config/palette/templates/, then run palette render.\n' >&2
+        return 1
+    fi
+    printf 'palette: every rendered file matches its template\n'
+}
+
+cmd_fill() {
+    setup_work
+    cat > "$WORK_DIR/stdin"
+    expand "$WORK_DIR/stdin" "$WORK_DIR/out" "stdin"
+    cat "$WORK_DIR/out"
+}
+
+# --- Readers kept until their callers move to `fill` -----------------------
+
+rows() { grep -vE '^[[:space:]]*(#|$)' "$PALETTE_FILE"; }
 
 cmd_list() { rows | tr '|' '\t'; }
 
@@ -55,57 +204,17 @@ cmd_names() {
     return 0
 }
 
-format_hex() {
-    local hex="$1" fmt="$2" bare="${1#\#}"
-    case "$fmt" in
-        hex) printf '%s\n' "$hex" ;;
-        raw) printf '%s\n' "$bare" ;;
-        0x) printf '0xff%s\n' "$bare" ;;
-        rgb) printf '%d;%d;%d\n' "0x${bare:0:2}" "0x${bare:2:2}" "0x${bare:4:2}" ;;
-        *)
-            printf 'palette: unknown format %q (hex|raw|0x|rgb)\n' "$fmt" >&2
-            return 2
-            ;;
-    esac
-}
-
 cmd_get() {
-    local want="${1:-}" fmt=hex name hex rest
-    shift || true
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-            --format)
-                fmt="${2:-}"
-                shift 2
-                ;;
-            *)
-                printf 'palette: unexpected argument %q\n' "$1" >&2
-                return 2
-                ;;
-        esac
-    done
-
-    [[ -n "$want" ]] || {
-        printf 'palette: get needs a colour name\n' >&2
-        return 2
-    }
-
-    while IFS='|' read -r name hex rest; do
-        if [[ "$name" == "$want" ]]; then
-            format_hex "$hex" "$fmt"
-            return
-        fi
-    done < <(rows)
-
-    printf 'palette: no such colour %q (try: palette names)\n' "$want" >&2
-    return 1
+    local want="${1:-}" fmt=hex
+    [[ "${2:-}" == --format ]] && fmt="${3:-}"
+    case "$fmt" in hex) fmt="" ;; 0x | rgb) fmt=":$fmt" ;; *) die "unknown format $fmt" ;; esac
+    grep -q "^$want|" "$PALETTE_FILE" || die "no such colour $want"
+    printf '{{%s%s}}\n' "$want" "$fmt" | cmd_fill
 }
 
-# Shell assignments, for configs that are themselves shell.
 cmd_export() {
     local prefix="${1:-PALETTE}" name hex rest var
     while IFS='|' read -r name hex rest; do
-        # Names are kebab-case in the file; shell variables cannot be.
         var="$(printf '%s' "$name" | tr '[:lower:]-' '[:upper:]_')"
         printf "%s_%s='%s'\n" "$prefix" "$var" "$hex"
     done < <(rows)
@@ -114,19 +223,21 @@ cmd_export() {
 
 main() {
     local cmd="${1:-}"
-    shift || true
     case "$cmd" in
+        render) cmd_render ;;
+        check) cmd_check ;;
+        fill) cmd_fill ;;
         list) cmd_list ;;
         names) cmd_names ;;
-        get) cmd_get "$@" ;;
-        export) cmd_export "$@" ;;
+        get) shift; cmd_get "$@" ;;
+        export) shift; cmd_export "$@" ;;
         -h | --help | "")
-            sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'
+            sed -n '2,34p' "$0" | sed 's/^# \{0,1\}//'
             [[ -z "$cmd" ]] && return 2
             return 0
             ;;
         *)
-            printf 'palette: unknown command %q (list|names|get|export)\n' "$cmd" >&2
+            printf 'palette: unknown command %q (render|check|fill)\n' "$cmd" >&2
             return 2
             ;;
     esac
