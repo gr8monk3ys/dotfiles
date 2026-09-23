@@ -136,8 +136,8 @@ Commands you re-run routinely.
 | `make update` | Update every manifest kind (Homebrew, casks, npm, Cargo, pacman, editor extensions), then Zinit and Neovim plugins. |
 | `make backup` | Snapshot configs + package lists. `backup-compress` / `backup-cleanup` variants exist. |
 | `make bench-shell` | Benchmark interactive zsh startup against a budget (default 900ms). |
-| `make daily` | Fast pre-push check: shell syntax + doc links + tests. |
-| `make verify` | Full repo verification: shell syntax + stale-ref check + doc links + tests. |
+| `make daily` | Fast pre-push check: doc links + tests. |
+| `make verify` | Full repo verification: linters + validators + tests + containers. |
 | `make clean` | Remove broken symlinks in `~/.config/`. |
 | `make restore [backup=/path]` | Restore the latest (or a named) `dotfiles-backup` snapshot. |
 | `make help` | List every target with its one-line description. |
@@ -150,13 +150,11 @@ See `bin/README.md` for flags.
 
 | Command | What it does |
 | --- | --- |
-| `make test-setup` | Install BATS if missing. |
+| `make test-setup` | Install the suite's prerequisites: bats, bats-support, bats-assert, zsh, stow. |
 | `make test` | Run the BATS suite (`test/test_*.bats`). |
-| `make verify-shell` | Syntax-check zsh/bash files. |
-| `make verify-shell-surface` | Source `.zshenv`/aliases/functions and check every alias resolves. |
 | `make verify-stale-refs` | Grep for strings left over from past migrations. |
 | `make verify-doc-links` | Validate local Markdown links (`bin/validate-doc-links`). |
-| `make test-docker` / `make test-docker-arch` | Run the install in an Ubuntu / Arch container. `make verify` runs both; `SKIP_DOCKER=1` skips both, `SKIP_ARCH_DOCKER=1` only the Arch one. |
+| `make test-docker` / `make test-docker-arch` | Build `test/Dockerfile` on Ubuntu / Arch and run that platform's real `make` (on Arch, `make arch` with the whole pacmanfile), then the suite and doctor. `make verify` runs both; `SKIP_DOCKER=1` skips both, `SKIP_ARCH_DOCKER=1` only the Arch one. |
 
 ### Package-level targets
 
@@ -283,7 +281,7 @@ Top-level directories, one sentence each.
 - **`bin/`** — Helper scripts: platform detection, `dotfiles-doctor/update/backup/restore/bench-shell/worktree/sync/why`, and the validators `validate-doc-links`, `check-alias-references`. See `bin/README.md`.
 - **`install/`** — Package manifests: `Brewfile`, `Caskfile`, `npmfile`, `Rustfile`, `pacmanfile`, `Codefile` (VSCodium extensions), `duti` (macOS file associations).
 - **`test/`** — BATS test suite. Run with `make test`. Pattern: `test_*.bats`, helpers in `test_helper/`.
-- **`.github/`** — `workflows/ci.yml` (shellcheck, markdownlint, validators, BATS on macOS and Ubuntu, the curl installer on Ubuntu) and `dependabot.yml`. `make verify` before pushing is still the local gate. `.pre-commit-config.yaml` is available for local hooks (`pre-commit install`).
+- **`.github/`** — `workflows/ci.yml` (`make lint`, BATS on macOS and Ubuntu, the Ubuntu and full-install Arch containers, the curl installer, a macOS fresh install) and `dependabot.yml`. `make verify` before pushing is still the local gate.
 - **`docs/`** — `agents/`: notes the engineering skills read.
 
 The Stow target is `~/.config/`. The only exception is `.zshenv`, which is manually symlinked from the repo root to `~/.zshenv` because Zsh must find it in `$HOME`.
@@ -361,7 +359,7 @@ The validator (`bin/validate-doc-links`) reports the file + line of each bad lin
 
 `make verify-stale-refs` scans for strings left over from past migrations (old theme names, removed file paths, typos). When it fires, grep for the reported pattern and either update or remove it.
 
-### `verify-shell-surface` fails with "alias references unresolved command"
+### Alias check fails with "alias references unresolved command"
 
 The alias references a command that is not a shell builtin, not in any install manifest, and not in `test/allowlist/system-tools.txt`. The error output names the offending alias's file:line and the unresolved command. Pick one fix:
 
@@ -395,10 +393,10 @@ sourced on macOS (see `file_mode` in `bin/dotfiles-doctor` for the `stat` split)
 Add or update a test whenever behavior changes; regression guards live in
 `test/test_regressions.bats`. Iterate with targeted runs
 (`bats test/test_regressions.bats -f "theme consistency"`), then `make test`.
-`make verify-shell-surface` parses and sources `.zshenv`, `aliases.zsh`, and
-`functions.zsh`, asserts a sentinel alias per conditional block, and runs
+`test/test_shell_surface.bats` parses and sources `.zshenv` and every file
+`.zshrc` sources, asserts a sentinel alias per conditional block, and runs
 `bin/check-alias-references` so every unconditional alias resolves to a known command
-(fixes are under [Troubleshooting](#verify-shell-surface-fails-with-alias-references-unresolved-command)).
+(fixes are under [Troubleshooting](#alias-check-fails-with-alias-references-unresolved-command)).
 
 ### Commits and pull requests
 
