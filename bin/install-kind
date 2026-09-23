@@ -101,7 +101,12 @@ brew_bundle() {
 cargo_path() {
     local rustup_prefix
     rustup_prefix="$(brew --prefix rustup 2> /dev/null || true)"
-    export PATH="$HOME/.cargo/bin:$rustup_prefix/bin:$PATH"
+    # Only with a prefix: an empty one made the entry "/bin", which on Arch
+    # holds rustup's cargo proxy and put it ahead of everything else on PATH.
+    if [[ -n "$rustup_prefix" ]]; then
+        export PATH="$rustup_prefix/bin:$PATH"
+    fi
+    export PATH="$HOME/.cargo/bin:$PATH"
 }
 
 # Two adapters, one interface. Install and update prefer codium, matching

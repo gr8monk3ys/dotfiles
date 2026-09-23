@@ -541,3 +541,21 @@ cargo install-update -a"
     ' _ "$DOTFILES_DIR"
     assert_success
 }
+
+# Regression: with no Homebrew rustup, `brew --prefix rustup` is empty and
+# cargo_path prepended "/bin" — on Arch that is rustup's cargo proxy, which
+# then shadowed every cargo later on PATH (and, in the suite, the stub).
+@test "cargo_path adds no bare /bin when Homebrew has no rustup" {
+    cat > "$STUB_BIN/cargo" <<'STUB'
+#!/usr/bin/env bash
+printf 'cargo PATH=%s\n' "$PATH" >> "$CALL_LOG"
+exit 0
+STUB
+    chmod +x "$STUB_BIN/cargo"
+    stub brew
+    run_kind record rust "$TEST_TEMP_DIR"
+    assert_success
+    run grep -m1 '^cargo PATH=' "$CALL_LOG"
+    assert_output "cargo PATH=$TEST_HOME/.cargo/bin:$STUB_BIN:$DOTFILES_DIR/bin:/usr/bin:/bin"
+}
+
