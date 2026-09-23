@@ -388,22 +388,25 @@ See CONTEXT.md § Link for tool-owned paths.
 
 ### [install-kind](install-kind)
 
-Installs or updates one manifest **kind**. How a kind installs — which
-manifest, which command, whether to skip it, whether a failure is fatal —
-used to be re-derived in six Makefile targets, and how it updates was
-re-derived again in `dotfiles-update` with its own skip flags.
+Installs, updates or records one manifest **kind**. How a kind installs —
+which manifest, which command, whether to skip it, whether a failure is
+fatal — used to be re-derived in six Makefile targets, how it updates again
+in `dotfiles-update`, and how it is recorded again in `dotfiles-backup`,
+each with its own skip flags.
 
 ```bash
 install-kind brew          # trust taps, then brew bundle the Brewfile
 install-kind code          # extensions, preferring codium over code
 install-kind update npm    # upgrade npm itself and every global package
+install-kind record rust ~/dotfiles-backup/20260922_120000   # cargo-installed.txt
 SKIP_KINDS="rust pacman" install-kind rust   # skipped
 STRICT_PACKAGES=1 install-kind npm           # a failure is fatal
 ```
 
 `install` is the default verb, so `install-kind <kind>` is unchanged.
 `update` upgrades everything the kind's tool manages, not only manifest
-entries. The Makefile keeps every dependency edge between kinds — ordering
+entries. `record` writes the files `lib/snapshot.sh` names, each stamped with
+the command that produced it. The Makefile keeps every dependency edge between kinds — ordering
 is what make is genuinely deep at. A missing tool is not a failure:
 `install-kind rust` with no cargo warns and exits 0.
 
