@@ -18,17 +18,12 @@ SHELL := env PATH='$(PATH)' /bin/bash
 # nothing extra when stow is present, the Homebrew bootstrap when it is not.
 HAVE_STOW := $(shell $(PLATFORM) has stow && echo yes)
 
-# Written once because `link` and `link-dry-run` each used to carry their own
-# copy. The copies had different escaping and only the dry-run one worked:
-# make does not collapse `\\`, so `link`'s grep received an escaped backslash
-# plus a quantifier instead of a literal `*`, never matched, and appended a
-# fresh Include block to ~/.ssh/config on every single `make link`.
-# Deferred (=) not immediate (:=) so `$$` survives to recipe expansion.
-SSH_INCLUDE_LINE = Include ~/.config/ssh/config.d/*.conf
-SSH_INCLUDE_RE = ^[[:space:]]*Include[[:space:]]+~/\.config/ssh/config\.d/\*\.conf([[:space:]]|$$)
-ZSHENV_NEEDS_BACKUP = [ -f "$(HOME)/.zshenv" ] && [ ! -h "$(HOME)/.zshenv" ]
 export XDG_CONFIG_HOME = $(HOME)/.config
-export STOW_DIR = $(DOTFILES_DIR)
+# Linking is bin/link's job: apply, dry-run and undo are one planner there, and
+# it owns the SSH Include line, the .zshenv backup and the tool-owned list.
+# HOME and XDG_CONFIG_HOME are passed explicitly so `make link HOME=/tmp/x`
+# (the tests) cannot reach the real home through an inherited value.
+LINK = DOTFILES_DIR="$(DOTFILES_DIR)" HOME="$(HOME)" XDG_CONFIG_HOME="$(XDG_CONFIG_HOME)" "$(MAKEFILE_DIR)/bin/link"
 
 .PHONY: all macos arch link unlink link-dry-run test test-setup verify \
         verify-config-live verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-doctor-tools verify-tests \
@@ -62,8 +57,12 @@ core-macos: brew git
 core-arch:
 	pacman -Syu --noconfirm
 
-stow-arch: core-arch
-	bin/platform has stow || pacman -S --noconfirm stow
+# Only stow, never a system upgrade: `link` depends on this, and it used to
+# depend on core-arch, so refreshing symlinks on Arch ran `pacman -Syu`.
+# --needed makes it a no-op if stow is already there. `make arch` still runs
+# core-arch first on its own.
+stow-arch:
+	$(PLATFORM) has stow || pacman -S --needed --noconfirm stow
 
 # Only pull in the Homebrew bootstrap when stow is actually missing, so
 # `make link` on a machine that already has stow touches nothing else.
@@ -84,38 +83,10 @@ stow-linux:
 		else echo "stow not found: install it with your package manager"; exit 1; fi; }
 
 link: stow-$(OS)
-	@echo "Linking dotfiles..."
-	mkdir -p "$(XDG_CONFIG_HOME)"
-	# Backup existing .zshenv if it exists and is not a symlink
-	if $(ZSHENV_NEEDS_BACKUP); then \
-		mv -v "$(HOME)/.zshenv" "$(HOME)/.zshenv.bak"; \
-	fi
-	# Link .zshenv to home directory
-	ln -sf "$(DOTFILES_DIR)/.zshenv" "$(HOME)/.zshenv"
-	# Link .config directory contents
-	stow -t "$(XDG_CONFIG_HOME)" .config
-	# Ensure OpenSSH includes dotfiles-managed host snippets
-	mkdir -p "$(HOME)/.ssh"
-	chmod 700 "$(HOME)/.ssh"
-	touch "$(HOME)/.ssh/config"
-	chmod 600 "$(HOME)/.ssh/config"
-	if ! grep -Eq '$(SSH_INCLUDE_RE)' "$(HOME)/.ssh/config"; then \
-		printf "\n# Dotfiles managed SSH host snippets\n%s\n" '$(SSH_INCLUDE_LINE)' >> "$(HOME)/.ssh/config"; \
-	fi
-	mkdir -p "$(HOME)/.local/runtime"
-	chmod 700 "$(HOME)/.local/runtime"
-	@echo "Dotfiles linked successfully!"
+	@$(LINK) apply
 
 unlink: stow-$(OS)
-	@echo "Unlinking dotfiles..."
-	stow --delete -t "$(XDG_CONFIG_HOME)" .config
-	# Remove .zshenv symlink
-	rm -f "$(HOME)/.zshenv"
-	# Restore backup if it exists
-	if [ -f "$(HOME)/.zshenv.bak" ]; then \
-		mv -v "$(HOME)/.zshenv.bak" "$(HOME)/.zshenv"; \
-	fi
-	@echo "Dotfiles unlinked successfully!"
+	@$(LINK) undo
 
 brew:
 	bin/platform has brew || curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh | bash
@@ -422,14 +393,10 @@ clean:
 restore:
 	@bin/dotfiles-restore $(if $(backup),$(backup),)
 
-## Restore legacy .zshenv backup created during link/unlink flow
-restore-zshenv:
-	@if [ -f "$(HOME)/.zshenv.bak" ]; then \
-		mv "$(HOME)/.zshenv.bak" "$(HOME)/.zshenv"; \
-		echo "✓ Restored .zshenv from backup"; \
-	else \
-		echo "No .zshenv backup found"; \
-	fi
+## Restore the .zshenv that `make link` backed up
+# Kept as a name only. Restoring the backup is part of undo, and this recipe's
+# own copy of that logic moved the backup over whatever was at ~/.zshenv.
+restore-zshenv: unlink
 
 brew-update:
 	@echo "Updating Homebrew..."
@@ -441,27 +408,11 @@ brew-cleanup:
 	@brew cleanup
 	@echo "✓ Homebrew cleanup complete"
 
-## Dry-run: Show what symlinks would be created without making changes
-link-dry-run: stow-$(OS)
-	@echo "Dry run - the following symlinks would be created:"
-	@echo ""
-	@echo "==> .zshenv symlink:"
-	@if $(ZSHENV_NEEDS_BACKUP); then \
-		echo "    Would backup: $(HOME)/.zshenv -> $(HOME)/.zshenv.bak"; \
-	fi
-	@echo "    Would create: $(HOME)/.zshenv -> $(DOTFILES_DIR)/.zshenv"
-	@echo ""
-	@echo "==> .config symlinks (via stow):"
-	@stow -n -v -t "$(XDG_CONFIG_HOME)" .config 2>&1 | grep -E "^(LINK|UNLINK)" || echo "    (no changes needed)"
-	@echo ""
-	@echo "==> SSH include:"
-	@if grep -Eq '$(SSH_INCLUDE_RE)' "$(HOME)/.ssh/config" 2>/dev/null; then \
-		echo "    Include already present in $(HOME)/.ssh/config"; \
-	else \
-		echo "    Would append: $(SSH_INCLUDE_LINE)"; \
-	fi
-	@echo ""
-	@echo "Run 'make link' to apply these changes."
+## Dry-run: print what `make link` would do, changing nothing
+# No stow-$(OS) prerequisite: a preview must not install anything. bin/link
+# says so if stow is missing and previews the rest.
+link-dry-run:
+	@$(LINK) dry-run
 
 ## Docker-based testing (clean environment)
 test-docker:
@@ -514,7 +465,7 @@ help:
 	@echo "                      the Firefox profiles that read it (bin/firefox-user-js status"
 	@echo "                      reports where it landed)"
 	@echo "  make restore [backup=/path] - Restore latest/specified backup snapshot"
-	@echo "  make restore-zshenv - Restore legacy .zshenv backup only"
+	@echo "  make restore-zshenv - Same as unlink: undo links, restore the pre-link .zshenv"
 	@echo "  make bench-shell [runs=7] [budget=900] - Benchmark zsh startup budget"
 	@echo "  make daily        - Run core pre-push checks (shell, docs, tests)"
 	@echo "  make worktree-add name=<task> [base=main] - New isolated worktree"

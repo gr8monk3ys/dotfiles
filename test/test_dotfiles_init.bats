@@ -272,10 +272,10 @@ link_git_include_chain() {
     run_init --git-name Ada --git-email ada@example.com
     assert_success
 
-    # The SSH Include line is make link's job, not this module's, so put it
+    # The SSH Include line is bin/link's job, not this module's, so put it
     # where a linked machine has it before asserting a clean check.
     mkdir -p "$TEST_HOME/.ssh"
-    echo 'Include ~/.config/ssh/config.d/*.conf' > "$TEST_HOME/.ssh/config"
+    "$DOTFILES_DIR/bin/link" include-line > "$TEST_HOME/.ssh/config"
 
     run_init --check
     assert_success
@@ -367,13 +367,6 @@ link_git_include_chain() {
 @test "dotfiles-doctor detects nothing about local config itself" {
     run grep -n 'config\.local\|conf\.d/user\.toml' "$DOTFILES_DIR/bin/dotfiles-doctor"
     assert_failure
-}
-
-@test "dotfiles-init and the Makefile agree on the SSH Include line" {
-    run grep -cF 'Include ~/.config/ssh/config.d/*.conf' "$DOTFILES_DIR/Makefile"
-    assert_success
-    run grep -cF 'Include ~/.config/ssh/config.d/*.conf' "$DOTFILES_DIR/bin/dotfiles-init"
-    assert_success
 }
 
 @test "every identity variable the Makefile reads appears in make help" {

@@ -146,16 +146,6 @@ teardown() {
 	[[ "$output" == *"install-kind code"* ]]
 }
 
-# Regression: `stow-macos: brew` made "symlinks only" install Homebrew via
-# curl on a fresh Mac. With stow present, `make link` must touch nothing else.
-@test "make link does not bootstrap Homebrew when stow is present" {
-	command -v stow >/dev/null 2>&1 || skip "stow not installed"
-	run make -n OS=macos link
-	assert_success
-	[[ "$output" != *"curl"* ]]
-	[[ "$output" != *"brew install"* ]]
-}
-
 # Regression: `dotfiles-why` with no args launched fzf without a TTY and hung.
 @test "dotfiles-why without a terminal prints usage and exits 1" {
 	run bash -c 'bin/dotfiles-why </dev/null'
@@ -249,8 +239,6 @@ EOS
     assert_output "0"
 }
 
-# Regression: `link: stow-$(OS)` had no stow-linux target, so `make link`
-# on any non-Arch Linux failed with "No rule to make target 'stow-linux'".
 # Regression: install.sh cased on `bin/platform detect` and called make
 # macos/arch/link itself, duplicating the Makefile's own OS dispatch. The two
 # disagreed: platform detect can return "unknown", and make had no target for
@@ -268,12 +256,6 @@ EOS
 	# Comments are exempt: the deletion is explained in one.
 	run bash -c 'grep -vE "^[[:space:]]*#" install.sh | grep -nE "make (macos|arch|link)\b"'
 	assert_failure
-}
-
-@test "make link has a rule for generic linux" {
-	run make -n OS=linux link
-	assert_success
-	[[ "$output" == *"stow -t"* ]]
 }
 
 # Regression: Homebrew >= 5 refuses third-party taps until `brew trust`ed,
@@ -301,42 +283,6 @@ EOS
 	run git -C "$DOTFILES_DIR" ls-files -- '.config/ssh/config.d/*.conf'
 	[[ -z "$output" ]]
 	git -C "$DOTFILES_DIR" check-ignore -q .config/ssh/config.d/pi-lab.conf
-}
-
-# Regression: `link` and `link-dry-run` each carried their own copy of the
-# SSH-include pattern with different escaping. Make does not collapse `\\`, so
-# `link`'s grep received an escaped backslash plus a quantifier rather than a
-# literal `*`, never matched an existing Include, and appended another block
-# on every run. A real ~/.ssh/config had accumulated three.
-@test "make link is idempotent: the SSH Include is appended exactly once" {
-	command -v stow >/dev/null 2>&1 || skip "stow not installed"
-	mkdir -p "$TEST_HOME/.config"
-
-	run make -C "$DOTFILES_DIR" link HOME="$TEST_HOME" XDG_CONFIG_HOME="$TEST_HOME/.config"
-	assert_success
-	run make -C "$DOTFILES_DIR" link HOME="$TEST_HOME" XDG_CONFIG_HOME="$TEST_HOME/.config"
-	assert_success
-
-	run grep -c 'Include ~/.config/ssh/config.d' "$TEST_HOME/.ssh/config"
-	assert_output "1"
-}
-
-@test "link and link-dry-run agree about the SSH Include" {
-	command -v stow >/dev/null 2>&1 || skip "stow not installed"
-	mkdir -p "$TEST_HOME/.config"
-
-	# Before linking, the dry run must say it would append.
-	run make -C "$DOTFILES_DIR" link-dry-run HOME="$TEST_HOME" XDG_CONFIG_HOME="$TEST_HOME/.config"
-	assert_success
-	[[ "$output" == *"Would append"* ]]
-
-	run make -C "$DOTFILES_DIR" link HOME="$TEST_HOME" XDG_CONFIG_HOME="$TEST_HOME/.config"
-	assert_success
-
-	# After linking, it must say it is already present.
-	run make -C "$DOTFILES_DIR" link-dry-run HOME="$TEST_HOME" XDG_CONFIG_HOME="$TEST_HOME/.config"
-	assert_success
-	[[ "$output" == *"already present"* ]]
 }
 
 # Regression: install.sh declared `readonly STRICT_PACKAGES=...` and then used
