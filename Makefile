@@ -151,16 +151,15 @@ test:
 # both container images call this rather than carrying their own recipe.
 # bats-support/bats-assert are real prerequisites, not optional: without them
 # test_helper/common.bash falls back to a three-function shim. zsh and stow
-# are what the suite exercises. Dispatches on $(OS), not on `command -v`:
-# bin/ is on PATH and bin/pacman is a wrapper, so `command -v pacman` is true
-# on every machine, and a Linux runner with Linuxbrew must still use apt.
+# are what the suite exercises. Dispatches on $(OS), not on `command -v`: a
+# Linux runner with Linuxbrew on PATH must still use apt.
 # Idempotent, so it re-runs cheaply. Ubuntu before 24.04 ships a bats too old
 # for the suite (it needs 1.5 for `run --separate-stderr`).
 test-setup:
 	@echo "Installing test dependencies (bats, bats-support, bats-assert, zsh, stow)..."
 	@case "$(OS)" in \
 	arch) \
-		sudo pacman -S --needed --noconfirm bats bats-support bats-assert zsh stow ;; \
+		$(AS_ROOT) pacman -S --needed --noconfirm bats bats-support bats-assert zsh stow ;; \
 	macos) \
 		brew install bats-core stow && \
 		brew tap bats-core/bats-core && \
