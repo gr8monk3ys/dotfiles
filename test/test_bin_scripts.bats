@@ -90,6 +90,21 @@ teardown() {
     done
 }
 
+# bin/README.md is an index that points at each script's --help rather than
+# repeating it, so every script must answer --help, and must do it without
+# acting: a script that ignored the flag would run for real here.
+@test "every bin script prints help for --help and exits 0" {
+    local script
+    for script in bin/*; do
+        [[ -f "$script" && "$script" != */README.md ]] || continue
+        run env HOME="$TEST_HOME" "$script" --help </dev/null
+        [[ "$status" -eq 0 && -n "$output" ]] || {
+            echo "no --help: $script (status $status)"
+            return 1
+        }
+    done
+}
+
 @test "no bin scripts have syntax errors" {
     for script in bin/*; do
         if [[ -f "$script" ]] && [[ "$script" != */README.md ]]; then

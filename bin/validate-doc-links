@@ -1,7 +1,19 @@
 #!/usr/bin/env bash
 # Validate local Markdown links resolve to existing files/directories.
+#
+# Usage: validate-doc-links [ROOT]   # default: the current directory
+#
+# Ignores external links and fenced code, strips #anchors before resolving,
+# and exits 1 on any broken link.
 
 set -euo pipefail
+
+case "${1:-}" in
+	-h | --help)
+		sed -n '2,7p' "$0" | sed 's/^# \{0,1\}//'
+		exit 0
+		;;
+esac
 
 ROOT_DIR="${1:-.}"
 
