@@ -13,7 +13,9 @@ into `~/.config/`; `make` drives install, link and verification.
   check, doc-link validator, BATS, and a Docker fresh-install (`SKIP_DOCKER=1`,
   `SKIP_LINTERS=1` to skip parts).
   It is a superset of CI. `make test` is just BATS (`bats test`).
-- CI (`.github/workflows/ci.yml`) runs the same checks plus the curl installer.
+- CI (`.github/workflows/ci.yml`) runs the same make targets, each once, plus
+  the curl installer and a macOS fresh install; `Container (arch)` is the
+  full `make arch` gate.
 
 ## Where things live
 

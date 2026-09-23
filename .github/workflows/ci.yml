@@ -8,6 +8,14 @@ on:
   pull_request:
     branches: [main]
 
+# Each check runs once per PR, and every job calls a make target rather than
+# carrying its own recipe, so CI and `make verify` cannot drift apart:
+#   Lint                 make lint (linters + validators)
+#   Tests (os)           make test-setup, make test, link/unlink round-trip
+#   Container (distro)   make test-docker[-arch]: the platform's real `make`,
+#                        then the suite and doctor, in a clean image
+#   Installer            the curl | bash entry point
+#   Fresh install (os)   bare `make` on a runner with nothing preinstalled
 jobs:
   lint:
     name: Lint
@@ -15,23 +23,19 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
-      - name: ShellCheck bin/
-        uses: ludeeus/action-shellcheck@00b27aa7cb85167568cb48a3838b75f4265f2bca
-        with:
-          scandir: ./bin
-          severity: warning
+      # Pinned to the versions `make verify` is run with locally. The runner's
+      # own shellcheck is older and would disagree with the local gate.
+      - name: Install linters
+        env:
+          SHELLCHECK_VERSION: v0.11.0
+        run: |
+          curl -fsSL "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" \
+            | tar -xJ -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/shellcheck-${SHELLCHECK_VERSION}" >> "$GITHUB_PATH"
+          npm install --global markdownlint-cli@0.49.1
 
-      - name: markdownlint
-        uses: articulate/actions-markdownlint@17b8abe7407cd17590c006ecc837c35e1ac3ed83
-        with:
-          config: .markdownlint.json
-          files: "**/*.md"
-          ignore: |
-            .github
-            test
-
-      - name: Validators (doc links, tool catalog, stale refs)
-        run: make verify-doc-links verify-tool-docs verify-doctor-tools verify-stale-refs
+      - name: make lint
+        run: make lint
 
   test:
     name: Tests
@@ -43,28 +47,13 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
-      - name: Install bats (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew install bats-core
-          brew tap bats-core/bats-core
-          brew trust bats-core/bats-core 2>/dev/null || true
-          brew install bats-support bats-assert stow
+      - name: make test-setup
+        run: make test-setup
 
-      - name: Install bats (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y bats zsh stow
-          sudo mkdir -p /usr/lib/bats
-          sudo git clone --depth 1 https://github.com/bats-core/bats-support.git /usr/lib/bats/bats-support
-          sudo git clone --depth 1 https://github.com/bats-core/bats-assert.git /usr/lib/bats/bats-assert
-
-      - name: make verify (no Docker)
+      - name: make test
         env:
-          SKIP_DOCKER: "1"
           TERM: xterm
-        run: make verify
+        run: make test
 
       - name: link / unlink round-trip
         run: |
@@ -73,28 +62,28 @@ jobs:
           make unlink
           test ! -L "$HOME/.zshenv"
 
-  # The repo claims Arch (incl. Omarchy) support, but nothing verified it:
-  # `make test-docker-arch` existed and was in no gate, so install/pacmanfile
-  # sat at 8 packages — no zsh, no neovim, no starship — without failing
-  # anything. This job is that gate. GitHub's runners are amd64, so the
-  # linux/amd64 image is native here and costs about as much as Ubuntu.
+  # Arch (incl. Omarchy) is a supported platform, and this is the job that
+  # proves it: the container runs `make` (= `make arch`: pacman -Syu, the whole
+  # install/pacmanfile under STRICT_PACKAGES, link), then the suite and doctor.
+  # GitHub's runners are amd64, so the linux/amd64 image is native here. The
+  # Ubuntu leg runs the generic-Linux path (`make` = link only).
   container:
     name: Container (${{ matrix.distro }})
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
-        distro: [ubuntu, arch]
+        include:
+          - distro: ubuntu
+            target: test-docker
+          - distro: arch
+            target: test-docker-arch
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
-      - name: make test-docker (${{ matrix.distro }})
-        run: |
-          if [ "${{ matrix.distro }}" = "arch" ]; then
-            make test-docker-arch
-          else
-            make test-docker
-          fi
+      - name: make ${{ matrix.target }}
+        run: make ${{ matrix.target }}
 
   installer:
     name: Installer
@@ -111,9 +100,11 @@ jobs:
           test -L "$HOME/.zshenv"
           test -L "$HOME/.config/starship"
 
-  # Full fresh-machine install: Homebrew bootstrap, every formula and day-one
-  # cask, npm globals, rustup + crates, link, real zsh boot, doctor. This is
-  # the only check that proves `make` works on a machine that has nothing.
+  # Bare `make` on a runner. On macOS that is the full fresh-machine install:
+  # Homebrew bootstrap, every formula and day-one cask, npm globals, rustup +
+  # crates, link, a real zsh boot, doctor. On ubuntu-latest `make` resolves to
+  # the generic `linux` target, which only links; Ubuntu is not a supported
+  # platform, and the Arch full install is Container (arch).
   install:
     name: Fresh install (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -125,7 +116,7 @@ jobs:
       - name: Strip the runner's preinstalled Homebrew (macOS)
         if: startsWith(matrix.os, 'macos')
         run: |
-          brew uninstall --ignore-dependencies --force $(brew list --formula)
+          brew list --formula | xargs brew uninstall --ignore-dependencies --force
           brew uninstall --cask --force firefox google-chrome
           brew cleanup --prune-prefix
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall.sh)"
