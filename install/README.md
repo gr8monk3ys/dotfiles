@@ -47,8 +47,8 @@ Applied by `make cask-apps`, which runs as part of `make macos`.
 ### [Caskfile.extra](Caskfile.extra)
 
 **Homebrew Casks (optional)** - everything else. Not part of `make macos`;
-install on demand with `make cask-apps-extra` (honours `SKIP_CASKS` and
-`BREW_BUNDLE_STRICT` like `cask-apps`).
+install on demand with `make cask-apps-extra` (honours `SKIP_KINDS=cask-extra`
+and `STRICT_PACKAGES` like `cask-apps`).
 
 - **Games**: godot, love, lunar-client
 - **Media production**: audacity, obs, cameracontroller, rode-central

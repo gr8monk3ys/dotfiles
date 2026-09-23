@@ -38,11 +38,11 @@ readonly DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
 readonly DOTFILES_BRANCH="${DOTFILES_BRANCH:-main}"
 # A fresh, unattended machine should fail loudly on a broken package install;
 # plain `make` stays tolerant because it is interactive and `make doctor`
-# reports what is missing. DOTFILES_STRICT_PACKAGES is the old spelling.
+# reports what is missing.
 # Exported, not readonly: `make` needs it in its environment, and a
 # `STRICT_PACKAGES=... make` assignment prefix on a readonly variable is a
 # fatal error in bash — which broke the curl installer outright.
-STRICT_PACKAGES="${STRICT_PACKAGES:-${DOTFILES_STRICT_PACKAGES:-1}}"
+STRICT_PACKAGES="${STRICT_PACKAGES:-1}"
 export STRICT_PACKAGES
 
 # ============================================================================
