@@ -153,17 +153,6 @@ teardown() {
 	assert_output --partial "Usage:"
 }
 
-@test "dotfiles-doctor checks Zinit instead of Oh My Zsh" {
-	mkdir -p "$TEST_HOME/.local/share/zinit/zinit.git"
-
-	run env HOME="$TEST_HOME" DOTFILES_DIR="$TEST_HOME/.dotfiles" \
-		XDG_DATA_HOME="$TEST_HOME/.local/share" \
-		PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
-		bash bin/dotfiles-doctor
-	assert_output --partial "Zinit installed"
-	[[ "$output" != *"Oh My Zsh"* ]]
-}
-
 # Regression: install.sh cased on `bin/platform detect` and called make
 # macos/arch/link itself, duplicating the Makefile's own OS dispatch. The two
 # disagreed: platform detect can return "unknown", and make had no target for

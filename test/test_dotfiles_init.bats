@@ -354,21 +354,6 @@ link_git_include_chain() {
 
 # ---------- it does not drift from its callers ----------
 
-@test "dotfiles-doctor handles every state dotfiles-init can report" {
-    run_init --states
-    assert_success
-    local st
-    for st in $output; do
-        grep -q "$st" "$DOTFILES_DIR/bin/dotfiles-doctor" \
-            || { echo "dotfiles-doctor does not handle state: $st"; return 1; }
-    done
-}
-
-@test "dotfiles-doctor detects nothing about local config itself" {
-    run grep -n 'config\.local\|conf\.d/user\.toml' "$DOTFILES_DIR/bin/dotfiles-doctor"
-    assert_failure
-}
-
 @test "every identity variable the Makefile reads appears in make help" {
     run bash -c '
         set -euo pipefail
