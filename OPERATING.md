@@ -95,7 +95,10 @@ launch zsh from the terminal: `command = /usr/bin/zsh` in `~/.config/ghostty/con
 and `nano` are new. Nothing in it conflicts with an Omarchy package.
 
 **Updating.** `omarchy-update` (snapshot, `git pull` of the Omarchy checkout, migrations,
-`pacman -Syu`) is separate from `make update`, which knows nothing about Omarchy. Run both.
+`pacman -Syu`) is separate from `make update`, which knows nothing about Omarchy.
+`make update` runs `pacman -Syu` too, as the pacman kind's update, but without
+Omarchy's snapshot and migrations; on Omarchy run `omarchy-update`, then
+`make update SKIP_KINDS=pacman`.
 
 ### Fresh-laptop checklist
 
@@ -130,7 +133,7 @@ Commands you re-run routinely.
 | `make link-dry-run` | Preview symlink changes without applying. |
 | `make init` | Create the git-ignored identity files (git, jj). Safe to re-run; never overwrites. |
 | `make doctor` | Comprehensive health check (symlinks, package managers, shell config, local config, tool presence). |
-| `make update` | Update all packages (Homebrew, npm, Cargo, Zinit plugins). |
+| `make update` | Update every manifest kind (Homebrew, casks, npm, Cargo, pacman, editor extensions), then Zinit and Neovim plugins. |
 | `make backup` | Snapshot configs + package lists. `backup-compress` / `backup-cleanup` variants exist. |
 | `make bench-shell` | Benchmark interactive zsh startup against a budget (default 900ms). |
 | `make daily` | Fast pre-push check: shell syntax + doc links + tests. |
@@ -140,7 +143,7 @@ Commands you re-run routinely.
 | `make help` | List every target with its one-line description. |
 
 `make <target>` wraps the matching `bin/dotfiles-*` script, which also runs standalone
-(`dotfiles-doctor --verbose`, `dotfiles-update --skip-brew`, `dotfiles-restore --dry-run`).
+(`dotfiles-doctor --verbose`, `dotfiles-update --skip brew`, `dotfiles-restore --dry-run`).
 See `bin/README.md` for flags.
 
 ### Testing and verification

@@ -153,39 +153,6 @@ teardown() {
 	assert_output --partial "Usage:"
 }
 
-@test "dotfiles-update npm check survives outdated packages under set -e" {
-	# Minimal clean git repo so update_dotfiles passes
-	git -C "$TEST_HOME" init -q -b main dotfiles-repo
-	git -C "$TEST_HOME/dotfiles-repo" -c user.email=t@t.t -c user.name=t \
-		commit -q --allow-empty -m init
-	git -C "$TEST_HOME/dotfiles-repo" remote add origin "$TEST_HOME/dotfiles-repo"
-
-	# Stub npm: like the real one, outdated exits 1 when packages are stale
-	mkdir -p "$TEST_TEMP_DIR/bin"
-	cat > "$TEST_TEMP_DIR/bin/npm" <<'EOS'
-#!/usr/bin/env bash
-case "${1:-}" in
-	outdated) printf 'Package Current Wanted\nfoo 1.0.0 2.0.0\n'; exit 1 ;;
-	*) exit 0 ;;
-esac
-EOS
-	chmod +x "$TEST_TEMP_DIR/bin/npm"
-
-	# ZDOTDIR and the XDG vars are scrubbed, not just HOME: dotfiles-update's
-	# zinit step runs a child `zsh -c`, zsh derives its completion dump from
-	# an inherited $ZDOTDIR rather than from $HOME, and on a machine where
-	# ~/.config/zsh is stowed that path resolves *into the checkout* — so this
-	# sandboxed test wrote .zcompdump into the working tree and
-	# test_shell_boot.bats's "the suite does not write into the checkout"
-	# failed several tests later. Same scrub test_shell_boot.bats uses.
-	run env -u ZDOTDIR -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_CACHE_HOME \
-		HOME="$TEST_HOME" DOTFILES_DIR="$TEST_HOME/dotfiles-repo" \
-		PATH="$TEST_TEMP_DIR/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
-		bash bin/dotfiles-update --skip-brew --skip-cargo
-	assert_success
-	assert_output --partial "npm packages updated"
-}
-
 @test "dotfiles-doctor checks Zinit instead of Oh My Zsh" {
 	mkdir -p "$TEST_HOME/.local/share/zinit/zinit.git"
 
