@@ -136,8 +136,8 @@ Commands you re-run routinely.
 | `make update` | Update every manifest kind (Homebrew, casks, npm, Cargo, pacman, editor extensions), then Zinit and Neovim plugins. |
 | `make backup` | Snapshot configs + package lists. `backup-compress` / `backup-cleanup` variants exist. |
 | `make bench-shell` | Benchmark interactive zsh startup against a budget (default 900ms). |
-| `make daily` | Fast pre-push check: shell syntax + doc links + tests. |
-| `make verify` | Full repo verification: shell syntax + stale-ref check + doc links + tests. |
+| `make daily` | Fast pre-push check: doc links + tests. |
+| `make verify` | Full repo verification: linters + validators + tests + containers. |
 | `make clean` | Remove broken symlinks in `~/.config/`. |
 | `make restore [backup=/path]` | Restore the latest (or a named) `dotfiles-backup` snapshot. |
 | `make help` | List every target with its one-line description. |
@@ -152,8 +152,6 @@ See `bin/README.md` for flags.
 | --- | --- |
 | `make test-setup` | Install BATS if missing. |
 | `make test` | Run the BATS suite (`test/test_*.bats`). |
-| `make verify-shell` | Syntax-check zsh/bash files. |
-| `make verify-shell-surface` | Source `.zshenv`/aliases/functions and check every alias resolves. |
 | `make verify-stale-refs` | Grep for strings left over from past migrations. |
 | `make verify-doc-links` | Validate local Markdown links (`bin/validate-doc-links`). |
 | `make test-docker` / `make test-docker-arch` | Run the install in an Ubuntu / Arch container. `make verify` runs both; `SKIP_DOCKER=1` skips both, `SKIP_ARCH_DOCKER=1` only the Arch one. |
@@ -361,7 +359,7 @@ The validator (`bin/validate-doc-links`) reports the file + line of each bad lin
 
 `make verify-stale-refs` scans for strings left over from past migrations (old theme names, removed file paths, typos). When it fires, grep for the reported pattern and either update or remove it.
 
-### `verify-shell-surface` fails with "alias references unresolved command"
+### Alias check fails with "alias references unresolved command"
 
 The alias references a command that is not a shell builtin, not in any install manifest, and not in `test/allowlist/system-tools.txt`. The error output names the offending alias's file:line and the unresolved command. Pick one fix:
 
@@ -395,10 +393,10 @@ sourced on macOS (see `file_mode` in `bin/dotfiles-doctor` for the `stat` split)
 Add or update a test whenever behavior changes; regression guards live in
 `test/test_regressions.bats`. Iterate with targeted runs
 (`bats test/test_regressions.bats -f "theme consistency"`), then `make test`.
-`make verify-shell-surface` parses and sources `.zshenv`, `aliases.zsh`, and
-`functions.zsh`, asserts a sentinel alias per conditional block, and runs
+`test/test_shell_surface.bats` parses and sources `.zshenv` and every file
+`.zshrc` sources, asserts a sentinel alias per conditional block, and runs
 `bin/check-alias-references` so every unconditional alias resolves to a known command
-(fixes are under [Troubleshooting](#verify-shell-surface-fails-with-alias-references-unresolved-command)).
+(fixes are under [Troubleshooting](#alias-check-fails-with-alias-references-unresolved-command)).
 
 ### Commits and pull requests
 

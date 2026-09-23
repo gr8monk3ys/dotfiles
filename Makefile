@@ -26,7 +26,7 @@ export XDG_CONFIG_HOME = $(HOME)/.config
 LINK = DOTFILES_DIR="$(DOTFILES_DIR)" HOME="$(HOME)" XDG_CONFIG_HOME="$(XDG_CONFIG_HOME)" "$(MAKEFILE_DIR)/bin/link"
 
 .PHONY: all macos arch link unlink link-dry-run test test-setup verify \
-        verify-config-live verify-palette verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-doc-links verify-tests \
+        verify-config-live verify-palette verify-shellcheck verify-markdown verify-stale-refs verify-doc-links verify-tests \
         doctor init update backup firefox worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
         brew git packages-macos packages-arch core-macos core-arch \
@@ -160,7 +160,10 @@ test-setup:
 		exit 1; \
 	fi
 
-verify: verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-palette verify-doc-links verify-tests verify-docker
+# No separate syntax or shell-surface steps: shellcheck parses every bin/
+# script, and the suite (verify-tests) parses and sources the zsh surface.
+# Both used to run here as well, so each check ran two or three times.
+verify: verify-shellcheck verify-markdown verify-stale-refs verify-palette verify-doc-links verify-tests verify-docker
 	@echo "✓ Verification complete"
 
 # The container tests are the only checks that exercise the fresh-install path,
@@ -182,19 +185,6 @@ verify-docker:
 		if [ -n "$(SKIP_ARCH_DOCKER)" ]; then echo "Skipping Arch container test (SKIP_ARCH_DOCKER set)"; \
 		else $(MAKE) test-docker-arch; fi; \
 	else echo "⚠️  Docker not reachable; fresh-install container tests SKIPPED (run 'make test-docker test-docker-arch' where Docker exists)"; fi
-
-verify-shell:
-	@echo "Running shell syntax checks..."
-	@if command -v zsh >/dev/null 2>&1; then \
-		zsh -n .zshenv .config/zsh/.zshrc .config/zsh/aliases.zsh .config/zsh/functions.zsh; \
-	else \
-		echo "⚠️  zsh not found; skipping zsh syntax checks"; \
-	fi
-	@for script in bin/*; do \
-		if [ -f "$$script" ] && head -n1 "$$script" | grep -q "bash"; then \
-			bash -n "$$script"; \
-		fi; \
-	done
 
 # Retired palette hexes are not listed here any more: every colour outside
 # prose is rendered from .config/palette/danse.conf and checked by
@@ -226,10 +216,6 @@ verify-palette:
 verify-doc-links:
 	@echo "Validating markdown links..."
 	@bin/validate-doc-links
-
-verify-shell-surface:
-	@echo "Running shell-surface tests..."
-	@bats test/test_shell_surface.bats test/test_alias_checker.bats
 
 # Mirrors the Lint job in .github/workflows/ci.yml. Kept here so `make verify`
 # is a superset of CI rather than a subset of it: shellcheck and markdownlint
@@ -271,7 +257,7 @@ verify-tests:
 	@$(MAKE) test
 
 ## Run core pre-push checks (fast local confidence loop)
-daily: verify-shell verify-doc-links verify-tests
+daily: verify-doc-links verify-tests
 	@echo "✓ Daily checks passed"
 
 doctor:
