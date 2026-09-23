@@ -1,97 +1,32 @@
-# Ghostty Terminal Configuration
+# ghostty
 
-[Ghostty](https://ghostty.org/) is a fast, feature-rich, and cross-platform terminal emulator built from the ground up in Zig by Mitchell Hashimoto (HashiCorp co-founder).
+[Ghostty](https://ghostty.org/docs/config), the primary terminal. Splits and
+tabs are Ghostty's own (`Cmd`-based keybinds in `config`); Zellij runs inside
+it when a session has to survive the window.
 
-## Features
+## Why these choices
 
-- **Native GPU Rendering** - Hardware-accelerated rendering for smooth performance
-- **Built-in Multiplexing** - Native splits and tabs without tmux
-- **Modern Architecture** - Written in Zig for performance and safety
-- **Cross-Platform** - macOS, Linux (Windows coming)
-- **Font Ligatures** - Full support for programming ligatures
-- **Shell Integration** - Smart features like cursor tracking, sudo detection
+- **Keybinds for many panes at once:** `Cmd+D` / `Cmd+Shift+D` split,
+  `Cmd+H/J/K/L` move between splits, resize and equalize keys, and a zoom
+  toggle to read one pane full-size. The full list is the `keybind` lines in
+  `config`.
+- **Frosted glass over a painting:** the desktop is _La Danse_
+  (`bin/wallpaper`), so opacity is 0.86 rather than the usual 0.8, and
+  `background-opacity-cells` stops cells with their own background from
+  showing as opaque patches.
+- **JetBrains Mono Nerd Font** (installed by the Caskfile) with ligatures on
+  and 20% extra line height.
+- **`macos-option-as-alt`**, so Option works as Meta in zsh, Neovim and
+  Zellij.
+- **Colours:** `theme = danse` loads `themes/danse`, and the chrome colours
+  (split fill, divider, Dock icon) are a region of `config`. Both are
+  rendered from the palette by `bin/palette`; edit the templates under
+  `.config/palette/templates/`.
 
-## Installation
+## Gotchas
 
-```bash
-# macOS (via Homebrew)
-brew install --cask ghostty
-
-# Or download from https://ghostty.org/download
-```
-
-## Key Bindings
-
-### Splits (Built-in Multiplexing)
-
-| Key | Action |
-| ----- | -------- |
-| `Cmd+D` | Split right |
-| `Cmd+Shift+D` | Split down |
-| `Cmd+W` | Close split |
-| `Cmd+H/J/K/L` | Navigate splits (vim-style) |
-| `Cmd+Enter` | Toggle split zoom |
-
-### Tabs
-
-| Key | Action |
-| ----- | -------- |
-| `Cmd+T` | New tab |
-| `Cmd+1-5` | Go to tab 1-5 |
-| `Cmd+Shift+Left/Right` | Previous/Next tab |
-
-### General
-
-| Key | Action |
-| ----- | -------- |
-| `Cmd+F` | Toggle fullscreen |
-| `Cmd++/-` | Increase/Decrease font size |
-| `Cmd+0` | Reset font size |
-| `Cmd+Shift+C` | Open config |
-
-## Theme
-
-`theme = danse` loads `themes/danse`, a Ghostty theme rendered from the
-palette by `bin/palette`; the chrome colours in `config` are a rendered
-region too. Edit the templates under `.config/palette/templates/`, not these.
-
-UI/UX profile in this repo:
-
-- Frosted-glass effect (`background-opacity = 0.8`, `background-blur = 90`)
-- Comfortable spacing (`window-padding-x = 10`, balanced padding enabled)
-- Clean native chrome (`macos-titlebar-style = transparent`)
-
-On Linux, blur depends on compositor support.
-Popular theme alternatives right now: Catppuccin Mocha, Rose Pine Moon, TokyoNight Storm.
-
-## Why Ghostty over Kitty?
-
-1. **Performance** - Zig-based rendering is exceptionally fast
-2. **Built-in Multiplexing** - No need for tmux for basic splits
-3. **Modern Codebase** - Clean architecture, actively developed
-4. **macOS Native** - Better macOS integration
-5. **Configuration** - Simpler config format
-
-## Migration from Kitty
-
-Ghostty and Kitty have similar features. Main differences:
-
-- Ghostty uses `=` for config assignments (not spaces)
-- Keybindings use `keybind =` prefix
-- Built-in splits use different terminology
-
-## Configuration
-
-Edit `~/.config/ghostty/config` to customize. Changes take effect on restart; `Cmd+Shift+C` opens the config file.
-
-Validate config:
-
-```bash
-ghostty +validate-config --config-file ~/.config/ghostty/config
-```
-
-## Resources
-
-- [Ghostty Documentation](https://ghostty.org/docs)
-- [Ghostty GitHub](https://github.com/ghostty-org/ghostty)
-- [Configuration Reference](https://ghostty.org/docs/config)
+- Changes need a config reload (`Cmd+Shift+,`) or a restart;
+  `ghostty +validate-config` catches typos first.
+- Background blur on Linux depends on the compositor.
+- On Omarchy the login shell stays bash; OPERATING.md § Arch: Omarchy says
+  how to start zsh from Ghostty instead.
