@@ -137,30 +137,49 @@ Commands you re-run routinely.
 | `make backup` | Snapshot configs + package lists. `backup-compress` / `backup-cleanup` variants exist. |
 | `make bench-shell` | Benchmark interactive zsh startup against a budget (default 900ms). |
 | `make daily` | Fast pre-push check: doc links + tests. |
-| `make verify` | Full repo verification: linters + validators + tests + containers. |
+| `make verify` | The pre-push gate; see [Testing and verification](#testing-and-verification). |
 | `make clean` | Remove broken symlinks in `~/.config/`. |
 | `make restore [backup=/path]` | Restore the latest (or a named) `dotfiles-backup` snapshot. |
-| `make help` | List every target with its one-line description. |
+| `make help` | Every public target, one line each. |
 
 `make <target>` wraps the matching `bin/dotfiles-*` script, which also runs standalone
 (`dotfiles-doctor --verbose`, `dotfiles-update --skip brew`, `dotfiles-restore --dry-run`).
-See `bin/README.md` for flags.
+Every script answers `--help`; [bin/README.md](bin/README.md) is the index.
 
 ### Testing and verification
 
+`make verify` is the gate: run it before pushing. It is three parts, each
+runnable alone:
+
 | Command | What it does |
 | --- | --- |
-| `make test-setup` | Install the suite's prerequisites: bats, bats-support, bats-assert, zsh, stow. |
-| `make test` | Run the BATS suite (`test/test_*.bats`). |
-| `make verify-stale-refs` | Grep for strings left over from past migrations. |
-| `make verify-doc-links` | Validate local Markdown links (`bin/validate-doc-links`). |
-| `make test-docker` / `make test-docker-arch` | Build `test/Dockerfile` on Ubuntu / Arch and run that platform's real `make` (on Arch, `make arch` with the whole pacmanfile), then the suite and doctor. `make verify` runs both; `SKIP_DOCKER=1` skips both, `SKIP_ARCH_DOCKER=1` only the Arch one. |
+| `make lint` | shellcheck over `bin/`, markdownlint, the stale-reference grep, `bin/palette check`, and the doc-link validator. No bats, no packages. |
+| `make test` | The BATS suite (`bats test`). `make test-setup` installs its prerequisites: bats, bats-support, bats-assert, zsh, stow. |
+| `make verify-docker` | `make test-docker` (Ubuntu: `make`, which only links there) and `make test-docker-arch` (Arch: `make arch` with the whole pacmanfile), each followed by the suite and doctor in a clean container. Skipped with a warning when Docker is not reachable. |
+
+`SKIP_DOCKER=1` skips both containers and `SKIP_ARCH_DOCKER=1` only the Arch
+one, which runs under amd64 emulation on Apple Silicon and takes about 25
+minutes. `SKIP_LINTERS=1` skips shellcheck and markdownlint; a missing linter
+is a warning locally and a failure under CI. Each part of `lint` is also its
+own `verify-*` target (`make help`). `make daily` is doc links and the suite
+only.
+
+`make verify-config-live` is not in the gate: it asks each installed tool
+whether it reads its tracked config, which needs a linked machine and a login
+shell's environment. Run it after `make link` or when a tool misbehaves.
+
+CI (`.github/workflows/ci.yml`) runs the same targets, each once: `make lint`;
+`make test-setup` and `make test` plus a link/unlink round-trip on macOS and
+Ubuntu; `make test-docker` and `make test-docker-arch`; the `curl | bash`
+installer; and a bare `make` on fresh macOS 15 and Ubuntu runners. How to write
+a test is in [test/README.md](test/README.md).
 
 ### Package-level targets
 
 `make brew-packages`, `make cask-apps`, `make node-packages`, `make rust-packages`,
 `make vscode-extensions`, `make duti` (macOS file associations) and
-`make pacman-packages` (Arch) each install one manifest from `install/`.
+`make pacman-packages` (Arch) each install one manifest from `install/`
+([install/README.md](install/README.md) has which is which).
 `make brew-update` / `make brew-cleanup` maintain Homebrew alone.
 
 ### Automated sync (macOS)
@@ -208,43 +227,25 @@ echo "# New App Configuration" > .config/new-app/README.md
 make link
 ```
 
+If the config carries colours, put a template under
+`.config/palette/templates/` instead of typing hexes and run `bin/palette
+render` ([.config/palette/README.md](.config/palette/README.md)).
+
 If the app writes its own files into its config directory (caches, generated
 defaults, saved state), add it to `TOOL_OWNED` in `bin/link` with the write that
 justifies it, so it is linked unfolded and those files stay out of the repo.
 
-The `.config/new-app/README.md` should document why the config exists, any non-obvious choices, and a link to upstream docs. This is a repo-wide convention (see [Per-config README](#per-config-readme)).
+The `.config/new-app/README.md` follows [Per-config README](#per-config-readme).
 
-### Add a Homebrew formula (CLI tool)
+### Add or remove a package
 
-```bash
-brew install <package>
-brew bundle dump --force --file=install/Brewfile
-```
-
-### Add a Homebrew cask (GUI app)
-
-```bash
-brew install --cask <app>
-brew bundle dump --force --file=install/Caskfile --cask
-```
-
-### Add an npm package
-
-```bash
-npm install -g <package>
-echo '<package>' >> install/npmfile
-```
-
-### Add a Cargo package
-
-```bash
-cargo install <package>
-echo '<package>' >> install/Rustfile
-```
+Edit the manifest line, rationale included, and run that kind's `make`
+target. [install/README.md](install/README.md) has the entry format and the
+two commands never to run against a manifest.
 
 ### Add a shell alias
 
-Edit `.config/zsh/aliases.zsh` (~400 lines, organized by tool). Find the relevant section header and add the alias there. Reload with `exec zsh`.
+Edit `.config/zsh/aliases.zsh` (organized by tool). Find the relevant section header and add the alias there. Reload with `exec zsh`.
 
 ### Swap or remove a tool
 
@@ -277,14 +278,14 @@ Set `~/.machine_type` to `personal`, `work`, or `server`. On shell startup, `.co
 
 Top-level directories, one sentence each.
 
-- **`.config/`** — XDG-compliant app configs (26 directories). Managed by Stow. Each has its own README.
-- **`bin/`** — Helper scripts: platform detection, `dotfiles-doctor/update/backup/restore/bench-shell/worktree/sync/why`, and the validators `validate-doc-links`, `check-alias-references`. See `bin/README.md`.
-- **`install/`** — Package manifests: `Brewfile`, `Caskfile`, `npmfile`, `Rustfile`, `pacmanfile`, `Codefile` (VSCodium extensions), `duti` (macOS file associations).
-- **`test/`** — BATS test suite. Run with `make test`. Pattern: `test_*.bats`, helpers in `test_helper/`.
-- **`.github/`** — `workflows/ci.yml` (`make lint`, BATS on macOS and Ubuntu, the Ubuntu and full-install Arch containers, the curl installer, a macOS fresh install) and `dependabot.yml`. `make verify` before pushing is still the local gate.
+- **`.config/`** — one directory per tool, linked by Stow. Each has its own README. `.config/palette/` holds the colours and the templates every themed file is rendered from.
+- **`bin/`** — the scripts `make` wraps, plus the modules they share. Index: [bin/README.md](bin/README.md).
+- **`install/`** — package manifests, one per package manager, and `duti`. See [install/README.md](install/README.md).
+- **`test/`** — the BATS suite, one `test_<module>.bats` per module, and `test/Dockerfile` for the container runs. See [test/README.md](test/README.md).
+- **`.github/`** — `workflows/ci.yml` (see [Testing and verification](#testing-and-verification)) and `dependabot.yml`.
 - **`docs/`** — `agents/`: notes the engineering skills read.
 
-The Stow target is `~/.config/`. The only exception is `.zshenv`, which is manually symlinked from the repo root to `~/.zshenv` because Zsh must find it in `$HOME`.
+The Stow target is `~/.config/`. The only exception is `.zshenv`, which `bin/link` symlinks from the repo root to `~/.zshenv` because Zsh must find it in `$HOME`.
 
 ---
 
@@ -302,8 +303,6 @@ Which tools are actually in use right now. Update this table when you swap tools
 | Editor | Neovim | VSCodium | VSCodium for GUI/extension-heavy work |
 | Window manager | AeroSpace | — | i3-like tiling for macOS |
 | Keyboard remapping | Karabiner | — | macOS |
-
-This table replaces the stale `NEW` tag system that used to live in README.md and CLAUDE.md. "NEW" decays into a lie; "primary vs backup" only changes when you actually swap tools.
 
 ---
 
@@ -359,6 +358,14 @@ The validator (`bin/validate-doc-links`) reports the file + line of each bad lin
 
 `make verify-stale-refs` scans for strings left over from past migrations (old theme names, removed file paths, typos). When it fires, grep for the reported pattern and either update or remove it.
 
+### Palette check fails (`make verify-palette`)
+
+A rendered file differs from what its template produces. If you edited
+`.config/palette/danse.conf` or a template, run `bin/palette render` and
+commit the result. If you edited the rendered file itself, move the change
+into its template under `.config/palette/templates/` and render; the
+rendered copy is overwritten on the next render.
+
 ### Alias check fails with "alias references unresolved command"
 
 The alias references a command that is not a shell builtin, not in any install manifest, and not in `test/allowlist/system-tools.txt`. The error output names the offending alias's file:line and the unresolved command. Pick one fix:
@@ -386,18 +393,14 @@ Style, testing, and PR rules. `CLAUDE.md` points here.
 Follow `.editorconfig`: UTF-8, LF, final newline, no trailing whitespace; 2-space
 indent by default, 4 spaces in shell scripts, tabs in Makefiles; Markdown lines
 readable (max 80 configured). Prefer portable shell — no GNU-only flags in anything
-sourced on macOS (see `file_mode` in `bin/dotfiles-doctor` for the `stat` split).
+sourced on macOS (OS differences go behind `bin/platform`, e.g. `platform file-mode` for the `stat` split).
 
 ### Testing
 
 Add or update a test whenever behavior changes, in the `test_*.bats` file of
-the module it guards; a regression test says so in a `# Regression:` comment.
+the module it guards; conventions are in [test/README.md](test/README.md).
 Iterate with targeted runs (`bats test/test_link.bats -f "dry-run"`), then
 `make test`.
-`test/test_shell_surface.bats` parses and sources `.zshenv` and every file
-`.zshrc` sources, asserts a sentinel alias per conditional block, and runs
-`bin/check-alias-references` so every unconditional alias resolves to a known command
-(fixes are under [Troubleshooting](#alias-check-fails-with-alias-references-unresolved-command)).
 
 ### Commits and pull requests
 
@@ -412,15 +415,14 @@ was done and how it was validated. Before opening or pushing:
 
 ### Per-config README
 
-Every `.config/<app>/` directory carries a `README.md`: why the app is installed and
-its role (primary / backup / specialized), non-obvious choices (keybindings,
-overrides, themes), and a link to upstream. Required for new configs, in the same
-commit as the config.
+Every `.config/<app>/` directory carries a `README.md`, written in the same
+commit as the config: what the tool is and its role (primary, backup,
+specialized), why these choices, gotchas, and platform notes. It does not
+restate the config line by line or list keybindings the config file already
+shows; the config is the reference for what is set.
 
 ### Package rationale
 
-Every package in the install manifests says why it is in the stack, in the
-comment on its own line ([install/README.md](install/README.md) § Entry format).
-`test_packages.bats` (part of `make verify`) fails on a package without one, so
-the rationale is written in the same edit that adds the package, and goes when
-the line goes. Browse it with `dotfiles-why`.
+Every package says why it is in the stack in the comment on its own manifest
+line ([install/README.md](install/README.md) § Entry format), and `make test`
+fails on one that does not. Browse them with `dotfiles-why`.
