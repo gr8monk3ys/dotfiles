@@ -253,14 +253,16 @@ verify-shellcheck:
 		echo "⚠️  shellcheck not found; SKIPPED (CI runs it — brew install shellcheck)"; \
 	fi
 
+# "**/*.md" does not descend into dot-directories, so .config's READMEs were
+# never linted; the second glob names that directory explicitly.
 verify-markdown:
 	@echo "Running markdownlint..."
 	@if [ -n "$(call truthy,$(SKIP_LINTERS))" ]; then \
 		echo "Skipping markdownlint (SKIP_LINTERS set)"; \
 	elif command -v markdownlint >/dev/null 2>&1; then \
-		markdownlint -c .markdownlint.json --ignore .github --ignore test "**/*.md"; \
+		markdownlint -c .markdownlint.json --ignore .github --ignore test "**/*.md" ".config/**/*.md"; \
 	elif [ -x "$$(npm config get prefix 2>/dev/null)/bin/markdownlint" ]; then \
-		"$$(npm config get prefix)/bin/markdownlint" -c .markdownlint.json --ignore .github --ignore test "**/*.md"; \
+		"$$(npm config get prefix)/bin/markdownlint" -c .markdownlint.json --ignore .github --ignore test "**/*.md" ".config/**/*.md"; \
 	elif [ -n "$(call truthy,$(CI))" ]; then \
 		echo "markdownlint not found, and CI requires it"; exit 1; \
 	else \
