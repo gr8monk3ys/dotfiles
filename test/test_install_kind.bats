@@ -372,6 +372,27 @@ cargo install-update -a"
     assert_output --partial "not installed; skipping"
 }
 
+# Regression: `install-kind rust` with neither cargo nor rustup ran
+# `rustup default stable` unguarded and exited 127 under set -e.
+#
+# A PATH of bare utilities only, not /usr/bin: on the Arch image /usr/bin
+# holds the real pacman and the test user has passwordless sudo, so "no tool
+# on PATH" has to be built rather than assumed.
+@test "with no package manager at all, every verb of every kind exits 0" {
+    local bare="$TEST_TEMP_DIR/bare" t verb kind
+    mkdir -p "$bare"
+    for t in bash sh env dirname readlink grep tr awk sed id cat xargs; do
+        ln -s "$(command -v "$t")" "$bare/$t"
+    done
+    for verb in install update; do
+        for kind in $("$DOTFILES_DIR/bin/manifest" kinds); do
+            run env PATH="$bare:$DOTFILES_DIR/bin" HOME="$TEST_HOME" \
+                bash "$DOTFILES_DIR/bin/install-kind" "$verb" "$kind"
+            [[ "$status" -eq 0 ]] || { echo "$verb $kind exited $status: $output"; return 1; }
+        done
+    done
+}
+
 @test "code with no editor at all warns and exits 0" {
     run_kind code
     assert_success
