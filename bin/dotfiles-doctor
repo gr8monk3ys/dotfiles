@@ -106,53 +106,43 @@ check_system() {
 }
 
 # Check dotfiles repository
+#
+# A reporter over bin/lib/git-sync.sh: the module decides what state the
+# checkout is in, this only maps the state to output. It used to probe git
+# itself with `[[ -d .git ]]`, which is false in a worktree (there .git is a
+# file), so every `dotfiles-worktree` checkout was reported "Not a git
+# repository". Offline: compares against the last fetch rather than contacting
+# the remote, so `doctor` stays fast and works on a plane.
 check_dotfiles() {
     print_header "Dotfiles Repository"
 
-    if [[ -d "$DOTFILES_DIR" ]]; then
-        check_pass "Dotfiles directory found: $DOTFILES_DIR"
-
-        cd "$DOTFILES_DIR"
-
-        # Check if it's a git repository
-        if [[ -d ".git" ]]; then
-            check_pass "Git repository initialized"
-
-            # Check for uncommitted changes
-            if [[ -n $(git status --porcelain) ]]; then
-                check_warn "Uncommitted changes detected"
-            else
-                check_pass "Repository is clean"
-            fi
-
-            # Check remote
-            if git remote -v | grep -q origin; then
-                check_pass "Remote origin configured"
-            else
-                check_warn "No remote origin configured"
-            fi
-
-            # Sync state, offline: compares against the last fetch rather than
-            # contacting the remote, so `doctor` stays fast and works on a
-            # plane. Same module dotfiles-update and dotfiles-sync act on.
-            git_sync_status "$DOTFILES_DIR" no-fetch
-            case "$GIT_SYNC_STATE" in
-                "$GIT_SYNC_CLEAN_BEHIND")
-                    check_warn "Behind origin by $GIT_SYNC_BEHIND commit(s) as of last fetch (run 'dotfiles-update')"
-                    ;;
-                "$GIT_SYNC_DIVERGED")
-                    check_warn "Local and remote have diverged - manual merge required"
-                    ;;
-                "$GIT_SYNC_NO_UPSTREAM")
-                    check_warn "No upstream configured - this checkout can never sync"
-                    ;;
-            esac
-        else
-            check_warn "Not a git repository"
-        fi
-    else
-        check_fail "Dotfiles directory not found: $DOTFILES_DIR"
-    fi
+    git_sync_status "$DOTFILES_DIR" no-fetch
+    case "$GIT_SYNC_STATE" in
+        "$GIT_SYNC_MISSING_DIR")
+            check_fail "Dotfiles directory not found: $DOTFILES_DIR"
+            ;;
+        "$GIT_SYNC_NOT_A_REPO")
+            check_warn "Not a git repository: $DOTFILES_DIR"
+            ;;
+        "$GIT_SYNC_DIRTY")
+            check_warn "Uncommitted changes detected in $DOTFILES_DIR"
+            ;;
+        "$GIT_SYNC_NO_UPSTREAM")
+            check_warn "No upstream configured - this checkout can never sync"
+            ;;
+        "$GIT_SYNC_CLEAN_UPTODATE" | "$GIT_SYNC_PULLED")
+            check_pass "Level with upstream as of last fetch: $DOTFILES_DIR"
+            ;;
+        "$GIT_SYNC_CLEAN_BEHIND")
+            check_warn "Behind upstream by $GIT_SYNC_BEHIND commit(s) as of last fetch (run 'dotfiles-update')"
+            ;;
+        "$GIT_SYNC_DIVERGED")
+            check_warn "Local and remote have diverged - manual merge required"
+            ;;
+        "$GIT_SYNC_FETCH_FAILED" | "$GIT_SYNC_PULL_FAILED")
+            check_warn "Sync failed ($GIT_SYNC_STATE): ${GIT_SYNC_DETAIL%%$'\n'*}"
+            ;;
+    esac
 }
 
 # Check symlinks
