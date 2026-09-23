@@ -72,15 +72,6 @@ teardown() {
 	[[ "$backup_count" -eq 5 ]]
 }
 
-@test "dotfiles-doctor reaches the summary when issues are present" {
-	run env HOME="$TEST_HOME" DOTFILES_DIR="$TEST_HOME/.dotfiles" \
-		PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
-		bash bin/dotfiles-doctor
-	assert_failure
-	assert_output --partial "Summary"
-	assert_output --partial "issue(s) found"
-}
-
 # That starship is the *live* prompt is asserted on a booted shell in
 # test_shell_boot.bats. What stays here are the static negatives: p10k is
 # gone and nothing reintroduces it.

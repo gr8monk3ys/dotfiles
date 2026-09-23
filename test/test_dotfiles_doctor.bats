@@ -213,6 +213,18 @@ reports() {
     reports ⚠ "eza" "not installed"
 }
 
+@test "pacman is only reported on Arch" {
+    # Repo bin first on PATH, like make doctor: a pacman on PATH off Arch —
+    # the repo once shipped a sudo wrapper named pacman — must not register.
+    make_checkout
+    DOCTOR_PATH="$DOTFILES_DIR/bin:/usr/bin:/bin:/usr/sbin:/sbin" doctor --only manager
+    if [[ "$(bin/platform detect)" == "arch" ]]; then
+        [[ "$output" == *"pacman"* ]]
+    else
+        [[ "$output" != *"pacman"* ]]
+    fi
+}
+
 # ---------- shell and permissions ----------
 
 @test "zinit is checked, not Oh My Zsh" {
@@ -273,6 +285,13 @@ reports() {
     doctor --only sync
     assert_success
     assert_output --partial "1 warning(s) found"
+}
+
+@test "reaches the summary when issues are present, and exits 1" {
+    doctor
+    assert_failure
+    assert_output --partial "Summary"
+    assert_output --partial "issue(s) found"
 }
 
 @test "rejects an unknown option and an unknown --only vocabulary" {
