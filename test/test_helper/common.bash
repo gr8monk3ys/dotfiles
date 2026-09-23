@@ -5,6 +5,16 @@
 DOTFILES_DIR="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
 export DOTFILES_DIR
 
+# The suite never signs commits. Fixture repos commit with throwaway
+# identities, but a linked ~/.config/git/config turns commit.gpgsign on: with
+# no key (a fresh container after `make link`) every fixture commit failed,
+# and with one the suite signed throwaway commits with the owner's key.
+# Env-level config outranks every config file yet does not apply to
+# `git config --file`, so tests that read a file directly are unaffected.
+export GIT_CONFIG_COUNT=2 \
+    GIT_CONFIG_KEY_0=commit.gpgsign GIT_CONFIG_VALUE_0=false \
+    GIT_CONFIG_KEY_1=tag.gpgsign GIT_CONFIG_VALUE_1=false
+
 # Load bats-support and bats-assert if available
 # macOS (Homebrew on Apple Silicon)
 if [[ -d "/opt/homebrew/lib/bats-support" ]]; then
