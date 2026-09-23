@@ -171,6 +171,16 @@ teardown() {
     [[ "$output" == *"/.config/npm/npmrc"* ]]
 }
 
+@test "shell-boot: STARSHIP_CONFIG reaches non-interactive shells" {
+    # It used to be set in .zshrc only, so anything not an interactive zsh
+    # (make verify-config-live, scripts) saw starship's default path instead.
+    run --separate-stderr env -u ZDOTDIR -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_CACHE_HOME \
+        -u STARSHIP_CONFIG HOME="$FAKE_HOME" TERM=xterm \
+        zsh -c 'print -r -- "$STARSHIP_CONFIG"'
+    assert_success
+    assert_output "$FAKE_HOME/.config/starship/starship.toml"
+}
+
 @test "every .config dir shipping a dotfile-named config has a way to be found" {
     # A tool whose config is named .foorc under .config/foo/ almost certainly
     # looks in $HOME by default. Require an env var naming it in .zshenv.

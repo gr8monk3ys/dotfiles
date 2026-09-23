@@ -43,6 +43,10 @@ export NPM_CONFIG_USERCONFIG="$XDG_CONFIG_HOME/npm/npmrc"
 export CURL_HOME="$XDG_CONFIG_HOME/curl"
 export WGETRC="$XDG_CONFIG_HOME/wget/.wgetrc"
 export SCREENRC="$XDG_CONFIG_HOME/macos/.screenrc"
+# starship's default is ~/.config/starship.toml, not the starship/ directory
+# this checkout ships. Set here rather than in .zshrc so non-interactive
+# callers (make verify-config-live, scripts) see the same config the prompt uses.
+export STARSHIP_CONFIG="$XDG_CONFIG_HOME/starship/starship.toml"
 # eza defaults EZA_CONFIG_DIR to $XDG_CONFIG_HOME/eza already; set explicitly
 # so it survives an unset XDG_CONFIG_HOME.
 export EZA_CONFIG_DIR="$XDG_CONFIG_HOME/eza"
