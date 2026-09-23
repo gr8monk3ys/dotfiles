@@ -54,15 +54,19 @@ unknown: link
 
 core-macos: brew git
 
+# pacman needs root. Escalate here rather than through a wrapper that shadows
+# pacman on PATH (bin/pacman, now gone); install-kind does the same in bash.
+AS_ROOT := $(if $(filter 0,$(shell id -u)),,sudo)
+
 core-arch:
-	pacman -Syu --noconfirm
+	$(AS_ROOT) pacman -Syu --noconfirm
 
 # Only stow, never a system upgrade: `link` depends on this, and it used to
 # depend on core-arch, so refreshing symlinks on Arch ran `pacman -Syu`.
 # --needed makes it a no-op if stow is already there. `make arch` still runs
 # core-arch first on its own.
 stow-arch:
-	$(PLATFORM) has stow || pacman -S --needed --noconfirm stow
+	$(PLATFORM) has stow || $(AS_ROOT) pacman -S --needed --noconfirm stow
 
 # Only pull in the Homebrew bootstrap when stow is actually missing, so
 # `make link` on a machine that already has stow touches nothing else.

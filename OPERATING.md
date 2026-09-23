@@ -54,7 +54,7 @@ make
 [Omarchy](https://github.com/basecamp/omarchy) is Arch + Hyprland. `bin/platform detect`
 still says `arch` on it (`bin/platform is-omarchy` distinguishes it; the marker is the
 `~/.local/share/omarchy` checkout — Omarchy does not write its own `/etc/os-release`),
-so the install path is `make arch`: `pacman -Syu` via `bin/pacman` (sudo wrapper),
+so the install path is `make arch`: `pacman -Syu` (through `sudo` unless already root),
 then `install/pacmanfile`, then `make link`. Facts below were checked against the
 v3.8.4 tag and not on a live Omarchy box.
 

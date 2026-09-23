@@ -186,17 +186,6 @@ EOS
 	assert_output --partial "npm packages updated"
 }
 
-@test "dotfiles-doctor does not report pacman on macOS" {
-	skip_if_not_macos
-
-	# Repo bin first on PATH, like make doctor: the bin/pacman wrapper
-	# must not register as an installed package manager on macOS
-	run env HOME="$TEST_HOME" DOTFILES_DIR="$TEST_HOME/.dotfiles" \
-		PATH="$DOTFILES_DIR/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
-		bash bin/dotfiles-doctor
-	[[ "$output" != *"pacman installed"* ]]
-}
-
 @test "dotfiles-doctor checks Zinit instead of Oh My Zsh" {
 	mkdir -p "$TEST_HOME/.local/share/zinit/zinit.git"
 
