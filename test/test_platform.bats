@@ -51,6 +51,17 @@ teardown() {
     [[ "$output" != "omarchy" ]]
 }
 
+@test "platform describe names the OS a person would recognise" {
+    run bin/platform describe
+    assert_success
+    [[ "${#lines[@]}" -eq 1 ]]
+    if is_macos; then
+        [[ "$output" =~ ^macOS\ [0-9] ]]
+    else
+        [[ -n "$output" && "$output" != "unknown" ]]
+    fi
+}
+
 @test "platform is-arm64 detects ARM architecture" {
     run bin/platform is-arm64
     if [[ $(uname -m) == "arm64" ]] || [[ $(uname -m) == "aarch64" ]]; then

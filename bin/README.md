@@ -13,6 +13,7 @@ Unified platform detection utility (replaces individual is-* scripts).
 ```bash
 # Detect OS
 platform detect              # Output: macos, arch, linux, or unknown
+platform describe            # For reports: "macOS 15.5", the distro's PRETTY_NAME
 
 # Detect architecture
 platform arch                # Output: arm64, x86_64, or unknown
