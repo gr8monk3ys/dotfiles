@@ -28,7 +28,7 @@ export XDG_CONFIG_HOME = $(HOME)/.config
 # (the tests) cannot reach the real home through an inherited value.
 LINK = DOTFILES_DIR="$(DOTFILES_DIR)" HOME="$(HOME)" XDG_CONFIG_HOME="$(XDG_CONFIG_HOME)" "$(MAKEFILE_DIR)/bin/link"
 
-.PHONY: all macos arch link unlink link-dry-run test test-setup verify \
+.PHONY: all macos arch link unlink link-dry-run test test-setup lint verify \
         verify-config-live verify-palette verify-shellcheck verify-markdown verify-stale-refs verify-doc-links verify-tests \
         doctor init update backup firefox worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
@@ -177,10 +177,14 @@ test-setup:
 		fi ;; \
 	esac
 
+# The static checks: no bats, no packages, nothing platform-specific. CI's Lint
+# job runs exactly this, once per PR; the Tests jobs run only the suite.
+lint: verify-shellcheck verify-markdown verify-stale-refs verify-palette verify-doc-links
+
 # No separate syntax or shell-surface steps: shellcheck parses every bin/
 # script, and the suite (verify-tests) parses and sources the zsh surface.
 # Both used to run here as well, so each check ran two or three times.
-verify: verify-shellcheck verify-markdown verify-stale-refs verify-palette verify-doc-links verify-tests verify-docker
+verify: lint verify-tests verify-docker
 	@echo "✓ Verification complete"
 
 # The containers are the only local checks that run a platform's real `make`
@@ -232,11 +236,10 @@ verify-doc-links:
 	@echo "Validating markdown links..."
 	@bin/validate-doc-links
 
-# Mirrors the Lint job in .github/workflows/ci.yml. Kept here so `make verify`
-# is a superset of CI rather than a subset of it: shellcheck and markdownlint
-# used to run only in CI, which meant a green local gate could still fail on
-# push. SKIP_LINTERS=1 opts out; a missing linter warns rather than failing,
-# so a fresh checkout without npm still gets a usable `make verify`.
+# Run by `make lint`, which is all CI's Lint job does, so local and CI run the
+# same linter invocation. SKIP_LINTERS=1 opts out. A missing linter warns
+# locally, so a fresh checkout without npm still gets a usable `make verify`,
+# but fails under CI (CI=true): a gate whose linter is absent must not pass.
 verify-shellcheck:
 	@echo "Running shellcheck on bin/..."
 	@if [ -n "$(call truthy,$(SKIP_LINTERS))" ]; then \
@@ -245,6 +248,8 @@ verify-shellcheck:
 		find bin -type f ! -name '*.md' -print0 \
 			| xargs -0 grep -l '^#!.*\(bash\|sh\)' \
 			| xargs shellcheck --severity=warning -x; \
+	elif [ -n "$(call truthy,$(CI))" ]; then \
+		echo "shellcheck not found, and CI requires it"; exit 1; \
 	else \
 		echo "⚠️  shellcheck not found; SKIPPED (CI runs it — brew install shellcheck)"; \
 	fi
@@ -257,6 +262,8 @@ verify-markdown:
 		markdownlint -c .markdownlint.json --ignore .github --ignore test "**/*.md"; \
 	elif [ -x "$$(npm config get prefix 2>/dev/null)/bin/markdownlint" ]; then \
 		"$$(npm config get prefix)/bin/markdownlint" -c .markdownlint.json --ignore .github --ignore test "**/*.md"; \
+	elif [ -n "$(call truthy,$(CI))" ]; then \
+		echo "markdownlint not found, and CI requires it"; exit 1; \
 	else \
 		echo "⚠️  markdownlint not found; SKIPPED (CI runs it — npm i -g markdownlint-cli)"; \
 	fi
@@ -494,6 +501,7 @@ help:
 	@echo "  make test         - Run test suite"
 	@echo "  make test-docker  - Link + run test suite in an Ubuntu container"
 	@echo "  make test-docker-arch - make arch (full pacmanfile) + test suite in an Arch container"
+	@echo "  make lint         - Linters and validators only (what CI's Lint job runs)"
 	@echo "  make verify       - Run full repository verification"
 	@echo "  make verify-config-live - Check tracked configs are actually honoured"
 	@echo ""
