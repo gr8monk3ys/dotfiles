@@ -94,7 +94,9 @@ run_kind() {
         bash "$DOTFILES_DIR/bin/install-kind" "$@"
 }
 
-calls() { cat "$CALL_LOG"; }
+# The calls that did something. `--version` probes (is this tool usable?) are
+# dropped so assertions read as the actions taken.
+calls() { grep -v -- ' --version$' "$CALL_LOG" || true; }
 
 # ---------- interface ----------
 
@@ -559,3 +561,28 @@ STUB
     assert_output "cargo PATH=$TEST_HOME/.cargo/bin:$STUB_BIN:$DOTFILES_DIR/bin:/usr/bin:/bin"
 }
 
+# Regression: rustup's cargo proxy exists before any toolchain does, so on a
+# fresh `make arch` "cargo is on PATH" was true, the rustup bootstrap was
+# skipped, and every later cargo call failed — under set -e that aborted
+# dotfiles-backup. Found by the Arch container running the real make arch.
+@test "install rust bootstraps a toolchain when cargo exists but does not work" {
+    stub cargo 1
+    stub rustup
+    run_kind rust
+    assert_success
+    run grep -cx 'rustup default stable' "$CALL_LOG"
+    assert_output "1"
+}
+
+@test "record and update skip a cargo with no default toolchain" {
+    stub cargo 1
+    local rec="$TEST_TEMP_DIR/record"
+    mkdir -p "$rec"
+    run_kind record rust "$rec"
+    assert_success
+    assert_output --partial "no default toolchain"
+    [[ ! -e "$rec/cargo-installed.txt" ]]
+    run_kind update rust
+    assert_success
+    assert_output --partial "no default toolchain"
+}
