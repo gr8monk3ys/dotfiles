@@ -17,7 +17,6 @@ SHELL := env PATH='$(PATH)' /bin/bash
 # Evaluated at parse time so `make -n link` shows exactly what would run:
 # nothing extra when stow is present, the Homebrew bootstrap when it is not.
 HAVE_STOW := $(shell $(PLATFORM) has stow && echo yes)
-BIN := $(HOMEBREW_PREFIX)/bin
 
 # Written once because `link` and `link-dry-run` each used to carry their own
 # copy. The copies had different escaping and only the dry-run one worked:
@@ -30,7 +29,6 @@ SSH_INCLUDE_RE = ^[[:space:]]*Include[[:space:]]+~/\.config/ssh/config\.d/\*\.co
 ZSHENV_NEEDS_BACKUP = [ -f "$(HOME)/.zshenv" ] && [ ! -h "$(HOME)/.zshenv" ]
 export XDG_CONFIG_HOME = $(HOME)/.config
 export STOW_DIR = $(DOTFILES_DIR)
-export ACCEPT_EULA=Y
 
 .PHONY: all macos arch link unlink link-dry-run test test-setup verify \
         verify-config-live verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-doctor-tools verify-tests \
