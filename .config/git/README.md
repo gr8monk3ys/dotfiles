@@ -1,40 +1,12 @@
-# Git Configuration
+# git
 
-This directory contains the global configuration for [Git](https://git-scm.com/), the distributed version control system.
+Global git config, read from `$XDG_CONFIG_HOME/git/config` (git has read the
+XDG path natively since 1.7.12). `ignore` is the global excludes file.
 
-## Files
+## Identity
 
-- `.gitconfig` - Global Git configuration file
-- `ignore` - Global ignore patterns
-- `config.local.example` - Template for the git-ignored `config.local` (name, email, signing key)
-
-## What is .gitconfig?
-
-The `.gitconfig` file defines global settings for Git that apply to all repositories on your system. It allows you to customize:
-
-- User identity (name and email)
-- Default behaviors and preferences
-- Command aliases
-- Merge and diff tools
-- Credential handling
-- Color schemes
-
-## Configuration Structure
-
-The file is organized into sections:
-
-### [user]
-
-Defines your identity for commits. It is **not** in the tracked config — that
-carries no identity — and lives in the gitignored `config.local`, which the
-tracked config `[include]`s at the bottom:
-
-```ini
-[user]
-    name = Your Name
-    email = your.email@example.com
-```
-
+The tracked `config` carries no name, email or signing key; they live in the
+gitignored `config.local`, which `config` `[include]`s at the bottom.
 Write it with `make init` rather than by hand:
 
 ```bash
@@ -50,73 +22,28 @@ key it also writes `commit.gpgsign = false`, because the tracked config turns
 commit signing on and a machine with no GPG key would otherwise fail every
 commit.
 
-### [core]
+## Why these choices
 
-Core Git settings like default editor, line endings, and exclusions
+- **Signed commits** (`commit.gpgsign`), identity supplied per machine as
+  above.
+- **`pull.rebase`** and **`push.autoSetupRemote`**: no merge bubbles on pull,
+  and a first `git push` of a new branch just works.
+- **`merge.conflictstyle = diff3`**, so a conflict shows the common ancestor
+  as well as both sides.
+- **delta as the pager**, side by side with line numbers, highlighting with
+  the `danse` bat theme; its diff colours are a region rendered by
+  `bin/palette`.
+- **Aliases** (`git config --get-regexp '^alias\.'` lists them) are the
+  shell-era ones: `l` graph log, `s` short status, `d` diff with stat.
 
-### [alias]
+## Gotchas
 
-Custom shortcuts for Git commands, making complex operations simpler
-
-### [color]
-
-Color output settings for better readability in terminal
-
-### [merge] / [diff]
-
-Configure merge strategies and diff tools
-
-### [push] / [pull]
-
-Default behaviors for push and pull operations
-
-## Usage
-
-`make link` symlinks this directory to `~/.config/git/`; Git's XDG config path is `$XDG_CONFIG_HOME/git/config`. Settings here apply globally unless overridden by repository-specific configurations.
-
-### Viewing Configuration
-
-```bash
-# View all settings
-git config --global --list
-
-# View specific setting
-git config --global user.name
-```
-
-### Modifying Configuration
-
-You can edit the file directly or use Git commands:
-
-```bash
-# Set a value
-git config --global user.email "new.email@example.com"
-
-# Add an alias
-git config --global alias.st status
-```
-
-## Common Aliases
-
-Defined in the `[alias]` block of `.gitconfig`, for example:
-
-- `l` → graph log of the last 20 commits
-- `s` → `status -s`
-- `d` → diff with stat against HEAD
-- `di N` → diff against `HEAD~N`
-
-Run `git config --get-regexp '^alias\.'` for the full list.
-
-## Best Practices
-
-1. Keep sensitive information (like tokens) out of `.gitconfig`
-2. Use aliases for frequently used commands
-3. Configure a global `.gitignore` for system-specific files
-4. Set up GPG signing for commits if needed
-5. Configure credential helpers for HTTPS authentication
-
-## Resources
-
-- [Git Configuration Documentation](https://git-scm.com/docs/git-config)
-- [Git Book - Configuration](https://git-scm.com/book/en/v2/Customizing-Git-Git-Configuration)
-- [GitHub Git Configuration Guide](https://docs.github.com/en/get-started/getting-started-with-git/setting-your-username-in-git)
+- The `github:` and `gist:` shorthands expand to `git://` URLs, a protocol
+  GitHub turned off in 2022, so fetching through them fails. Use full
+  `https://` URLs.
+- `https://github.com/github/...` is rewritten to SSH, which needs a key
+  registered with GitHub. The broader HTTPS-to-SSH push rewrite is commented
+  out for that reason; the comment above it explains.
+- git also reads `~/.gitconfig`, after this file, so anything set there
+  wins. A leftover `~/.gitconfig` is the usual reason a setting here seems
+  ignored.
