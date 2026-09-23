@@ -6,7 +6,9 @@ into `~/.config/`; `make` drives install, link and verification.
 ## Run / verify
 
 - `make` — detect platform (`bin/platform detect`) and install + link.
-- `make link` / `make link-dry-run` / `make unlink` — Stow only.
+- `make link` / `make link-dry-run` / `make unlink` — `bin/link` apply/dry-run/undo
+  (stow, `.zshenv`, SSH Include, tool-owned dirs). Links only; installs nothing
+  but stow.
 - `make verify` — the gate: shell syntax, shellcheck, markdownlint, shell-surface
   tests, stale-ref grep, doc-link, tool-catalog and doctor-tool validators, BATS,
   and a Docker fresh-install (`SKIP_DOCKER=1`, `SKIP_LINTERS=1` to skip parts).
