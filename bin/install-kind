@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
-# install-kind - Install or update one manifest kind.
+# install-kind - Install, update or record one manifest kind.
 #
 # A kind owns what its package manager is asked to do: install from the
-# manifest, and upgrade what the tool has installed. Those used to be two
-# implementations — six Makefile targets and dotfiles-update — each with its
-# own skip flags, and dotfiles-update called the rust kind "cargo". The
-# Makefile keeps the dependency edges between kinds, which is the thing make
-# is actually good at; dotfiles-update keeps sequencing and reporting.
+# manifest, upgrade what the tool has installed, and record what is installed
+# into a snapshot. Those used to be three implementations — six Makefile
+# targets, dotfiles-update and dotfiles-backup — each with its own skip flags
+# and its own name for the rust kind ("cargo"). The Makefile keeps the
+# dependency edges between kinds, which is the thing make is actually good
+# at; dotfiles-update and dotfiles-backup keep sequencing and reporting.
 #
 # Usage:
 #   install-kind <kind>                 install (the default verb)
 #   install-kind install <kind>         the same, spelled out
 #   install-kind update <kind>          upgrade what the kind's tool has installed
+#   install-kind record <kind> <dir>    write the kind's snapshot record into <dir>
 #
 # Kinds come from `bin/manifest kinds`: brew cask cask-extra npm rust pacman code
 #
@@ -27,7 +29,9 @@
 #
 # `update` upgrades everything the kind's tool manages, not only what the
 # manifest lists: a hand-installed npm global goes stale all the same, and
-# that is the scope dotfiles-update always had.
+# that is the scope dotfiles-update always had. `record` writes the files
+# bin/lib/snapshot.sh names, each with a provenance header; a kind with no
+# row in that table records nothing.
 
 set -euo pipefail
 
@@ -36,10 +40,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/preamble.sh"
 # shellcheck source=lib/ui.sh
 source "$SCRIPT_DIR/lib/ui.sh"
+# shellcheck source=lib/snapshot.sh
+source "$SCRIPT_DIR/lib/snapshot.sh"
 
 readonly MANIFEST="$SCRIPT_DIR/manifest"
 readonly INSTALL_DIR="$DOTFILES_DIR/install"
-readonly VERBS="install update"
+readonly VERBS="install update record"
 
 SKIP_KINDS="${SKIP_KINDS:-}"
 
@@ -225,6 +231,81 @@ update_code() {
     run_install "$EDITOR_CMD" --update-extensions
 }
 
+# --- record ----------------------------------------------------------------
+# Filenames are the ones bin/lib/snapshot.sh's table names; its drift test
+# runs dotfiles-backup, which records through here, and compares the result
+# against that table.
+
+RECORD_DIR=""
+
+# Stamp even on failure: `npm list` exits 1 on an extraneous package yet
+# still prints the list, and a record without its header could be mistaken
+# for a manifest.
+record_to() {
+    local name="$1" status=0
+    shift
+    "$@" > "$RECORD_DIR/$name" || status=$?
+    snapshot_provenance "$RECORD_DIR/$name" "$*"
+    print_success "Recorded $name"
+    return "$status"
+}
+
+# brew bundle dump writes its own --file rather than stdout.
+brew_dump() {
+    local name="$1" label="$2" status=0
+    shift 2
+    brew bundle dump --force --file="$RECORD_DIR/$name" "$@" || status=$?
+    snapshot_provenance "$RECORD_DIR/$name" "$label"
+    print_success "Recorded $name"
+    return "$status"
+}
+
+record_brew() {
+    have brew Homebrew || return 0
+    run_install brew_dump Brewfile "brew bundle dump"
+}
+
+record_cask() {
+    have brew Homebrew || return 0
+    run_install brew_dump Caskfile "brew bundle dump --cask" --cask
+}
+
+# Caskfile lists every installed cask; brew cannot tell which manifest one
+# came from, so there is no separate record to write.
+record_cask_extra() {
+    print_info "cask-extra is recorded with cask (Caskfile lists every installed cask)"
+}
+
+record_npm() {
+    have npm npm || return 0
+    run_install record_to npm-global-list.txt npm list -g --depth=0
+}
+
+record_rust() {
+    cargo_path
+    have cargo cargo || return 0
+    run_install record_to cargo-installed.txt cargo install --list
+}
+
+record_pacman() {
+    print_info "pacman has no snapshot record (bin/lib/snapshot.sh names none)"
+}
+
+# Both editors, when both exist: a record has no reason to choose, unlike an
+# installer.
+record_code() {
+    local found=0
+    if command_exists code; then
+        run_install record_to vscode-extensions.txt code --list-extensions
+        found=1
+    fi
+    if command_exists codium; then
+        run_install record_to vscodium-extensions.txt codium --list-extensions
+        found=1
+    fi
+    [[ "$found" -eq 1 ]] || print_warn "Neither codium nor code installed; skipping extensions"
+}
+
 # --- main ------------------------------------------------------------------
 
 usage() {
@@ -264,6 +345,14 @@ main() {
     if ! printf '%s\n' "$known" | grep -Fxq -- "$kind"; then
         print_error "Unknown kind '$kind' (one of: $(printf '%s' "$known" | tr '\n' ' '))"
         return 2
+    fi
+
+    if [[ "$verb" == record ]]; then
+        RECORD_DIR="${2:-}"
+        if [[ -z "$RECORD_DIR" || ! -d "$RECORD_DIR" ]]; then
+            print_error "install-kind record $kind: <dir> must be an existing directory"
+            return 2
+        fi
     fi
 
     if should_skip "$kind"; then

@@ -56,6 +56,35 @@ STUB
     chmod +x "$STUB_BIN/sudo" "$STUB_BIN/id"
 }
 
+# brew whose `bundle dump --file=X` writes X, as the real one does. Only
+# for dump: a stub that wrote --file on `brew bundle --file=install/Brewfile`
+# would overwrite the checkout's manifest.
+stub_brew_dump() {
+    cat > "$STUB_BIN/brew" <<'STUB'
+#!/usr/bin/env bash
+printf 'brew %s\n' "$*" >> "$CALL_LOG"
+if [[ "${1:-} ${2:-}" == "bundle dump" ]]; then
+    for a in "$@"; do
+        case "$a" in --file=*) echo 'brew "stub"' > "${a#--file=}" ;; esac
+    done
+fi
+exit 0
+STUB
+    chmod +x "$STUB_BIN/brew"
+}
+
+# A tool that lists something on stdout, and exits with the given code.
+stub_lister() {
+    local name="$1" exit_code="${2:-0}"
+    cat > "$STUB_BIN/$name" <<STUB
+#!/usr/bin/env bash
+printf '%s %s\n' "$name" "\$*" >> "\$CALL_LOG"
+echo "listed-by-$name"
+exit $exit_code
+STUB
+    chmod +x "$STUB_BIN/$name"
+}
+
 # Run install-kind with ONLY the stubs plus the repo's bin on PATH, so a real
 # brew/npm/cargo on this machine can never be reached.
 run_kind() {
@@ -94,10 +123,16 @@ calls() { cat "$CALL_LOG"; }
     for t in brew npm cargo cargo-install-update rustup code codium; do stub "$t"; done
     stub_pacman
     stub_sudo_as_uid 1000
-    local verb kind
-    for verb in install update; do
+    stub_brew_dump
+    local verb kind rec="$TEST_TEMP_DIR/record"
+    mkdir -p "$rec"
+    for verb in install update record; do
         for kind in $("$DOTFILES_DIR/bin/manifest" kinds); do
-            run_kind "$verb" "$kind"
+            if [[ "$verb" == record ]]; then
+                run_kind "$verb" "$kind" "$rec"
+            else
+                run_kind "$verb" "$kind"
+            fi
             [[ "$status" -eq 0 ]] || { echo "$verb $kind exited $status: $output"; return 1; }
         done
     done
@@ -363,6 +398,59 @@ cargo install-update -a"
     assert_failure
 }
 
+# ---------- record ----------
+
+@test "record writes each kind's snapshot record with a provenance header" {
+    stub_brew_dump
+    for t in npm cargo code codium; do stub_lister "$t"; done
+    local rec="$TEST_TEMP_DIR/record" kind f
+    mkdir -p "$rec"
+    for kind in $("$DOTFILES_DIR/bin/manifest" kinds); do
+        run_kind record "$kind" "$rec"
+        assert_success
+    done
+    for f in Brewfile Caskfile npm-global-list.txt cargo-installed.txt \
+             vscode-extensions.txt vscodium-extensions.txt; do
+        [[ -f "$rec/$f" ]] || { echo "not recorded: $f"; return 1; }
+        run head -1 "$rec/$f"
+        assert_output --partial "not an install manifest"
+    done
+    run grep -c "produced by: npm list -g --depth=0" "$rec/npm-global-list.txt"
+    assert_output "1"
+    run grep -c "listed-by-cargo" "$rec/cargo-installed.txt"
+    assert_output "1"
+    run grep -c "produced by: brew bundle dump --cask" "$rec/Caskfile"
+    assert_output "1"
+}
+
+@test "record needs an existing directory" {
+    run_kind record npm
+    assert_failure
+    assert_output --partial "must be an existing directory"
+    run_kind record npm "$TEST_TEMP_DIR/nope"
+    assert_failure
+}
+
+@test "SKIP_KINDS applies to record too" {
+    stub_lister npm
+    SKIP_KINDS="npm" run_kind record npm "$TEST_TEMP_DIR"
+    assert_success
+    assert_output --partial "Skipping npm"
+    [[ ! -e "$TEST_TEMP_DIR/npm-global-list.txt" ]]
+}
+
+# npm list exits 1 on an extraneous package but still prints the list.
+@test "a failing lister keeps its output and its provenance header" {
+    stub_lister npm 1
+    run_kind record npm "$TEST_TEMP_DIR"
+    assert_success
+    assert_output --partial "Continuing after failure"
+    run head -1 "$TEST_TEMP_DIR/npm-global-list.txt"
+    assert_output --partial "not an install manifest"
+    run grep -c "listed-by-npm" "$TEST_TEMP_DIR/npm-global-list.txt"
+    assert_output "1"
+}
+
 # ---------- missing tools are not failures ----------
 
 @test "a missing tool warns and exits 0" {
@@ -381,13 +469,13 @@ cargo install-update -a"
 @test "with no package manager at all, every verb of every kind exits 0" {
     local bare="$TEST_TEMP_DIR/bare" t verb kind
     mkdir -p "$bare"
-    for t in bash sh env dirname readlink grep tr awk sed id cat xargs; do
+    for t in bash sh env dirname readlink grep tr awk sed id cat xargs mktemp date mv; do
         ln -s "$(command -v "$t")" "$bare/$t"
     done
-    for verb in install update; do
+    for verb in install update record; do
         for kind in $("$DOTFILES_DIR/bin/manifest" kinds); do
             run env PATH="$bare:$DOTFILES_DIR/bin" HOME="$TEST_HOME" \
-                bash "$DOTFILES_DIR/bin/install-kind" "$verb" "$kind"
+                bash "$DOTFILES_DIR/bin/install-kind" "$verb" "$kind" "$TEST_TEMP_DIR"
             [[ "$status" -eq 0 ]] || { echo "$verb $kind exited $status: $output"; return 1; }
         done
     done
