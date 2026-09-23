@@ -1,177 +1,26 @@
-# Zathura Configuration
+# zathura
 
-This directory contains the configuration for [Zathura](https://pwmt.org/projects/zathura/), a highly customizable document viewer.
+Keyboard-driven PDF viewer, with the MuPDF backend (`zathura-pdf-mupdf`). On
+macOS it comes from the `homebrew-zathura` tap; on Arch from pacman.
 
-## Files
+## Why these choices
 
-- `zathurarc` - Configuration file for Zathura
+- **Colours are the danse palette**, rendered into `zathurarc` by
+  `bin/palette` from `.config/palette/templates/`. `recolor` is on, so pages
+  are drawn in the terminal's own ground and foreground; `i` toggles it back
+  to the document's real colours. `recolor-keephue` keeps figures and
+  highlighted text recognisable while recoloured.
+- **`J`/`K` zoom** rather than page, and `R` rotates, freeing `r` to reload a
+  document that a build (latexmk) has just rewritten.
+- **`selection-clipboard clipboard`**: a mouse selection goes to the system
+  clipboard, not the X primary selection.
+- **No GUI chrome** (`guioptions ""`): no status or input bar until needed.
 
-## What is Zathura?
+## Gotchas
 
-Zathura is a lightweight, keyboard-driven document viewer that supports:
-- PDF, PS, DjVu, and other document formats
-- Vim-like keybindings
-- Customizable appearance
-- SyncTeX support for LaTeX integration
-- Fast rendering
-- Minimal memory footprint
-
-## Configuration Overview
-
-The `zathurarc` file customizes Zathura's behavior, appearance, and keybindings.
-
-### Common Settings
-
-#### Appearance
-
-Colours are the danse palette ([`.config/palette/`](../palette/README.md)),
-with `recolor` on so pages render in the terminal's own ground.
-
-#### Behavior
-```
-set selection-clipboard clipboard
-set adjust-open width
-set pages-per-row 1
-set scroll-page-aware true
-set smooth-scroll true
-set window-title-basename true
-```
-
-#### Key Mappings
-```
-map <C-i> zoom in
-map <C-o> zoom out
-map r reload
-map R rotate
-map p print
-map i recolor
-map J zoom out
-map K zoom in
-```
-
-#### Search
-```
-set incremental-search true
-set search-hadjust true
-```
-
-## Usage
-
-Open documents with:
-```bash
-zathura document.pdf
-zathura --mode fullscreen document.pdf
-zathura --page 10 document.pdf
-```
-
-### Basic Navigation
-
-- `j/k` - Scroll down/up
-- `h/l` - Scroll left/right
-- `J/K` - Page down/up (or zoom out/in if mapped)
-- `gg/G` - Go to first/last page
-- `H/L` - Go to top/bottom of page
-- `<num>gg` - Go to page <num>
-- `Space/Backspace` - Next/previous page
-
-### Zoom and Display
-
-- `+/-` - Zoom in/out
-- `=` - Reset zoom
-- `a` - Adjust to page width
-- `s` - Adjust to page height
-- `r` - Rotate page
-- `R` - Recolor (invert colors)
-
-### Search and Navigation
-
-- `/` - Search forward
-- `?` - Search backward
-- `n` - Next search result
-- `N` - Previous search result
-
-### Other Commands
-
-- `f` - Follow links (shows link hints)
-- `F` - Display index (table of contents)
-- `:` - Command mode
-- `Tab` - Show index sidebar
-- `d` - Toggle dual-page view
-- `q` - Quit
-
-## Features
-
-### SyncTeX Support
-
-For LaTeX integration:
-```bash
-# Forward search (from editor to PDF)
-zathura --synctex-forward=line:column:file.tex file.pdf
-
-# Inverse search (from PDF to editor)
-# Configure in zathurarc:
-set synctex true
-set synctex-editor-command "vim --remote +%{line} %{input}"
-```
-
-### Color Schemes
-
-Easily create color schemes for day/night reading:
-
-**Dark Theme**
-```
-set recolor true
-```
-
-**Light Theme**
-```
-set recolor false
-```
-
-### Clipboard Integration
-
-```
-set selection-clipboard clipboard
-```
-Now selections automatically copy to clipboard.
-
-## Integration
-
-### LaTeX Editors
-
-Integrate with Vim/Neovim using vimtex:
-```vim
-let g:vimtex_view_method = 'zathura'
-```
-
-### File Managers
-
-Open PDFs from lf, ranger, or other file managers:
-```bash
-# In file manager config
-map o $zathura "$f"
-```
-
-## Command Mode
-
-Enter command mode with `:` for advanced features:
-- `:set` - Change settings
-- `:print` - Print document
-- `:info` - Show document information
-- `:exec` - Execute command
-- `:open` - Open file
-
-## Tips
-
-1. **Recolor**: Press `Ctrl+R` to toggle recolor for better reading
-2. **Fullscreen**: Press `F11` or start with `--mode fullscreen`
-3. **Bookmarks**: Use `:bmark <name>` and `:blist` to manage bookmarks
-4. **Multiple Windows**: Open same document in multiple windows for cross-referencing
-5. **Export Images**: Right-click on images to save them
-
-## Resources
-
-- [Zathura Documentation](https://pwmt.org/projects/zathura/documentation/)
-- [Zathura Manual](https://manpages.org/zathura)
-- [Zathura Configuration](https://pwmt.org/projects/zathura/configuration/)
-- [GitHub Repository](https://github.com/pwmt/zathura)
+- `scroll-step` is set twice; the later `50` wins over the `0.01` above it.
+- The font is `inconsolata 15`, which no manifest installs, so zathura falls
+  back to a default font until Inconsolata is present.
+- Colour values are rendered: edit
+  `.config/palette/templates/.config/zathura/zathurarc`, then
+  `bin/palette render`. `make lint` fails on a hand edit.

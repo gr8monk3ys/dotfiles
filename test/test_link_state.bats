@@ -187,3 +187,35 @@ rows() {
     rows
     [[ "$output" == "$first" ]]
 }
+
+@test "make clean removes broken symlinks on BSD and GNU find" {
+    local fake="$TEST_HOME/fake-dotfiles"
+    mkdir -p "$TEST_HOME/.config"
+    printf 'keep\n' > "$TEST_HOME/.config/real-file"
+    ln -s "$TEST_HOME/.config/real-file" "$TEST_HOME/.config/valid-link"
+    # Broken links that pointed into the dotfiles checkout: absolute and
+    # stow-style relative (../fake-dotfiles/.config/...)
+    ln -s "$fake/.config/gone" "$TEST_HOME/.config/broken-link"
+    ln -s "../fake-dotfiles/.config/gone-too" "$TEST_HOME/.config/broken-relative"
+
+    run env HOME="$TEST_HOME" PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
+        make clean DOTFILES_DIR="$fake"
+    assert_success
+
+    [[ -f "$TEST_HOME/.config/real-file" ]]
+    [[ -h "$TEST_HOME/.config/valid-link" ]]
+    [[ ! -h "$TEST_HOME/.config/broken-link" ]]
+    [[ ! -h "$TEST_HOME/.config/broken-relative" ]]
+}
+
+# Regression: `make clean` deleted every broken symlink under ~/.config,
+# including ones other tools own. Only links into the checkout are ours.
+@test "make clean leaves broken symlinks that do not point into the checkout" {
+    mkdir -p "$TEST_HOME/.config"
+    ln -s "$TEST_HOME/does-not-exist" "$TEST_HOME/.config/foreign-broken"
+
+    run env HOME="$TEST_HOME" PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
+        make clean DOTFILES_DIR="$TEST_HOME/fake-dotfiles"
+    assert_success
+    [[ -h "$TEST_HOME/.config/foreign-broken" ]]
+}

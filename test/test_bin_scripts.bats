@@ -35,14 +35,6 @@ teardown() {
     assert_output --partial "Backup completed successfully!"
 }
 
-@test "dotfiles-backup accepts --cleanup flag" {
-    mkdir -p "$TEST_TEMP_DIR/backups/20260101_000000"
-    run env HOME="$TEST_HOME" BACKUP_DIR="$TEST_TEMP_DIR/backups" \
-        PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
-        bash bin/dotfiles-backup --cleanup
-    assert_success
-}
-
 @test "dotfiles-restore accepts --help flag" {
     run bin/dotfiles-restore --help
     assert_success
@@ -90,6 +82,21 @@ teardown() {
     done
 }
 
+# bin/README.md is an index that points at each script's --help rather than
+# repeating it, so every script must answer --help, and must do it without
+# acting: a script that ignored the flag would run for real here.
+@test "every bin script prints help for --help and exits 0" {
+    local script
+    for script in bin/*; do
+        [[ -f "$script" && "$script" != */README.md ]] || continue
+        run env HOME="$TEST_HOME" "$script" --help </dev/null
+        [[ "$status" -eq 0 && -n "$output" ]] || {
+            echo "no --help: $script (status $status)"
+            return 1
+        }
+    done
+}
+
 @test "no bin scripts have syntax errors" {
     for script in bin/*; do
         if [[ -f "$script" ]] && [[ "$script" != */README.md ]]; then
@@ -133,4 +140,47 @@ teardown() {
     run bin/dotfiles-why this-tool-does-not-exist
     assert_failure
     assert_output --partial "No manifest entry"
+}
+
+@test "dotfiles-backup completes when a single config file is present" {
+    mkdir -p "$TEST_TEMP_DIR/backups"
+    printf 'export TEST_BACKUP=1\n' > "$TEST_HOME/.zshrc"
+
+    run env HOME="$TEST_HOME" BACKUP_DIR="$TEST_TEMP_DIR/backups" \
+        PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
+        bash bin/dotfiles-backup
+    assert_success
+    assert_output --partial "Backup completed successfully!"
+
+    local backup_path
+    backup_path="$(find "$TEST_TEMP_DIR/backups" -maxdepth 1 -mindepth 1 -type d | head -n 1)"
+    [[ -n "$backup_path" ]]
+    [[ -f "$backup_path/MANIFEST.txt" ]]
+    [[ -f "$backup_path/configs/.zshrc" ]]
+}
+
+@test "dotfiles-backup cleanup keeps the latest five backups" {
+    mkdir -p \
+        "$TEST_TEMP_DIR/backups/20260101_000000" \
+        "$TEST_TEMP_DIR/backups/20260102_000000" \
+        "$TEST_TEMP_DIR/backups/20260103_000000" \
+        "$TEST_TEMP_DIR/backups/20260104_000000" \
+        "$TEST_TEMP_DIR/backups/20260105_000000" \
+        "$TEST_TEMP_DIR/backups/20260106_000000"
+
+    run env HOME="$TEST_HOME" BACKUP_DIR="$TEST_TEMP_DIR/backups" \
+        PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
+        bash bin/dotfiles-backup --cleanup
+    assert_success
+
+    local backup_count
+    backup_count="$(find "$TEST_TEMP_DIR/backups" -maxdepth 1 -mindepth 1 -type d -name '20*' | wc -l | tr -d '[:space:]')"
+    [[ "$backup_count" -eq 5 ]]
+}
+
+# Regression: `dotfiles-why` with no args launched fzf without a TTY and hung.
+@test "dotfiles-why without a terminal prints usage and exits 1" {
+    run bash -c 'bin/dotfiles-why </dev/null'
+    assert_failure
+    assert_output --partial "Usage:"
 }

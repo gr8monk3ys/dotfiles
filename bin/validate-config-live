@@ -26,13 +26,20 @@
 # Tools that cannot meet that bar are deliberately absent rather than probed
 # badly. yazi is the example: it has no headless config check, `--debug` needs
 # a TTY, and giving it one via `script` launches the TUI and hangs. Its schema
-# is guarded statically in test_regressions.bats instead, which is honest
+# is guarded statically in test_tool_configs.bats instead, which is honest
 # about being a text check rather than a liveness one.
 # Asserting a file exists is not a probe — that is the mistake this catches.
 # A tool that is not installed is skipped, not failed: a config for a tool
 # this machine does not have is not a defect.
 
 set -euo pipefail
+
+case "${1:-}" in
+    -h | --help)
+        sed -n '2,33p' "$0" | sed 's/^# \{0,1\}//'
+        exit 0
+        ;;
+esac
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/preamble.sh

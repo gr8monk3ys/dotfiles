@@ -374,3 +374,14 @@ link_git_include_chain() {
     run grep -A6 '^init:' "$DOTFILES_DIR/Makefile"
     assert_output --partial "bin/dotfiles-init"
 }
+
+# Public-readiness: tracked config must carry no personal identity or hosts.
+@test "tracked git, jj and ssh config contain no personal identity" {
+    run git -C "$DOTFILES_DIR" grep -nE '^\s*(email|name)\s*=' -- .config/git/config
+    assert_failure
+    run git -C "$DOTFILES_DIR" grep -nE '^\s*(email|name)\s*=' -- .config/jj/config.toml
+    assert_failure
+    run git -C "$DOTFILES_DIR" ls-files -- '.config/ssh/config.d/*.conf'
+    [[ -z "$output" ]]
+    git -C "$DOTFILES_DIR" check-ignore -q .config/ssh/config.d/pi-lab.conf
+}

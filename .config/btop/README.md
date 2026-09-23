@@ -4,8 +4,8 @@ Resource monitor. Replaces `top` for anything interactive.
 
 ## Theme
 
-`themes/danse.theme` is generated from
-[`.config/palette/danse.conf`](../palette/danse.conf). The gradients are where
+`themes/danse.theme` is rendered by `bin/palette` from
+[`.config/palette/danse.conf`](../palette/danse.conf) and its template. The gradients are where
 the Matisse colours earn their place: load and temperature run viridian →
 ochre → vermilion, which is the painting's own ground-to-figures progression.
 
@@ -39,6 +39,6 @@ The rationale that used to live in the file:
 
 - btop needs a real terminal. It exits immediately under a pipe or a
   non-interactive shell with `Couldn't determine terminal size`, which is why
-  there is no `validate-config-live` probe for it — the theme is guarded by
-  `test_palette.bats` asserting every hex in it is a palette colour, which is
-  honest about being a text check rather than a liveness one.
+  there is no `validate-config-live` probe for it. The theme is rendered, so
+  `bin/palette check` guards it instead; that is a text check, not a
+  liveness one.

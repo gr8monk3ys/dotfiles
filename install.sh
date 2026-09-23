@@ -16,7 +16,6 @@ set -euo pipefail
 # rendered in by bin/palette instead, and palette check keeps them current.
 # ============================================================================
 # palette:begin - rendered from .config/palette/templates/install.sh; edit it there, then run bin/palette render
-readonly BLACK='\033[38;2;40;44;52m'
 readonly RED='\033[38;2;224;106;81m'
 readonly GREEN='\033[38;2;152;195;121m'
 readonly YELLOW='\033[38;2;229;192;123m'
@@ -321,7 +320,8 @@ print_post_install() {
     echo -e "    ${CYAN}1.${NC} Restart your terminal or run:"
     echo -e "       ${DIM}source ~/.zshenv${NC}"
     echo ""
-    echo -e "    ${CYAN}2.${NC} Prompt is Starship (config: ~/.config/starship/starship.toml)"
+    echo -e "    ${CYAN}2.${NC} Set your git and jj identity (prompts for name and email):"
+    echo -e "       ${DIM}cd $DOTFILES_DIR && make init${NC}"
     echo ""
     echo -e "    ${CYAN}3.${NC} Verify installation:"
     echo -e "       ${DIM}make doctor${NC}"
@@ -338,9 +338,8 @@ print_post_install() {
     echo ""
     echo -e "    ${WHITE}${BOLD}Local Customization:${NC}"
     echo ""
-    echo -e "    ${DIM}Create these files for machine-specific settings:${NC}"
-    echo -e "    ${ORANGE}~/.config/zsh/zshrc.local${NC}"
-    echo -e "    ${ORANGE}~/.config/git/config.local${NC}"
+    echo -e "    ${DIM}Shell overrides go in a file git never sees; copy its template:${NC}"
+    echo -e "    ${ORANGE}~/.config/zsh/zshrc.local${NC} ${DIM}(from zshrc.local.example)${NC}"
     echo ""
     echo -e "    ${DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""

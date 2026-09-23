@@ -1,4 +1,3 @@
-readonly BLACK='\033[38;2;{{bg:rgb}}m'
 readonly RED='\033[38;2;{{vermilion:rgb}}m'
 readonly GREEN='\033[38;2;{{green:rgb}}m'
 readonly YELLOW='\033[38;2;{{yellow:rgb}}m'

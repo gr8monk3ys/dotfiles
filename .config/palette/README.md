@@ -27,7 +27,7 @@ The painting's three fields were sampled from the source scan:
 | Viridian ground | `#476a62` |
 
 Those values are too dark for terminal text, so the two accent roles take the
-painting's *hue* at OneDark's luminance, and the two fill roles take the
+painting's _hue_ at OneDark's luminance, and the two fill roles take the
 sampled colour unchanged and are used only for chrome.
 
 `danse.conf` is the current table.

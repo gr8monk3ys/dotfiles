@@ -10,8 +10,9 @@ Cross-shell prompt — the default prompt for these dotfiles.
   mode — its author wound down active development.
 - The layout deliberately replicates the previous lean p10k prompt
   (`user@host dir git duration` / `venv ❯`) so the migration is visually
-  quiet. Colors are the repo-wide OneDark palette with a transparent
-  background (Ghostty frosted glass shows through).
+  quiet. Styles name palette roles and the hexes are rendered in from the
+  danse palette by `bin/palette`; the background is transparent so
+  Ghostty's frosted glass shows through.
 
 ## Upstream
 

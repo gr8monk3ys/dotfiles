@@ -186,3 +186,20 @@ ZSH
     assert_success
     assert_output --partial "all aliases resolve"
 }
+
+@test "shell configs do not use GNU-only find -printf" {
+    run grep -R -n -F "-printf" .zshenv .config/zsh
+    assert_failure
+}
+
+# That starship is the *live* prompt is asserted on a booted shell in
+# test_shell_boot.bats. What stays here are the static negatives: p10k is
+# gone and nothing reintroduces it.
+@test "prompt system: starship only, guarded on the binary" {
+    grep -q 'command -v starship' .config/zsh/.zshrc
+    [[ -f .config/starship/starship.toml ]]
+    # p10k is gone: no config file, no plugin load, no prompt switch
+    [[ ! -f .config/zsh/.p10k.zsh ]]
+    run grep -n 'powerlevel10k\|p10k\|DOTFILES_PROMPT' .config/zsh/.zshrc
+    assert_failure
+}
