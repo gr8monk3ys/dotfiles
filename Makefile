@@ -183,22 +183,20 @@ test-setup:
 verify: verify-shellcheck verify-markdown verify-stale-refs verify-palette verify-doc-links verify-tests verify-docker
 	@echo "✓ Verification complete"
 
-# The container tests are the only checks that exercise the fresh-install path,
-# and the only ones that run the suite on Linux at all. Both distros run:
-# the repo claims macOS *and* Arch support, and for a long time nothing
-# verified the Arch half — install/pacmanfile listed 8 packages and no test
-# ever noticed. Run when a Docker daemon is reachable; otherwise say so
-# loudly and move on.
+# The containers are the only local checks that run a platform's real `make`
+# on a clean machine, and the only ones that run the suite on Linux. Arch is a
+# supported platform, so its container installs the whole pacmanfile via
+# `make arch` (about 1.2 GB of packages); Ubuntu is generic Linux, link only.
+# Run when a Docker daemon is reachable; otherwise say so loudly and move on.
 #
-# Cost: on an Apple Silicon host the Arch image has to run under linux/amd64
-# emulation (upstream publishes no arm64 archlinux image), which puts it at
-# roughly 4-5 minutes against well under a minute for the native Ubuntu one.
-# If that becomes intolerable locally, SKIP_ARCH_DOCKER=1 drops it and the
-# Arch job in .github/workflows/ci.yml still covers it on every PR.
+# Cost: upstream publishes no arm64 archlinux image, so on Apple Silicon the
+# Arch container runs under linux/amd64 emulation and takes roughly 25
+# minutes, against well under a minute for Ubuntu. SKIP_ARCH_DOCKER=1 drops
+# it locally; CI's Container (arch) job runs it natively on every PR.
 verify-docker:
 	@if [ -n "$(call truthy,$(SKIP_DOCKER))" ]; then echo "Skipping container tests (SKIP_DOCKER set)"; \
 	elif docker info >/dev/null 2>&1; then \
-		$(MAKE) test-docker; \
+		$(MAKE) test-docker && \
 		if [ -n "$(call truthy,$(SKIP_ARCH_DOCKER))" ]; then echo "Skipping Arch container test (SKIP_ARCH_DOCKER set)"; \
 		else $(MAKE) test-docker-arch; fi; \
 	else echo "⚠️  Docker not reachable; fresh-install container tests SKIPPED (run 'make test-docker test-docker-arch' where Docker exists)"; fi
@@ -424,20 +422,30 @@ link-dry-run:
 	@$(LINK) dry-run
 
 ## Docker-based testing (clean environment)
+# One Dockerfile (test/Dockerfile), one pinned base image per distro. The
+# container runs the platform's real `make` path, then the suite and doctor.
+# Upstream publishes no arm64 archlinux image, so Arch always runs as
+# linux/amd64: native on CI runners, emulated (and slow) on Apple Silicon.
+DOCKER_BASE_ubuntu := ubuntu:24.04@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3
+DOCKER_BASE_arch := archlinux:latest@sha256:bb1e5dd58eb79755e736ac530292074f4408572c0fbc4306cd62b431fdf356f0
+DOCKER_PLATFORM_arch := --platform linux/amd64
+docker_build = docker build $(DOCKER_PLATFORM_$(1)) --build-arg BASE=$(DOCKER_BASE_$(1)) \
+	-t dotfiles-test-$(1) -f test/Dockerfile .
+
 test-docker:
-	@echo "Building and running tests in Ubuntu container..."
-	docker build -t dotfiles-test -f test/Dockerfile .
-	docker run --rm dotfiles-test
+	@echo "Building and running the install + tests in an Ubuntu container..."
+	$(call docker_build,ubuntu)
+	docker run --rm dotfiles-test-ubuntu
 
 test-docker-arch:
-	@echo "Building and running tests in Arch Linux container..."
-	docker build --platform linux/amd64 -t dotfiles-test-arch -f test/Dockerfile.arch .
-	docker run --platform linux/amd64 --rm dotfiles-test-arch
+	@echo "Building and running make arch + tests in an Arch Linux container..."
+	$(call docker_build,arch)
+	docker run $(DOCKER_PLATFORM_arch) --rm dotfiles-test-arch
 
 test-docker-interactive:
 	@echo "Starting interactive Ubuntu container..."
-	docker build -t dotfiles-test -f test/Dockerfile .
-	docker run -it --rm dotfiles-test /bin/zsh
+	$(call docker_build,ubuntu)
+	docker run -it --rm dotfiles-test-ubuntu /bin/bash
 
 # ============================================================================
 # Help
@@ -484,8 +492,8 @@ help:
 	@echo "  make clean        - Remove broken symlinks"
 	@echo "  make test-setup   - Install test dependencies (bats)"
 	@echo "  make test         - Run test suite"
-	@echo "  make test-docker  - Run test suite in an Ubuntu container"
-	@echo "  make test-docker-arch - Run test suite in an Arch container"
+	@echo "  make test-docker  - Link + run test suite in an Ubuntu container"
+	@echo "  make test-docker-arch - make arch (full pacmanfile) + test suite in an Arch container"
 	@echo "  make verify       - Run full repository verification"
 	@echo "  make verify-config-live - Check tracked configs are actually honoured"
 	@echo ""

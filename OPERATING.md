@@ -154,7 +154,7 @@ See `bin/README.md` for flags.
 | `make test` | Run the BATS suite (`test/test_*.bats`). |
 | `make verify-stale-refs` | Grep for strings left over from past migrations. |
 | `make verify-doc-links` | Validate local Markdown links (`bin/validate-doc-links`). |
-| `make test-docker` / `make test-docker-arch` | Run the install in an Ubuntu / Arch container. `make verify` runs both; `SKIP_DOCKER=1` skips both, `SKIP_ARCH_DOCKER=1` only the Arch one. |
+| `make test-docker` / `make test-docker-arch` | Build `test/Dockerfile` on Ubuntu / Arch and run that platform's real `make` (on Arch, `make arch` with the whole pacmanfile), then the suite and doctor. `make verify` runs both; `SKIP_DOCKER=1` skips both, `SKIP_ARCH_DOCKER=1` only the Arch one. |
 
 ### Package-level targets
 

@@ -3,8 +3,9 @@
 # The Linux half of install/Brewfile. Read only through `bin/manifest list
 # pacman`; installed by `bin/install-kind pacman` (`make arch`).
 #
-# One bare lowercase package name per line. Every name here was checked with
-# `pacman -Si` inside test/Dockerfile.arch: all of them resolve in the
+# One bare lowercase package name per line. Every name here is installed by
+# `make test-docker-arch` (CI's Container (arch) job) under STRICT_PACKAGES,
+# so one that stops resolving fails the gate. All of them must come from the
 # official core/extra repos, because `pacman -S` cannot reach the AUR.
 # Anything Arch ships only in the AUR is not listed here at all.
 #
