@@ -87,4 +87,4 @@ Makefile     install, link, verify targets (make help)
 
 [OPERATING.md](OPERATING.md) is the runbook: install paths, machine profiles,
 local overrides, `make` reference, troubleshooting, conventions.
-[CHANGELOG.md](CHANGELOG.md) has the history. License: GPL-3.0.
+The history is the merged pull requests. License: GPL-3.0.
