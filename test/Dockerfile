@@ -1,53 +1,42 @@
-# Dockerfile for testing dotfiles installation
+# check=skip=InvalidDefaultArgInFrom
+# One image definition for every container gate, parametrised by base image.
+# Run it through make, which owns the pinned bases:
 #
-# Build: docker build -t dotfiles-test -f test/Dockerfile .
-# Run:   docker run --rm dotfiles-test
+#   make test-docker        # Ubuntu 24.04: generic Linux, `make` = link only
+#   make test-docker-arch   # Arch: `make` = `make arch`, the whole pacmanfile
 #
-# This tests the dotfiles installation in a clean Ubuntu environment.
+# Omarchy (Arch + Hyprland) is plain Arch for this purpose: same pacman, same
+# `make arch` path. There is no separate Omarchy image.
+#
+# The image carries only what `make` needs before it can run: make, git, sudo
+# and a non-root user with passwordless sudo, which is what a fresh machine's
+# owner has. Packages, stow, zsh and bats arrive through the repo's own
+# targets when the container runs, so the gate proves those targets instead
+# of a hand-written package list kept beside them.
 
-FROM ubuntu:22.04@sha256:3ba65aa20f86a0fad9df2b2c259c613df006b2e6d0bfcc8a146afb8c525a9751
+# No default on purpose: the pins live in the Makefile beside the target that
+# names the distro, and a build without --build-arg BASE should fail rather
+# than quietly pick one (hence the check=skip directive on line 1).
+ARG BASE
+FROM ${BASE}
 
-# Prevent interactive prompts during package installation
-ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=UTC
-
-# Install base dependencies
-RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    wget \
-    stow \
-    zsh \
-    sudo \
-    make \
-    locales \
-    && rm -rf /var/lib/apt/lists/*
-
-# Ubuntu's `bats` package is 1.2.1, which predates
-# bats_require_minimum_version and `run --separate-stderr`. Installing it
-# made test_shell_boot.bats die with status 127 and silently cost the run
-# two tests. Install bats-core from source instead.
-ARG BATS_VERSION=1.11.0
-RUN git clone --depth 1 --branch "v${BATS_VERSION}" \
-        https://github.com/bats-core/bats-core.git /tmp/bats-core \
-    && /tmp/bats-core/install.sh /usr/local \
-    && rm -rf /tmp/bats-core
-
-# Set up locale
-RUN locale-gen en_US.UTF-8
-ENV LANG=en_US.UTF-8
-ENV LANGUAGE=en_US:en
-ENV LC_ALL=en_US.UTF-8
-
-# Create a non-root user for testing
-RUN useradd -m -s /bin/zsh testuser && \
+# pacman's seccomp sandbox cannot start under amd64 emulation on Apple
+# Silicon, so it is disabled. apt lists are kept: a real Ubuntu machine has
+# them, and `make link`'s stow-linux step relies on them.
+RUN if command -v pacman >/dev/null 2>&1; then \
+        sed -i '/^\[options\]/a DisableSandbox' /etc/pacman.conf && \
+        pacman -Syu --noconfirm --needed make git sudo && \
+        pacman -Scc --noconfirm; \
+    else \
+        apt-get update && \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            make git sudo ca-certificates; \
+    fi && \
+    useradd -m -s /bin/bash testuser && \
     echo "testuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Switch to test user
 USER testuser
 WORKDIR /home/testuser
-
-# Copy dotfiles repository
 COPY --chown=testuser:testuser . /home/testuser/.dotfiles
 
 # Several tests ask git about the checkout (`git grep` for leaked identity,
@@ -65,10 +54,14 @@ RUN if [ ! -d /home/testuser/.dotfiles/.git ]; then \
             commit -qm "container snapshot"; \
     fi
 
-# Set environment variables
-ENV HOME=/home/testuser
-ENV DOTFILES_DIR=/home/testuser/.dotfiles
-ENV XDG_CONFIG_HOME=/home/testuser/.config
+ENV HOME=/home/testuser \
+    DOTFILES_DIR=/home/testuser/.dotfiles \
+    XDG_CONFIG_HOME=/home/testuser/.config \
+    LANG=C.UTF-8
 
-# Default command: run tests and link
-CMD ["/bin/bash", "-c", "cd $DOTFILES_DIR && make test && make link && make doctor"]
+# `make` runs before `make test-setup` on purpose: test-setup installs zsh and
+# stow, and running it first would hide a platform target that fails to.
+# STRICT_PACKAGES is scoped to that one command: this is a gate, so an
+# uninstallable manifest entry must fail it, but the suite asserts the
+# tolerant default and must not inherit the override.
+CMD ["/bin/bash", "-c", "set -e; cd \"$DOTFILES_DIR\"; STRICT_PACKAGES=1 make; make test-setup; make test; make doctor"]
