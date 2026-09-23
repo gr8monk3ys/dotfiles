@@ -19,269 +19,269 @@ tap "FelixKratz/formulae"              # SketchyBar status bar, JankyBorders
 # ============================================================================
 # Core System Dependencies
 # ============================================================================
-brew "ca-certificates"                 # SSL/TLS certificates
-brew "dbus"                            # Message bus system (no restart_service: fails on a fresh machine)
-brew "gnupg"                           # PGP encryption
+brew "ca-certificates"                 # SSL/TLS certificates.
+brew "dbus"                            # Message bus system (no restart_service: fails on a fresh machine).
+brew "gnupg"                           # PGP encryption.
 
 # ============================================================================
 # Graphics & UI Libraries
 # ============================================================================
-brew "freetype"                        # Font rendering
-brew "glib"                            # Core library
-brew "harfbuzz"                        # Text shaping
-brew "librsvg"                         # SVG rendering
-brew "adwaita-icon-theme"              # Icon theme
-brew "at-spi2-core"                    # Accessibility toolkit
-brew "gsettings-desktop-schemas"       # Desktop settings
+brew "freetype"                        # Font rendering.
+brew "glib"                            # Core library.
+brew "harfbuzz"                        # Text shaping.
+brew "librsvg"                         # SVG rendering.
+brew "adwaita-icon-theme"              # Icon theme.
+brew "at-spi2-core"                    # Accessibility toolkit.
+brew "gsettings-desktop-schemas"       # Desktop settings.
 
 # ============================================================================
 # Development Tools
 # ============================================================================
 
 ## Build Systems & Compilers
-brew "gcc"                             # GNU Compiler Collection
-brew "bear"                            # Generate compilation database
-brew "meson"                           # Build system
-brew "tbb"                             # Threading Building Blocks
-brew "xcodegen"                        # Xcode project generator
+brew "gcc"                             # GNU Compiler Collection.
+brew "bear"                            # Generate compilation database.
+brew "meson"                           # Build system.
+brew "tbb"                             # Threading Building Blocks.
+brew "xcodegen"                        # Xcode project generator.
 
 ## Version Control & Git Tools
-brew "gh"                              # GitHub CLI
-brew "lazygit"                         # Terminal UI for git
-brew "lazydocker"                      # Terminal UI for Docker
+brew "gh"                              # Official GitHub CLI for PRs, issues, and API access from the terminal; used by helper scripts. Alternatives: hub (unmaintained).
+brew "lazygit"                         # Fast TUI for staging, rebasing, and browsing history when a full jj/git CLI round-trip is overkill. Alternatives: gitui, tig.
+brew "lazydocker"                      # Same UX as lazygit for containers; quick logs/exec without memorizing docker flags. Alternatives: ctop, docker desktop dashboard.
 # gh-dash is a gh CLI extension: gh extension install dlvhdr/gh-dash
 
 ## Language Servers & Development Tools
-brew "rustup"                          # Rust toolchain manager (make rust-packages runs `rustup default stable`)
-brew "rust-analyzer"                   # Rust language server
-brew "lua-language-server"             # Lua language server
-brew "python-lsp-server"               # Python language server
-brew "typescript"                      # TypeScript compiler
+brew "rustup"                          # The Rust toolchain itself; nothing else installs `cargo`, and `install/Rustfile` needs it. `make rust-packages` runs `rustup default stable` on first use.
+brew "rust-analyzer"                   # Rust language server.
+brew "lua-language-server"             # Lua language server.
+brew "python-lsp-server"               # Python language server.
+brew "typescript"                      # TypeScript compiler (tsc) available globally for tooling.
 
 # ============================================================================
 # Programming Languages & Runtimes
 # ============================================================================
 
 ## JavaScript/TypeScript
-brew "node"                            # Node.js runtime
-brew "deno"                            # Secure TypeScript runtime
-brew "oven-sh/bun/bun"                 # Fast all-in-one JavaScript runtime
+brew "node"                            # Node.js runtime required by npm global tooling and editors.
+brew "deno"                            # Secure-by-default TS runtime for one-off scripts. Alternatives: node, bun.
+brew "oven-sh/bun/bun"                 # Fast all-in-one JS runtime/bundler/test runner for scripts and tooling. Alternatives: node (kept), deno (kept).
 # pnpm and yarn installed via npmfile to avoid duplication
 
 ## Python
-brew "python@3.12"                     # Python 3.12
-brew "python@3.13"                     # Python 3.13 (latest)
-brew "poetry"                          # Python dependency management
-brew "pipx"                            # Install Python apps in isolation
-brew "uv"                              # Fast Python package installer
-brew "uvicorn"                         # ASGI server
+brew "python@3.12"                     # Python 3.12.
+brew "python@3.13"                     # Python 3.13 (latest).
+brew "poetry"                          # Python dependency management.
+brew "pipx"                            # Install Python apps in isolation.
+brew "uv"                              # Fast Python package/venv manager; gradually replacing pip/poetry workflows. Alternatives: pip, poetry (kept for legacy projects).
+brew "uvicorn"                         # ASGI server.
 
 ## Haskell
-brew "ghc"                             # Glasgow Haskell Compiler
-brew "ghcup"                           # Haskell toolchain installer
-brew "haskell-stack"                   # Haskell build tool
+brew "ghc"                             # Glasgow Haskell Compiler.
+brew "ghcup"                           # Haskell toolchain installer.
+brew "haskell-stack"                   # Haskell build tool.
 
 ## Other Languages
-brew "ruby"                            # Ruby programming language
-brew "r"                               # R statistical language
-brew "zig"                             # Zig programming language
-brew "luarocks"                        # Lua package manager
+brew "ruby"                            # Ruby programming language.
+brew "r"                               # R statistical language.
+brew "zig"                             # Zig programming language.
+brew "luarocks"                        # Lua package manager.
 
 # ============================================================================
 # Mobile Development
 # ============================================================================
-brew "cocoapods"                       # iOS dependency manager
-brew "ios-deploy"                      # Deploy iOS apps
-brew "libimobiledevice"                # iOS device communication
+brew "cocoapods"                       # iOS dependency manager.
+brew "ios-deploy"                      # Deploy iOS apps.
+brew "libimobiledevice"                # iOS device communication.
 
 # ============================================================================
 # Containerization
 # ============================================================================
-brew "colima"                          # Container runtime on macOS
-brew "docker"                          # Container platform
-brew "docker-compose"                  # Multi-container Docker apps
+brew "colima"                          # Container runtime on macOS.
+brew "docker"                          # Container platform.
+brew "docker-compose"                  # Multi-container Docker apps.
 
 # ============================================================================
 # Text Editors & IDEs
 # ============================================================================
-brew "neovim"                          # Primary editor (LSP, treesitter, plugins)
+brew "neovim"                          # cmd=nvim tier=core Primary editor. Lua config with lazy.nvim, LSP, treesitter, conform formatting. Alternatives: vim, helix, vscodium (GUI fallback).
 
 # ============================================================================
 # Shell & Terminal Tools
 # ============================================================================
-brew "tmux"                            # Terminal multiplexer
-brew "zsh-syntax-highlighting"         # Zsh syntax highlighting
-brew "starship"                        # Cross-shell prompt
-brew "hudochenkov/sshpass/sshpass"      # Non-interactive ssh password auth
-brew "stripe/stripe-cli/stripe"         # Stripe CLI
-brew "fzf"                             # Fuzzy finder
-brew "dockutil"                        # Scripted Dock layout (.config/macos/dock.sh)
-brew "duti"                            # Default-app associations from install/duti (make duti)
+brew "tmux"                            # Backup multiplexer kept for SSH/remote boxes and muscle-memory compatibility; zellij is primary locally. Alternatives: zellij (primary), screen.
+brew "zsh-syntax-highlighting"         # Zsh syntax highlighting (also loaded via zinit); styled by `ZSH_HIGHLIGHT_STYLES` in `.zshrc`.
+brew "starship"                        # Shell prompt: fast single binary, one TOML config, actively developed (Powerlevel10k, the previous prompt, is in maintenance mode). Alternatives: powerlevel10k, oh-my-posh, pure.
+brew "hudochenkov/sshpass/sshpass"     # Non-interactive SSH password auth for scripted access to hosts without key auth; from `hudochenkov/sshpass`, as homebrew/core declines to carry it.
+brew "stripe/stripe-cli/stripe"        # Stripe CLI for testing webhooks and API calls locally; from the `stripe/stripe-cli` tap.
+brew "fzf"                             # tier=essential Fuzzy finder powering ctrl-r/ctrl-t, fzf-tab completion menus, and the f/fv helper functions; themed via FZF_DEFAULT_OPTS. Alternatives: skim, peco.
+brew "dockutil"                        # Rebuilds the Dock from a script (`.config/macos/dock.sh`) instead of dragging icons on every new machine.
+brew "duti"                            # Applies the file-type → app associations in `install/duti` (`make duti`) so a fresh machine opens code, markdown and media in the intended apps without clicking through Finder.
 
 # ============================================================================
 # File & Text Search
 # ============================================================================
-brew "fd"                              # Fast find alternative
-brew "ripgrep"                         # Fast grep alternative (rg)
-brew "shellcheck"                      # Shell script static analysis (run by make verify and CI)
-brew "jq"                              # JSON processor
-brew "tree"                            # Directory tree viewer
+brew "fd"                              # tier=essential Fast, gitignore-aware find with sane syntax; used directly (find is not shadowed). Alternatives: find, fselect.
+brew "ripgrep"                         # cmd=rg tier=essential Fast recursive grep used by editor pickers and scripts; grep itself is not shadowed. Alternatives: grep, ag, ack.
+brew "shellcheck"                      # Static analysis for shell scripts; `make verify` and CI both gate on it.
+brew "jq"                              # The standard JSON processor; scripted everywhere, so kept canonical (jnv adds interactivity). Alternatives: jaq, gojq, dasel.
+brew "tree"                            # Directory tree viewer.
 
 # ============================================================================
 # Modern CLI Replacements (Rust-powered)
 # ============================================================================
-brew "eza"                             # Modern ls replacement (fork of exa)
-brew "bat"                             # Cat with syntax highlighting
-brew "zoxide"                          # Smart cd replacement (frecency-based)
-brew "git-delta"                       # Beautiful git diffs with syntax highlighting
-brew "dust"                            # Modern du replacement (disk usage)
-brew "bottom"                          # Modern htop replacement (btm)
-brew "btop"                            # Resource monitor with a themed TUI
-brew "procs"                           # Modern ps replacement
-brew "sd"                              # Modern sed replacement
-brew "hyperfine"                       # Command-line benchmarking tool
-brew "tokei"                           # Code statistics tool
-brew "watchexec"                       # File watcher for development
-brew "wget"                            # Network downloader (.config/wget/.wgetrc configures it)
+brew "eza"                             # tier=essential Modern ls with icons, git status, and tree view; aliased to ls and used in fzf-tab previews. Alternatives: lsd, plain ls.
+brew "bat"                             # tier=essential cat with syntax highlighting and paging; themed from `.config/palette/`, and the fzf/dotfiles-why previewer. Alternatives: cat, moar.
+brew "zoxide"                          # tier=essential Frecency-based cd (aliased to cd) replacing the old z.lua setup. Alternatives: z.lua (removed), autojump.
+brew "git-delta"                       # cmd=delta tier=next-gen Syntax-highlighting pager for git/jj diffs, themed from `.config/palette/` to match bat. Alternatives: difftastic (kept for structural diffs), diff-so-fancy.
+brew "dust"                            # Readable du with a usage graph; du itself is not shadowed. Alternatives: du, ncdu, gdu.
+brew "bottom"                          # Graphical process/system monitor (btm); top is not shadowed. Alternatives: htop, btop, glances.
+brew "btop"                            # Interactive resource monitor. Themed from `.config/palette/`, with a transparent background so it inherits Ghostty's blur rather than punching an opaque rectangle through it. Alternatives: bottom (kept, non-interactive use), htop, top.
+brew "procs"                           # Readable, searchable ps; ps itself is not shadowed. Alternatives: ps.
+brew "sd"                              # Intuitive find-and-replace; sed stays unshadowed because scripts depend on it. Alternatives: sed.
+brew "hyperfine"                       # Statistical CLI benchmarking; used to measure shell startup alongside dotfiles-bench-shell. Alternatives: time, bench.
+brew "tokei"                           # Code statistics tool.
+brew "watchexec"                       # File watcher for development.
+brew "wget"                            # Non-interactive downloader; `.config/wget/.wgetrc` sets timestamping, retries and timeouts, and is found via `$WGETRC` exported from `.zshenv`.
 
 # ============================================================================
 # Next-Gen Modern Tools (2024+)
 # ============================================================================
-brew "yazi"                            # Blazing fast file manager (replaces lf/ranger)
-brew "jj"                              # Jujutsu - next-gen Git-compatible VCS
-brew "zellij"                          # Modern terminal multiplexer (tmux alternative)
-brew "navi"                            # Interactive cheatsheet tool
-brew "broot"                           # Tree navigation with fuzzy search
-brew "tealdeer"                        # Fast tldr client (Rust)
-brew "gping"                           # Graphical ping with history
-brew "ouch"                            # Universal archive compress/decompress
+brew "yazi"                            # tier=next-gen Primary terminal file manager: async, image previews, themed from `.config/palette/`. Alternatives: ranger, lf, nnn, broot (kept for tree-jumps).
+brew "jj"                              # tier=next-gen Jujutsu: Git-compatible VCS with first-class undo, anonymous branches, and automatic rebases; primary local workflow, git remains the wire format. Alternatives: git alone.
+brew "zellij"                          # tier=next-gen Primary terminal multiplexer: sane defaults, discoverable keybindings, floating panes, themed from `.config/palette/`. Alternatives: tmux (kept as backup).
+brew "navi"                            # tier=additional Interactive cheatsheets at the prompt (ctrl-g) for rarely-used commands. Alternatives: tldr/tealdeer (kept).
+brew "broot"                           # tier=additional Tree navigation with fuzzy search for jumping deep into big repos. Alternatives: yazi (primary file manager).
+brew "tealdeer"                        # cmd=tldr tier=additional Fast Rust tldr client for example-first help; man stays canonical. Alternatives: tldr (node).
+brew "gping"                           # tier=additional Graphical ping with history.
+brew "ouch"                            # tier=additional Universal archive compress/decompress.
 
 # ============================================================================
 # Modern CLI Tools (2025+ additions)
 # ============================================================================
 
 ## Data & JSON
-brew "jnv"                             # Interactive JSON navigator with jq
-brew "glow"                            # Terminal markdown renderer
-brew "csvlens"                         # Interactive CSV viewer
-brew "xsv"                             # Fast CSV toolkit (Rust)
+brew "jnv"                             # Interactive JSON navigator with jq.
+brew "glow"                            # Renders markdown in the terminal; used for README/doc reading. Alternatives: bat (plain highlight).
+brew "csvlens"                         # Interactive CSV viewer.
+brew "xsv"                             # Fast CSV toolkit (Rust).
 
 ## System & Network
-brew "duf"                             # Modern df replacement (disk free)
-brew "doggo"                           # Modern DNS client (replaces dig)
-brew "bandwhich"                       # Network utilization by process
-brew "viddy"                           # Modern watch command with diffs
-brew "trippy"                          # Network diagnostic TUI (mtr/traceroute)
+brew "duf"                             # Readable df with colored table output; df itself is not shadowed. Alternatives: df.
+brew "doggo"                           # Modern DNS client with readable output; dig is not shadowed since scripts parse it. Alternatives: dig, dog.
+brew "bandwhich"                       # Network utilization by process.
+brew "viddy"                           # Modern watch command with diffs.
+brew "trippy"                          # mtr-style network diagnostic TUI (aliased via sudo trip). Alternatives: mtr, traceroute.
 
 ## Developer Productivity
-brew "just"                            # Command runner (simpler make)
-brew "difftastic"                      # Structural/syntax-aware diffs
-brew "grex"                            # Generate regex from examples
-brew "topgrade"                        # Universal system updater
-brew "gum"                             # Styled prompts/spinners for shell scripts
-brew "fastfetch"                       # Fast system info splash (neofetch successor)
+brew "just"                            # Ergonomic command runner for project-local recipes; make stays for this repo itself. Alternatives: make, task.
+brew "difftastic"                      # Structural, syntax-aware diffs for review; delta covers day-to-day paging. Alternatives: git-delta (pager).
+brew "grex"                            # Generate regex from examples.
+brew "topgrade"                        # One command to update brew/npm/cargo/etc.; complements dotfiles-update. Alternatives: dotfiles-update (repo script).
+brew "gum"                             # Styled headers, prompts, and spinners for shell scripts; `bin/lib/ui.sh` upgrades script output with it when present (plain ANSI fallback keeps tests/CI stable). Alternatives: hand-rolled ANSI escapes (the fallback).
+brew "fastfetch"                       # Fast, maintained neofetch successor for a system-info splash; run on demand via the `ff` alias rather than on shell start to protect startup time. Alternatives: neofetch (unmaintained), macchina.
 
 # ============================================================================
 # Shell History & Environment
 # ============================================================================
-brew "atuin"                           # Magical shell history with sync
-brew "direnv"                          # Per-directory environment variables
+brew "atuin"                           # tier=next-gen SQLite-backed shell history with fuzzy search and optional sync; replaces plain ctrl-r. Themed from `.config/palette/` via a custom theme file. Alternatives: mcfly, plain HISTFILE (still kept as fallback).
+brew "direnv"                          # Per-directory env vars; loads per-project dev environments from `.envrc`. Alternatives: shadowenv.
 
 # ============================================================================
 # Version Management
 # ============================================================================
-brew "mise"                            # Universal version manager (replaces asdf/pyenv/nvm)
+brew "mise"                            # Single version manager for node/python/etc.; replaces asdf/pyenv/nvm sprawl (n is kept only for the Makefile bootstrap). Alternatives: asdf, nvm+pyenv+rbenv.
 
 # ============================================================================
 # ============================================================================
 # File Transfer & Download
 # ============================================================================
-brew "aria2"                           # Download utility
-brew "transmission-cli"                # Torrent client CLI
-brew "yt-dlp"                          # YouTube downloader
+brew "aria2"                           # Download utility.
+brew "transmission-cli"                # Torrent client CLI.
+brew "yt-dlp"                          # YouTube downloader.
 
 # ============================================================================
 # Media Processing
 # ============================================================================
-brew "ffmpeg"                          # Video/audio processing
-brew "imagemagick"                     # Image processing
+brew "ffmpeg"                          # Video/audio processing.
+brew "imagemagick"                     # Image processing.
 
 # ============================================================================
 # Document Tools
 # ============================================================================
 
 ## PDF & Document Viewers
-brew "mupdf"                           # Lightweight PDF viewer
-brew "homebrew-zathura/zathura/zathura"                  # Document viewer with Vim keybindings
-brew "homebrew-zathura/zathura/zathura-pdf-mupdf"        # MuPDF backend for Zathura
+brew "mupdf"                           # Lightweight PDF viewer.
+brew "homebrew-zathura/zathura/zathura" # Vim-keybinding document viewer for PDFs. Alternatives: mupdf (kept as backend/light viewer), Preview.app.
+brew "homebrew-zathura/zathura/zathura-pdf-mupdf" # MuPDF backend for Zathura.
 
 ## Documentation & Publishing
-brew "pandoc"                          # Universal document converter
-brew "sphinx-doc"                      # Documentation generator
-brew "typst"                           # Modern typesetting system
-brew "typstyle"                        # Typst formatter
+brew "pandoc"                          # Universal document converter.
+brew "sphinx-doc"                      # Documentation generator.
+brew "typst"                           # Modern typesetting system.
+brew "typstyle"                        # Typst formatter.
 
 ## LaTeX & Math
-brew "manim"                           # Math animation engine
+brew "manim"                           # Math animation engine.
 
 # ============================================================================
 # Data Science & Jupyter
 # ============================================================================
-brew "jupyterlab"                      # Interactive notebooks
-brew "python-matplotlib"               # Plotting library
+brew "jupyterlab"                      # Interactive notebooks.
+brew "python-matplotlib"               # Plotting library.
 
 # ============================================================================
 # Communication & Email
 # ============================================================================
-brew "neomutt"                         # Terminal email client
-brew "msmtp"                           # SMTP client
-brew "isync"                           # Mailbox synchronization
-brew "himalaya"                        # Modern terminal email client
+brew "neomutt"                         # Terminal email client (paired with isync/msmtp). Alternatives: himalaya (kept, modern alternative).
+brew "msmtp"                           # SMTP client.
+brew "isync"                           # Mailbox synchronization.
+brew "himalaya"                        # Modern terminal email client.
 
 # ============================================================================
 # Security & Privacy
 # ============================================================================
-brew "pass"                            # Password manager
+brew "pass"                            # GPG-backed CLI password store for scripts and git-credential use. Alternatives: keepassxc (GUI vault).
 
 # ============================================================================
 # Productivity & Utilities
 # ============================================================================
 
 ## Time & Task Management
-brew "dominikbraun/timetrace/timetrace"                  # Time tracking
-brew "timewarrior"                     # Time tracking
+brew "dominikbraun/timetrace/timetrace" # Time tracking.
+brew "timewarrior"                     # Time tracking.
 
 ## System Monitoring
 # gtop installed via npmfile to avoid duplication
 
 ## Music & Media
-brew "spotify_player"                  # Spotify TUI player
+brew "spotify_player"                  # Spotify TUI player.
 
 ## Miscellaneous
-brew "sl"                              # Steam Locomotive (fun)
-brew "telnet"                          # Telnet client
-brew "xh"                              # HTTPie alternative
-brew "typos-cli"                       # Source code spell checker
-brew "biome"                           # Web dev toolchain
-brew "cabin"                            # Package manager
+brew "sl"                              # Steam Locomotive (fun).
+brew "telnet"                          # Telnet client.
+brew "xh"                              # Friendly HTTP client for API poking. Alternatives: curl (kept canonical), httpie.
+brew "typos-cli"                       # Source code spell checker.
+brew "biome"                           # Single fast formatter/linter for JS/TS; wired into nvim conform. Alternatives: prettier+eslint.
+brew "cabin"                           # C++ package manager / build system (formerly poac). _Rationale unclear — candidate for removal if no active C++ projects use it._
 
 # ============================================================================
 # Databases
 # ============================================================================
-brew "mysql@8.4"                       # MySQL 8.4
+brew "mysql@8.4"                       # MySQL 8.4.
 
 # ============================================================================
 # Status Bar
 # ============================================================================
-brew "FelixKratz/formulae/sketchybar"  # Customizable macOS status bar
-brew "FelixKratz/formulae/borders"     # Focused-window borders for the tiling WM
+brew "FelixKratz/formulae/sketchybar"  # Customizable status bar showing AeroSpace workspaces; themed from the repo-wide palette (`.config/palette/`). Alternatives: stock menu bar, übersicht.
+brew "FelixKratz/formulae/borders"     # Draws the focused-window border macOS does not. Under AeroSpace, focus moves without the mouse and an unfocused macOS window is barely distinguishable, so this is the clearest focus signal in the setup. Alternatives: none on macOS; yabai's built-in borders (needs SIP disabled).
 
 # ============================================================================
 # AI & Machine Learning
 # ============================================================================
-brew "ollama"                          # Local LLM runner
+brew "ollama"                          # Local LLM runner for offline/private inference. Alternatives: llama.cpp, lm-studio.
 
 # ============================================================================
 # Media
 # ============================================================================
-brew "cava"                            # Console audio visualiser
+brew "cava"                            # Console audio visualiser, themed with the palette's eight-stop gradient. Pure rice — it does no work. On macOS it captures an input device, so it hears the microphone until a BlackHole loopback is set up; see the config README. Alternatives: glava (Linux only), projectM.
