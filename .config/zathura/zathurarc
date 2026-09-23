@@ -23,38 +23,40 @@ map R rotate
 set zoom-min 10
 set guioptions ""
 
-# zathurarc-dark
 set font "inconsolata 15"
-set default-bg "#000000" #00
-set default-fg "#F7F7F6" #01
 
-set statusbar-fg "#B0B0B0" #04
-set statusbar-bg "#202020" #01
+# Colours: the danse palette (.config/palette/danse.conf), so documents open
+# in the same ground as the terminal they were launched from.
+set default-bg "#21252b"
+set default-fg "#abb2bf"
 
-set inputbar-bg "#151515" #00 currently not used
-set inputbar-fg "#FFFFFF" #02
+set statusbar-fg "#abb2bf"
+set statusbar-bg "#3e4451"
 
-set notification-error-bg "#AC4142" #08
-set notification-error-fg "#151515" #00
+set inputbar-bg "#282c34"
+set inputbar-fg "#abb2bf"
 
-set notification-warning-bg "#AC4142" #08
-set notification-warning-fg "#151515" #00
+set notification-error-bg "#e06a51"
+set notification-error-fg "#21252b"
 
-set highlight-color "#F4BF75" #0A
-set highlight-active-color "#6A9FB5" #0D
+set notification-warning-bg "#e5c07b"
+set notification-warning-fg "#21252b"
 
-set completion-highlight-fg "#000000" #02
-set completion-highlight-bg "#00BCD4B3" #0C
+set highlight-color "#e5c07b"
+set highlight-active-color "#61afef"
 
-set completion-bg "#30303003" #02
-set completion-fg "#FFC107C4" #0C
+set completion-highlight-fg "#21252b"
+set completion-highlight-bg "#61afef"
 
-set notification-bg "#90A959" #0B
-set notification-fg "#151515" #00
+set completion-bg "#282c34"
+set completion-fg "#abb2bf"
+
+set notification-bg "#98c379"
+set notification-fg "#21252b"
 
 set recolor "true"
-set recolor-lightcolor "#000000" #00
-set recolor-darkcolor "#E0E0E0" #06
+set recolor-lightcolor "#21252b"
+set recolor-darkcolor "#abb2bf"
 set recolor-reverse-video "true"
 set recolor-keephue "true"
 
