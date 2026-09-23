@@ -99,7 +99,8 @@ Key differences:
 
 ## Theme
 
-Using OneDark colors for consistency with Neovim, Ghostty, and other tools.
+`theme.toml` is rendered from the danse palette by `bin/palette`; edit its
+template under `.config/palette/templates/`, not the file here.
 
 ## Shell Integration
 

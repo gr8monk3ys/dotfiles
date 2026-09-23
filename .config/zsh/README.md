@@ -30,14 +30,14 @@ what makes this a checked constraint instead of a comment.
 ## Prompt
 
 [Starship](https://starship.rs) (config:
-[`../starship/starship.toml`](../starship/starship.toml), OneDark). If the
+[`../starship/starship.toml`](../starship/starship.toml)). If the
 `starship` binary is missing, `.zshrc` sets a plain two-line prompt until
 `make brew-packages` installs it.
 
 ## Plugin manager
 
 Plugins are managed by [zinit](https://github.com/zdharma-continuum/zinit)
-(self-bootstraps on first shell start): zsh-syntax-highlighting (OneDark `ZSH_HIGHLIGHT_STYLES` palette),
+(self-bootstraps on first shell start): zsh-syntax-highlighting (its `ZSH_HIGHLIGHT_STYLES` are a palette region),
 zsh-completions, zsh-autosuggestions, fzf-tab, plus a few OMZ snippets
 (git, sudo, command-not-found; aws/kubectl/archlinux only when the tool
 exists). OMZ itself is **not** installed.
@@ -46,9 +46,9 @@ exists). OMZ itself is **not** installed.
 
 `.zshrc` initializes these when installed (all from the Brewfile):
 
-- **fzf** — ctrl-r / ctrl-t, themed OneDark via `FZF_DEFAULT_OPTS`
+- **fzf** — ctrl-r / ctrl-t, themed from the palette via `FZF_DEFAULT_OPTS`
 - **zoxide** — frecency `cd` replacement (`--cmd cd`)
-- **atuin** — searchable shell history UI (OneDark theme in
+- **atuin** — searchable shell history UI (danse theme in
   [`../atuin/`](../atuin/))
 - **direnv** — per-directory environments
 - **mise** — runtime version manager

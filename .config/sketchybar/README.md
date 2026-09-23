@@ -11,7 +11,8 @@ Floating macOS status bar with AeroSpace workspace integration.
 ## Design
 
 - **Position:** Top, floating with rounded corners
-- **Colors:** OneDark palette (same hexes as Starship, zsh, Ghostty, Neovim)
+- **Colors:** role names in `colors.sh`, rendered from the danse palette by
+  `bin/palette`
 - **Font:** SF Pro (ships with macOS)
 
 ## File Structure
