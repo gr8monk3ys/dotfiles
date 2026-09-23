@@ -242,6 +242,12 @@ STUB
     # real data dir (read-only here); state and cache go to the test's temp
     # dir so the boot writes nothing outside it.
     command -v nvim > /dev/null || skip "nvim not installed"
+    # Same rule as test_shell_boot.bats' zinit check: a first boot clones
+    # every plugin from the network, floods stderr and leaves git children
+    # writing into later tests' output. That is a fresh machine (the Arch
+    # container after `make arch`), not a palette failure.
+    [[ -d "${XDG_DATA_HOME:-$HOME/.local/share}/nvim/lazy/lazy.nvim" ]] ||
+        skip "nvim plugins not bootstrapped (open nvim once)"
     want="$(printf '{{vermilion}} {{bg}} {{diff-add}}\n' | "$DOTFILES_DIR/bin/palette" fill)"
     run env XDG_CONFIG_HOME="$DOTFILES_DIR/.config" \
         XDG_STATE_HOME="$TEST_TEMP_DIR/state" XDG_CACHE_HOME="$TEST_TEMP_DIR/cache" \
