@@ -17,31 +17,35 @@ teardown() {
     cleanup_test_env
 }
 
-# --- Parse checks (zsh -n) -------------------------------------------------
+# --- Parse and source checks ----------------------------------------------
+# The subjects are read from .zshrc's own source list, so a file .zshrc starts
+# sourcing is covered without anyone editing this test. This replaced one
+# hand-written test per file plus a meta-test that grepped this file to prove
+# the hand-written list was complete.
 
-@test "shell-surface: .zshenv parses as valid zsh" {
+zshrc_sources() {
+    grep -oE 'ZDOTDIR/[a-z]+\.zsh' "$DOTFILES_DIR/.config/zsh/.zshrc" |
+        sed 's|ZDOTDIR/||' | sort -u
+}
+
+@test "shell-surface: .zshrc sources at least one file (the derivation is live)" {
+    # Without this, a .zshrc rewrite that the grep no longer matches would
+    # turn the loop below into a test of nothing that still passes.
+    run zshrc_sources
+    assert_success
+    [[ -n "$output" ]]
+}
+
+@test "shell-surface: .zshenv and .zshrc parse as valid zsh" {
+    # .zshrc is parse-only: sourcing it needs zinit, which test_shell_boot.bats
+    # covers when a zinit store exists and skips otherwise (fresh CI runners).
+    # One file per call: `zsh -n a b` parses only `a` and hands `b` to it as
+    # $1, which is how the Makefile's old four-file check covered one file.
     run zsh -n "$DOTFILES_DIR/.zshenv"
     assert_success
-}
-
-@test "shell-surface: aliases.zsh parses as valid zsh" {
-    run zsh -n "$DOTFILES_DIR/.config/zsh/aliases.zsh"
+    run zsh -n "$DOTFILES_DIR/.config/zsh/.zshrc"
     assert_success
 }
-
-@test "shell-surface: lib.zsh parses as valid zsh" {
-    run zsh -n "$DOTFILES_DIR/.config/zsh/lib.zsh"
-    assert_success
-}
-
-@test "shell-surface: functions.zsh parses as valid zsh" {
-    run zsh -n "$DOTFILES_DIR/.config/zsh/functions.zsh"
-    assert_success
-}
-
-# --- Source checks ---------------------------------------------------------
-# Source each file in a clean subshell with HOME pointed at a temp dir.
-# Any error written to stderr at source time is a failure.
 
 @test "shell-surface: .zshenv sources cleanly in a clean subshell" {
     run zsh -c "HOME='$TEST_HOME' source '$DOTFILES_DIR/.zshenv'"
@@ -49,40 +53,27 @@ teardown() {
     assert_output ""
 }
 
-@test "shell-surface: aliases.zsh sources cleanly in a clean subshell" {
-    run zsh -c "HOME='$TEST_HOME' source '$DOTFILES_DIR/.config/zsh/aliases.zsh'"
-    assert_success
-    assert_output ""
-}
-
-@test "shell-surface: lib.zsh sources cleanly in a clean subshell" {
-    run zsh -c "HOME='$TEST_HOME' source '$DOTFILES_DIR/.config/zsh/lib.zsh'"
-    assert_success
-}
-
-@test "shell-surface: every file .zshrc sources is covered above" {
-    # Drift guard: a new sourced file must gain both a parse test and a
-    # source test here. Matches on test NAMES, not on the path appearing
-    # anywhere in the file, which a grep for the path alone would satisfy.
-    run bash -c '
-        set -euo pipefail
-        cd "$1"
-        status=0
-        for f in $(grep -oE "ZDOTDIR/[a-z]+\.zsh" .config/zsh/.zshrc | sed "s|ZDOTDIR/||" | sort -u); do
-            grep -q "^@test \"shell-surface: $f parses" test/test_shell_surface.bats ||
-                { echo "no parse test for: $f"; status=1; }
-            grep -q "^@test \"shell-surface: $f sources" test/test_shell_surface.bats ||
-                { echo "no source test for: $f"; status=1; }
-        done
-        exit $status
-    ' _ "$DOTFILES_DIR"
-    assert_success
-}
-
-@test "shell-surface: functions.zsh sources cleanly in a clean subshell" {
-    run zsh -c "HOME='$TEST_HOME' source '$DOTFILES_DIR/.config/zsh/functions.zsh'"
-    assert_success
-    assert_output ""
+@test "shell-surface: every file .zshrc sources parses and sources silently" {
+    # Sourced in a clean subshell with HOME pointed at a temp dir: anything
+    # written at source time is a failure, since an interactive shell would
+    # print it on every start.
+    local f path out failed=0
+    while IFS= read -r f; do
+        path="$DOTFILES_DIR/.config/zsh/$f"
+        if ! out="$(zsh -n "$path" 2>&1)"; then
+            printf 'does not parse: %s\n%s\n' "$f" "$out"
+            failed=1
+            continue
+        fi
+        if ! out="$(zsh -c "HOME='$TEST_HOME' source '$path'" 2>&1)"; then
+            printf 'fails to source: %s\n%s\n' "$f" "$out"
+            failed=1
+        elif [[ -n "$out" ]]; then
+            printf 'prints when sourced: %s\n%s\n' "$f" "$out"
+            failed=1
+        fi
+    done < <(zshrc_sources)
+    return "$failed"
 }
 
 # --- Sentinel: detect typo'd `command -v` guards ---------------------------
