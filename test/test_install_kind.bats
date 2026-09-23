@@ -31,6 +31,31 @@ STUB
     chmod +x "$STUB_BIN/$name"
 }
 
+# pacman reads its package list from stdin when the last argument is "-";
+# this stub keeps it, so a test can see what pacman was actually handed.
+stub_pacman() {
+    cat > "$STUB_BIN/pacman" <<'STUB'
+#!/usr/bin/env bash
+printf 'pacman %s\n' "$*" >> "$CALL_LOG"
+[[ "${!#}" == "-" ]] && cat > "$CALL_LOG.stdin"
+exit 0
+STUB
+    chmod +x "$STUB_BIN/pacman"
+}
+
+# sudo that logs and then runs its command (the stubbed one, via PATH), and
+# an `id` that claims the given uid: together they decide who escalates.
+stub_sudo_as_uid() {
+    local uid="$1"
+    cat > "$STUB_BIN/sudo" <<'STUB'
+#!/usr/bin/env bash
+printf 'sudo %s\n' "$*" >> "$CALL_LOG"
+exec "$@"
+STUB
+    printf '#!/usr/bin/env bash\necho %s\n' "$uid" > "$STUB_BIN/id"
+    chmod +x "$STUB_BIN/sudo" "$STUB_BIN/id"
+}
+
 # Run install-kind with ONLY the stubs plus the repo's bin on PATH, so a real
 # brew/npm/cargo on this machine can never be reached.
 run_kind() {
@@ -134,6 +159,32 @@ calls() { cat "$CALL_LOG"; }
     assert_success
     run calls
     assert_output --partial "npm install --force --location global"
+}
+
+# bin/pacman used to shadow the real pacman on PATH to add sudo. The kind
+# escalates at the call site instead.
+@test "pacman installs the manifest through sudo when not root" {
+    stub_pacman
+    stub_sudo_as_uid 1000
+    run_kind pacman
+    assert_success
+    run calls
+    assert_output --partial "sudo pacman -S --noconfirm -"
+    first="$("$DOTFILES_DIR/bin/manifest" list pacman | head -1)"
+    run grep -cx "$first" "$CALL_LOG.stdin"
+    assert_output "1"
+    run grep -c "#" "$CALL_LOG.stdin"
+    assert_output "0"
+}
+
+@test "pacman runs directly as root, without sudo" {
+    stub_pacman
+    stub_sudo_as_uid 0
+    run_kind pacman
+    assert_success
+    run calls
+    assert_output --partial "pacman -S --noconfirm -"
+    [[ "$output" != *"sudo"* ]]
 }
 
 @test "code prefers codium when both editors exist" {

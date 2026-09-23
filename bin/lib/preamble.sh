@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Shared preamble for bin/ scripts: checkout resolution, the command-presence
-# predicate, and the truthiness rule for boolean knobs.
+# predicate, the truthiness rule for boolean knobs, and root escalation.
 #
 # SCRIPT_DIR deliberately does not live here — a script needs it to find this
 # file in the first place. Every caller starts with the same two lines:
@@ -45,4 +45,17 @@ knob_on() {
     esac
     echo "warning: $name='$value' is not 1/true or 0/false; treating it as off" >&2
     return 1
+}
+
+# Run a command as root: directly when already root, through sudo otherwise.
+# This replaces bin/pacman, a wrapper that shadowed the real pacman on PATH to
+# add sudo and so needed a self-recursion guard, a doctor special case and a
+# regression test of its own. Escalation is the caller's decision, made at the
+# call site. Asks `id -u` rather than $EUID so a test can stand in for root.
+as_root() {
+    if [[ "$(id -u)" -eq 0 ]]; then
+        "$@"
+    else
+        sudo "$@"
+    fi
 }

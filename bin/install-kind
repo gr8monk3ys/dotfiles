@@ -104,14 +104,18 @@ install_rust() {
     run_install sh -c "\"$MANIFEST\" list rust | xargs -n1 cargo install"
 }
 
+# Was `pacman -S - < install/pacmanfile`, which fed comments straight to
+# pacman; it worked only because that file happens to have none.
+pacman_install_manifest() {
+    "$MANIFEST" list pacman | as_root pacman -S --noconfirm -
+}
+
 install_pacman() {
     if ! command_exists pacman; then
         print_warn "pacman not installed; skipping"
         return 0
     fi
-    # Was `pacman -S - < install/pacmanfile`, which fed comments straight to
-    # pacman; it worked only because that file happens to have none.
-    run_install sh -c "\"$MANIFEST\" list pacman | pacman -S --noconfirm -"
+    run_install pacman_install_manifest
 }
 
 install_code() {

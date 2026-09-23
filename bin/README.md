@@ -473,13 +473,6 @@ package (directly, via the mapping, or as an explicit `-` exemption), and
 every mapping entry must still name a package that exists and a command
 doctor still probes. Run by `make verify-doctor-tools`.
 
-## Compatibility Helpers
-
-### [pacman](pacman)
-
-Wrapper that invokes `/usr/bin/pacman`, using `sudo` automatically when needed.
-Helps non-root installations on Arch Linux.
-
 ## Adding New Scripts
 
 1. Create script with shebang (`#!/usr/bin/env bash`)
