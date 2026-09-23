@@ -1,7 +1,7 @@
 # macOS Configuration
 
 macOS-specific scripts and settings. Nothing here runs automatically; apply by
-hand on a new machine after `brew bundle`.
+hand on a new machine after `make`.
 
 ## Files
 
