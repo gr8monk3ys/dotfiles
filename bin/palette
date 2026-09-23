@@ -190,47 +190,12 @@ cmd_fill() {
     cat "$WORK_DIR/out"
 }
 
-# --- Readers kept until their callers move to `fill` -----------------------
-
-rows() { grep -vE '^[[:space:]]*(#|$)' "$PALETTE_FILE"; }
-
-cmd_list() { rows | tr '|' '\t'; }
-
-cmd_names() {
-    local name rest
-    while IFS='|' read -r name rest; do
-        [[ -n "$name" ]] && printf '%s\n' "$name"
-    done < <(rows)
-    return 0
-}
-
-cmd_get() {
-    local want="${1:-}" fmt=hex
-    [[ "${2:-}" == --format ]] && fmt="${3:-}"
-    case "$fmt" in hex) fmt="" ;; 0x | rgb) fmt=":$fmt" ;; *) die "unknown format $fmt" ;; esac
-    grep -q "^$want|" "$PALETTE_FILE" || die "no such colour $want"
-    printf '{{%s%s}}\n' "$want" "$fmt" | cmd_fill
-}
-
-cmd_export() {
-    local prefix="${1:-PALETTE}" name hex rest var
-    while IFS='|' read -r name hex rest; do
-        var="$(printf '%s' "$name" | tr '[:lower:]-' '[:upper:]_')"
-        printf "%s_%s='%s'\n" "$prefix" "$var" "$hex"
-    done < <(rows)
-    return 0
-}
-
 main() {
     local cmd="${1:-}"
     case "$cmd" in
         render) cmd_render ;;
         check) cmd_check ;;
         fill) cmd_fill ;;
-        list) cmd_list ;;
-        names) cmd_names ;;
-        get) shift; cmd_get "$@" ;;
-        export) shift; cmd_export "$@" ;;
         -h | --help | "")
             sed -n '2,34p' "$0" | sed 's/^# \{0,1\}//'
             [[ -z "$cmd" ]] && return 2

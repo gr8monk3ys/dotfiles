@@ -1,9 +1,11 @@
 #!/usr/bin/env bats
-# Tests for bin/palette and the configs that consume it.
+# Tests for bin/palette and the configs it renders.
 #
-# The palette was ten copies of the same six hex literals with nothing
-# connecting them, so "everything matches" was unverifiable. These tests are
-# the verification: the data has one home, and no consumer re-types it.
+# The palette was fifteen hand-copied sets of hex literals with nothing
+# connecting them, so "everything matches" was unverifiable. These tests go
+# through the module's interface (render, check, fill) against a fixture, and
+# then assert the real checkout is rendered and that nothing outside the
+# rendered output types a colour.
 
 load test_helper/common
 
@@ -192,61 +194,6 @@ STUB
     assert_success
 }
 
-@test "palette is executable" {
-    [[ -x "$DOTFILES_DIR/bin/palette" ]]
-}
-
-@test "get returns the hex for a known colour" {
-    run "$DOTFILES_DIR/bin/palette" get blue
-    assert_success
-    assert_output "#61afef"
-}
-
-@test "get on an unknown colour fails rather than returning empty" {
-    # A typo in a theme should be loud. Returning "" paints something black
-    # and looks like a design choice.
-    run "$DOTFILES_DIR/bin/palette" get nosuchcolour
-    assert_failure
-    assert_output --partial "no such colour"
-}
-
-@test "the 0x format is what sketchybar wants" {
-    run "$DOTFILES_DIR/bin/palette" get blue --format 0x
-    assert_success
-    assert_output "0xff61afef"
-}
-
-@test "the rgb format is what EZA_COLORS wants" {
-    run "$DOTFILES_DIR/bin/palette" get blue --format rgb
-    assert_success
-    assert_output "97;175;239"
-}
-
-@test "an unknown format is rejected" {
-    run "$DOTFILES_DIR/bin/palette" get blue --format bogus
-    assert_failure
-    assert_output --partial "unknown format"
-}
-
-@test "every palette entry is a valid six-digit hex" {
-    run bash -c '
-        set -euo pipefail
-        status=0
-        while IFS="	" read -r name hex role; do
-            [[ "$hex" =~ ^\#[0-9a-f]{6}$ ]] || { echo "bad hex for $name: $hex"; status=1; }
-            [[ -n "$role" ]] || { echo "no role documented for $name"; status=1; }
-        done < <("$1/bin/palette" list)
-        exit $status
-    ' _ "$DOTFILES_DIR"
-    assert_success
-}
-
-@test "palette names are unique" {
-    run bash -c '"$1/bin/palette" names | sort | uniq -d' _ "$DOTFILES_DIR"
-    assert_success
-    assert_output ""
-}
-
 @test "a sourced sketchybar colors.sh defines its roles from the palette" {
     # Asserted on the sourced file, not by grepping it: the old runtime parser
     # left every role empty when the palette file was unreachable, which
@@ -258,48 +205,32 @@ STUB
     assert_output "$(printf '{{bg:0x}} {{blue:0x}} {{vermilion:0x}} {{ultramarine:0x}}\n' | "$DOTFILES_DIR/bin/palette" fill)"
 }
 
-@test "every truecolor triple in EZA_COLORS is a palette colour" {
-    # EZA_COLORS encodes colours as decimal SGR triples, so a hex-based grep
-    # cannot see them: a retune that rewrote every "#e06c75" left "224;108;117"
-    # behind in .zshenv and the listing kept the old red.
+@test "no colour is typed anywhere the palette does not render" {
+    # check proves each rendered file matches its template. This covers the
+    # rest of the tree, where a new theme could type a colour straight in and
+    # nothing would notice: every colour literal must be inside rendered
+    # output (a whole rendered file, or the inside of a palette region).
+    # Exempt: the palette itself, prose, tests, and cava's vendored assets.
+    git -C "$DOTFILES_DIR" rev-parse --git-dir > /dev/null 2>&1 || skip "not a git checkout"
     run bash -c '
         set -euo pipefail
-        repo="$1"
-        allowed=""
-        while IFS="	" read -r name hex role; do
-            allowed="$allowed $(printf "%d;%d;%d" "0x${hex:1:2}" "0x${hex:3:2}" "0x${hex:5:2}")"
-        done < <("$repo/bin/palette" list)
+        cd "$1"
+        pattern="#[0-9A-Fa-f]{6}|0x[0-9A-Fa-f]{8}|38;2;[0-9]"
         status=0
-        for triple in $(grep -oE "38;2;[0-9]+;[0-9]+;[0-9]+" "$repo/.zshenv" | sed "s/^38;2;//" | sort -u); do
-            case " $allowed " in
-                *" $triple "*) ;;
-                *) echo "EZA_COLORS uses $triple, which is not in the palette"; status=1 ;;
+        while IFS= read -r f; do
+            case "$f" in
+                .config/palette/*|bin/palette|*.md|test/*|.config/cava/shaders/*|.config/cava/themes/*) continue ;;
             esac
-        done
-        exit $status
-    ' _ "$DOTFILES_DIR"
-    assert_success
-}
-
-@test "every colour in a generated theme is a palette colour" {
-    # ghostty/themes/danse, btop/themes/danse.theme and cava/config are all
-    # derived from the palette by hand-running `palette get`. Nothing re-runs
-    # that, so this is what keeps them true — and it is what catches a colour
-    # typed straight into a theme instead of taken from the palette.
-    run bash -c '
-        set -euo pipefail
-        repo="$1"
-        allowed="$("$repo/bin/palette" list | cut -f2)"
-        status=0
-        for f in .config/ghostty/themes/danse \
-                 .config/btop/themes/danse.theme \
-                 .config/cava/config; do
-            [[ -f "$repo/$f" ]] || { echo "missing generated theme: $f"; status=1; continue; }
-            for hex in $(grep -oE "#[0-9a-f]{6}" "$repo/$f" | sort -u); do
-                printf "%s\n" "$allowed" | grep -Fxq "$hex" \
-                    || { echo "$f uses $hex, which is not in the palette"; status=1; }
-            done
-        done
+            [[ -f "$f" ]] || continue
+            if [[ -f ".config/palette/templates/$f" ]]; then
+                grep -q "palette:begin" "$f" || continue
+                hits="$(awk "/palette:begin/{s=1;next} /palette:end/{s=0;next} !s" "$f" \
+                    | sed "s/0x00000000//g" | grep -nE "$pattern" || true)"
+            else
+                hits="$(sed "s/0x00000000//g" "$f" | grep -nE "$pattern" || true)"
+            fi
+            [[ -z "$hits" ]] || { printf "%s: colour outside rendered output:\n%s\n" "$f" "$hits"; status=1; }
+        done < <(git ls-files --cached --others --exclude-standard | xargs grep -lIE "$pattern" 2> /dev/null || true)
         exit $status
     ' _ "$DOTFILES_DIR"
     assert_success

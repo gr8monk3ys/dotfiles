@@ -204,9 +204,9 @@ teardown() {
 @test "shell-boot: eza is themed through the mechanism this build supports" {
     # theme.yml needs a build feature Homebrew does not enable, so eza ignores
     # it silently. EZA_COLORS is what actually applies; assert it is exported
-    # and that eza emits the OneDark directory colour.
+    # and that it carries the palette's blue for directories.
     run --separate-stderr env -u ZDOTDIR -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_CACHE_HOME \
         -u EZA_COLORS HOME="$FAKE_HOME" TERM=xterm zsh -ic 'print -r -- "$EZA_COLORS"'
     assert_success
-    [[ "$output" == *"di=38;2;97;175;239"* ]]
+    [[ "$output" == *"di=38;2;$(printf '{{blue:rgb}}' | "$DOTFILES_DIR/bin/palette" fill)"* ]]
 }
