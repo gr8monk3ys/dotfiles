@@ -168,6 +168,13 @@ STUB
     done < <(bash -c 'source "$1"; snapshot_names_of_class record' _ "$SNAPSHOT_LIB")
 }
 
+# The manifest names the platform in bin/platform's vocabulary, not uname's.
+@test "the snapshot manifest records the platform bin/platform reports" {
+    run_full_backup
+    run grep -c "^Platform: $("$DOTFILES_DIR/bin/platform" detect) ($("$DOTFILES_DIR/bin/platform" arch))$" "$SNAP/MANIFEST.txt"
+    assert_output "1"
+}
+
 @test "dotfiles-backup honours SKIP_KINDS for records" {
     mkdir -p "$TEST_TEMP_DIR/backups"
     run env HOME="$TEST_HOME" BACKUP_DIR="$TEST_TEMP_DIR/backups" SKIP_KINDS="npm" \
