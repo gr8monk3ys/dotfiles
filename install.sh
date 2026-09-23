@@ -16,7 +16,6 @@ set -euo pipefail
 # rendered in by bin/palette instead, and palette check keeps them current.
 # ============================================================================
 # palette:begin - rendered from .config/palette/templates/install.sh; edit it there, then run bin/palette render
-readonly BLACK='\033[38;2;40;44;52m'
 readonly RED='\033[38;2;224;106;81m'
 readonly GREEN='\033[38;2;152;195;121m'
 readonly YELLOW='\033[38;2;229;192;123m'
