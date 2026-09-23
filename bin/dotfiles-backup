@@ -118,7 +118,7 @@ Dotfiles Backup Manifest
 Backup Date: $(date)
 Hostname: $(hostname)
 User: ${USER:-$(id -un)}
-OS: $(uname -s)
+Platform: $("$SCRIPT_DIR/platform" detect) ($("$SCRIPT_DIR/platform" arch))
 
 Backup Contents:
 EOF
