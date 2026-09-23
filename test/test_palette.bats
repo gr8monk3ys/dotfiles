@@ -156,6 +156,37 @@ teardown() {
     assert_output "#61afef 0xff61afef 224;106;81"
 }
 
+@test "a retune gives the wallpaper a new cache key; an unchanged palette reuses it" {
+    # The wallpaper matte is painted in bg-dark and ultramarine. Keyed on
+    # screen size alone, a retune reused the old image. magick is stubbed and
+    # the source scan pre-seeded, so nothing is fetched and no desktop is set.
+    make_fixture
+    printf 'bg-dark|#21252b|ground\nultramarine|#2b4468|fill\n' > "$FIXTURE/.config/palette/danse.conf"
+    mkdir -p "$TEST_TEMP_DIR/stub" "$TEST_HOME/.cache/wallpaper"
+    printf 'jpg' > "$TEST_HOME/.cache/wallpaper/danse-source.jpg"
+    cat > "$TEST_TEMP_DIR/stub/magick" <<'STUB'
+#!/bin/sh
+for last; do :; done
+echo run >> "$HOME/magick-calls"
+printf png > "$last"
+STUB
+    chmod +x "$TEST_TEMP_DIR/stub/magick"
+    build() {
+        env HOME="$TEST_HOME" DOTFILES_DIR="$FIXTURE" XDG_CACHE_HOME="$TEST_HOME/.cache" \
+            XDG_DATA_HOME="$TEST_HOME/.local/share" WALLPAPER_WIDTH=100 WALLPAPER_HEIGHT=50 \
+            PATH="$TEST_TEMP_DIR/stub:$PATH" "$DOTFILES_DIR/bin/wallpaper" build 2> /dev/null
+    }
+
+    first="$(build)"
+    [[ "$(build)" == "$first" ]]
+    [[ "$(wc -l < "$TEST_HOME/magick-calls")" -eq 1 ]]
+
+    printf 'bg-dark|#21252b|ground\nultramarine|#31486d|fill\n' > "$FIXTURE/.config/palette/danse.conf"
+    second="$(build)"
+    [[ -n "$second" && "$second" != "$first" ]]
+    [[ "$(wc -l < "$TEST_HOME/magick-calls")" -eq 2 ]]
+}
+
 @test "the checkout's rendered files match their templates" {
     run "$DOTFILES_DIR/bin/palette" check
     assert_success
