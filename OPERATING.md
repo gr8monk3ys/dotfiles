@@ -150,7 +150,7 @@ See `bin/README.md` for flags.
 
 | Command | What it does |
 | --- | --- |
-| `make test-setup` | Install BATS if missing. |
+| `make test-setup` | Install the suite's prerequisites: bats, bats-support, bats-assert, zsh, stow. |
 | `make test` | Run the BATS suite (`test/test_*.bats`). |
 | `make verify-stale-refs` | Grep for strings left over from past migrations. |
 | `make verify-doc-links` | Validate local Markdown links (`bin/validate-doc-links`). |
