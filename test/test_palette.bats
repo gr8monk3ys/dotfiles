@@ -216,32 +216,15 @@ teardown() {
     assert_output ""
 }
 
-@test "sketchybar colors.sh contains no literal hex colours" {
-    # Drift guard: the bar's colours must come from the palette, not from a
-    # copy that silently stops matching the prompt and the background.
-    run grep -nE '0x[0-9a-fA-F]{8}|#[0-9a-fA-F]{6}' \
-        "$DOTFILES_DIR/.config/sketchybar/colors.sh"
-    # grep exits 1 when it finds nothing, which is what we want — except for
-    # the fully transparent sentinel, which is not a palette colour.
-    if [[ "$status" -eq 0 ]]; then
-        run bash -c 'printf "%s\n" "$1" | grep -v "0x00000000"' _ "$output"
-        assert_output ""
-    fi
-}
-
-@test "every colour sketchybar references exists in the palette" {
-    run bash -c '
-        set -euo pipefail
-        repo="$1"
-        names="$("$repo/bin/palette" names | tr "[:lower:]-" "[:upper:]_")"
-        status=0
-        for var in $(grep -oE "\$PAL_[A-Z_]+" "$repo/.config/sketchybar/colors.sh" | sort -u); do
-            want="${var#\$PAL_}"
-            printf "%s\n" "$names" | grep -Fxq "$want" || { echo "colors.sh wants \$PAL_$want, palette has no such colour"; status=1; }
-        done
-        exit $status
-    ' _ "$DOTFILES_DIR"
+@test "a sourced sketchybar colors.sh defines its roles from the palette" {
+    # Asserted on the sourced file, not by grepping it: the old runtime parser
+    # left every role empty when the palette file was unreachable, which
+    # sketchybar draws as black. env -i is the minimal environment sketchybar
+    # gives its scripts.
+    run env -i bash -c 'source "$1/.config/sketchybar/colors.sh"; printf "%s %s %s %s\n" "$BAR_COLOR" "$BLUE" "$RED" "$ULTRAMARINE"' \
+        _ "$DOTFILES_DIR"
     assert_success
+    assert_output "$(printf '{{bg:0x}} {{blue:0x}} {{vermilion:0x}} {{ultramarine:0x}}\n' | "$DOTFILES_DIR/bin/palette" fill)"
 }
 
 @test "every truecolor triple in EZA_COLORS is a palette colour" {
