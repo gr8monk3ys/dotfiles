@@ -51,7 +51,9 @@ brew install --cask ghostty
 
 ## Theme
 
-`theme = Atom One Dark` matches the repo-wide OneDark palette (verify names with `ghostty +list-themes`).
+`theme = danse` loads `themes/danse`, a Ghostty theme rendered from the
+palette by `bin/palette`; the chrome colours in `config` are a rendered
+region too. Edit the templates under `.config/palette/templates/`, not these.
 
 UI/UX profile in this repo:
 
