@@ -479,18 +479,6 @@ statically in `test_regressions.bats` instead.
 Not part of `make verify`: several probes read discovery variables that a
 login shell exports, and `make` does not run one. Use `make verify-config-live`.
 
-### [validate-doctor-tools](validate-doctor-tools)
-
-Fails when `dotfiles-doctor`'s probed tool lists and the `install/` manifests
-drift apart. Doctor probes _commands_ (`rg`); manifests list _packages_
-(`ripgrep`), so the mapping and the deliberate exemptions live in
-`test/allowlist/command-packages.txt`.
-
-Checks both directions: every probed command must resolve to a manifest
-package (directly, via the mapping, or as an explicit `-` exemption), and
-every mapping entry must still name a package that exists and a command
-doctor still probes. Run by `make verify-doctor-tools`.
-
 ## Adding New Scripts
 
 1. Create script with shebang (`#!/usr/bin/env bash`)
