@@ -18,6 +18,9 @@ SHELL := env PATH='$(PATH)' /bin/bash
 # nothing extra when stow is present, the Homebrew bootstrap when it is not.
 HAVE_STOW := $(shell $(PLATFORM) has stow && echo yes)
 
+# Yes/no switches (SKIP_DOCKER, SKIP_LINTERS, …): `1` or `true` means yes,
+# anything else means no. Testing for "non-empty" made SKIP_DOCKER=0 skip.
+truthy = $(filter 1 true,$(strip $(1)))
 export XDG_CONFIG_HOME = $(HOME)/.config
 # Linking is bin/link's job: apply, dry-run and undo are one planner there, and
 # it owns the SSH Include line, the .zshenv backup and the tool-owned list.
@@ -179,10 +182,10 @@ verify: verify-shellcheck verify-markdown verify-stale-refs verify-palette verif
 # If that becomes intolerable locally, SKIP_ARCH_DOCKER=1 drops it and the
 # Arch job in .github/workflows/ci.yml still covers it on every PR.
 verify-docker:
-	@if [ -n "$(SKIP_DOCKER)" ]; then echo "Skipping container tests (SKIP_DOCKER set)"; \
+	@if [ -n "$(call truthy,$(SKIP_DOCKER))" ]; then echo "Skipping container tests (SKIP_DOCKER set)"; \
 	elif docker info >/dev/null 2>&1; then \
 		$(MAKE) test-docker; \
-		if [ -n "$(SKIP_ARCH_DOCKER)" ]; then echo "Skipping Arch container test (SKIP_ARCH_DOCKER set)"; \
+		if [ -n "$(call truthy,$(SKIP_ARCH_DOCKER))" ]; then echo "Skipping Arch container test (SKIP_ARCH_DOCKER set)"; \
 		else $(MAKE) test-docker-arch; fi; \
 	else echo "⚠️  Docker not reachable; fresh-install container tests SKIPPED (run 'make test-docker test-docker-arch' where Docker exists)"; fi
 
@@ -224,7 +227,7 @@ verify-doc-links:
 # so a fresh checkout without npm still gets a usable `make verify`.
 verify-shellcheck:
 	@echo "Running shellcheck on bin/..."
-	@if [ -n "$(SKIP_LINTERS)" ]; then \
+	@if [ -n "$(call truthy,$(SKIP_LINTERS))" ]; then \
 		echo "Skipping shellcheck (SKIP_LINTERS set)"; \
 	elif command -v shellcheck >/dev/null 2>&1; then \
 		find bin -type f ! -name '*.md' -print0 \
@@ -236,7 +239,7 @@ verify-shellcheck:
 
 verify-markdown:
 	@echo "Running markdownlint..."
-	@if [ -n "$(SKIP_LINTERS)" ]; then \
+	@if [ -n "$(call truthy,$(SKIP_LINTERS))" ]; then \
 		echo "Skipping markdownlint (SKIP_LINTERS set)"; \
 	elif command -v markdownlint >/dev/null 2>&1; then \
 		markdownlint -c .markdownlint.json --ignore .github --ignore test "**/*.md"; \
