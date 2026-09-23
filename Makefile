@@ -147,21 +147,35 @@ test:
 	fi
 	bats test
 
+# The one way the suite's prerequisites get installed: CI's Tests jobs and
+# both container images call this rather than carrying their own recipe.
+# bats-support/bats-assert are real prerequisites, not optional: without them
+# test_helper/common.bash falls back to a three-function shim. zsh and stow
+# are what the suite exercises. Dispatches on $(OS), not on `command -v`:
+# bin/ is on PATH and bin/pacman is a wrapper, so `command -v pacman` is true
+# on every machine, and a Linux runner with Linuxbrew must still use apt.
+# Idempotent, so it re-runs cheaply. Ubuntu before 24.04 ships a bats too old
+# for the suite (it needs 1.5 for `run --separate-stderr`).
 test-setup:
-	@echo "Installing test dependencies (bats)..."
-	@if command -v bats >/dev/null 2>&1; then \
-		echo "✓ bats already installed"; \
-	elif command -v brew >/dev/null 2>&1; then \
-		brew install bats-core; \
-	elif command -v apt-get >/dev/null 2>&1; then \
-		sudo apt-get update && sudo apt-get install -y bats; \
-	elif command -v pacman >/dev/null 2>&1; then \
-		sudo pacman -Sy --noconfirm bats; \
-	else \
-		echo "Could not auto-install bats on this platform."; \
-		echo "Install bats manually and re-run 'make test'."; \
-		exit 1; \
-	fi
+	@echo "Installing test dependencies (bats, bats-support, bats-assert, zsh, stow)..."
+	@case "$(OS)" in \
+	arch) \
+		sudo pacman -S --needed --noconfirm bats bats-support bats-assert zsh stow ;; \
+	macos) \
+		brew install bats-core stow && \
+		brew tap bats-core/bats-core && \
+		{ brew trust bats-core/bats-core 2>/dev/null || true; } && \
+		brew install bats-support bats-assert ;; \
+	*) \
+		if command -v apt-get >/dev/null 2>&1; then \
+			sudo apt-get update && \
+			sudo apt-get install -y --no-install-recommends bats bats-support bats-assert zsh stow; \
+		else \
+			echo "Could not auto-install bats on this platform."; \
+			echo "Install bats-core, bats-support and bats-assert, then re-run 'make test'."; \
+			exit 1; \
+		fi ;; \
+	esac
 
 # No separate syntax or shell-surface steps: shellcheck parses every bin/
 # script, and the suite (verify-tests) parses and sources the zsh surface.
