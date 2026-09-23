@@ -4,8 +4,9 @@
 # inside the subject.
 MAKEFILE_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 DOTFILES_DIR := $(MAKEFILE_DIR)
-OS := $(shell bin/platform detect)
-HOMEBREW_PREFIX := $(shell bin/platform select /opt/homebrew /usr/local "bin/platform is-arm64")
+PLATFORM := "$(MAKEFILE_DIR)/bin/platform"
+OS := $(shell $(PLATFORM) detect)
+HOMEBREW_PREFIX := $(shell $(PLATFORM) select /opt/homebrew /usr/local '$(PLATFORM) is-arm64')
 PATH := $(HOMEBREW_PREFIX)/bin:$(DOTFILES_DIR)/bin:$(PATH)
 # PATH is passed through env rather than exported because make 3.81 (macOS)
 # resolves simple commands against its own PATH, not the exported one. The
@@ -15,7 +16,7 @@ PATH := $(HOMEBREW_PREFIX)/bin:$(DOTFILES_DIR)/bin:$(PATH)
 SHELL := env PATH='$(PATH)' /bin/bash
 # Evaluated at parse time so `make -n link` shows exactly what would run:
 # nothing extra when stow is present, the Homebrew bootstrap when it is not.
-HAVE_STOW := $(shell bin/platform has stow && echo yes)
+HAVE_STOW := $(shell $(PLATFORM) has stow && echo yes)
 BIN := $(HOMEBREW_PREFIX)/bin
 
 # Written once because `link` and `link-dry-run` each used to carry their own

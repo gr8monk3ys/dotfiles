@@ -14,3 +14,12 @@ load 'test_helper/common'
 	assert_success
 	[[ "$output" != *"No such file or directory"* ]]
 }
+
+@test "make -f from another directory still detects the platform" {
+	# Regression: bin/platform was invoked relative to the cwd, so OS came out
+	# empty and `link` depended on a target named `stow-`.
+	cd "$BATS_TEST_TMPDIR"
+	run make -f "$DOTFILES_DIR/Makefile" -n link
+	assert_success
+	[[ "$output" != *"stow-'"* ]]
+}
