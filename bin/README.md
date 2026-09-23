@@ -386,21 +386,24 @@ See CONTEXT.md § Link for tool-owned paths.
 
 ### [install-kind](install-kind)
 
-Installs one manifest **kind**. How a kind installs — which manifest, which
-command, whether to skip it, whether a failure is fatal — used to be
-re-derived in six Makefile targets, which is why the only way to test any of
-it was to grep `make -n` output.
+Installs or updates one manifest **kind**. How a kind installs — which
+manifest, which command, whether to skip it, whether a failure is fatal —
+used to be re-derived in six Makefile targets, and how it updates was
+re-derived again in `dotfiles-update` with its own skip flags.
 
 ```bash
 install-kind brew          # trust taps, then brew bundle the Brewfile
 install-kind code          # extensions, preferring codium over code
+install-kind update npm    # upgrade npm itself and every global package
 SKIP_KINDS="rust pacman" install-kind rust   # skipped
 STRICT_PACKAGES=1 install-kind npm           # a failure is fatal
 ```
 
-The Makefile keeps every dependency edge between kinds — ordering is what
-make is genuinely deep at. A missing tool is not a failure: `install-kind
-rust` with no cargo warns and exits 0.
+`install` is the default verb, so `install-kind <kind>` is unchanged.
+`update` upgrades everything the kind's tool manages, not only manifest
+entries. The Makefile keeps every dependency edge between kinds — ordering
+is what make is genuinely deep at. A missing tool is not a failure:
+`install-kind rust` with no cargo warns and exits 0.
 
 ### [firefox-user-js](firefox-user-js)
 
