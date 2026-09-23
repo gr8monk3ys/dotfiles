@@ -2,29 +2,29 @@
 # Install with: make vscode-extensions
 
 # Language Support
-vscodevim.vim
-ms-python.python
-rust-lang.rust-analyzer
-golang.go
-dbaeumer.vscode-eslint
-esbenp.prettier-vscode
+vscodevim.vim                          # Vim keybindings, so the GUI fallback keeps nvim muscle memory.
+ms-python.python                       # Python language support: IntelliSense, debugging, environments.
+rust-lang.rust-analyzer                # Rust language server (the same one nvim uses).
+golang.go                              # Go language support.
+dbaeumer.vscode-eslint                 # ESLint diagnostics for JS/TS projects that use it.
+esbenp.prettier-vscode                 # Prettier formatting, matching the global prettier from the npmfile.
 
 # Git Integration
-eamodio.gitlens
-mhutchie.git-graph
+eamodio.gitlens                        # Inline blame and history.
+mhutchie.git-graph                     # Commit graph view.
 
 # Utilities
-editorconfig.editorconfig
-usernamehw.errorlens
-streetsidesoftware.code-spell-checker
-christian-kohler.path-intellisense
-yzhang.markdown-all-in-one
+editorconfig.editorconfig              # Honours per-project .editorconfig indentation rules.
+usernamehw.errorlens                   # Shows diagnostics inline on the offending line.
+streetsidesoftware.code-spell-checker  # Spell checking in code and comments.
+christian-kohler.path-intellisense     # Completes file paths in strings.
+yzhang.markdown-all-in-one             # Markdown shortcuts, TOC and preview.
 
 # Themes
-zhuangtongfa.material-theme
+zhuangtongfa.material-theme            # One Dark Pro colour theme.
 
 # Docker & Containers (if needed)
-ms-azuretools.vscode-docker
+ms-azuretools.vscode-docker            # Dockerfile and compose support.
 
 # Markdown & Documentation
-davidanson.vscode-markdownlint
+davidanson.vscode-markdownlint         # markdownlint in the editor, the same linter `make verify` runs.

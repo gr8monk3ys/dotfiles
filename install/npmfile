@@ -1,53 +1,53 @@
 # npm Global Packages
 # Global npm packages installed system-wide
-# Install with: grep -Ev '^\s*(#|$)' install/npmfile | xargs npm install -g
+# Install with: bin/manifest list npm | xargs npm install -g
 
 # ============================================================================
 # Package Managers
 # ============================================================================
-npm
-pnpm
-yarn
+npm                                    # Node's package manager itself, kept current globally (ships with node but updated independently).
+pnpm                                   # Disk-efficient npm alternative (content-addressed store); preferred for JS monorepos.
+yarn                                   # Legacy JS package manager kept for projects that pin it.
 
 # ============================================================================
 # Package Management Tools
 # ============================================================================
-@antfu/ni
-npm-check-updates
+@antfu/ni                              # `ni`/`nr` shims that auto-detect npm/pnpm/yarn/bun per project — one muscle memory for all of them.
+npm-check-updates                      # Bumps package.json ranges to latest (`ncu`).
 
 # ============================================================================
 # Development & Build Tools
 # ============================================================================
-tsx
-prettier
-release-it
+tsx                                    # Run TypeScript files directly without a build step.
+prettier                               # Default formatter for web-adjacent files where biome isn't configured.
+release-it                             # Automates version bump + changelog + tag + publish for npm packages.
 
 # ============================================================================
 # Documentation & Markdown
 # ============================================================================
-markdownlint-cli
-remark-cli
-remark-preset-webpro
+markdownlint-cli                       # Markdown linter; `make verify` and CI both gate on it with `.markdownlint.json`.
+remark-cli                             # Markdown linting/processing pipeline.
+remark-preset-webpro                   # Shared remark ruleset for the markdown pipeline.
 
 # ============================================================================
 # CLI Utilities
 # ============================================================================
-fkill-cli
-get-port-cli
-underscore-cli
+fkill-cli                              # Fuzzy, cross-platform process killer (`fkill`).
+get-port-cli                           # Prints a free TCP port; handy in scripts.
+underscore-cli                         # JS-flavored JSON manipulation when jq syntax is overkill.
 
 # ============================================================================
 # Network & System Monitoring
 # ============================================================================
-fast-cli
-gtop
+fast-cli                               # Quick bandwidth test from the terminal (fast.com).
+gtop                                   # Graphical system dashboard in the terminal (node-based; bottom is the daily driver).
 
 # ============================================================================
 # Local Development
 # ============================================================================
-local-web-server
+local-web-server                       # Instant static file server with SPA/HTTPS options (`ws`).
 
 # ============================================================================
 # Image Optimization
 # ============================================================================
-svgo
+svgo                                   # SVG optimizer for asset pipelines.
