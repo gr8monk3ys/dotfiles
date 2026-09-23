@@ -34,7 +34,7 @@ into `~/.config/`; `make` drives install, link and verification.
 
 - No identity or real hosts in tracked config. Git/jj identity and SSH hosts go in
   gitignored local files (`.config/git/config.local`, `.config/jj/conf.d/`,
-  `.config/ssh/config.d/*.conf`); `test_regressions.bats` enforces it.
+  `.config/ssh/config.d/*.conf`); `test_dotfiles_init.bats` enforces it.
 - Every unconditional alias must resolve to a manifest entry, builtin, or
   `test/allowlist/system-tools.txt` — `check-alias-references` fails otherwise.
 - Portable shell only in anything sourced on macOS (no GNU-only flags).

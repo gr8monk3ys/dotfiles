@@ -288,3 +288,23 @@ STUB
     ' _ "$DOTFILES_DIR"
     assert_success
 }
+
+# $BAT_THEME is asserted on a booted shell in test_shell_boot.bats. bat's own
+# config file has no cheap runtime observable, so it stays a text check.
+@test "bat config file selects danse" {
+    run grep -n '^--theme="danse"$' .config/bat/config
+    assert_success
+}
+
+@test "git delta and neovim are configured for the danse palette" {
+    # git's own parser, not a regex over git's syntax: this passes only if
+    # the setting is in a section git actually reads.
+    run git config --file .config/git/config --get delta.syntax-theme
+    assert_success
+    assert_output "danse"
+
+    # nvim would need a headless boot to observe; a text check is the
+    # proportionate tool here.
+    run grep -E -n '"navarasu/onedark.nvim"|theme = "onedark"' .config/nvim/lua/plugins.lua
+    assert_success
+}

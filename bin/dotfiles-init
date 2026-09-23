@@ -3,7 +3,7 @@
 #
 # `make` produces a linked machine. It cannot produce a configured one: the
 # tracked config carries no identity and no real hosts (CLAUDE.md § Gotchas,
-# enforced by test_regressions.bats), so name, email and SSH hosts have to come
+# enforced by test_dotfiles_init.bats), so name, email and SSH hosts have to come
 # from files git never sees. Until this module existed the only thing that knew
 # those files were missing was one warning line in `dotfiles-doctor` and a
 # checklist in OPERATING.md, and neither could do anything about it.

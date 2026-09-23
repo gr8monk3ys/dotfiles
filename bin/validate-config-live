@@ -26,7 +26,7 @@
 # Tools that cannot meet that bar are deliberately absent rather than probed
 # badly. yazi is the example: it has no headless config check, `--debug` needs
 # a TTY, and giving it one via `script` launches the TUI and hangs. Its schema
-# is guarded statically in test_regressions.bats instead, which is honest
+# is guarded statically in test_tool_configs.bats instead, which is honest
 # about being a text check rather than a liveness one.
 # Asserting a file exists is not a probe — that is the mistake this catches.
 # A tool that is not installed is skipped, not failed: a config for a tool

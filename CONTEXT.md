@@ -85,7 +85,7 @@ Karabiner-Elements does not notice changes to a symlinked `karabiner.json`.
 
 The gitignored per-machine files the **checkout** expects but deliberately does
 not track, because they carry identity or real hosts (`CLAUDE.md` § Gotchas,
-enforced by `test_regressions.bats`). `bin/dotfiles-init` classifies and writes
+enforced by `test_dotfiles_init.bats`). `bin/dotfiles-init` classifies and writes
 them; `dotfiles-doctor` reports the classification.
 
 Four subjects, each with a tracked template beside it:

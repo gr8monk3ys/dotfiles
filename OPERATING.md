@@ -390,9 +390,10 @@ sourced on macOS (see `file_mode` in `bin/dotfiles-doctor` for the `stat` split)
 
 ### Testing
 
-Add or update a test whenever behavior changes; regression guards live in
-`test/test_regressions.bats`. Iterate with targeted runs
-(`bats test/test_regressions.bats -f "theme consistency"`), then `make test`.
+Add or update a test whenever behavior changes, in the `test_*.bats` file of
+the module it guards; a regression test says so in a `# Regression:` comment.
+Iterate with targeted runs (`bats test/test_link.bats -f "dry-run"`), then
+`make test`.
 `test/test_shell_surface.bats` parses and sources `.zshenv` and every file
 `.zshrc` sources, asserts a sentinel alias per conditional block, and runs
 `bin/check-alias-references` so every unconditional alias resolves to a known command
