@@ -23,15 +23,9 @@ The `zathurarc` file customizes Zathura's behavior, appearance, and keybindings.
 ### Common Settings
 
 #### Appearance
-```
-set default-bg "#1e1e1e"
-set default-fg "#d4d4d4"
-set statusbar-bg "#1e1e1e"
-set statusbar-fg "#d4d4d4"
-set recolor true
-set recolor-lightcolor "#1e1e1e"
-set recolor-darkcolor "#d4d4d4"
-```
+
+Colours are the danse palette ([`.config/palette/`](../palette/README.md)),
+with `recolor` on so pages render in the terminal's own ground.
 
 #### Behavior
 ```
@@ -127,8 +121,6 @@ Easily create color schemes for day/night reading:
 **Dark Theme**
 ```
 set recolor true
-set recolor-lightcolor "#000000"
-set recolor-darkcolor "#E0E0E0"
 ```
 
 **Light Theme**

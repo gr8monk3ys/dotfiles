@@ -26,7 +26,7 @@ export XDG_CONFIG_HOME = $(HOME)/.config
 LINK = DOTFILES_DIR="$(DOTFILES_DIR)" HOME="$(HOME)" XDG_CONFIG_HOME="$(XDG_CONFIG_HOME)" "$(MAKEFILE_DIR)/bin/link"
 
 .PHONY: all macos arch link unlink link-dry-run test test-setup verify \
-        verify-config-live verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-doctor-tools verify-tests \
+        verify-config-live verify-palette verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-doctor-tools verify-tests \
         doctor init update backup firefox worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
         brew git packages-macos packages-arch core-macos core-arch \
@@ -155,7 +155,7 @@ test-setup:
 		exit 1; \
 	fi
 
-verify: verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-doctor-tools verify-tests verify-docker
+verify: verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-palette verify-doc-links verify-tool-docs verify-doctor-tools verify-tests verify-docker
 	@echo "✓ Verification complete"
 
 # The container tests are the only checks that exercise the fresh-install path,
@@ -191,10 +191,13 @@ verify-shell:
 		fi; \
 	done
 
+# Retired palette hexes are not listed here any more: every colour outside
+# prose is rendered from .config/palette/danse.conf and checked by
+# verify-palette; test_palette.bats fails on a colour literal anywhere else.
 verify-stale-refs:
 	@echo "Checking for stale migration references..."
-	@PATTERN='OneHalfDark|base16-onedark|e06c75|d19a66|\.config/\.aliases|org\.alacritty|tokyonight|LF_ICONS|CODE_QUALITY_REPORT|lorenozsca7|oh-my-zsh|Oh My Zsh'; \
-	SCAN_PATHS='README.md OPERATING.md CLAUDE.md .config bin .zshenv'; \
+	@PATTERN='OneHalfDark|base16-onedark|\.config/\.aliases|org\.alacritty|tokyonight|LF_ICONS|CODE_QUALITY_REPORT|lorenozsca7|oh-my-zsh|Oh My Zsh'; \
+	SCAN_PATHS='README.md OPERATING.md CLAUDE.md .config bin .zshenv install.sh'; \
 	if command -v rg >/dev/null 2>&1; then \
 		if rg -n "$$PATTERN" $$SCAN_PATHS >/dev/null; then \
 			echo "Found stale references:"; \
@@ -208,6 +211,12 @@ verify-stale-refs:
 			exit 1; \
 		fi; \
 	fi
+
+# Every rendered file must match what its template produces from the palette;
+# a hand-edited rendered file or a stale one after a retune fails here.
+verify-palette:
+	@echo "Checking rendered palette files..."
+	@bin/palette check
 
 verify-doc-links:
 	@echo "Validating markdown links..."

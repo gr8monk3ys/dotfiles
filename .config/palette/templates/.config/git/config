@@ -1,0 +1,8 @@
+	plus-style = "syntax {{diff-add}}"
+	plus-emph-style = "syntax {{green}}"
+	minus-style = "syntax {{diff-delete}}"
+	minus-emph-style = "syntax {{vermilion}}"
+	line-numbers-minus-style = "{{vermilion}}"
+	line-numbers-plus-style = "{{green}}"
+	line-numbers-zero-style = "{{comment}}"
+	file-style = "bold {{blue}}"

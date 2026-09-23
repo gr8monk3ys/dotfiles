@@ -1,0 +1,62 @@
+# danse - btop's view of .config/palette/danse.conf.
+#
+# Rendered by bin/palette from .config/palette/templates/.config/btop/themes/danse.theme.
+# Edit the template, then run `palette render`; `palette check` fails on hand edits.
+#
+# main_bg is deliberately empty: that is how btop leaves the background
+# transparent, so it inherits Ghostty's blur and the painting behind it
+# instead of punching an opaque rectangle through the middle of the rice.
+#
+# The gradients are where the Matisse colours actually earn their place —
+# load and temperature run viridian to ochre to vermilion, which is the
+# painting's own ground-to-figures progression.
+
+theme[main_bg]=""
+theme[main_fg]="{{fg}}"
+theme[title]="{{fg}}"
+theme[hi_fg]="{{blue}}"
+theme[selected_bg]="{{surface}}"
+theme[selected_fg]="{{blue}}"
+theme[inactive_fg]="{{comment}}"
+theme[graph_text]="{{comment}}"
+theme[meter_bg]="{{surface}}"
+theme[proc_misc]="{{cyan}}"
+
+# Box outlines
+theme[cpu_box]="{{ultramarine}}"
+theme[mem_box]="{{ultramarine}}"
+theme[net_box]="{{ultramarine}}"
+theme[proc_box]="{{ultramarine}}"
+theme[div_line]="{{surface}}"
+
+# Temperature: cool ground to hot figures
+theme[temp_start]="{{viridian}}"
+theme[temp_mid]="{{yellow}}"
+theme[temp_end]="{{vermilion}}"
+
+# CPU load: the same progression
+theme[cpu_start]="{{green}}"
+theme[cpu_mid]="{{yellow}}"
+theme[cpu_end]="{{vermilion}}"
+
+# Memory
+theme[free_start]="{{viridian}}"
+theme[free_mid]=""
+theme[free_end]="{{green}}"
+theme[cached_start]="{{ultramarine}}"
+theme[cached_mid]=""
+theme[cached_end]="{{blue}}"
+theme[available_start]="{{terracotta}}"
+theme[available_mid]=""
+theme[available_end]="{{yellow}}"
+theme[used_start]="{{magenta}}"
+theme[used_mid]=""
+theme[used_end]="{{vermilion}}"
+
+# Network
+theme[download_start]="{{ultramarine}}"
+theme[download_mid]="{{blue}}"
+theme[download_end]="{{cyan}}"
+theme[upload_start]="{{viridian}}"
+theme[upload_mid]="{{green}}"
+theme[upload_end]="{{yellow}}"

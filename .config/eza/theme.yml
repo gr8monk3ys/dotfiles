@@ -1,18 +1,8 @@
 # eza danse theme — colours from .config/palette/danse.conf
 # Based on Atom's One Dark color scheme
 # https://github.com/eza-community/eza-themes
-
-# Palette (see .config/palette/danse.conf):
-# Background:  #282c34
-# Foreground:  #abb2bf
-# Vermilion:   #e06a51
-# Green:       #98c379
-# Yellow:      #e5c07b
-# Blue:        #61afef
-# Magenta:     #c678dd
-# Cyan:        #56b6c2
-# Terracotta:  #d98c5c
-# Comment:     #5c6370
+# Rendered by bin/palette from .config/palette/templates/.config/eza/theme.yml.
+# Edit the template, then run `palette render`; `palette check` fails on hand edits.
 
 # File types
 filetype:

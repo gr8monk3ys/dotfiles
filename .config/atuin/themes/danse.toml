@@ -1,5 +1,6 @@
 # danse theme for Atuin's search UI (OneDark retuned to Matisse).
-# Hexes come from .config/palette/danse.conf.
+# Rendered by bin/palette from .config/palette/templates/.config/atuin/themes/danse.toml.
+# Edit the template, then run `palette render`; `palette check` fails on hand edits.
 [theme]
 name = "danse"
 

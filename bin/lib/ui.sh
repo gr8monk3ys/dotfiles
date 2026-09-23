@@ -3,8 +3,8 @@
 #
 # Plain ANSI output by default so test/CI output stays stable; headers are
 # upgraded via gum (https://github.com/charmbracelet/gum) when it is
-# installed and stdout is a terminal. Accent hexes match the repo's OneDark
-# theme (see README.md "Theme").
+# installed and stdout is a terminal. The gum accent is the palette's blue,
+# rendered into the region below by bin/palette.
 #
 # Usage:
 #   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -20,6 +20,10 @@ readonly YELLOW='\033[1;33m'
 readonly RED='\033[0;31m'
 readonly NC='\033[0m' # No Color
 
+# palette:begin - rendered from .config/palette/templates/bin/lib/ui.sh; edit it there, then run bin/palette render
+readonly UI_ACCENT='#61afef' # blue
+# palette:end
+
 _ui_use_gum() {
     [[ -t 1 ]] && command -v gum > /dev/null 2>&1
 }
@@ -28,7 +32,7 @@ print_header() {
     if _ui_use_gum; then
         echo ""
         gum style --border rounded --padding "0 2" \
-            --border-foreground "#61afef" --foreground "#61afef" "$1"
+            --border-foreground "$UI_ACCENT" --foreground "$UI_ACCENT" "$1"
     else
         echo ""
         echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"

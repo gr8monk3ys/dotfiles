@@ -2,46 +2,31 @@
 
 # SketchyBar's view of the shared palette.
 #
-# The hexes are NOT written here. They come from .config/palette/danse.conf,
-# the one place this checkout defines a colour, so the bar cannot drift from
-# the prompt, Ghostty, Neovim and the desktop background. This file only maps
-# palette names onto the role names the item scripts already use.
+# Rendered by bin/palette from .config/palette/templates/.config/sketchybar/colors.sh.
+# Edit the template, then run `palette render`; `palette check` fails on hand edits.
 #
-# Read inline rather than through bin/palette: sketchybar execs its scripts
-# with a minimal environment and this checkout's bin/ is not reliably on that
-# PATH. The file is two fields and a comment character; a parser is overkill.
+# The hexes are rendered in rather than read at runtime: sketchybar execs its
+# scripts with a minimal environment, so a file with nothing to parse and
+# nothing to find on PATH is the one that cannot fail. This file only maps
+# palette names onto the role names the item scripts already use.
 
-PALETTE_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/palette/danse.conf"
-
-# name -> 0xaarrggbb, as $PAL_<NAME> with kebab-case folded to underscores.
-if [ -r "$PALETTE_FILE" ]; then
-    while IFS='|' read -r _name _hex _role; do
-        case "$_name" in '' | \#*) continue ;; esac
-        _var="PAL_$(printf '%s' "$_name" | tr '[:lower:]-' '[:upper:]_')"
-        eval "$_var=0xff${_hex#\#}"
-    done < "$PALETTE_FILE"
-    unset _name _hex _role _var
-else
-    echo "sketchybar/colors.sh: cannot read $PALETTE_FILE" >&2
-fi
-
-export BAR_COLOR="$PAL_BG"
-export BAR_BORDER_COLOR="$PAL_SURFACE"
-export BACKGROUND="$PAL_SURFACE"
-export FOREGROUND="$PAL_FG"
-export ACCENT="$PAL_MAGENTA"
-export GREEN="$PAL_GREEN"
-export RED="$PAL_VERMILION"
-export YELLOW="$PAL_YELLOW"
-export BLUE="$PAL_BLUE"
-export PEACH="$PAL_TERRACOTTA"
-export TEAL="$PAL_CYAN"
-export LAVENDER="$PAL_BLUE"
-export SUBTEXT="$PAL_COMMENT"
-export OVERLAY="$PAL_COMMENT"
+export BAR_COLOR=0xff282c34
+export BAR_BORDER_COLOR=0xff3e4451
+export BACKGROUND=0xff3e4451
+export FOREGROUND=0xffabb2bf
+export ACCENT=0xffc678dd
+export GREEN=0xff98c379
+export RED=0xffe06a51
+export YELLOW=0xffe5c07b
+export BLUE=0xff61afef
+export PEACH=0xffd98c5c
+export TEAL=0xff56b6c2
+export LAVENDER=0xff61afef
+export SUBTEXT=0xff5c6370
+export OVERLAY=0xff5c6370
 
 # Matisse fills, for chrome that sits behind text rather than being text.
-export ULTRAMARINE="$PAL_ULTRAMARINE"
-export VIRIDIAN="$PAL_VIRIDIAN"
+export ULTRAMARINE=0xff2b4468
+export VIRIDIAN=0xff476a62
 
 export TRANSPARENT=0x00000000

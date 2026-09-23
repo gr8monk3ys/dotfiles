@@ -1,5 +1,8 @@
 # danse - btop's view of .config/palette/danse.conf.
 #
+# Rendered by bin/palette from .config/palette/templates/.config/btop/themes/danse.theme.
+# Edit the template, then run `palette render`; `palette check` fails on hand edits.
+#
 # main_bg is deliberately empty: that is how btop leaves the background
 # transparent, so it inherits Ghostty's blur and the painting behind it
 # instead of punching an opaque rectangle through the middle of the rice.

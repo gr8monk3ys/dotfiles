@@ -1,6 +1,8 @@
 # Yazi theme — danse palette, from .config/palette/danse.conf
 # https://yazi-rs.github.io/docs/configuration/theme
 # Consistent with Neovim, bat, eza, git-delta, and zellij
+# Rendered by bin/palette from .config/palette/templates/.config/yazi/theme.toml.
+# Edit the template, then run `palette render`; `palette check` fails on hand edits.
 
 [mgr]
 # Active file/directory
@@ -118,7 +120,7 @@ rules = [
     { name = "tests",         text = "", fg = "#c678dd" },
 
     # Common files
-    { name = "Makefile",      text = "", fg = "#6d8086" },
+    { name = "Makefile",      text = "", fg = "#5c6370" },
     { name = "Dockerfile",    text = "󰡨", fg = "#61afef" },
     { name = ".dockerignore", text = "󰡨", fg = "#5c6370" },
     { name = ".gitignore",    text = "", fg = "#e06a51" },
