@@ -281,7 +281,7 @@ Top-level directories, one sentence each.
 - **`bin/`** — Helper scripts: platform detection, `dotfiles-doctor/update/backup/restore/bench-shell/worktree/sync/why`, and the validators `validate-doc-links`, `check-alias-references`. See `bin/README.md`.
 - **`install/`** — Package manifests: `Brewfile`, `Caskfile`, `npmfile`, `Rustfile`, `pacmanfile`, `Codefile` (VSCodium extensions), `duti` (macOS file associations).
 - **`test/`** — BATS test suite. Run with `make test`. Pattern: `test_*.bats`, helpers in `test_helper/`.
-- **`.github/`** — `workflows/ci.yml` (shellcheck, markdownlint, validators, BATS on macOS and Ubuntu, the curl installer on Ubuntu) and `dependabot.yml`. `make verify` before pushing is still the local gate. `.pre-commit-config.yaml` is available for local hooks (`pre-commit install`).
+- **`.github/`** — `workflows/ci.yml` (`make lint`, BATS on macOS and Ubuntu, the Ubuntu and full-install Arch containers, the curl installer, a macOS fresh install) and `dependabot.yml`. `make verify` before pushing is still the local gate. `.pre-commit-config.yaml` is available for local hooks (`pre-commit install`).
 - **`docs/`** — `agents/`: notes the engineering skills read.
 
 The Stow target is `~/.config/`. The only exception is `.zshenv`, which is manually symlinked from the repo root to `~/.zshenv` because Zsh must find it in `$HOME`.
