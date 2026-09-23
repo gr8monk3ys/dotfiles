@@ -4,23 +4,24 @@ Modern `ls` replacement with Git integration and icons.
 
 ## Theme
 
-This directory contains the OneDark theme for eza, matching the overall
-dotfiles color scheme.
+eza is themed from the danse palette ([`.config/palette/`](../palette/README.md))
+in two places, both rendered by `bin/palette`: `EZA_COLORS` in `.zshenv`, which
+is what applies on this Mac, and `theme.yml` here. Edit the templates, not
+these files.
 
-### OneDark Colors Used
-
-| Element | Color | Hex |
-| --- | --- | --- |
-| Directories | Blue | `#61afef` |
-| Executables | Green | `#98c379` |
-| Symlinks | Cyan | `#56b6c2` |
-| Modified (Git) | Yellow | `#e5c07b` |
-| New (Git) | Green | `#98c379` |
-| Deleted (Git) | Vermilion | `#e06a51` |
+| Element | Palette colour |
+| --- | --- |
+| Directories | `blue` |
+| Executables | `green` |
+| Symlinks | `cyan` |
+| Modified (Git) | `yellow` |
+| New (Git) | `green` |
+| Deleted (Git) | `vermilion` |
 
 ## Usage
 
-eza automatically loads the theme from `~/.config/eza/theme.yml`.
+On macOS the colours come from `EZA_COLORS`; `theme.yml` is not read (see
+below).
 
 ```bash
 # Basic listing with icons
@@ -67,7 +68,7 @@ v0.23.5 [+git]
 malformed YAML included, which is how to check: if a deliberately broken
 `theme.yml` produces no error, theme support is absent.
 
-`EZA_COLORS` is what this build honours, so the same OneDark palette is
-expressed there in `.zshenv`. `theme.yml` is kept because it is the upstream
-format and will work on a build with the feature enabled, but **editing it
-changes nothing today** — change `EZA_COLORS` instead.
+`EZA_COLORS` is what this build honours, so the palette is rendered there in
+`.zshenv` too. `theme.yml` stays, rendered from the same slots, for eza builds
+that do read it (other platforms' packages, e.g. Arch's, are not built from
+the Homebrew bottle); on this Mac it changes nothing.

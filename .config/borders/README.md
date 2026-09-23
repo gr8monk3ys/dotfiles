@@ -14,10 +14,10 @@ answer to "which window will my next keystroke go to" is a guess.
 
 Rendered by `bin/palette` from [`.config/palette/`](../palette/README.md), as `0xAARRGGBB`:
 
-| Role | Palette name | Value |
-| --- | --- | --- |
-| Focused | `blue` | `0xff61afef` |
-| Everything else | `surface` | `0xff3e4451` |
+| Role | Palette name |
+| --- | --- |
+| Focused | `blue` |
+| Everything else | `surface` |
 
 ## Lifecycle
 
