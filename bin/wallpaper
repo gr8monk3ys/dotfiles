@@ -49,10 +49,12 @@ palette() { printf '{{%s}}' "$1" | "$SCRIPT_DIR/palette" fill; }
 
 display_size() {
     local w h
+    # `|| true`: under pipefail a missing system_profiler (any Linux) failed
+    # the assignment and set -e exited before the fallback size below.
     w="$(system_profiler SPDisplaysDataType 2> /dev/null |
-        awk '/Resolution:/ {print $2; exit}')"
+        awk '/Resolution:/ {print $2; exit}' || true)"
     h="$(system_profiler SPDisplaysDataType 2> /dev/null |
-        awk '/Resolution:/ {print $4; exit}')"
+        awk '/Resolution:/ {print $4; exit}' || true)"
     if [[ "$w" =~ ^[0-9]+$ && "$h" =~ ^[0-9]+$ ]]; then
         printf '%s %s\n' "$w" "$h"
     else
