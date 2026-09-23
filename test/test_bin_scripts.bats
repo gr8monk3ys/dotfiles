@@ -103,23 +103,7 @@ teardown() {
     done
 }
 
-# Tool catalog tests
-@test "validate-tool-docs passes on current catalog" {
-    run bin/validate-tool-docs
-    assert_success
-    assert_output --partial "in sync"
-}
-
-@test "validate-tool-docs fails on undocumented package" {
-    cp -r install "$TEST_TEMP_DIR/install"
-    mkdir -p "$TEST_TEMP_DIR/docs" "$TEST_TEMP_DIR/bin"
-    cp docs/TOOLS.md "$TEST_TEMP_DIR/docs/"
-    echo 'brew "made-up-tool"' >> "$TEST_TEMP_DIR/install/Brewfile"
-    run bin/validate-tool-docs "$TEST_TEMP_DIR"
-    assert_failure
-    assert_output --partial "made-up-tool"
-}
-
+# dotfiles-why tests
 @test "dotfiles-why prints the rationale from the manifest line" {
     run bin/dotfiles-why ripgrep
     assert_success

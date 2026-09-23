@@ -5,10 +5,9 @@
 My macOS and Arch (incl. Omarchy) environment: 26 XDG configs linked with GNU
 Stow, package manifests, and a `make verify` gate that keeps the two honest.
 
-The part that matters: **every package has to justify itself.** `docs/TOOLS.md`
-carries one rationale entry per package, and `bin/validate-tool-docs` fails
-`make verify` in both directions — a package in a manifest with no entry, or an
-entry with no package. Same idea for the shell: `bin/check-alias-references`
+The part that matters: **every package has to justify itself.** Each manifest
+line carries its rationale in its own comment, and `make verify` fails on a
+package without one — the reason cannot drift away from the entry it explains. Same idea for the shell: `bin/check-alias-references`
 rejects any unconditional alias whose target is not a manifest entry, a builtin,
 or an allowlisted system tool. Tracked config carries no identity or real hosts;
 a regression test grep-checks that too. The suite is 91 BATS tests; a second
@@ -50,7 +49,7 @@ make init check=1  # report only; non-zero if anything is still unconfigured
 
 ```bash
 make test      # bats test
-make verify    # syntax, shell-surface, stale refs, doc links, tool catalog, bats, Docker fresh install
+make verify    # syntax, shell-surface, stale refs, doc links, bats, Docker fresh install
 make doctor    # health check of the linked machine
 ```
 
@@ -65,8 +64,8 @@ make doctor    # health check of the linked machine
 | Packages | Homebrew, pacman, mise, cargo, npm |
 
 `ls`, `cat`, `cd` are aliased to their replacements; `grep`, `find`, `du`,
-`ps`, `top` deliberately are not. Why each tool is here: `dotfiles-why <tool>`
-or [docs/TOOLS.md](docs/TOOLS.md).
+`ps`, `top` deliberately are not. Why each tool is here: `dotfiles-why <tool>`,
+or the comment on its line in [install/](install/).
 
 Everything is themed from one place. [`.config/palette/`](.config/palette/)
 holds the palette — OneDark, with two accents and two chrome fills tuned to
@@ -81,7 +80,7 @@ the script fetches it and the repo carries the recipe.
 bin/         dotfiles-doctor/update/backup/restore/sync/why, palette, wallpaper, validators
 install/     Brewfile, Caskfile, Caskfile.extra, npmfile, Rustfile, pacmanfile, Codefile, duti
 test/        BATS suite
-docs/        TOOLS.md
+docs/        agent skill notes
 install.sh   one-line installer
 Makefile     install, link, verify targets (make help)
 ```

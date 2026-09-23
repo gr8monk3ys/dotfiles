@@ -26,7 +26,7 @@ export XDG_CONFIG_HOME = $(HOME)/.config
 LINK = DOTFILES_DIR="$(DOTFILES_DIR)" HOME="$(HOME)" XDG_CONFIG_HOME="$(XDG_CONFIG_HOME)" "$(MAKEFILE_DIR)/bin/link"
 
 .PHONY: all macos arch link unlink link-dry-run test test-setup verify \
-        verify-config-live verify-palette verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-tests \
+        verify-config-live verify-palette verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-doc-links verify-tests \
         doctor init update backup firefox worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
         brew git packages-macos packages-arch core-macos core-arch \
@@ -160,7 +160,7 @@ test-setup:
 		exit 1; \
 	fi
 
-verify: verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-palette verify-doc-links verify-tool-docs verify-tests verify-docker
+verify: verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-palette verify-doc-links verify-tests verify-docker
 	@echo "✓ Verification complete"
 
 # The container tests are the only checks that exercise the fresh-install path,
@@ -230,10 +230,6 @@ verify-doc-links:
 verify-shell-surface:
 	@echo "Running shell-surface tests..."
 	@bats test/test_shell_surface.bats test/test_alias_checker.bats
-
-verify-tool-docs:
-	@echo "Validating tool catalog..."
-	@bin/validate-tool-docs
 
 # Mirrors the Lint job in .github/workflows/ci.yml. Kept here so `make verify`
 # is a superset of CI rather than a subset of it: shellcheck and markdownlint

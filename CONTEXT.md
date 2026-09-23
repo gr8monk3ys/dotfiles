@@ -162,8 +162,12 @@ manifest: it lists file associations, not packages.
 
 A manifest **kind** is the abstract name for one of them (`brew`, `cask`,
 `cask-extra`, `npm`, `rust`, `pacman`, `code`); callers ask for a kind, not a
-path. `docs/TOOLS.md` carries one rationale entry per manifest entry, and
-`bin/validate-tool-docs` fails when the two disagree in either direction.
+path. Each entry carries its own rationale, and optionally `cmd=` and `tier=`
+metadata, in the comment on its line (install/README.md § Entry format);
+`bin/manifest` parses it, `dotfiles-why` shows it, and `test_packages.bats`
+fails on a package with no rationale. There is no separate catalog to keep in
+step: the one that existed (`docs/TOOLS.md`) had rotted in prose while its
+headings still matched.
 
 A kind answers three verbs, all in `bin/install-kind`: **install** from its
 manifest, **update** everything its tool manages (not only manifest entries),
@@ -177,8 +181,8 @@ cask". Boolean knobs share one truthiness rule, `knob_on` in
 `bin/lib/preamble.sh`: `1`/`true` is on; unset, `0` and `false` are off.
 
 Which kinds a caller cares about is that caller's policy, not the module's:
-`validate-tool-docs` excludes `font-*` casks (its Fonts section covers them),
-`check-alias-references` reads only the kinds that put a command on PATH.
+`check-alias-references` reads only the kinds that put a command on PATH, and
+`dotfiles-doctor` only the entries that carry a `tier=`.
 
 ## Snapshot
 
