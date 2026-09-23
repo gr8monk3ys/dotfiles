@@ -314,3 +314,55 @@ resolves_to() {
     run bash "$DOTFILES_DIR/bin/link" tool-owned
     [[ "$output" != *karabiner* ]]
 }
+
+# ---------- the Makefile is a thin caller ----------
+
+# Regression: `stow-macos: brew` made "symlinks only" install Homebrew via
+# curl on a fresh Mac. With stow present, `make link` must touch nothing else.
+@test "make link does not bootstrap Homebrew when stow is present" {
+    needs_stow
+    run make -n OS=macos link
+    assert_success
+    [[ "$output" != *"curl"* ]]
+    [[ "$output" != *"brew install"* ]]
+    assert_output --partial "bin/link\" apply"
+}
+
+# Regression: `link` depended on stow-arch, which depended on core-arch, so
+# previewing or refreshing symlinks on Arch ran a full `pacman -Syu`.
+@test "make link on Arch does not upgrade the system" {
+    run make -n OS=arch link
+    assert_success
+    [[ "$output" != *"-Syu"* ]]
+    assert_output --partial "bin/link\" apply"
+}
+
+# Regression: `link: stow-$(OS)` had no stow-linux target, so `make link`
+# on any non-Arch Linux failed with "No rule to make target 'stow-linux'".
+@test "make link has a rule for generic linux" {
+    run make -n OS=linux link
+    assert_success
+    assert_output --partial "bin/link\" apply"
+}
+
+@test "make link-dry-run installs nothing" {
+    run make -n OS=arch link-dry-run
+    assert_success
+    [[ "$output" != *"pacman"* ]]
+    assert_output --partial "bin/link\" dry-run"
+}
+
+@test "make link and make unlink round-trip a fixture home" {
+    needs_stow
+    mkdir -p "$TEST_HOME/.config"
+    run make -C "$DOTFILES_DIR" link HOME="$TEST_HOME" XDG_CONFIG_HOME="$TEST_HOME/.config"
+    assert_success
+    [[ -L "$TEST_HOME/.zshenv" ]]
+    run make -C "$DOTFILES_DIR" link HOME="$TEST_HOME" XDG_CONFIG_HOME="$TEST_HOME/.config"
+    assert_success
+    run grep -c 'Include ~/.config/ssh/config.d' "$TEST_HOME/.ssh/config"
+    assert_output "1"
+    run make -C "$DOTFILES_DIR" unlink HOME="$TEST_HOME" XDG_CONFIG_HOME="$TEST_HOME/.config"
+    assert_success
+    [[ ! -L "$TEST_HOME/.zshenv" ]]
+}
