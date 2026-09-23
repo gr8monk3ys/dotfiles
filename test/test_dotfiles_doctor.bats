@@ -207,8 +207,16 @@ reports() {
 }
 
 @test "a missing optional tool is information, not a warning" {
+    # A PATH of bare utilities, not /usr/bin: after a real `make arch` (the
+    # Arch container) ouch and eza live in /usr/bin, so "missing" has to be
+    # built rather than assumed.
     make_checkout
-    doctor --only tool
+    local bare="$TEST_TEMP_DIR/bare" t
+    mkdir -p "$bare"
+    for t in bash sh env dirname basename readlink grep tr awk sed cat cut sort head uname id git; do
+        ln -s "$(command -v "$t")" "$bare/$t"
+    done
+    DOCTOR_PATH="$bare" doctor --only tool
     reports ℹ "ouch" "optional"
     reports ⚠ "eza" "not installed"
 }
