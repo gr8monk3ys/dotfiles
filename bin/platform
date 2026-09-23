@@ -8,7 +8,6 @@
 #   platform arch             # Output: arm64, x86_64, or unknown
 #   platform is-macos         # Exit 0 if macOS, 1 otherwise
 #   platform is-omarchy       # Exit 0 if Omarchy (Arch + Hyprland), 1 otherwise
-#   platform is-linux         # Exit 0 if Linux, 1 otherwise
 #   platform is-arm64         # Exit 0 if ARM64, 1 otherwise
 #   platform has <cmd>        # Exit 0 if command exists, 1 otherwise
 #   platform file-mode <path> # Octal permission bits (BSD/GNU stat)
@@ -118,9 +117,6 @@ main() {
         is-omarchy)
             is_omarchy
             ;;
-        is-linux)
-            [[ "$OSTYPE" =~ ^linux ]]
-            ;;
         is-arm64)
             [[ "$(uname -m)" == "arm64" || "$(uname -m)" == "aarch64" ]]
             ;;
@@ -152,7 +148,6 @@ Usage:
   platform arch             Output: arm64, x86_64, or unknown
   platform is-macos         Exit 0 if macOS, 1 otherwise
   platform is-omarchy       Exit 0 if Omarchy (~/.local/share/omarchy), 1 otherwise
-  platform is-linux         Exit 0 if Linux, 1 otherwise
   platform is-arm64         Exit 0 if ARM64, 1 otherwise
   platform has <cmd>        Exit 0 if command exists, 1 otherwise
   platform file-mode <path> Octal permission bits (BSD/GNU stat)
