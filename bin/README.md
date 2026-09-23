@@ -105,12 +105,14 @@ detection of its own.
 
 ### [dotfiles-update](dotfiles-update)
 
-Update all packages and configurations.
+Update all packages and configurations: the repository (fast-forward only;
+a dirty checkout skips this step and nothing else), then `install-kind update`
+for every manifest kind, then zinit and Neovim plugins.
 
 **Usage:**
 
 ```bash
-dotfiles-update [--skip-brew] [--skip-npm] [--skip-cargo]
+dotfiles-update [--skip <kind>]...   # e.g. --skip pacman; SKIP_KINDS works too
 # or
 make update
 ```
