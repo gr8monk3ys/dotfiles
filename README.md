@@ -2,16 +2,17 @@
 
 [![CI](https://img.shields.io/github/actions/workflow/status/gr8monk3ys/dotfiles/ci.yml?branch=main&style=flat-square&logo=github)](https://github.com/gr8monk3ys/dotfiles/actions/workflows/ci.yml)
 
-My macOS and Arch (incl. Omarchy) environment: 26 XDG configs linked with GNU
+My macOS and Arch (incl. Omarchy) environment: XDG configs linked with GNU
 Stow, package manifests, and a `make verify` gate that keeps the two honest.
 
 The part that matters: **every package has to justify itself.** Each manifest
 line carries its rationale in its own comment, and `make verify` fails on a
-package without one — the reason cannot drift away from the entry it explains. Same idea for the shell: `bin/check-alias-references`
+package without one, so the reason cannot drift away from the entry it
+explains. Same idea for the shell: `bin/check-alias-references`
 rejects any unconditional alias whose target is not a manifest entry, a builtin,
 or an allowlisted system tool. Tracked config carries no identity or real hosts;
-a regression test grep-checks that too. The suite is 91 BATS tests; a second
-interactive zsh start is budgeted at 900 ms and tested.
+a test checks that too. A second interactive zsh start is budgeted at 900 ms,
+and the suite boots a real one to hold it there.
 
 ## Install
 
@@ -47,11 +48,8 @@ make init check=1  # report only; non-zero if anything is still unconfigured
 
 ## Verify
 
-```bash
-make test      # bats test
-make verify    # linters, stale refs, palette check, doc links, bats, Docker fresh install
-make doctor    # health check of the linked machine
-```
+`make verify` before pushing; `make doctor` on a linked machine. What each
+check runs is in [OPERATING.md](OPERATING.md#testing-and-verification).
 
 ## What is in it
 
@@ -68,18 +66,19 @@ make doctor    # health check of the linked machine
 or the comment on its line in [install/](install/).
 
 Everything is themed from one place. [`.config/palette/`](.config/palette/)
-holds the palette — OneDark, with two accents and two chrome fills tuned to
-Matisse's _La Danse_ (1910), which `bin/wallpaper` also composes into the
-desktop background. The artwork is public domain but is not tracked here;
+holds the palette, `danse`: OneDark's structure, with two accents and two
+chrome fills retuned to Matisse's _La Danse_ (1910). `bin/palette` renders
+every themed config from it, and `bin/wallpaper` composes the painting into
+the desktop background. The artwork is public domain but is not tracked here;
 the script fetches it and the repo carries the recipe.
 
 ## Layout
 
 ```
 .config/     one directory per tool, each with a README
-bin/         dotfiles-doctor/update/backup/restore/sync/why, palette, wallpaper, validators
+bin/         link, palette, manifest, install-kind, dotfiles-*, validators (bin/README.md)
 install/     Brewfile, Caskfile, Caskfile.extra, npmfile, Rustfile, pacmanfile, Codefile, duti
-test/        BATS suite
+test/        BATS suite and the container Dockerfile
 docs/        agent skill notes
 install.sh   one-line installer
 Makefile     install, link, verify targets (make help)

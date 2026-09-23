@@ -5,30 +5,33 @@ into `~/.config/`; `make` drives install, link and verification.
 
 ## Run / verify
 
-- `make` — detect platform (`bin/platform detect`) and install + link.
-- `make link` / `make link-dry-run` / `make unlink` — `bin/link` apply/dry-run/undo
-  (stow, `.zshenv`, SSH Include, tool-owned dirs). Links only; installs nothing
-  but stow.
-- `make verify` — the gate: shellcheck, markdownlint, stale-ref grep, palette
-  check, doc-link validator, BATS, and a Docker fresh-install (`SKIP_DOCKER=1`,
-  `SKIP_LINTERS=1` to skip parts).
-  It is a superset of CI. `make test` is just BATS (`bats test`).
-- CI (`.github/workflows/ci.yml`) runs the same make targets, each once, plus
-  the curl installer and a macOS fresh install; `Container (arch)` is the
-  full `make arch` gate.
+- `make` — install + link for the platform `bin/platform detect` reports.
+- `make link` / `make link-dry-run` / `make unlink` — `bin/link` apply /
+  dry-run / undo. Links only; installs nothing but stow.
+- `make verify` — the gate: `make lint` + `make test` + both Docker
+  containers (`SKIP_DOCKER=1` skips those). `make test` is `bats test`.
+  What each runs, and CI: `OPERATING.md` § Testing and verification.
+- `bin/palette check` after any edit under `.config/`; `palette render`
+  after editing a template or `danse.conf`.
 
 ## Where things live
 
 - `.config/<app>/` — one dir per tool, each with a README. `.zshenv` at the root
   is the only file linked into `$HOME` directly.
-- `bin/` — `dotfiles-doctor/update/backup/restore/sync/why`, `platform`, and the
-  validators `validate-doc-links`, `check-alias-references`; `manifest` reads `install/`.
+- `.config/palette/` — `danse.conf` and the templates every themed file is
+  rendered from. Rendered files and `palette:begin`/`end` regions are never
+  hand-edited.
+- `bin/` — `link`, `link-state`, `palette`, `wallpaper`, `manifest`,
+  `install-kind`, `platform`, `dotfiles-*`, and the validators
+  `check-alias-references`, `validate-doc-links`, `validate-config-live`;
+  shared shell in `bin/lib/`. Index: `bin/README.md`; each answers `--help`.
 - `install/` — manifests: `Brewfile`, `Caskfile[.extra]`, `npmfile`, `Rustfile`,
-  `pacmanfile`, `Codefile`, `duti`. Each entry's rationale (and doctor tier) is
-  the comment on its line — `install/README.md` § Entry format; `dotfiles-why`
-  reads it.
-- `test/` — BATS (`test_*.bats`, helpers in `test_helper/`).
-- `OPERATING.md` — the runbook (install paths, profiles, troubleshooting, conventions).
+  `pacmanfile`, `Codefile`, plus `duti`. One package per line, its rationale
+  and optional `cmd=`/`tier=` in the line's comment (`install/README.md`
+  § Entry format).
+- `test/` — BATS, one `test_<module>.bats` per module, helpers in
+  `test_helper/`, conventions in `test/README.md`.
+- `OPERATING.md` — the runbook. `CONTEXT.md` — the domain terms.
 
 ## Gotchas
 
@@ -41,6 +44,7 @@ into `~/.config/`; `make` drives install, link and verification.
 - Conventional commits; one change per commit. A package is added with its
   rationale on the same manifest line (`test_packages.bats` fails without one);
   whether `dotfiles-doctor` probes it is `tier=` on that line.
+- Tests never touch the real `$HOME`: fixture home via `setup_test_env`.
 - Manifests under `install/` are read only through `bin/manifest`, never
   parsed inline.
 
