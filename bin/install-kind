@@ -126,8 +126,11 @@ install_npm() {
 
 install_rust() {
     cargo_path
-    # rustup bootstrap is a real install step, not a guard.
-    command_exists cargo || rustup default stable
+    # rustup bootstrap is a real install step, not a guard — but only when
+    # there is a rustup to bootstrap; with neither tool, this is a skip.
+    if ! command_exists cargo && command_exists rustup; then
+        rustup default stable
+    fi
     have cargo cargo || return 0
     run_install sh -c "\"$MANIFEST\" list rust | xargs -n1 cargo install"
 }
