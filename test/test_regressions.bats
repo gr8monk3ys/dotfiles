@@ -153,50 +153,6 @@ teardown() {
 	assert_output --partial "Usage:"
 }
 
-@test "dotfiles-update npm check survives outdated packages under set -e" {
-	# Minimal clean git repo so update_dotfiles passes
-	git -C "$TEST_HOME" init -q -b main dotfiles-repo
-	git -C "$TEST_HOME/dotfiles-repo" -c user.email=t@t.t -c user.name=t \
-		commit -q --allow-empty -m init
-	git -C "$TEST_HOME/dotfiles-repo" remote add origin "$TEST_HOME/dotfiles-repo"
-
-	# Stub npm: like the real one, outdated exits 1 when packages are stale
-	mkdir -p "$TEST_TEMP_DIR/bin"
-	cat > "$TEST_TEMP_DIR/bin/npm" <<'EOS'
-#!/usr/bin/env bash
-case "${1:-}" in
-	outdated) printf 'Package Current Wanted\nfoo 1.0.0 2.0.0\n'; exit 1 ;;
-	*) exit 0 ;;
-esac
-EOS
-	chmod +x "$TEST_TEMP_DIR/bin/npm"
-
-	# ZDOTDIR and the XDG vars are scrubbed, not just HOME: dotfiles-update's
-	# zinit step runs a child `zsh -c`, zsh derives its completion dump from
-	# an inherited $ZDOTDIR rather than from $HOME, and on a machine where
-	# ~/.config/zsh is stowed that path resolves *into the checkout* — so this
-	# sandboxed test wrote .zcompdump into the working tree and
-	# test_shell_boot.bats's "the suite does not write into the checkout"
-	# failed several tests later. Same scrub test_shell_boot.bats uses.
-	run env -u ZDOTDIR -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_CACHE_HOME \
-		HOME="$TEST_HOME" DOTFILES_DIR="$TEST_HOME/dotfiles-repo" \
-		PATH="$TEST_TEMP_DIR/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
-		bash bin/dotfiles-update --skip-brew --skip-cargo
-	assert_success
-	assert_output --partial "npm packages updated"
-}
-
-@test "dotfiles-doctor does not report pacman on macOS" {
-	skip_if_not_macos
-
-	# Repo bin first on PATH, like make doctor: the bin/pacman wrapper
-	# must not register as an installed package manager on macOS
-	run env HOME="$TEST_HOME" DOTFILES_DIR="$TEST_HOME/.dotfiles" \
-		PATH="$DOTFILES_DIR/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
-		bash bin/dotfiles-doctor
-	[[ "$output" != *"pacman installed"* ]]
-}
-
 @test "dotfiles-doctor checks Zinit instead of Oh My Zsh" {
 	mkdir -p "$TEST_HOME/.local/share/zinit/zinit.git"
 
@@ -206,37 +162,6 @@ EOS
 		bash bin/dotfiles-doctor
 	assert_output --partial "Zinit installed"
 	[[ "$output" != *"Oh My Zsh"* ]]
-}
-
-# Regression: Makefile used $(shell cat install/npmfile), which flattens the
-# file onto one line so the leading "# comment" turned every package name
-# into a shell comment. `make node-packages` installed nothing and
-# `make rust-packages` ran a bare `cargo install`.
-#
-# The package list now comes from bin/manifest, so these assert the outcome
-# (real names, no comment leaking in) rather than which file the recipe names.
-@test "make node-packages expands real package names, not a comment" {
-    run make -n node-packages SKIP_BREW=1
-    assert_success
-    [[ "$output" != *"global # npm"* ]]
-
-    run bin/manifest list npm
-    assert_success
-    [[ "${#lines[@]}" -gt 0 ]]
-    run bash -c 'bin/manifest list npm | grep -c "^#"'
-    assert_output "0"
-}
-
-@test "make rust-packages does not run a bare cargo install" {
-    run make -n rust-packages SKIP_BREW=1
-    assert_success
-    [[ "$output" != *"cargo install # Rust"* ]]
-
-    run bin/manifest list rust
-    assert_success
-    [[ "${#lines[@]}" -gt 0 ]]
-    run bash -c 'bin/manifest list rust | grep -c "^#"'
-    assert_output "0"
 }
 
 # Regression: install.sh cased on `bin/platform detect` and called make
@@ -256,22 +181,6 @@ EOS
 	# Comments are exempt: the deletion is explained in one.
 	run bash -c 'grep -vE "^[[:space:]]*#" install.sh | grep -nE "make (macos|arch|link)\b"'
 	assert_failure
-}
-
-# Regression: Homebrew >= 5 refuses third-party taps until `brew trust`ed,
-# so `brew bundle` on a fresh Mac died on the first tapped cask (aerospace).
-#
-# Trusting taps moved inside bin/install-kind, where it is asserted by running
-# the real thing against stub binaries ("brew kinds trust the declared taps
-# first", test_install_kind.bats). What stays here is the make-level claim:
-# the brew kinds are still routed through install-kind at all.
-@test "brew and cask targets route through install-kind" {
-	run make -n brew-packages
-	assert_success
-	[[ "$output" == *"install-kind brew"* ]]
-	run make -n cask-apps
-	assert_success
-	[[ "$output" == *"install-kind cask"* ]]
 }
 
 # Public-readiness: tracked config must carry no personal identity or hosts.

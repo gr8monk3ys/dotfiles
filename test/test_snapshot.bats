@@ -1,9 +1,10 @@
 #!/usr/bin/env bats
 # Tests for bin/lib/snapshot.sh and dotfiles-restore's use of it.
 #
-# No package manager runs here. The snapshot layout is exercised against a
-# hand-built fixture directory, and the drift check greps dotfiles-backup
-# rather than executing it — asserting that `brew` works is not our job.
+# No real package manager runs here. The snapshot layout is exercised against
+# a hand-built fixture directory, and the drift check runs dotfiles-backup
+# against stub tools — asserting that `brew` works is not our job, but
+# asserting what backup actually writes is.
 
 load test_helper/common
 
@@ -106,36 +107,81 @@ lib() {
 
 # ---------- drift: backup and the table must agree ----------
 
-@test "every artifact dotfiles-backup writes is in the snapshot table" {
-    # Greps the source rather than running it: no brew/npm/cargo needed.
-    run bash -c '
-        set -euo pipefail
-        cd "$1"
-        source bin/lib/snapshot.sh
-        status=0
-        # Artifact names backup writes directly under $BACKUP_PATH.
-        for name in $(grep -oE "\$BACKUP_PATH/[A-Za-z0-9._-]+" bin/dotfiles-backup \
-                        | sed "s|\$BACKUP_PATH/||" | sort -u); do
-            snapshot_class "$name" >/dev/null 2>&1 || { echo "not in table: $name"; status=1; }
-        done
-        exit $status
-    ' _ "$DOTFILES_DIR"
+# Run dotfiles-backup for real, with every lister stubbed and a HOME that has
+# something for each tree artifact, and leave the snapshot path in $SNAP.
+# Records are written by `install-kind record`, so this is also the check
+# that the kind module and the table agree.
+run_full_backup() {
+    local stubs="$TEST_TEMP_DIR/stubbin" t
+    mkdir -p "$stubs" "$TEST_HOME/.ssh" "$TEST_TEMP_DIR/backups"
+    # brew writes its own --file for `bundle dump`; everything else lists to
+    # stdout. Only dump writes: nothing here may touch install/.
+    cat > "$stubs/brew" <<'STUB'
+#!/usr/bin/env bash
+if [[ "${1:-} ${2:-}" == "bundle dump" ]]; then
+    for a in "$@"; do
+        case "$a" in --file=*) echo 'brew "stub"' > "${a#--file=}" ;; esac
+    done
+fi
+STUB
+    for t in npm cargo code codium; do
+        printf '#!/usr/bin/env bash\necho "listed-by-%s"\n' "$t" > "$stubs/$t"
+    done
+    chmod +x "$stubs"/*
+    echo "# zshrc" > "$TEST_HOME/.zshrc"
+    echo "Host example" > "$TEST_HOME/.ssh/config"
+
+    run env HOME="$TEST_HOME" BACKUP_DIR="$TEST_TEMP_DIR/backups" \
+        PATH="$stubs:/usr/bin:/bin:/usr/sbin:/sbin" \
+        bash "$DOTFILES_DIR/bin/dotfiles-backup"
     assert_success
+    SNAP="$(find "$TEST_TEMP_DIR/backups" -mindepth 1 -maxdepth 1 -type d | head -1)"
+    [[ -n "$SNAP" ]]
 }
 
-@test "every table artifact except metadata is written by dotfiles-backup" {
-    run bash -c '
-        set -euo pipefail
-        cd "$1"
-        source bin/lib/snapshot.sh
-        status=0
-        while IFS= read -r name; do
-            grep -q "BACKUP_PATH/$name" bin/dotfiles-backup ||
-                { echo "in table but never written: $name"; status=1; }
-        done < <(snapshot_names_of_class record)
-        exit $status
-    ' _ "$DOTFILES_DIR"
+@test "every artifact dotfiles-backup writes is in the snapshot table" {
+    run_full_backup
+    # Not `local status`: bats' `run` (inside lib) assigns that name.
+    local name bad=0
+    for name in $(ls -A "$SNAP"); do
+        lib snapshot_class "$name"
+        [[ "$status" -eq 0 ]] || { echo "not in table: $name"; bad=1; }
+    done
+    return "$bad"
+}
+
+@test "every table artifact is written by dotfiles-backup" {
+    run_full_backup
+    local name missing=0
+    while IFS= read -r name; do
+        [[ -e "$SNAP/$name" ]] || { echo "in table but never written: $name"; missing=1; }
+    done < <(bash -c 'source "$1"; snapshot_names' _ "$SNAPSHOT_LIB")
+    return "$missing"
+}
+
+@test "every record dotfiles-backup writes carries a provenance header" {
+    run_full_backup
+    local name
+    while IFS= read -r name; do
+        run head -1 "$SNAP/$name"
+        assert_output --partial "not an install manifest"
+    done < <(bash -c 'source "$1"; snapshot_names_of_class record' _ "$SNAPSHOT_LIB")
+}
+
+# The manifest names the platform in bin/platform's vocabulary, not uname's.
+@test "the snapshot manifest records the platform bin/platform reports" {
+    run_full_backup
+    run grep -c "^Platform: $("$DOTFILES_DIR/bin/platform" detect) ($("$DOTFILES_DIR/bin/platform" arch))$" "$SNAP/MANIFEST.txt"
+    assert_output "1"
+}
+
+@test "dotfiles-backup honours SKIP_KINDS for records" {
+    mkdir -p "$TEST_TEMP_DIR/backups"
+    run env HOME="$TEST_HOME" BACKUP_DIR="$TEST_TEMP_DIR/backups" SKIP_KINDS="npm" \
+        PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
+        bash "$DOTFILES_DIR/bin/dotfiles-backup"
     assert_success
+    assert_output --partial "Skipping npm (SKIP_KINDS)"
 }
 
 # ---------- restore's behaviour over a fixture ----------

@@ -105,12 +105,14 @@ detection of its own.
 
 ### [dotfiles-update](dotfiles-update)
 
-Update all packages and configurations.
+Update all packages and configurations: the repository (fast-forward only;
+a dirty checkout skips this step and nothing else), then `install-kind update`
+for every manifest kind, then zinit and Neovim plugins.
 
 **Usage:**
 
 ```bash
-dotfiles-update [--skip-brew] [--skip-npm] [--skip-cargo]
+dotfiles-update [--skip <kind>]...   # e.g. --skip pacman; SKIP_KINDS works too
 # or
 make update
 ```
@@ -386,21 +388,27 @@ See CONTEXT.md § Link for tool-owned paths.
 
 ### [install-kind](install-kind)
 
-Installs one manifest **kind**. How a kind installs — which manifest, which
-command, whether to skip it, whether a failure is fatal — used to be
-re-derived in six Makefile targets, which is why the only way to test any of
-it was to grep `make -n` output.
+Installs, updates or records one manifest **kind**. How a kind installs —
+which manifest, which command, whether to skip it, whether a failure is
+fatal — used to be re-derived in six Makefile targets, how it updates again
+in `dotfiles-update`, and how it is recorded again in `dotfiles-backup`,
+each with its own skip flags.
 
 ```bash
 install-kind brew          # trust taps, then brew bundle the Brewfile
 install-kind code          # extensions, preferring codium over code
+install-kind update npm    # upgrade npm itself and every global package
+install-kind record rust ~/dotfiles-backup/20260922_120000   # cargo-installed.txt
 SKIP_KINDS="rust pacman" install-kind rust   # skipped
 STRICT_PACKAGES=1 install-kind npm           # a failure is fatal
 ```
 
-The Makefile keeps every dependency edge between kinds — ordering is what
-make is genuinely deep at. A missing tool is not a failure: `install-kind
-rust` with no cargo warns and exits 0.
+`install` is the default verb, so `install-kind <kind>` is unchanged.
+`update` upgrades everything the kind's tool manages, not only manifest
+entries. `record` writes the files `lib/snapshot.sh` names, each stamped with
+the command that produced it. The Makefile keeps every dependency edge between kinds — ordering
+is what make is genuinely deep at. A missing tool is not a failure:
+`install-kind rust` with no cargo warns and exits 0.
 
 ### [firefox-user-js](firefox-user-js)
 
@@ -472,13 +480,6 @@ Checks both directions: every probed command must resolve to a manifest
 package (directly, via the mapping, or as an explicit `-` exemption), and
 every mapping entry must still name a package that exists and a command
 doctor still probes. Run by `make verify-doctor-tools`.
-
-## Compatibility Helpers
-
-### [pacman](pacman)
-
-Wrapper that invokes `/usr/bin/pacman`, using `sudo` automatically when needed.
-Helps non-root installations on Arch Linux.
 
 ## Adding New Scripts
 
