@@ -16,8 +16,8 @@ options=(
     style=round
     width=5.0
     hidpi=on
-    active_color=0xff61afef      # blue - focused
-    inactive_color=0xff3e4451 # surface - everything else
+    active_color={{blue:0x}}      # blue - focused
+    inactive_color={{surface:0x}} # surface - everything else
     background_color=0x00000000
 )
 
