@@ -462,7 +462,7 @@ Each probe must be offline, fast, and fail when the config is _not_ honoured.
 Asserting a file exists is not a probe — that is the mistake this catches. An
 absent tool is skipped, not failed. Tools with no probe meeting that bar are
 deliberately absent rather than probed badly; `yazi` is the example, guarded
-statically in `test_regressions.bats` instead.
+statically in `test_tool_configs.bats` instead.
 
 Not part of `make verify`: several probes read discovery variables that a
 login shell exports, and `make` does not run one. Use `make verify-config-live`.
