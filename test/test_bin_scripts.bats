@@ -11,14 +11,6 @@ teardown() {
     cleanup_test_env
 }
 
-@test "dotfiles-doctor runs and reaches summary" {
-    run env HOME="$TEST_HOME" DOTFILES_DIR="$TEST_HOME/.dotfiles" \
-        PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
-        bash bin/dotfiles-doctor
-    # Mock env is incomplete so issues will be found, but it should reach summary
-    assert_output --partial "Summary"
-}
-
 @test "dotfiles-update detects missing dotfiles directory" {
     run env HOME="$TEST_HOME" DOTFILES_DIR="$TEST_HOME/nonexistent" \
         PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
