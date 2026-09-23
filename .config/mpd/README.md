@@ -7,7 +7,9 @@
 
 - **Library:** `~/Music`, auto-updated when files change (`auto_update`).
 - **Playlists:** `~/.config/mpd/playlists` (create the directory before
-  first run; it is not in this repo).
+  first run; it is not in this repo). `~/.config/mpd` is a tool-owned path in
+  `bin/link`, linked unfolded, so saved playlists land there and not in the
+  checkout.
 - **Network:** binds to `127.0.0.1` only — no LAN exposure.
 - **Startup:** resumes paused rather than playing (`restore_paused`).
 
