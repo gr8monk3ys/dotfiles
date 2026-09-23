@@ -7,6 +7,160 @@
 
 load test_helper/common
 
+# A fixture checkout: a two-colour palette and one template of each kind, so
+# the render/check contract is tested against something a retune of the real
+# palette cannot move.
+make_fixture() {
+    FIXTURE="$TEST_TEMP_DIR/checkout"
+    mkdir -p "$FIXTURE/.config/palette/templates/app" "$FIXTURE/.config/palette/templates/mixed"
+    cat > "$FIXTURE/.config/palette/danse.conf" <<'CONF'
+# fixture palette
+blue|#61afef|accent
+red|#e06a51|error
+CONF
+    # Whole-file template.
+    printf 'accent = {{blue}}\nerror = {{red}}\nbar = {{blue:0x}}\nsgr = {{red:rgb}}\n' \
+        > "$FIXTURE/.config/palette/templates/app/theme"
+    # Region template, and the hand-edited file it renders into.
+    printf 'fg={{blue}}\n' > "$FIXTURE/.config/palette/templates/mixed/rc"
+    mkdir -p "$FIXTURE/mixed"
+    printf 'hand-written top\n# palette:begin\nstale\n# palette:end\nhand-written bottom\n' \
+        > "$FIXTURE/mixed/rc"
+}
+
+palette_in() { env DOTFILES_DIR="$FIXTURE" "$DOTFILES_DIR/bin/palette" "$@"; }
+
+setup() {
+    setup_test_env
+}
+
+teardown() {
+    cleanup_test_env
+}
+
+@test "render writes whole files and fills regions, and check then passes" {
+    make_fixture
+    run palette_in render
+    assert_success
+    assert_output --partial "2 file(s) changed"
+
+    run cat "$FIXTURE/app/theme"
+    assert_output "$(printf 'accent = #61afef\nerror = #e06a51\nbar = 0xff61afef\nsgr = 224;106;81')"
+
+    # Only the region is the template's; the rest of the file is left alone.
+    run cat "$FIXTURE/mixed/rc"
+    assert_output "$(printf 'hand-written top\n# palette:begin\nfg=#61afef\n# palette:end\nhand-written bottom')"
+
+    run palette_in check
+    assert_success
+
+    # Idempotent: a second render touches nothing.
+    run palette_in render
+    assert_output --partial "0 file(s) changed"
+}
+
+@test "check fails with a diff when a rendered file is hand-edited" {
+    make_fixture
+    palette_in render
+    sed -i.bak 's/#e06a51/#ff0000/' "$FIXTURE/app/theme" && rm "$FIXTURE/app/theme.bak"
+    run palette_in check
+    assert_failure
+    assert_output --partial "app/theme (committed)"
+    assert_output --partial "+error = #e06a51"
+}
+
+@test "check fails when two palette colours are swapped in a rendered file" {
+    # The old membership test passed this: both hexes were on the palette.
+    make_fixture
+    palette_in render
+    printf 'accent = #e06a51\nerror = #61afef\nbar = 0xff61afef\nsgr = 224;106;81\n' \
+        > "$FIXTURE/app/theme"
+    run palette_in check
+    assert_failure
+}
+
+@test "check fails when a region is edited, but not when the rest of the file is" {
+    make_fixture
+    palette_in render
+    printf 'more hand-written\n' >> "$FIXTURE/mixed/rc"
+    run palette_in check
+    assert_success
+
+    sed -i.bak 's/^fg=.*/fg=#000000/' "$FIXTURE/mixed/rc" && rm "$FIXTURE/mixed/rc.bak"
+    run palette_in check
+    assert_failure
+}
+
+@test "check reports a rendered file that does not exist yet" {
+    make_fixture
+    palette_in render
+    rm "$FIXTURE/app/theme"
+    run palette_in check
+    assert_failure
+    assert_output --partial "missing: app/theme"
+}
+
+@test "a region with no end marker is refused, not guessed at" {
+    make_fixture
+    printf 'top\n# palette:begin\nstale\n' > "$FIXTURE/mixed/rc"
+    run palette_in render
+    assert_failure
+    assert_output --partial "malformed palette region"
+}
+
+@test "a literal colour in a template is refused" {
+    # That is how off-palette colours got in: typed straight into a theme.
+    make_fixture
+    printf 'x = #6d8086\n' > "$FIXTURE/.config/palette/templates/app/theme"
+    run palette_in check
+    assert_failure
+    assert_output --partial "literal colour"
+}
+
+@test "an unknown colour or format in a template is refused" {
+    make_fixture
+    printf 'x = {{blu}}\n' > "$FIXTURE/.config/palette/templates/app/theme"
+    run palette_in check
+    assert_failure
+    assert_output --partial "unknown slot"
+
+    printf 'x = {{blue:raw}}\n' > "$FIXTURE/.config/palette/templates/app/theme"
+    run palette_in check
+    assert_failure
+    assert_output --partial "unknown slot"
+}
+
+@test "a malformed or duplicated palette entry fails every command" {
+    make_fixture
+    printf 'blue|#61AFEF|accent\n' > "$FIXTURE/.config/palette/danse.conf"
+    run palette_in check
+    assert_failure
+    assert_output --partial "bad hex"
+
+    printf 'blue|#61afef|accent\nblue|#e06a51|error\n' > "$FIXTURE/.config/palette/danse.conf"
+    run palette_in check
+    assert_failure
+    assert_output --partial "defined twice"
+
+    printf 'blue|#61afef|\n' > "$FIXTURE/.config/palette/danse.conf"
+    run palette_in check
+    assert_failure
+    assert_output --partial "no role"
+}
+
+@test "fill expands the three slot formats for scripts" {
+    make_fixture
+    run bash -c 'printf "{{blue}} {{blue:0x}} {{red:rgb}}\n" | DOTFILES_DIR="$1" "$2/bin/palette" fill' \
+        _ "$FIXTURE" "$DOTFILES_DIR"
+    assert_success
+    assert_output "#61afef 0xff61afef 224;106;81"
+}
+
+@test "the checkout's rendered files match their templates" {
+    run "$DOTFILES_DIR/bin/palette" check
+    assert_success
+}
+
 @test "palette is executable" {
     [[ -x "$DOTFILES_DIR/bin/palette" ]]
 }
