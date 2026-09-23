@@ -1,0 +1,136 @@
+# eza danse theme — colours from .config/palette/danse.conf
+# Based on Atom's One Dark color scheme
+# https://github.com/eza-community/eza-themes
+# Rendered by bin/palette from .config/palette/templates/.config/eza/theme.yml.
+# Edit the template, then run `palette render`; `palette check` fails on hand edits.
+
+# File types
+filetype:
+  normal:
+    foreground: "{{fg}}"
+  directory:
+    foreground: "{{blue}}"
+    bold: true
+  symlink:
+    foreground: "{{cyan}}"
+  executable:
+    foreground: "{{green}}"
+    bold: true
+  pipe:
+    foreground: "{{yellow}}"
+  socket:
+    foreground: "{{magenta}}"
+  block_device:
+    foreground: "{{yellow}}"
+  char_device:
+    foreground: "{{yellow}}"
+  special:
+    foreground: "{{terracotta}}"
+
+# Permissions
+permissions:
+  user_read:
+    foreground: "{{green}}"
+  user_write:
+    foreground: "{{yellow}}"
+  user_execute_file:
+    foreground: "{{vermilion}}"
+  user_execute_other:
+    foreground: "{{vermilion}}"
+  group_read:
+    foreground: "{{green}}"
+  group_write:
+    foreground: "{{yellow}}"
+  group_execute:
+    foreground: "{{vermilion}}"
+  other_read:
+    foreground: "{{green}}"
+  other_write:
+    foreground: "{{yellow}}"
+  other_execute:
+    foreground: "{{vermilion}}"
+  special_user_file:
+    foreground: "{{magenta}}"
+  special_other:
+    foreground: "{{magenta}}"
+  attribute:
+    foreground: "{{comment}}"
+
+# File sizes
+size:
+  number:
+    foreground: "{{green}}"
+  unit:
+    foreground: "{{cyan}}"
+  major:
+    foreground: "{{green}}"
+  minor:
+    foreground: "{{cyan}}"
+
+# Owners
+users:
+  user_you:
+    foreground: "{{yellow}}"
+    bold: true
+  user_other:
+    foreground: "{{fg}}"
+  group_yours:
+    foreground: "{{magenta}}"
+  group_other:
+    foreground: "{{comment}}"
+
+# Date/time
+date:
+  hour_old:
+    foreground: "{{green}}"
+  day_old:
+    foreground: "{{blue}}"
+  older:
+    foreground: "{{comment}}"
+
+# Git status
+git:
+  new:
+    foreground: "{{green}}"
+    bold: true
+  modified:
+    foreground: "{{yellow}}"
+  deleted:
+    foreground: "{{vermilion}}"
+  renamed:
+    foreground: "{{magenta}}"
+  ignored:
+    foreground: "{{comment}}"
+  conflicted:
+    foreground: "{{vermilion}}"
+    bold: true
+
+# Links
+links:
+  normal:
+    foreground: "{{magenta}}"
+  multi:
+    foreground: "{{cyan}}"
+
+# Punctuation
+punctuation:
+  foreground: "{{comment}}"
+
+# Control characters
+control:
+  foreground: "{{vermilion}}"
+
+# Broken symlinks
+broken_symlink:
+  foreground: "{{vermilion}}"
+  bold: true
+
+# Git repo header
+git_repo:
+  branch:
+    foreground: "{{magenta}}"
+    bold: true
+  clean:
+    foreground: "{{green}}"
+  dirty:
+    foreground: "{{yellow}}"

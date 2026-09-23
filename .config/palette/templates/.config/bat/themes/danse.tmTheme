@@ -15,15 +15,15 @@
 	<key>gutterSettings</key>
 	<dict>
 		<key>background</key>
-		<string>#3e4451</string>
+		<string>{{surface}}</string>
 		<key>divider</key>
-		<string>#3e4451</string>
+		<string>{{surface}}</string>
 		<key>foreground</key>
-		<string>#5c6370</string>
+		<string>{{comment}}</string>
 		<key>selectionBackground</key>
-		<string>#3e4451</string>
+		<string>{{surface}}</string>
 		<key>selectionForeground</key>
-		<string>#5c6370</string>
+		<string>{{comment}}</string>
 	</dict>
 	<key>settings</key>
 	<array>
@@ -31,17 +31,17 @@
 			<key>settings</key>
 			<dict>
 				<key>background</key>
-				<string>#282c34</string>
+				<string>{{bg}}</string>
 				<key>caret</key>
-				<string>#abb2bf</string>
+				<string>{{fg}}</string>
 				<key>foreground</key>
-				<string>#abb2bf</string>
+				<string>{{fg}}</string>
 				<key>invisibles</key>
-				<string>#5c6370</string>
+				<string>{{comment}}</string>
 				<key>lineHighlight</key>
-				<string>#5c637055</string>
+				<string>{{comment}}55</string>
 				<key>selection</key>
-				<string>#3e4451</string>
+				<string>{{surface}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -52,7 +52,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#abb2bf</string>
+				<string>{{fg}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -63,7 +63,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#5c6370</string>
+				<string>{{comment}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -74,7 +74,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#abb2bf</string>
+				<string>{{fg}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -85,7 +85,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#abb2bf</string>
+				<string>{{fg}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -96,7 +96,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#abb2bf</string>
+				<string>{{fg}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -107,7 +107,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#c678dd</string>
+				<string>{{magenta}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -118,7 +118,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#e06a51</string>
+				<string>{{vermilion}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -129,7 +129,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#61afef</string>
+				<string>{{blue}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -140,7 +140,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#d98c5c</string>
+				<string>{{terracotta}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -151,7 +151,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#e5c07b</string>
+				<string>{{yellow}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -162,7 +162,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#abb2bf</string>
+				<string>{{fg}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -173,7 +173,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#61afef</string>
+				<string>{{blue}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -184,7 +184,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#c678dd</string>
+				<string>{{magenta}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -195,7 +195,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#56b6c2</string>
+				<string>{{cyan}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -206,7 +206,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#98c379</string>
+				<string>{{green}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -217,7 +217,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#d98c5c</string>
+				<string>{{terracotta}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -228,7 +228,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#d98c5c</string>
+				<string>{{terracotta}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -239,7 +239,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#d98c5c</string>
+				<string>{{terracotta}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -250,7 +250,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#d98c5c</string>
+				<string>{{terracotta}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -261,7 +261,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#e06a51</string>
+				<string>{{vermilion}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -272,7 +272,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#d98c5c</string>
+				<string>{{terracotta}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -283,7 +283,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#61afef</string>
+				<string>{{blue}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -294,7 +294,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#c678dd</string>
+				<string>{{magenta}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -305,7 +305,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#d98c5c</string>
+				<string>{{terracotta}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -318,7 +318,7 @@
 				<key>fontStyle</key>
 				<string></string>
 				<key>foreground</key>
-				<string>#61afef</string>
+				<string>{{blue}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -329,7 +329,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#d98c5c</string>
+				<string>{{terracotta}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -342,7 +342,7 @@
 				<key>fontStyle</key>
 				<string>bold</string>
 				<key>foreground</key>
-				<string>#e5c07b</string>
+				<string>{{yellow}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -355,7 +355,7 @@
 				<key>fontStyle</key>
 				<string>italic</string>
 				<key>foreground</key>
-				<string>#c678dd</string>
+				<string>{{magenta}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -366,7 +366,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#98c379</string>
+				<string>{{green}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -377,7 +377,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#e06a51</string>
+				<string>{{vermilion}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -388,7 +388,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#d98c5c</string>
+				<string>{{terracotta}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -399,7 +399,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#e06a51</string>
+				<string>{{vermilion}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -410,7 +410,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#d98c5c</string>
+				<string>{{terracotta}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -421,9 +421,9 @@
 			<key>settings</key>
 			<dict>
 				<key>background</key>
-				<string>#3e4451</string>
+				<string>{{surface}}</string>
 				<key>foreground</key>
-				<string>#abb2bf</string>
+				<string>{{fg}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -434,7 +434,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#98c379</string>
+				<string>{{green}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -445,7 +445,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#e06a51</string>
+				<string>{{vermilion}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -456,7 +456,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#c678dd</string>
+				<string>{{magenta}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -467,7 +467,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#56b6c2</string>
+				<string>{{cyan}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -478,7 +478,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#56b6c2</string>
+				<string>{{cyan}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -489,7 +489,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#56b6c2</string>
+				<string>{{cyan}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -500,7 +500,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#c678dd</string>
+				<string>{{magenta}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -511,9 +511,9 @@
 			<key>settings</key>
 			<dict>
 				<key>background</key>
-				<string>#e06a51</string>
+				<string>{{vermilion}}</string>
 				<key>foreground</key>
-				<string>#abb2bf</string>
+				<string>{{fg}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -524,9 +524,9 @@
 			<key>settings</key>
 			<dict>
 				<key>background</key>
-				<string>#d98c5c</string>
+				<string>{{terracotta}}</string>
 				<key>foreground</key>
-				<string>#282c34</string>
+				<string>{{bg}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -537,9 +537,9 @@
 			<key>settings</key>
 			<dict>
 				<key>background</key>
-				<string>#d98c5c</string>
+				<string>{{terracotta}}</string>
 				<key>foreground</key>
-				<string>#abb2bf</string>
+				<string>{{fg}}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -550,9 +550,9 @@
 			<key>settings</key>
 			<dict>
 				<key>background</key>
-				<string>#5c6370</string>
+				<string>{{comment}}</string>
 				<key>foreground</key>
-				<string>#abb2bf</string>
+				<string>{{fg}}</string>
 			</dict>
 		</dict>
 	</array>

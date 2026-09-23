@@ -1,0 +1,30 @@
+set default-bg "{{bg-dark}}"
+set default-fg "{{fg}}"
+
+set statusbar-fg "{{fg}}"
+set statusbar-bg "{{surface}}"
+
+set inputbar-bg "{{bg}}"
+set inputbar-fg "{{fg}}"
+
+set notification-error-bg "{{vermilion}}"
+set notification-error-fg "{{bg-dark}}"
+
+set notification-warning-bg "{{yellow}}"
+set notification-warning-fg "{{bg-dark}}"
+
+set highlight-color "{{yellow}}"
+set highlight-active-color "{{blue}}"
+
+set completion-highlight-fg "{{bg-dark}}"
+set completion-highlight-bg "{{blue}}"
+
+set completion-bg "{{bg}}"
+set completion-fg "{{fg}}"
+
+set notification-bg "{{green}}"
+set notification-fg "{{bg-dark}}"
+
+set recolor "true"
+set recolor-lightcolor "{{bg-dark}}"
+set recolor-darkcolor "{{fg}}"

@@ -1,0 +1,15 @@
+themes {
+    custom {
+        fg "{{fg}}"
+        bg "{{bg}}"
+        black "{{bg}}"
+        red "{{vermilion}}"
+        green "{{green}}"
+        yellow "{{yellow}}"
+        blue "{{blue}}"
+        magenta "{{magenta}}"
+        cyan "{{cyan}}"
+        white "{{fg}}"
+        orange "{{terracotta}}"
+    }
+}

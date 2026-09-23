@@ -76,8 +76,11 @@ zinit light Aloxaf/fzf-tab
 zinit light zsh-users/zsh-autosuggestions
 zinit light zsh-users/zsh-syntax-highlighting
 
-# OneDark palette for zsh-syntax-highlighting (same hexes as the README
-# theme table): valid commands green, errors red, paths underlined, etc.
+# Colours, from the danse palette (.config/palette/). zsh-syntax-highlighting:
+# valid commands green, errors vermilion, paths underlined. fzf: bg:-1 keeps
+# the terminal's own background so Ghostty's frosted glass shows through;
+# inherited by fzf-tab, ctrl-r/ctrl-t, and fzf-based scripts (dotfiles-why).
+# palette:begin - rendered from .config/palette/templates/.config/zsh/.zshrc; edit it there, then run bin/palette render
 typeset -A ZSH_HIGHLIGHT_STYLES
 ZSH_HIGHLIGHT_STYLES[command]='fg=#98c379'
 ZSH_HIGHLIGHT_STYLES[builtin]='fg=#98c379'
@@ -93,6 +96,13 @@ ZSH_HIGHLIGHT_STYLES[double-quoted-argument]='fg=#e5c07b'
 ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]='fg=#d98c5c'
 ZSH_HIGHLIGHT_STYLES[comment]='fg=#5c6370,italic'
 ZSH_HIGHLIGHT_STYLES[redirection]='fg=#c678dd'
+export FZF_DEFAULT_OPTS="
+  --height=60% --layout=reverse --border=rounded --info=inline
+  --color=bg:-1,fg:#abb2bf,hl:#61afef
+  --color=bg+:#3e4451,fg+:#abb2bf,hl+:#61afef
+  --color=prompt:#98c379,pointer:#c678dd,marker:#98c379
+  --color=info:#e5c07b,spinner:#56b6c2,header:#56b6c2,border:#5c6370"
+# palette:end
 
 # Prompt: starship (install/Brewfile). Until it is installed, a plain
 # two-line prompt so the shell is still usable.
@@ -158,16 +168,7 @@ fi
 # Shell integrations
 # ============================================================================
 
-# fzf - Fuzzy finder
-# OneDark palette (matches the README theme table); bg:-1 keeps the
-# terminal's own background so Ghostty's frosted glass shows through.
-# Inherited by fzf-tab, ctrl-r/ctrl-t, and fzf-based scripts (dotfiles-why).
-export FZF_DEFAULT_OPTS="
-  --height=60% --layout=reverse --border=rounded --info=inline
-  --color=bg:-1,fg:#abb2bf,hl:#61afef
-  --color=bg+:#3e4451,fg+:#abb2bf,hl+:#61afef
-  --color=prompt:#98c379,pointer:#c678dd,marker:#98c379
-  --color=info:#e5c07b,spinner:#56b6c2,header:#56b6c2,border:#5c6370"
+# fzf - Fuzzy finder (FZF_DEFAULT_OPTS is in the palette region above)
 if command -v fzf &> /dev/null; then
     eval "$(fzf --zsh)"
 fi

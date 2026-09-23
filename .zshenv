@@ -50,10 +50,12 @@ export EZA_CONFIG_DIR="$XDG_CONFIG_HOME/eza"
 # theme.yml needs a build feature Homebrew's bottle does not enable — this
 # eza reports "v0.23.5 [+git]" and nothing else, and silently ignores the
 # file, malformed YAML included. EZA_COLORS is what this build honours, so
-# the OneDark palette from .config/eza/theme.yml is expressed here too.
+# the palette is expressed here too, rendered from the same slots as theme.yml.
 # Keys: di=dir ln=symlink ex=executable pi=pipe so=socket bd/cd=devices
 #       fi=file u*=permission bits g*=git status da=date uu/gu=user/group
+# palette:begin - rendered from .config/palette/templates/.zshenv; edit it there, then run bin/palette render
 export EZA_COLORS="di=38;2;97;175;239:ln=38;2;86;182;194:ex=38;2;152;195;121:pi=38;2;229;192;123:so=38;2;198;120;221:bd=38;2;229;192;123:cd=38;2;229;192;123:fi=38;2;171;178;191:ur=38;2;229;192;123:uw=38;2;224;106;81:ux=38;2;152;195;121:gm=38;2;152;195;121:ga=38;2;229;192;123:gd=38;2;224;106;81:da=38;2;92;99;112:uu=38;2;171;178;191:gu=38;2;92;99;112"
+# palette:end
 
 # colors!
 export BAT_THEME="danse"

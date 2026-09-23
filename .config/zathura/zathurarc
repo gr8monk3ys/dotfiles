@@ -27,6 +27,7 @@ set font "inconsolata 15"
 
 # Colours: the danse palette (.config/palette/danse.conf), so documents open
 # in the same ground as the terminal they were launched from.
+# palette:begin - rendered from .config/palette/templates/.config/zathura/zathurarc; edit it there, then run bin/palette render
 set default-bg "#21252b"
 set default-fg "#abb2bf"
 
@@ -57,6 +58,7 @@ set notification-fg "#21252b"
 set recolor "true"
 set recolor-lightcolor "#21252b"
 set recolor-darkcolor "#abb2bf"
+# palette:end
 set recolor-reverse-video "true"
 set recolor-keephue "true"
 
