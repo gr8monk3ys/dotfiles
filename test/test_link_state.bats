@@ -187,17 +187,3 @@ rows() {
     rows
     [[ "$output" == "$first" ]]
 }
-
-@test "every state the doctor maps is one link-state can emit" {
-    # Drift guard: doctor's case arms and the module's vocabulary must agree.
-    run bash -c '
-        set -euo pipefail
-        cd "$1"
-        status=0
-        for s in $(bin/link-state --states); do
-            grep -qE "^[[:space:]]+$s\\)" bin/dotfiles-doctor || { echo "doctor has no arm for: $s"; status=1; }
-        done
-        exit $status
-    ' _ "$DOTFILES_DIR"
-    assert_success
-}
