@@ -1,6 +1,26 @@
-# Install Directory
+# install/
 
-This directory contains package lists for various package managers, making it easy to install all necessary tools and applications on a new system.
+What this system installs, one manifest per package manager. Nothing parses
+these files except [`bin/manifest`](../bin/manifest); installing, updating and
+recording them is [`bin/install-kind`](../bin/install-kind)'s job, and the
+`make` targets below call it.
+
+| File | Kind | Installed by | Platform |
+| --- | --- | --- | --- |
+| [Brewfile](Brewfile) | `brew` | `make brew-packages` (in `make macos`) | macOS |
+| [Caskfile](Caskfile) | `cask` | `make cask-apps` (in `make macos`) | macOS |
+| [Caskfile.extra](Caskfile.extra) | `cask-extra` | `make cask-apps-extra` only | macOS |
+| [npmfile](npmfile) | `npm` | `make node-packages` (in `make macos`) | macOS |
+| [Rustfile](Rustfile) | `rust` | `make rust-packages` (in `make macos`) | macOS |
+| [Codefile](Codefile) | `code` | `make vscode-extensions` (in `make macos`) | macOS |
+| [pacmanfile](pacmanfile) | `pacman` | `make pacman-packages` (in `make arch`) | Arch |
+| [duti](duti) | — | `make duti` (in `make macos`) | macOS |
+
+`duti` is not a manifest: it maps file types to apps, and lists no packages.
+Caskfile holds what a fresh Mac needs to be usable; everything optional
+(games, media production, extra fonts) is in Caskfile.extra and is never
+installed unasked. `SKIP_KINDS` and `STRICT_PACKAGES` apply to every kind
+(`make help`).
 
 ## Entry format
 
@@ -25,7 +45,7 @@ rationale (the rest of the line). Keys:
 
 An unknown key, a tier outside that list, or a repeated key makes the line
 unparseable, and `bin/manifest` fails on it like any other malformed entry. A
-missing rationale does not stop an install, but `test/test_manifest.bats`
+missing rationale does not stop an install, but `test/test_packages.bats`
 fails on it: every package needs one on at least one of its lines. When the
 same package name is in two manifests (usually the Brewfile and the
 pacmanfile), the rationale and metadata go on one line — the Brewfile's, by
@@ -35,437 +55,21 @@ Read it with `dotfiles-why <package-or-command>`, or `bin/manifest describe`.
 Keep a rationale to one line; a note that needs paragraphs belongs in the
 tool's `.config/<app>/README.md`.
 
-## Files Overview
+## Adding or removing a package
 
-### [Brewfile](Brewfile)
+Add the line, with its rationale, to the manifest for its kind, then run that
+kind's `make` target; `make test` fails on a line without a rationale. To
+remove one, delete the line; its rationale and any doctor probe go with it.
+If an alias in `.config/zsh/aliases.zsh` uses the command, `make test` fails
+until the alias goes too, or is guarded (OPERATING.md § Troubleshooting).
 
-**Homebrew formulae** - Command-line tools and development packages.
-
-Contains formulae (command-line tools) installed via [Homebrew](https://brew.sh), the package manager for macOS.
-
-**Categories include:**
-
-- **Development Tools**: gcc, node, python, rust-analyzer, lua-language-server
-- **Version Control**: gh (GitHub CLI), git, lazygit
-- **Shell & Terminal**: zsh-syntax-highlighting, tmux, fzf
-- **Text Processing**: pandoc, ripgrep, fd, sk
-- **Containers**: docker, docker-compose, colima
-- **Language Runtimes**: deno, ghc (Haskell), zig, bun
-- **Build Systems**: cmake, meson, ninja, bear
-- **Python Tools**: pyenv, poetry, pipx, uv, jupyterlab
-- **Media**: ffmpeg, imagemagick, yt-dlp
-- **Document Tools**: zathura, mupdf, sphinx-doc, typst
-- **Communication**: neomutt, msmtp, isync, himalaya
-- **Utilities**: tldr, aria2, pass, timewarrior, ollama
-
-**Taps (Third-party repositories):**
-
-- `nikitabobko/tap` - AeroSpace window manager
-- `homebrew-zathura/zathura` - Zathura document viewer
-- `oven-sh/bun` - Bun JavaScript runtime
-
-### [Caskfile](Caskfile)
-
-**Homebrew Casks (day-one)** - GUI applications a fresh Mac needs to be usable.
-Applied by `make cask-apps`, which runs as part of `make macos`.
-
-- **Window management**: aerospace, karabiner-elements, raycast
-- **Terminal**: ghostty
-- **Browsers**: zen, firefox, brave-browser
-- **Development**: vscodium, docker-desktop
-- **Notes / security / sync**: obsidian, keepassxc, proton-drive
-- **Music**: tidal
-- **Fonts**: font-jetbrains-mono-nerd-font (Ghostty's font), font-fira-code-nerd-font
-
-### [Caskfile.extra](Caskfile.extra)
-
-**Homebrew Casks (optional)** - everything else. Not part of `make macos`;
-install on demand with `make cask-apps-extra` (honours `SKIP_KINDS=cask-extra`
-and `STRICT_PACKAGES` like `cask-apps`).
-
-- **Games**: godot, love, lunar-client
-- **Media production**: audacity, obs, cameracontroller, rode-central
-- **Misc**: balenaetcher, db-browser-for-sqlite, dorion, figma, keycastr,
-  monero-wallet, spacedrive, tor-browser
-- **Fonts**: the remaining Nerd Fonts (0xproto, 3270, agave, hack) and font-fontawesome
-
-### [npmfile](npmfile)
-
-**Node.js packages** - Global npm packages.
-
-Global Node.js packages installed via npm/pnpm.
-
-**Packages include:**
-
-- **Package Managers**: npm, pnpm, yarn
-- **CLI Utilities**: @antfu/ni, fkill-cli, get-port-cli, gtop
-- **Development Tools**: prettier, tsx, underscore-cli
-- **Documentation**: tldr, remark-cli
-- **Network**: fast-cli, local-web-server
-- **Release Management**: release-it, npm-check-updates
-- **Optimization**: svgo
-
-### [Rustfile](Rustfile)
-
-**Rust packages** - Cargo-installed tools.
-
-Rust packages installed via [Cargo](https://doc.rust-lang.org/cargo/), Rust's package manager.
-
-**Packages include:**
-
-- `cargo-cache` - Manage cargo cache
-- `cargo-update` - Update installed cargo packages
-- `jless` - JSON viewer for the terminal
-- `just` - Command runner (make alternative)
-
-### [pacmanfile](pacmanfile)
-
-**Arch Linux packages** - Pacman package list.
-
-Packages for Arch Linux systems installed via [pacman](https://wiki.archlinux.org/title/Pacman).
-
-**Packages include:**
-
-- **Base**: base-devel, bash-completion
-- **Search**: fd, fzf, zoxide
-- **Version Control**: git, git-delta
-- **Editor**: nano
-
-### [Codefile](Codefile)
-
-**VSCodium/VS Code extensions** - Editor extensions.
-
-Contains VSCodium/VS Code extension IDs for automated installation.
-
-**Extensions include:**
-
-- **Language Support**: Python, Rust, Go, JavaScript/TypeScript, ESLint, Prettier
-- **Editor Enhancement**: Vim keybindings
-- **Git Integration**: GitLens, Git Graph
-- **Utilities**: EditorConfig, Error Lens, Code Spell Checker, Path Intellisense
-- **Markdown**: Markdown All in One, Markdownlint
-- **Themes**: One Dark Pro (Material Theme)
-- **Containers**: Docker support
-
-Install with: `make vscode-extensions`
-
-## Usage
-
-### Installing Homebrew Packages
+Never regenerate a manifest from what is installed (`brew bundle dump
+--force`, `pacman -Qqe >`, …): a dump carries no rationales and would erase
+every one. To see drift instead, compare against a listing:
 
 ```bash
-# Install formulae (command-line tools)
-brew bundle --file=install/Brewfile
-
-# Install day-one casks (applications)
-brew bundle --file=install/Caskfile
-
-# Install optional casks (games, media production, misc)
-brew bundle --file=install/Caskfile.extra
+comm -13 <(bin/manifest list brew | sort) <(brew leaves | sort)   # installed, not listed
 ```
 
-### Installing npm Packages
-
-```bash
-# Install global npm packages
-bin/manifest list npm | xargs npm install -g
-
-# Or with pnpm
-bin/manifest list npm | xargs pnpm add -g
-```
-
-### Installing Rust Packages
-
-```bash
-# Install cargo packages
-bin/manifest list rust | xargs -n1 cargo install
-```
-
-### Installing Arch Linux Packages
-
-```bash
-# Install pacman packages
-bin/manifest list pacman | xargs sudo pacman -S --needed
-```
-
-## Maintenance
-
-### Updating Package Lists
-
-To see what is installed but not listed, dump to a scratch file and compare —
-never over the manifest itself: a dump carries no rationales, and overwriting
-would erase every one of them.
-
-To update these files with currently installed packages:
-
-**Homebrew:**
-
-```bash
-brew bundle dump --force --file=install/Brewfile
-brew bundle dump --force --file=install/Caskfile --cask   # then move optional apps to Caskfile.extra by hand
-```
-
-**npm:**
-
-```bash
-npm list -g --depth=0 --parseable | \
-  awk -F'/node_modules/' '{print $2}' | grep -v '^npm$' > install/npmfile
-```
-
-**Cargo:**
-
-```bash
-cargo install --list | grep -v '^ ' | cut -d' ' -f1 > install/Rustfile
-```
-
-**Pacman:**
-
-```bash
-pacman -Qqe > install/pacmanfile
-```
-
-## Adding New Packages
-
-### To add a new Homebrew formula
-
-1. Install it: `brew install <package>`
-2. Add to Brewfile with its rationale: `brew "<package>"  # <why it is here>`
-
-### To add a new Homebrew cask
-
-1. Install it: `brew install --cask <cask>`
-2. Add to Caskfile (day-one) or Caskfile.extra (optional) with its rationale: `cask "<cask>"  # <why>`
-
-### To add a new npm package
-
-1. Install it: `npm install -g <package>`
-2. Add to npmfile with its rationale: `<package>  # <why>`
-
-### To add a new Rust package
-
-1. Install it: `cargo install <package>`
-2. Add to Rustfile with its rationale: `<package>  # <why>`
-
-## Platform-Specific Notes
-
-- **Brewfile/Caskfile**: macOS only (some formulae may work on Linux with Homebrew)
-- **npmfile**: Cross-platform (macOS, Linux, Windows)
-- **Rustfile**: Cross-platform (macOS, Linux, Windows)
-- **pacmanfile**: Arch Linux and derivatives only
-
-## Cleanup
-
-To remove packages that are no longer in the bundle files:
-
-```bash
-# Remove Homebrew packages not in Brewfile/Caskfile
-brew bundle cleanup --force
-
-# This will uninstall any packages not listed in the files
-```
-
-## Troubleshooting
-
-### Homebrew Installation Issues
-
-**Problem:** `brew bundle` fails with permission errors
-
-**Solution:**
-
-```bash
-# Fix Homebrew permissions
-sudo chown -R $(whoami) /usr/local/* /opt/homebrew/*
-
-# Or reinstall Homebrew
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
-
-**Problem:** Package installation fails due to conflicts
-
-**Solution:**
-
-```bash
-# Update Homebrew first
-brew update
-
-# Try installing specific package
-brew install <package>
-
-# Check for issues
-brew doctor
-```
-
-### npm Installation Issues
-
-**Problem:** Permission errors when installing global packages
-
-**Solution:**
-
-```bash
-# Node comes from Homebrew (brew "node"); its global prefix is user-writable.
-# Or configure npm to use a different directory
-mkdir ~/.npm-global
-npm config set prefix '~/.npm-global'
-echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.zshrc
-```
-
-**Problem:** Package not found or outdated
-
-**Solution:**
-
-```bash
-# Clear npm cache
-npm cache clean --force
-
-# Update npm itself
-npm install -g npm@latest
-```
-
-### Cargo Installation Issues
-
-**Problem:** Cargo not found
-
-**Solution:**
-
-```bash
-# Install Rust toolchain
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source ~/.cargo/env
-```
-
-**Problem:** Compilation errors
-
-**Solution:**
-
-```bash
-# Update Rust toolchain
-rustup update
-
-# Ensure build tools are installed (macOS)
-xcode-select --install
-```
-
-### Platform-Specific Issues
-
-**macOS:**
-
-- Ensure Xcode Command Line Tools are installed: `xcode-select --install`
-- Some casks require Rosetta 2 on Apple Silicon: `softwareupdate --install-rosetta`
-
-**Linux:**
-
-- pacmanfile is for Arch-based distributions only
-- For Debian/Ubuntu, you'll need to create a separate package list
-- Some Homebrew formulae may not be available on Linux
-
-## Backup & Restore
-
-### Creating a Backup
-
-Before installing or updating packages, create a backup of current packages:
-
-```bash
-# Create backup directory
-mkdir -p ~/dotfiles-backup/$(date +%Y%m%d)
-
-# Backup current Homebrew packages
-brew bundle dump --file=~/dotfiles-backup/$(date +%Y%m%d)/Brewfile
-brew bundle dump --file=~/dotfiles-backup/$(date +%Y%m%d)/Caskfile --cask
-
-# Backup current npm packages
-npm list -g --depth=0 > ~/dotfiles-backup/$(date +%Y%m%d)/npmfile.txt
-
-# Backup current cargo packages
-cargo install --list > ~/dotfiles-backup/$(date +%Y%m%d)/Rustfile.txt
-```
-
-### Restoring from Backup
-
-To restore packages from a backup:
-
-```bash
-# Restore Homebrew packages
-brew bundle --file=~/dotfiles-backup/YYYYMMDD/Brewfile
-
-# Restore npm packages (parse the backup file)
-# Manual restoration recommended
-
-# Restore cargo packages
-# Extract package names from backup and install
-```
-
-## Platform-Specific Quirks
-
-### macOS
-
-**Apple Silicon (M1/M2/M3) Considerations:**
-
-- Homebrew installs to `/opt/homebrew` instead of `/usr/local`
-- Some packages may require Rosetta 2 for x86_64 binaries
-- Native ARM builds are available for most packages
-
-**Common Issues:**
-
-- **Karabiner-Elements** requires system permissions in Security & Privacy
-- **AeroSpace** requires Accessibility permissions
-- **Ghostty** may require Font Book to install Nerd Fonts properly
-
-### Linux (Arch)
-
-**Package Manager Differences:**
-
-- Use `pacman` instead of Homebrew for system packages
-- AUR packages may need a helper like `yay` or `paru`
-- Some Homebrew formulae have different names in pacman
-
-**Considerations:**
-
-- GUI applications (casks) won't work - use pacman equivalents
-- Terminal tools generally work the same way
-- Font installation differs - use pacman or manual installation
-
-## Package Explanations
-
-### Why These Specific Packages?
-
-**Development:**
-
-- **gcc, cmake, ninja** - Build systems for compiling software
-- **pyenv, poetry** - Python version and dependency management
-- **rust-analyzer** - Rust language server for IDE support
-
-**Shell Enhancement:**
-
-- **zsh-syntax-highlighting** - Syntax highlighting for Zsh
-- **tmux** - Terminal multiplexer for persistent sessions
-- **fzf** - Fuzzy finder for quick file/command navigation
-
-**Text & Search:**
-
-- **ripgrep (rg)** - Fast grep alternative written in Rust
-- **fd** - Fast find alternative
-- **sk** - Fuzzy finder alternative to fzf
-
-**Media:**
-
-- **ffmpeg** - Video/audio processing
-- **yt-dlp** - YouTube video downloader (youtube-dl fork)
-
-**Security:**
-
-- **pass** - Password manager using GPG
-- **keepassxc** - Cross-platform password manager GUI
-
-**Communication:**
-
-- **neomutt, msmtp, isync** - Terminal-based email client setup
-- **himalaya** - Modern terminal email client
-
-## Resources
-
-- [Homebrew Documentation](https://docs.brew.sh/)
-- [Homebrew Bundle](https://github.com/Homebrew/homebrew-bundle)
-- [npm Documentation](https://docs.npmjs.com/)
-- [Cargo Book](https://doc.rust-lang.org/cargo/)
-- [Pacman Wiki](https://wiki.archlinux.org/title/Pacman)
-- [Homebrew on Linux](https://docs.brew.sh/Homebrew-on-Linux)
+Nor run `brew bundle cleanup --force` against one file: formulae and casks
+live in separate manifests, so it would uninstall everything in the others.
