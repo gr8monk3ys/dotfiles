@@ -14,9 +14,9 @@
 #
 # Environment:
 #   SKIP_KINDS        Space-separated kinds to skip, e.g. SKIP_KINDS="rust pacman"
-#   STRICT_PACKAGES   Set to make a package failure fatal. Unset (default),
-#                     failures are tolerated and reported; `make doctor` is
-#                     how you find out what is missing.
+#   STRICT_PACKAGES   1/true makes a package failure fatal. Unset, 0 or false
+#                     (default), failures are tolerated and reported; `make
+#                     doctor` is how you find out what is missing.
 #
 # Deprecated, still honoured with a notice:
 #   SKIP_BREW SKIP_CASKS SKIP_NPM SKIP_RUST BREW_BUNDLE_STRICT
@@ -71,7 +71,7 @@ should_skip() {
 # Run an install command under the strictness policy. Tolerant by default so
 # one unavailable package does not abort a fresh machine's whole setup.
 run_install() {
-    if [[ -n "$STRICT_PACKAGES" ]]; then
+    if knob_on STRICT_PACKAGES; then
         "$@"
     else
         "$@" || print_warn "Continuing after failure (set STRICT_PACKAGES=1 to make this fatal)"

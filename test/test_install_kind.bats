@@ -203,6 +203,30 @@ calls() { cat "$CALL_LOG"; }
     assert_failure
 }
 
+@test "STRICT_PACKAGES=true is strict too" {
+    stub brew 1
+    STRICT_PACKAGES=true run_kind brew
+    assert_failure
+}
+
+# Regression: any non-empty value used to be strict, so the obvious way to
+# turn it off (STRICT_PACKAGES=0) turned it on.
+@test "STRICT_PACKAGES=0 and =false are not strict" {
+    stub brew 1
+    for v in 0 false; do
+        STRICT_PACKAGES="$v" run_kind brew
+        assert_success
+        assert_output --partial "Continuing after failure"
+    done
+}
+
+@test "a STRICT_PACKAGES typo is reported, not silently read as on" {
+    stub brew 1
+    STRICT_PACKAGES=yes run_kind brew
+    assert_success
+    assert_output --partial "STRICT_PACKAGES='yes' is not 1/true or 0/false"
+}
+
 @test "deprecated BREW_BUNDLE_STRICT still makes it fatal" {
     stub brew 1
     run env PATH="$STUB_BIN:$DOTFILES_DIR/bin:/usr/bin:/bin" CALL_LOG="$CALL_LOG" \

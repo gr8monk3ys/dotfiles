@@ -297,7 +297,11 @@ run_installation() {
     os=$("$DOTFILES_DIR/bin/platform" detect)
     print_substep "Detected $os - running make"
 
-    if [[ "$STRICT_PACKAGES" == "1" ]]; then
+    # The checkout exists now, so read the knob by the same rule install-kind
+    # uses rather than a second spelling of it.
+    # shellcheck source=bin/lib/preamble.sh
+    source "$DOTFILES_DIR/bin/lib/preamble.sh"
+    if knob_on STRICT_PACKAGES; then
         print_info "Strict package mode enabled (installation fails on package errors)"
     fi
     make
