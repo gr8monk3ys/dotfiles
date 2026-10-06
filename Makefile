@@ -4,14 +4,19 @@
 # inside the subject.
 MAKEFILE_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 DOTFILES_DIR := $(MAKEFILE_DIR)
-OS := $(shell bin/platform detect)
-HOMEBREW_PREFIX := $(shell bin/platform select /opt/homebrew /usr/local "bin/platform is-arm64")
+PLATFORM := "$(MAKEFILE_DIR)/bin/platform"
+OS := $(shell $(PLATFORM) detect)
+HOMEBREW_PREFIX := $(shell $(PLATFORM) select /opt/homebrew /usr/local '$(PLATFORM) is-arm64')
 PATH := $(HOMEBREW_PREFIX)/bin:$(DOTFILES_DIR)/bin:$(PATH)
-SHELL := env PATH=$(PATH) /bin/bash
+# PATH is passed through env rather than exported because make 3.81 (macOS)
+# resolves simple commands against its own PATH, not the exported one. The
+# quotes are load-bearing: unquoted, one PATH entry with a space in it (the
+# Claude desktop app adds several) splits the SHELL value and every recipe
+# exits 127.
+SHELL := env PATH='$(PATH)' /bin/bash
 # Evaluated at parse time so `make -n link` shows exactly what would run:
 # nothing extra when stow is present, the Homebrew bootstrap when it is not.
-HAVE_STOW := $(shell bin/platform has stow && echo yes)
-BIN := $(HOMEBREW_PREFIX)/bin
+HAVE_STOW := $(shell $(PLATFORM) has stow && echo yes)
 
 # Written once because `link` and `link-dry-run` each used to carry their own
 # copy. The copies had different escaping and only the dry-run one worked:
@@ -24,7 +29,6 @@ SSH_INCLUDE_RE = ^[[:space:]]*Include[[:space:]]+~/\.config/ssh/config\.d/\*\.co
 ZSHENV_NEEDS_BACKUP = [ -f "$(HOME)/.zshenv" ] && [ ! -h "$(HOME)/.zshenv" ]
 export XDG_CONFIG_HOME = $(HOME)/.config
 export STOW_DIR = $(DOTFILES_DIR)
-export ACCEPT_EULA=Y
 
 .PHONY: all macos arch link unlink link-dry-run test test-setup verify \
         verify-config-live verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-doctor-tools verify-tests \
@@ -435,7 +439,6 @@ brew-update:
 brew-cleanup:
 	@echo "Cleaning up Homebrew..."
 	@brew cleanup
-	@brew bundle cleanup --force
 	@echo "✓ Homebrew cleanup complete"
 
 ## Dry-run: Show what symlinks would be created without making changes
