@@ -18,6 +18,9 @@ SHELL := env PATH='$(PATH)' /bin/bash
 # nothing extra when stow is present, the Homebrew bootstrap when it is not.
 HAVE_STOW := $(shell $(PLATFORM) has stow && echo yes)
 
+# Yes/no switches (SKIP_DOCKER, SKIP_LINTERS, …): `1` or `true` means yes,
+# anything else means no. Testing for "non-empty" made SKIP_DOCKER=0 skip.
+truthy = $(filter 1 true,$(strip $(1)))
 export XDG_CONFIG_HOME = $(HOME)/.config
 # Linking is bin/link's job: apply, dry-run and undo are one planner there, and
 # it owns the SSH Include line, the .zshenv backup and the tool-owned list.
@@ -25,8 +28,8 @@ export XDG_CONFIG_HOME = $(HOME)/.config
 # (the tests) cannot reach the real home through an inherited value.
 LINK = DOTFILES_DIR="$(DOTFILES_DIR)" HOME="$(HOME)" XDG_CONFIG_HOME="$(XDG_CONFIG_HOME)" "$(MAKEFILE_DIR)/bin/link"
 
-.PHONY: all macos arch link unlink link-dry-run test test-setup verify \
-        verify-config-live verify-palette verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-doc-links verify-tests \
+.PHONY: all macos arch link unlink link-dry-run test test-setup lint verify \
+        verify-config-live verify-palette verify-shellcheck verify-markdown verify-stale-refs verify-doc-links verify-tests \
         doctor init update backup firefox worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
         brew git packages-macos packages-arch core-macos core-arch \
@@ -144,57 +147,62 @@ test:
 	fi
 	bats test
 
+# The one way the suite's prerequisites get installed: CI's Tests jobs and
+# both container images call this rather than carrying their own recipe.
+# bats-support/bats-assert are real prerequisites, not optional: without them
+# test_helper/common.bash falls back to a three-function shim. zsh and stow
+# are what the suite exercises. Dispatches on $(OS), not on `command -v`: a
+# Linux runner with Linuxbrew on PATH must still use apt.
+# Idempotent, so it re-runs cheaply. Ubuntu before 24.04 ships a bats too old
+# for the suite (it needs 1.5 for `run --separate-stderr`).
 test-setup:
-	@echo "Installing test dependencies (bats)..."
-	@if command -v bats >/dev/null 2>&1; then \
-		echo "✓ bats already installed"; \
-	elif command -v brew >/dev/null 2>&1; then \
-		brew install bats-core; \
-	elif command -v apt-get >/dev/null 2>&1; then \
-		sudo apt-get update && sudo apt-get install -y bats; \
-	elif command -v pacman >/dev/null 2>&1; then \
-		sudo pacman -Sy --noconfirm bats; \
-	else \
-		echo "Could not auto-install bats on this platform."; \
-		echo "Install bats manually and re-run 'make test'."; \
-		exit 1; \
-	fi
+	@echo "Installing test dependencies (bats, bats-support, bats-assert, zsh, stow)..."
+	@case "$(OS)" in \
+	arch) \
+		$(AS_ROOT) pacman -S --needed --noconfirm bats bats-support bats-assert zsh stow ;; \
+	macos) \
+		brew install bats-core stow && \
+		brew tap bats-core/bats-core && \
+		{ brew trust bats-core/bats-core 2>/dev/null || true; } && \
+		brew install bats-support bats-assert ;; \
+	*) \
+		if command -v apt-get >/dev/null 2>&1; then \
+			sudo apt-get update && \
+			sudo apt-get install -y --no-install-recommends bats bats-support bats-assert zsh stow; \
+		else \
+			echo "Could not auto-install bats on this platform."; \
+			echo "Install bats-core, bats-support and bats-assert, then re-run 'make test'."; \
+			exit 1; \
+		fi ;; \
+	esac
 
-verify: verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-palette verify-doc-links verify-tests verify-docker
+# The static checks: no bats, no packages, nothing platform-specific. CI's Lint
+# job runs exactly this, once per PR; the Tests jobs run only the suite.
+lint: verify-shellcheck verify-markdown verify-stale-refs verify-palette verify-doc-links
+
+# No separate syntax or shell-surface steps: shellcheck parses every bin/
+# script, and the suite (verify-tests) parses and sources the zsh surface.
+# Both used to run here as well, so each check ran two or three times.
+verify: lint verify-tests verify-docker
 	@echo "✓ Verification complete"
 
-# The container tests are the only checks that exercise the fresh-install path,
-# and the only ones that run the suite on Linux at all. Both distros run:
-# the repo claims macOS *and* Arch support, and for a long time nothing
-# verified the Arch half — install/pacmanfile listed 8 packages and no test
-# ever noticed. Run when a Docker daemon is reachable; otherwise say so
-# loudly and move on.
+# The containers are the only local checks that run a platform's real `make`
+# on a clean machine, and the only ones that run the suite on Linux. Arch is a
+# supported platform, so its container installs the whole pacmanfile via
+# `make arch` (about 1.2 GB of packages); Ubuntu is generic Linux, link only.
+# Run when a Docker daemon is reachable; otherwise say so loudly and move on.
 #
-# Cost: on an Apple Silicon host the Arch image has to run under linux/amd64
-# emulation (upstream publishes no arm64 archlinux image), which puts it at
-# roughly 4-5 minutes against well under a minute for the native Ubuntu one.
-# If that becomes intolerable locally, SKIP_ARCH_DOCKER=1 drops it and the
-# Arch job in .github/workflows/ci.yml still covers it on every PR.
+# Cost: upstream publishes no arm64 archlinux image, so on Apple Silicon the
+# Arch container runs under linux/amd64 emulation and takes roughly 25
+# minutes, against well under a minute for Ubuntu. SKIP_ARCH_DOCKER=1 drops
+# it locally; CI's Container (arch) job runs it natively on every PR.
 verify-docker:
-	@if [ -n "$(SKIP_DOCKER)" ]; then echo "Skipping container tests (SKIP_DOCKER set)"; \
+	@if [ -n "$(call truthy,$(SKIP_DOCKER))" ]; then echo "Skipping container tests (SKIP_DOCKER set)"; \
 	elif docker info >/dev/null 2>&1; then \
-		$(MAKE) test-docker; \
-		if [ -n "$(SKIP_ARCH_DOCKER)" ]; then echo "Skipping Arch container test (SKIP_ARCH_DOCKER set)"; \
+		$(MAKE) test-docker && \
+		if [ -n "$(call truthy,$(SKIP_ARCH_DOCKER))" ]; then echo "Skipping Arch container test (SKIP_ARCH_DOCKER set)"; \
 		else $(MAKE) test-docker-arch; fi; \
 	else echo "⚠️  Docker not reachable; fresh-install container tests SKIPPED (run 'make test-docker test-docker-arch' where Docker exists)"; fi
-
-verify-shell:
-	@echo "Running shell syntax checks..."
-	@if command -v zsh >/dev/null 2>&1; then \
-		zsh -n .zshenv .config/zsh/.zshrc .config/zsh/aliases.zsh .config/zsh/functions.zsh; \
-	else \
-		echo "⚠️  zsh not found; skipping zsh syntax checks"; \
-	fi
-	@for script in bin/*; do \
-		if [ -f "$$script" ] && head -n1 "$$script" | grep -q "bash"; then \
-			bash -n "$$script"; \
-		fi; \
-	done
 
 # Retired palette hexes are not listed here any more: every colour outside
 # prose is rendered from .config/palette/danse.conf and checked by
@@ -227,35 +235,34 @@ verify-doc-links:
 	@echo "Validating markdown links..."
 	@bin/validate-doc-links
 
-verify-shell-surface:
-	@echo "Running shell-surface tests..."
-	@bats test/test_shell_surface.bats test/test_alias_checker.bats
-
-# Mirrors the Lint job in .github/workflows/ci.yml. Kept here so `make verify`
-# is a superset of CI rather than a subset of it: shellcheck and markdownlint
-# used to run only in CI, which meant a green local gate could still fail on
-# push. SKIP_LINTERS=1 opts out; a missing linter warns rather than failing,
-# so a fresh checkout without npm still gets a usable `make verify`.
+# Run by `make lint`, which is all CI's Lint job does, so local and CI run the
+# same linter invocation. SKIP_LINTERS=1 opts out. A missing linter warns
+# locally, so a fresh checkout without npm still gets a usable `make verify`,
+# but fails under CI (CI=true): a gate whose linter is absent must not pass.
 verify-shellcheck:
 	@echo "Running shellcheck on bin/..."
-	@if [ -n "$(SKIP_LINTERS)" ]; then \
+	@if [ -n "$(call truthy,$(SKIP_LINTERS))" ]; then \
 		echo "Skipping shellcheck (SKIP_LINTERS set)"; \
 	elif command -v shellcheck >/dev/null 2>&1; then \
 		find bin -type f ! -name '*.md' -print0 \
 			| xargs -0 grep -l '^#!.*\(bash\|sh\)' \
 			| xargs shellcheck --severity=warning -x; \
+	elif [ -n "$(call truthy,$(CI))" ]; then \
+		echo "shellcheck not found, and CI requires it"; exit 1; \
 	else \
 		echo "⚠️  shellcheck not found; SKIPPED (CI runs it — brew install shellcheck)"; \
 	fi
 
 verify-markdown:
 	@echo "Running markdownlint..."
-	@if [ -n "$(SKIP_LINTERS)" ]; then \
+	@if [ -n "$(call truthy,$(SKIP_LINTERS))" ]; then \
 		echo "Skipping markdownlint (SKIP_LINTERS set)"; \
 	elif command -v markdownlint >/dev/null 2>&1; then \
 		markdownlint -c .markdownlint.json --ignore .github --ignore test "**/*.md"; \
 	elif [ -x "$$(npm config get prefix 2>/dev/null)/bin/markdownlint" ]; then \
 		"$$(npm config get prefix)/bin/markdownlint" -c .markdownlint.json --ignore .github --ignore test "**/*.md"; \
+	elif [ -n "$(call truthy,$(CI))" ]; then \
+		echo "markdownlint not found, and CI requires it"; exit 1; \
 	else \
 		echo "⚠️  markdownlint not found; SKIPPED (CI runs it — npm i -g markdownlint-cli)"; \
 	fi
@@ -271,7 +278,7 @@ verify-tests:
 	@$(MAKE) test
 
 ## Run core pre-push checks (fast local confidence loop)
-daily: verify-shell verify-doc-links verify-tests
+daily: verify-doc-links verify-tests
 	@echo "✓ Daily checks passed"
 
 doctor:
@@ -421,20 +428,30 @@ link-dry-run:
 	@$(LINK) dry-run
 
 ## Docker-based testing (clean environment)
+# One Dockerfile (test/Dockerfile), one pinned base image per distro. The
+# container runs the platform's real `make` path, then the suite and doctor.
+# Upstream publishes no arm64 archlinux image, so Arch always runs as
+# linux/amd64: native on CI runners, emulated (and slow) on Apple Silicon.
+DOCKER_BASE_ubuntu := ubuntu:24.04@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3
+DOCKER_BASE_arch := archlinux:latest@sha256:bb1e5dd58eb79755e736ac530292074f4408572c0fbc4306cd62b431fdf356f0
+DOCKER_PLATFORM_arch := --platform linux/amd64
+docker_build = docker build $(DOCKER_PLATFORM_$(1)) --build-arg BASE=$(DOCKER_BASE_$(1)) \
+	-t dotfiles-test-$(1) -f test/Dockerfile .
+
 test-docker:
-	@echo "Building and running tests in Ubuntu container..."
-	docker build -t dotfiles-test -f test/Dockerfile .
-	docker run --rm dotfiles-test
+	@echo "Building and running the install + tests in an Ubuntu container..."
+	$(call docker_build,ubuntu)
+	docker run --rm dotfiles-test-ubuntu
 
 test-docker-arch:
-	@echo "Building and running tests in Arch Linux container..."
-	docker build --platform linux/amd64 -t dotfiles-test-arch -f test/Dockerfile.arch .
-	docker run --platform linux/amd64 --rm dotfiles-test-arch
+	@echo "Building and running make arch + tests in an Arch Linux container..."
+	$(call docker_build,arch)
+	docker run $(DOCKER_PLATFORM_arch) --rm dotfiles-test-arch
 
 test-docker-interactive:
 	@echo "Starting interactive Ubuntu container..."
-	docker build -t dotfiles-test -f test/Dockerfile .
-	docker run -it --rm dotfiles-test /bin/zsh
+	$(call docker_build,ubuntu)
+	docker run -it --rm dotfiles-test-ubuntu /bin/bash
 
 # ============================================================================
 # Help
@@ -481,8 +498,9 @@ help:
 	@echo "  make clean        - Remove broken symlinks"
 	@echo "  make test-setup   - Install test dependencies (bats)"
 	@echo "  make test         - Run test suite"
-	@echo "  make test-docker  - Run test suite in an Ubuntu container"
-	@echo "  make test-docker-arch - Run test suite in an Arch container"
+	@echo "  make test-docker  - Link + run test suite in an Ubuntu container"
+	@echo "  make test-docker-arch - make arch (full pacmanfile) + test suite in an Arch container"
+	@echo "  make lint         - Linters and validators only (what CI's Lint job runs)"
 	@echo "  make verify       - Run full repository verification"
 	@echo "  make verify-config-live - Check tracked configs are actually honoured"
 	@echo ""

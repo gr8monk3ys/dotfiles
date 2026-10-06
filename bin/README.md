@@ -217,7 +217,7 @@ Aliases inside `if command -v X &> /dev/null; then ... fi` blocks are exempt
 ```bash
 check-alias-references  # Validate all unconditional aliases
 # or
-make verify-shell-surface
+bats test/test_shell_surface.bats
 ```
 
 **On failure:** Prints the offending alias's file:line, the unresolved command, and

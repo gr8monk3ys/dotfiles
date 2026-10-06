@@ -76,6 +76,22 @@ have() {
     return 1
 }
 
+# rustup's cargo proxy is on PATH as soon as rustup is, and fails on every call
+# until a default toolchain exists. A fresh `make arch` leaves exactly that
+# (rustup comes from the pacmanfile), so "cargo exists" is not "cargo works".
+cargo_works() {
+    command_exists cargo && cargo --version > /dev/null 2>&1
+}
+
+# have(), for cargo: present and usable. An unusable cargo is a skip, like a
+# missing one, not a failure of the whole run.
+have_cargo() {
+    have cargo cargo || return 1
+    cargo_works && return 0
+    print_warn "cargo has no default toolchain (run 'rustup default stable'); skipping"
+    return 1
+}
+
 # --- adapters shared across verbs ------------------------------------------
 
 # Homebrew >= 5 refuses to install from third-party taps until they are
@@ -139,10 +155,10 @@ install_rust() {
     cargo_path
     # rustup bootstrap is a real install step, not a guard — but only when
     # there is a rustup to bootstrap; with neither tool, this is a skip.
-    if ! command_exists cargo && command_exists rustup; then
+    if ! cargo_works && command_exists rustup; then
         rustup default stable
     fi
-    have cargo cargo || return 0
+    have_cargo || return 0
     run_install sh -c "\"$MANIFEST\" list rust | xargs -n1 cargo install"
 }
 
@@ -222,7 +238,7 @@ rust_upgrade_crates() {
 
 update_rust() {
     cargo_path
-    have cargo cargo || return 0
+    have_cargo || return 0
     run_install rust_upgrade_crates
 }
 
@@ -288,7 +304,7 @@ record_npm() {
 
 record_rust() {
     cargo_path
-    have cargo cargo || return 0
+    have_cargo || return 0
     run_install record_to cargo-installed.txt cargo install --list
 }
 

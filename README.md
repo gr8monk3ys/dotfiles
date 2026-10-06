@@ -49,7 +49,7 @@ make init check=1  # report only; non-zero if anything is still unconfigured
 
 ```bash
 make test      # bats test
-make verify    # syntax, shell-surface, stale refs, doc links, bats, Docker fresh install
+make verify    # linters, stale refs, palette check, doc links, bats, Docker fresh install
 make doctor    # health check of the linked machine
 ```
 

@@ -5,41 +5,15 @@ This directory contains the test suite for the dotfiles repository using
 
 ## Setup
 
-### Install BATS
-
-**macOS (via Homebrew):**
-
 ```bash
-brew install bats-core
+make test-setup
 ```
 
-**Linux:**
-
-```bash
-# Arch Linux
-sudo pacman -S bats
-
-# Ubuntu/Debian
-sudo apt-get install bats
-
-# Or install from source
-git clone https://github.com/bats-core/bats-core.git
-cd bats-core
-./install.sh /usr/local
-```
-
-### Install BATS Helpers (Optional but Recommended)
-
-```bash
-# Install bats-support (helper functions)
-git clone https://github.com/bats-core/bats-support.git test/test_helper/bats-support
-
-# Install bats-assert (assertions)
-git clone https://github.com/bats-core/bats-assert.git test/test_helper/bats-assert
-
-# Install bats-file (file assertions)
-git clone https://github.com/bats-core/bats-file.git test/test_helper/bats-file
-```
+One target installs everything the suite needs — bats-core, bats-support,
+bats-assert, zsh and stow — with pacman, apt-get or Homebrew, whichever the
+machine has. CI and both container images use it too, so there is one
+install recipe rather than one per environment. Ubuntu needs 24.04 or later:
+older releases ship a bats that predates `run --separate-stderr`.
 
 ## Running Tests
 
@@ -88,10 +62,7 @@ test/
 ├── test_regressions.bats  # Regression tests for known breakages
 ├── test_packages.bats     # Tests for package file validation
 └── test_helper/           # Test helpers and fixtures
-    ├── common.bash        # Common test functions
-    ├── bats-support/      # BATS support library
-    ├── bats-assert/       # BATS assertion library
-    └── bats-file/         # BATS file assertion library
+    └── common.bash        # Common test functions; loads bats-support/assert
 ```
 
 ## Test Files
@@ -180,13 +151,15 @@ teardown() {
 
 ## Continuous Integration
 
-`.github/workflows/ci.yml` runs on every PR and push to `main`: `SKIP_DOCKER=1
-make verify` plus a link/unlink round-trip on macOS and Ubuntu, shellcheck and
-markdownlint with the doc-link/tool-catalog/stale-ref validators, the suite in
-both the Ubuntu and Arch containers, and the real `curl | bash` installer on
-Ubuntu. `make verify` (which adds both container tests when Docker is present)
+`.github/workflows/ci.yml` runs on every PR and push to `main`, each check
+once and each through a make target: `make lint` (linters and validators),
+`make test-setup` + `make test` + a link/unlink round-trip on macOS and
+Ubuntu, `make test-docker` and `make test-docker-arch` (the Arch one runs the
+real `make arch` and installs the whole pacmanfile before the suite), the real
+`curl | bash` installer, and a bare `make` fresh install on macOS and Ubuntu.
+`make verify` (lint, the suite, and both containers when Docker is present)
 is the local equivalent — run it before pushing. On an Apple Silicon host the
-Arch image runs under `linux/amd64` emulation and takes several minutes;
+Arch image runs under `linux/amd64` emulation and takes about 25 minutes;
 `SKIP_ARCH_DOCKER=1` drops it locally without losing the CI coverage.
 
 ## Test Coverage
@@ -246,13 +219,9 @@ env | grep -E "(DOTFILES|HOME|PATH)"
 
 ### Helper Libraries Not Found
 
-```bash
-# Reinstall helpers
-rm -rf test/test_helper/bats-*
-git clone https://github.com/bats-core/bats-support.git test/test_helper/bats-support
-git clone https://github.com/bats-core/bats-assert.git test/test_helper/bats-assert
-git clone https://github.com/bats-core/bats-file.git test/test_helper/bats-file
-```
+`test_helper/common.bash` loads bats-support and bats-assert from the
+Homebrew or distro location and falls back to a minimal shim without them.
+Run `make test-setup` to install the real libraries.
 
 ## Resources
 
