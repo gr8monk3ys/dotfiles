@@ -16,6 +16,10 @@ source "$SCRIPT_DIR/lib/ui.sh"
 # shellcheck source=lib/snapshot.sh
 source "$SCRIPT_DIR/lib/snapshot.sh"
 
+# Kinds whose record failed. Only possible under STRICT_PACKAGES; otherwise
+# install-kind reports the failure itself and carries on.
+FAILED_KINDS=""
+
 # Setup backup directory
 setup_backup_dir() {
     print_header "Setting Up Backup"
@@ -25,88 +29,20 @@ setup_backup_dir() {
     print_success "Backup directory created"
 }
 
-# Backup Homebrew packages
-backup_homebrew() {
-    print_header "Backing Up Homebrew Packages"
+# Record installed packages, one manifest kind at a time. What each kind
+# records and under which snapshot name is the kind module's business, so
+# SKIP_KINDS and STRICT_PACKAGES mean here what they mean for install. A
+# failed kind does not stop the configs and SSH steps that follow.
+record_packages() {
+    print_header "Recording Installed Packages"
 
-    if ! command_exists brew; then
-        print_info "Homebrew not installed, skipping..."
-        return 0
-    fi
-
-    print_info "Backing up Homebrew formulae..."
-    brew bundle dump --force --file="$BACKUP_PATH/Brewfile"
-    snapshot_provenance "$BACKUP_PATH/Brewfile" "brew bundle dump"
-    print_success "Brewfile saved"
-
-    print_info "Backing up Homebrew casks..."
-    brew bundle dump --force --file="$BACKUP_PATH/Caskfile" --cask
-    snapshot_provenance "$BACKUP_PATH/Caskfile" "brew bundle dump --cask"
-    print_success "Caskfile saved"
-}
-
-# Backup npm packages
-backup_npm() {
-    print_header "Backing Up npm Packages"
-
-    if ! command_exists npm; then
-        print_info "npm not installed, skipping..."
-        return 0
-    fi
-
-    # Named npm-global-list.txt, not npmfile.txt: this is `npm list` tree
-    # output, not the bare-name format of install/npmfile.
-    print_info "Backing up global npm packages..."
-    npm list -g --depth=0 > "$BACKUP_PATH/npm-global-list.txt"
-    snapshot_provenance "$BACKUP_PATH/npm-global-list.txt" "npm list -g --depth=0"
-    print_success "npm packages saved"
-}
-
-# Backup Cargo packages
-backup_cargo() {
-    print_header "Backing Up Cargo Packages"
-
-    if ! command_exists cargo; then
-        print_info "Cargo not installed, skipping..."
-        return 0
-    fi
-
-    # Named cargo-installed.txt, not Rustfile.txt: this is
-    # `cargo install --list` output, not the format of install/Rustfile.
-    print_info "Backing up cargo packages..."
-    cargo install --list > "$BACKUP_PATH/cargo-installed.txt"
-    snapshot_provenance "$BACKUP_PATH/cargo-installed.txt" "cargo install --list"
-    print_success "Cargo packages saved"
-}
-
-# Backup VSCode extensions
-backup_vscode() {
-    print_header "Backing Up VSCode Extensions"
-
-    # Both, when both exist. A backup has no reason to choose an editor;
-    # the installer's preference is a separate decision that lives in the
-    # Makefile.
-    local found=0
-
-    if command_exists code; then
-        print_info "Backing up VSCode extensions..."
-        code --list-extensions > "$BACKUP_PATH/vscode-extensions.txt"
-        snapshot_provenance "$BACKUP_PATH/vscode-extensions.txt" "code --list-extensions"
-        print_success "VSCode extensions saved"
-        found=1
-    fi
-
-    if command_exists codium; then
-        print_info "Backing up VSCodium extensions..."
-        codium --list-extensions > "$BACKUP_PATH/vscodium-extensions.txt"
-        snapshot_provenance "$BACKUP_PATH/vscodium-extensions.txt" "codium --list-extensions"
-        print_success "VSCodium extensions saved"
-        found=1
-    fi
-
-    if [[ "$found" -eq 0 ]]; then
-        print_info "VSCode/VSCodium not installed, skipping..."
-    fi
+    local kind
+    for kind in $("$SCRIPT_DIR/manifest" kinds); do
+        if ! "$SCRIPT_DIR/install-kind" record "$kind" "$BACKUP_PATH"; then
+            print_error "Recording $kind failed"
+            FAILED_KINDS="$FAILED_KINDS $kind"
+        fi
+    done
 }
 
 # Backup important configs (if not symlinked)
@@ -182,7 +118,7 @@ Dotfiles Backup Manifest
 Backup Date: $(date)
 Hostname: $(hostname)
 User: ${USER:-$(id -un)}
-OS: $(uname -s)
+Platform: $("$SCRIPT_DIR/platform" detect) ($("$SCRIPT_DIR/platform" arch))
 
 Backup Contents:
 EOF
@@ -331,6 +267,10 @@ main() {
                 echo "  -c, --compress    Compress backup after creation"
                 echo "  -C, --cleanup     Remove old backups (keep latest 5)"
                 echo "  -h, --help        Show this help message"
+                echo ""
+                echo "Environment:"
+                echo "  SKIP_KINDS        Manifest kinds not to record, e.g. \"npm rust\""
+                echo "  STRICT_PACKAGES   1/true: a failed record makes the exit non-zero"
                 exit 0
                 ;;
             *)
@@ -342,10 +282,7 @@ main() {
 
     # Perform backup
     setup_backup_dir
-    backup_homebrew
-    backup_npm
-    backup_cargo
-    backup_vscode
+    record_packages
     backup_configs
     backup_ssh
     create_manifest
@@ -361,6 +298,11 @@ main() {
 
     # Show summary
     generate_summary
+
+    if [[ -n "$FAILED_KINDS" ]]; then
+        print_error "Snapshot written, but recording failed for:$FAILED_KINDS"
+        return 1
+    fi
 }
 
 main "$@"

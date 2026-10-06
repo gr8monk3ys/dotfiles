@@ -14,6 +14,9 @@ source "$SCRIPT_DIR/lib/git-sync.sh"
 # Set when the repository step was skipped for a benign reason, so the
 # summary can say so instead of claiming an unqualified success.
 REPO_SKIPPED=""
+# Kinds whose update failed. Only possible under STRICT_PACKAGES; otherwise
+# install-kind reports the failure itself and carries on.
+FAILED_KINDS=""
 
 # Update dotfiles repository
 update_dotfiles() {
@@ -30,7 +33,7 @@ update_dotfiles() {
             ;;
         "$GIT_SYNC_DIRTY")
             # Uncommitted work in the checkout is no reason to skip the
-            # Homebrew, npm and cargo upgrades that follow.
+            # package updates that follow.
             print_warn "Uncommitted changes detected - skipping repository update"
             echo "$GIT_SYNC_DETAIL"
             REPO_SKIPPED="uncommitted changes"
@@ -60,85 +63,20 @@ update_dotfiles() {
     esac
 }
 
-# Update Homebrew packages
-update_homebrew() {
-    print_header "Updating Homebrew"
-
-    if ! command_exists brew; then
-        print_info "Homebrew not installed, skipping..."
-        return 0
-    fi
-
-    print_info "Updating Homebrew itself..."
-    brew update
-
-    print_info "Upgrading formulae..."
-    brew upgrade
-
-    print_info "Upgrading casks..."
-    brew upgrade --cask --greedy
-
-    print_info "Cleaning up..."
-    brew cleanup
-
-    print_info "Running brew doctor..."
-    if brew doctor; then
-        print_success "Homebrew updated successfully"
-    else
-        print_error "Brew doctor found issues"
-    fi
-}
-
-# Update npm packages
-update_npm() {
-    print_header "Updating npm Packages"
-
-    if ! command_exists npm; then
-        print_info "npm not installed, skipping..."
-        return 0
-    fi
-
-    print_info "Updating npm itself..."
-    npm install -g npm@latest
-
-    print_info "Checking for outdated packages..."
-    # npm outdated exits 1 when packages are outdated; without the
-    # || true, set -e would abort exactly when there is work to do.
-    outdated=$(npm outdated -g --depth=0 | tail -n +2 | wc -l | tr -d '[:space:]') || true
-
-    if [[ "$outdated" -gt 0 ]]; then
-        print_info "Updating $outdated global packages..."
-        npm update -g
-        print_success "npm packages updated"
-    else
-        print_success "All npm packages up to date"
-    fi
-}
-
-# Update Cargo packages
-update_cargo() {
-    print_header "Updating Cargo Packages"
-
-    if ! command_exists cargo; then
-        print_info "Cargo not installed, skipping..."
-        return 0
-    fi
-
-    # Check if cargo-update is installed
-    if ! command_exists cargo-install-update; then
-        print_info "Installing cargo-update..."
-        cargo install cargo-update
-    fi
-
-    print_info "Updating Rust toolchain..."
-    if command_exists rustup; then
-        rustup update
-    fi
-
-    print_info "Updating cargo packages..."
-    cargo install-update -a
-
-    print_success "Cargo packages updated"
+# Update every manifest kind through the kind module, which owns how each
+# package manager upgrades; this script owns only the order and the report.
+# A kind that fails is recorded and the rest still run, so one broken tool
+# does not leave the others stale. A for loop, not `while read`: the kind's
+# tools must inherit this script's stdin, not the list of kinds.
+update_packages() {
+    local kind
+    for kind in $("$SCRIPT_DIR/manifest" kinds); do
+        print_header "Updating $kind"
+        if ! "$SCRIPT_DIR/install-kind" update "$kind"; then
+            print_error "Updating $kind failed"
+            FAILED_KINDS="$FAILED_KINDS $kind"
+        fi
+    done
 }
 
 # Update Zinit and its plugins
@@ -189,7 +127,9 @@ generate_report() {
     print_header "Update Summary"
 
     echo ""
-    if [[ -n "$REPO_SKIPPED" ]]; then
+    if [[ -n "$FAILED_KINDS" ]]; then
+        print_error "Update finished with failures:$FAILED_KINDS"
+    elif [[ -n "$REPO_SKIPPED" ]]; then
         print_warn "Update complete - repository not updated ($REPO_SKIPPED)"
     else
         print_success "Update complete!"
@@ -207,62 +147,63 @@ Usage: dotfiles-update [OPTIONS]
 Update all packages, configurations, and tools in the dotfiles system.
 
 OPTIONS:
-    -h, --help      Show this help message
-    -v, --verbose   Show verbose output during updates
-    --skip-brew     Skip Homebrew updates
-    --skip-npm      Skip npm updates
-    --skip-cargo    Skip Cargo updates
+    -h, --help       Show this help message
+    -v, --verbose    Show verbose output during updates
+    --skip <kind>    Skip one manifest kind; repeatable. Kinds:
+                     $(printf '%s' "$1" | tr '\n' ' ')
 
 DESCRIPTION:
     Updates the following:
-    - Dotfiles repository (git pull)
-    - Homebrew packages (formulae and casks)
-    - npm global packages
-    - Cargo packages
+    - Dotfiles repository (git pull, fast-forward only)
+    - Every manifest kind, via 'install-kind update <kind>': Homebrew
+      formulae and casks, npm and cargo globals, pacman, editor extensions
     - Zinit and its zsh plugins
     - Neovim plugins
 
+    Uncommitted changes in the checkout skip the repository step only;
+    the package updates still run.
+
+ENVIRONMENT:
+    SKIP_KINDS        Kinds to skip, as for make (--skip adds to it)
+    STRICT_PACKAGES   1/true: a failed kind makes the run exit non-zero
+
 REQUIREMENTS:
-    - Clean git repository (no uncommitted changes)
     - Internet connection
 
 EXAMPLES:
-    dotfiles-update              Update everything
-    dotfiles-update --help       Show this help
-    dotfiles-update --verbose    Update with detailed output
-    dotfiles-update --skip-brew  Skip Homebrew updates
+    dotfiles-update                          Update everything
+    dotfiles-update --skip brew --skip cask  Leave Homebrew alone
+    dotfiles-update --skip pacman            Leave the system to omarchy-update
 
 EOF
 }
 
 # Main
 main() {
-    local skip_brew=false
-    local skip_npm=false
-    local skip_cargo=false
+    local kinds
+    kinds="$("$SCRIPT_DIR/manifest" kinds)"
+    SKIP_KINDS="${SKIP_KINDS:-}"
 
     # Parse arguments
     while [[ $# -gt 0 ]]; do
         case $1 in
             -h|--help)
-                show_help
+                show_help "$kinds"
                 exit 0
                 ;;
             -v|--verbose)
                 set -x
                 shift
                 ;;
-            --skip-brew)
-                skip_brew=true
-                shift
-                ;;
-            --skip-npm)
-                skip_npm=true
-                shift
-                ;;
-            --skip-cargo)
-                skip_cargo=true
-                shift
+            --skip)
+                # Validated here: a misspelt kind in SKIP_KINDS matches
+                # nothing, so it would silently skip nothing.
+                if [[ -z "${2:-}" ]] || ! printf '%s\n' "$kinds" | grep -Fxq -- "$2"; then
+                    echo "--skip needs a kind, one of: $(printf '%s' "$kinds" | tr '\n' ' ')"
+                    exit 1
+                fi
+                SKIP_KINDS="$SKIP_KINDS $2"
+                shift 2
                 ;;
             *)
                 echo "Unknown option: $1"
@@ -271,6 +212,7 @@ main() {
                 ;;
         esac
     done
+    export SKIP_KINDS
 
     echo -e "${BLUE}╔═══════════════════════════════════════════════════════════════╗${NC}"
     echo -e "${BLUE}║                    Dotfiles Updater                           ║${NC}"
@@ -282,10 +224,7 @@ main() {
         exit 1
     }
 
-    # Update package managers
-    [[ "$skip_brew" == false ]] && update_homebrew
-    [[ "$skip_npm" == false ]] && update_npm
-    [[ "$skip_cargo" == false ]] && update_cargo
+    update_packages
 
     # Update shell and editor
     update_zinit
@@ -293,6 +232,8 @@ main() {
 
     # Generate report
     generate_report
+
+    [[ -z "$FAILED_KINDS" ]]
 }
 
 main "$@"

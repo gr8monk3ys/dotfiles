@@ -1,29 +1,37 @@
 #!/usr/bin/env bash
-# install-kind - Install one manifest kind.
+# install-kind - Install, update or record one manifest kind.
 #
-# How a kind is installed — which manifest, which command, whether to skip,
-# whether a failure is fatal — used to be re-derived in six Makefile targets,
-# which is why the only way to test any of it was to grep `make -n` output.
-# This module owns that; the Makefile keeps the dependency edges between
-# kinds, which is the thing make is actually good at.
+# A kind owns what its package manager is asked to do: install from the
+# manifest, upgrade what the tool has installed, and record what is installed
+# into a snapshot. Those used to be three implementations — six Makefile
+# targets, dotfiles-update and dotfiles-backup — each with its own skip flags
+# and its own name for the rust kind ("cargo"). The Makefile keeps the
+# dependency edges between kinds, which is the thing make is actually good
+# at; dotfiles-update and dotfiles-backup keep sequencing and reporting.
 #
 # Usage:
-#   install-kind <kind>
+#   install-kind <kind>                 install (the default verb)
+#   install-kind install <kind>         the same, spelled out
+#   install-kind update <kind>          upgrade what the kind's tool has installed
+#   install-kind record <kind> <dir>    write the kind's snapshot record into <dir>
 #
 # Kinds come from `bin/manifest kinds`: brew cask cask-extra npm rust pacman code
 #
-# Environment:
+# Environment (every verb):
 #   SKIP_KINDS        Space-separated kinds to skip, e.g. SKIP_KINDS="rust pacman"
-#   STRICT_PACKAGES   Set to make a package failure fatal. Unset (default),
+#   STRICT_PACKAGES   1/true makes a failure fatal. Unset, 0 or false (default),
 #                     failures are tolerated and reported; `make doctor` is
 #                     how you find out what is missing.
 #
-# Deprecated, still honoured with a notice:
-#   SKIP_BREW SKIP_CASKS SKIP_NPM SKIP_RUST BREW_BUNDLE_STRICT
+# A missing tool is not a failure: `install-kind rust` on a machine with no
+# cargo warns and exits 0. A kind that does not apply to this machine is not
+# an error.
 #
-# A missing tool is not a failed install: `install-kind rust` on a machine
-# with no cargo warns and exits 0. A kind that does not apply to this machine
-# is not an error.
+# `update` upgrades everything the kind's tool manages, not only what the
+# manifest lists: a hand-installed npm global goes stale all the same, and
+# that is the scope dotfiles-update always had. `record` writes the files
+# bin/lib/snapshot.sh names, each with a provenance header; a kind with no
+# row in that table records nothing.
 
 set -euo pipefail
 
@@ -32,31 +40,14 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/preamble.sh"
 # shellcheck source=lib/ui.sh
 source "$SCRIPT_DIR/lib/ui.sh"
+# shellcheck source=lib/snapshot.sh
+source "$SCRIPT_DIR/lib/snapshot.sh"
 
 readonly MANIFEST="$SCRIPT_DIR/manifest"
 readonly INSTALL_DIR="$DOTFILES_DIR/install"
+readonly VERBS="install update record"
 
-# --- deprecated flag translation -------------------------------------------
-# Silent aliases are how a second vocabulary survives forever; the notice is
-# what actually retires them.
 SKIP_KINDS="${SKIP_KINDS:-}"
-
-deprecate() {
-    local old="$1" kind="$2"
-    print_warn "$old is deprecated; use SKIP_KINDS=\"$kind\""
-    SKIP_KINDS="$SKIP_KINDS $kind"
-}
-
-[[ -n "${SKIP_BREW:-}" ]] && deprecate SKIP_BREW brew
-[[ -n "${SKIP_CASKS:-}" ]] && deprecate SKIP_CASKS "cask cask-extra"
-[[ -n "${SKIP_NPM:-}" ]] && deprecate SKIP_NPM npm
-[[ -n "${SKIP_RUST:-}" ]] && deprecate SKIP_RUST rust
-
-STRICT_PACKAGES="${STRICT_PACKAGES:-}"
-if [[ -z "$STRICT_PACKAGES" && -n "${BREW_BUNDLE_STRICT:-}" ]]; then
-    print_warn "BREW_BUNDLE_STRICT is deprecated; use STRICT_PACKAGES=1"
-    STRICT_PACKAGES=1
-fi
 
 # --- policy ----------------------------------------------------------------
 
@@ -68,15 +59,24 @@ should_skip() {
     return 1
 }
 
-# Run an install command under the strictness policy. Tolerant by default so
-# one unavailable package does not abort a fresh machine's whole setup.
+# Run a step under the strictness policy. Tolerant by default so one
+# unavailable package does not abort a fresh machine's whole setup.
 run_install() {
-    if [[ -n "$STRICT_PACKAGES" ]]; then
+    if knob_on STRICT_PACKAGES; then
         "$@"
     else
         "$@" || print_warn "Continuing after failure (set STRICT_PACKAGES=1 to make this fatal)"
     fi
 }
+
+# A missing tool is not a failure: say so, and let the caller return 0.
+have() {
+    command_exists "$1" && return 0
+    print_warn "$2 not installed; skipping"
+    return 1
+}
+
+# --- adapters shared across verbs ------------------------------------------
 
 # Homebrew >= 5 refuses to install from third-party taps until they are
 # trusted ("Refusing to load cask … from untrusted tap"). This is a step
@@ -92,81 +92,253 @@ trust_taps() {
 
 brew_bundle() {
     local file="$1"
-    if ! command_exists brew; then
-        print_warn "Homebrew not installed; skipping"
-        return 0
-    fi
+    have brew Homebrew || return 0
     trust_taps
     run_install brew bundle --file="$INSTALL_DIR/$file"
 }
 
-# --- per-kind installers ---------------------------------------------------
+# cargo lives in ~/.cargo/bin, which a make recipe's PATH need not include.
+cargo_path() {
+    local rustup_prefix
+    rustup_prefix="$(brew --prefix rustup 2> /dev/null || true)"
+    # Only with a prefix: an empty one made the entry "/bin", which on Arch
+    # holds rustup's cargo proxy and put it ahead of everything else on PATH.
+    if [[ -n "$rustup_prefix" ]]; then
+        export PATH="$rustup_prefix/bin:$PATH"
+    fi
+    export PATH="$HOME/.cargo/bin:$PATH"
+}
+
+# Two adapters, one interface. Install and update prefer codium, matching
+# what the Makefile did; record_code captures both, because a record has no
+# reason to choose, but an installer does.
+EDITOR_CMD=""
+pick_editor() {
+    if command_exists codium; then
+        EDITOR_CMD=codium
+    elif command_exists code; then
+        EDITOR_CMD=code
+    else
+        print_warn "Neither codium nor code installed; skipping extensions"
+        return 1
+    fi
+}
+
+# --- install ---------------------------------------------------------------
 
 install_brew() { brew_bundle Brewfile; }
 install_cask() { brew_bundle Caskfile; }
 install_cask_extra() { brew_bundle Caskfile.extra; }
 
 install_npm() {
-    if ! command_exists npm; then
-        print_warn "npm not installed; skipping"
-        return 0
-    fi
+    have npm npm || return 0
     run_install sh -c "\"$MANIFEST\" list npm | xargs npm install --force --location global"
 }
 
 install_rust() {
-    # rustup bootstrap is a real install step, not a guard.
-    local rustup_prefix
-    rustup_prefix="$(brew --prefix rustup 2> /dev/null || true)"
-    export PATH="$HOME/.cargo/bin:$rustup_prefix/bin:$PATH"
-    command_exists cargo || rustup default stable
-    if ! command_exists cargo; then
-        print_warn "cargo not installed; skipping"
-        return 0
+    cargo_path
+    # rustup bootstrap is a real install step, not a guard — but only when
+    # there is a rustup to bootstrap; with neither tool, this is a skip.
+    if ! command_exists cargo && command_exists rustup; then
+        rustup default stable
     fi
+    have cargo cargo || return 0
     run_install sh -c "\"$MANIFEST\" list rust | xargs -n1 cargo install"
 }
 
+# Was `pacman -S - < install/pacmanfile`, which fed comments straight to
+# pacman; it worked only because that file happens to have none.
+pacman_install_manifest() {
+    "$MANIFEST" list pacman | as_root pacman -S --noconfirm -
+}
+
 install_pacman() {
-    if ! command_exists pacman; then
-        print_warn "pacman not installed; skipping"
-        return 0
-    fi
-    # Was `pacman -S - < install/pacmanfile`, which fed comments straight to
-    # pacman; it worked only because that file happens to have none.
-    run_install sh -c "\"$MANIFEST\" list pacman | pacman -S --noconfirm -"
+    have pacman pacman || return 0
+    run_install pacman_install_manifest
 }
 
 install_code() {
-    # Two adapters, one interface. Prefers codium, matching what the Makefile
-    # did; dotfiles-backup captures both because a backup has no reason to
-    # choose, but an installer does.
-    local editor=""
-    if command_exists codium; then
-        editor=codium
-    elif command_exists code; then
-        editor=code
-    else
-        print_warn "Neither codium nor code installed; skipping extensions"
-        return 0
-    fi
-
-    print_info "Installing extensions with $editor..."
+    pick_editor || return 0
+    print_info "Installing extensions with $EDITOR_CMD..."
     local ext
     while IFS= read -r ext; do
-        "$editor" --install-extension "$ext" || true
+        "$EDITOR_CMD" --install-extension "$ext" || true
     done < <("$MANIFEST" list code)
+}
+
+# --- update ----------------------------------------------------------------
+
+# brew owns the tool-wide steps (refreshing Homebrew itself, cleanup), so a
+# cask-only update does not repeat them.
+brew_upgrade_formulae() {
+    brew update && brew upgrade --formula && brew cleanup
+}
+
+update_brew() {
+    have brew Homebrew || return 0
+    run_install brew_upgrade_formulae
+}
+
+update_cask() {
+    have brew Homebrew || return 0
+    run_install brew upgrade --cask --greedy
+}
+
+# `brew upgrade --cask` upgrades every installed cask at once and cannot tell
+# which manifest one came from, so the cask kind's update already covers these.
+update_cask_extra() {
+    print_info "cask-extra is upgraded with cask (brew upgrades every cask at once)"
+}
+
+npm_upgrade_globals() {
+    npm install -g npm@latest || return 1
+    # npm outdated exits 1 when packages are outdated; without the
+    # || true, set -e would abort exactly when there is work to do.
+    local outdated
+    outdated=$(npm outdated -g --depth=0 | tail -n +2 | wc -l | tr -d '[:space:]') || true
+    if [[ "${outdated:-0}" -gt 0 ]]; then
+        print_info "Updating $outdated global packages..."
+        npm update -g && print_success "npm packages updated"
+    else
+        print_success "All npm packages up to date"
+    fi
+}
+
+update_npm() {
+    have npm npm || return 0
+    run_install npm_upgrade_globals
+}
+
+rust_upgrade_crates() {
+    if command_exists rustup; then
+        rustup update || return 1
+    fi
+    if ! command_exists cargo-install-update; then
+        print_info "Installing cargo-update..."
+        cargo install cargo-update || return 1
+    fi
+    cargo install-update -a
+}
+
+update_rust() {
+    cargo_path
+    have cargo cargo || return 0
+    run_install rust_upgrade_crates
+}
+
+update_pacman() {
+    have pacman pacman || return 0
+    run_install as_root pacman -Syu --noconfirm
+}
+
+update_code() {
+    pick_editor || return 0
+    run_install "$EDITOR_CMD" --update-extensions
+}
+
+# --- record ----------------------------------------------------------------
+# Filenames are the ones bin/lib/snapshot.sh's table names; its drift test
+# runs dotfiles-backup, which records through here, and compares the result
+# against that table.
+
+RECORD_DIR=""
+
+# Stamp even on failure: `npm list` exits 1 on an extraneous package yet
+# still prints the list, and a record without its header could be mistaken
+# for a manifest.
+record_to() {
+    local name="$1" status=0
+    shift
+    "$@" > "$RECORD_DIR/$name" || status=$?
+    snapshot_provenance "$RECORD_DIR/$name" "$*"
+    print_success "Recorded $name"
+    return "$status"
+}
+
+# brew bundle dump writes its own --file rather than stdout.
+brew_dump() {
+    local name="$1" label="$2" status=0
+    shift 2
+    brew bundle dump --force --file="$RECORD_DIR/$name" "$@" || status=$?
+    snapshot_provenance "$RECORD_DIR/$name" "$label"
+    print_success "Recorded $name"
+    return "$status"
+}
+
+record_brew() {
+    have brew Homebrew || return 0
+    run_install brew_dump Brewfile "brew bundle dump"
+}
+
+record_cask() {
+    have brew Homebrew || return 0
+    run_install brew_dump Caskfile "brew bundle dump --cask" --cask
+}
+
+# Caskfile lists every installed cask; brew cannot tell which manifest one
+# came from, so there is no separate record to write.
+record_cask_extra() {
+    print_info "cask-extra is recorded with cask (Caskfile lists every installed cask)"
+}
+
+record_npm() {
+    have npm npm || return 0
+    run_install record_to npm-global-list.txt npm list -g --depth=0
+}
+
+record_rust() {
+    cargo_path
+    have cargo cargo || return 0
+    run_install record_to cargo-installed.txt cargo install --list
+}
+
+record_pacman() {
+    print_info "pacman has no snapshot record (bin/lib/snapshot.sh names none)"
+}
+
+# Both editors, when both exist: a record has no reason to choose, unlike an
+# installer.
+record_code() {
+    local found=0
+    if command_exists code; then
+        run_install record_to vscode-extensions.txt code --list-extensions
+        found=1
+    fi
+    if command_exists codium; then
+        run_install record_to vscodium-extensions.txt codium --list-extensions
+        found=1
+    fi
+    [[ "$found" -eq 1 ]] || print_warn "Neither codium nor code installed; skipping extensions"
 }
 
 # --- main ------------------------------------------------------------------
 
-main() {
-    local kind="${1:-}"
+usage() {
+    # The header comment, up to the first line that is not one.
+    awk 'NR > 1 && !/^#/ { exit } NR > 1 { sub(/^# ?/, ""); print }' "$0"
+}
 
-    if [[ -z "$kind" || "$kind" == "-h" || "$kind" == "--help" ]]; then
-        sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'
-        [[ -z "$kind" ]] && return 2
-        return 0
+main() {
+    local verb=install
+    case "${1:-}" in
+        "")
+            usage
+            return 2
+            ;;
+        -h | --help)
+            usage
+            return 0
+            ;;
+    esac
+    if [[ " $VERBS " == *" $1 "* ]]; then
+        verb="$1"
+        shift
+    fi
+
+    local kind="${1:-}"
+    if [[ -z "$kind" ]]; then
+        print_error "install-kind $verb: missing <kind>"
+        return 2
     fi
 
     # Deliberately not `"$MANIFEST" kinds | grep -Fxq`: grep -q exits on the
@@ -180,20 +352,20 @@ main() {
         return 2
     fi
 
+    if [[ "$verb" == record ]]; then
+        RECORD_DIR="${2:-}"
+        if [[ -z "$RECORD_DIR" || ! -d "$RECORD_DIR" ]]; then
+            print_error "install-kind record $kind: <dir> must be an existing directory"
+            return 2
+        fi
+    fi
+
     if should_skip "$kind"; then
         print_info "Skipping $kind (SKIP_KINDS)"
         return 0
     fi
 
-    case "$kind" in
-        brew) install_brew ;;
-        cask) install_cask ;;
-        cask-extra) install_cask_extra ;;
-        npm) install_npm ;;
-        rust) install_rust ;;
-        pacman) install_pacman ;;
-        code) install_code ;;
-    esac
+    "${verb}_${kind//-/_}"
 }
 
 main "$@"

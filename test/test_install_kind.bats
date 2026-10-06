@@ -31,6 +31,60 @@ STUB
     chmod +x "$STUB_BIN/$name"
 }
 
+# pacman reads its package list from stdin when the last argument is "-";
+# this stub keeps it, so a test can see what pacman was actually handed.
+stub_pacman() {
+    cat > "$STUB_BIN/pacman" <<'STUB'
+#!/usr/bin/env bash
+printf 'pacman %s\n' "$*" >> "$CALL_LOG"
+[[ "${!#}" == "-" ]] && cat > "$CALL_LOG.stdin"
+exit 0
+STUB
+    chmod +x "$STUB_BIN/pacman"
+}
+
+# sudo that logs and then runs its command (the stubbed one, via PATH), and
+# an `id` that claims the given uid: together they decide who escalates.
+stub_sudo_as_uid() {
+    local uid="$1"
+    cat > "$STUB_BIN/sudo" <<'STUB'
+#!/usr/bin/env bash
+printf 'sudo %s\n' "$*" >> "$CALL_LOG"
+exec "$@"
+STUB
+    printf '#!/usr/bin/env bash\necho %s\n' "$uid" > "$STUB_BIN/id"
+    chmod +x "$STUB_BIN/sudo" "$STUB_BIN/id"
+}
+
+# brew whose `bundle dump --file=X` writes X, as the real one does. Only
+# for dump: a stub that wrote --file on `brew bundle --file=install/Brewfile`
+# would overwrite the checkout's manifest.
+stub_brew_dump() {
+    cat > "$STUB_BIN/brew" <<'STUB'
+#!/usr/bin/env bash
+printf 'brew %s\n' "$*" >> "$CALL_LOG"
+if [[ "${1:-} ${2:-}" == "bundle dump" ]]; then
+    for a in "$@"; do
+        case "$a" in --file=*) echo 'brew "stub"' > "${a#--file=}" ;; esac
+    done
+fi
+exit 0
+STUB
+    chmod +x "$STUB_BIN/brew"
+}
+
+# A tool that lists something on stdout, and exits with the given code.
+stub_lister() {
+    local name="$1" exit_code="${2:-0}"
+    cat > "$STUB_BIN/$name" <<STUB
+#!/usr/bin/env bash
+printf '%s %s\n' "$name" "\$*" >> "\$CALL_LOG"
+echo "listed-by-$name"
+exit $exit_code
+STUB
+    chmod +x "$STUB_BIN/$name"
+}
+
 # Run install-kind with ONLY the stubs plus the repo's bin on PATH, so a real
 # brew/npm/cargo on this machine can never be reached.
 run_kind() {
@@ -62,14 +116,44 @@ calls() { cat "$CALL_LOG"; }
     assert_output --partial "SKIP_KINDS"
 }
 
-@test "every kind bin/manifest knows is accepted by install-kind" {
-    run bash -c '
-        set -euo pipefail
-        for k in $("$1/bin/manifest" kinds); do
-            grep -q "        $k)" "$1/bin/install-kind" || { echo "no case arm for kind: $k"; exit 1; }
+# Every verb must answer for every kind bin/manifest knows. Run for real
+# with every tool stubbed, so a kind with no function for a verb fails here
+# rather than on the first machine that asks.
+@test "every verb answers for every kind bin/manifest knows" {
+    for t in brew npm cargo cargo-install-update rustup code codium; do stub "$t"; done
+    stub_pacman
+    stub_sudo_as_uid 1000
+    stub_brew_dump
+    local verb kind rec="$TEST_TEMP_DIR/record"
+    mkdir -p "$rec"
+    for verb in install update record; do
+        for kind in $("$DOTFILES_DIR/bin/manifest" kinds); do
+            if [[ "$verb" == record ]]; then
+                run_kind "$verb" "$kind" "$rec"
+            else
+                run_kind "$verb" "$kind"
+            fi
+            [[ "$status" -eq 0 ]] || { echo "$verb $kind exited $status: $output"; return 1; }
         done
-    ' _ "$DOTFILES_DIR"
+    done
+}
+
+@test "install is the default verb" {
+    stub brew
+    run_kind install brew
     assert_success
+    run calls
+    local explicit="$output"
+    : > "$CALL_LOG"
+    run_kind brew
+    run calls
+    [[ "$output" == "$explicit" ]]
+}
+
+@test "a verb with no kind fails" {
+    run_kind update
+    assert_failure
+    assert_output --partial "missing <kind>"
 }
 
 # ---------- skip policy ----------
@@ -88,27 +172,6 @@ calls() { cat "$CALL_LOG"; }
     assert_success
     run calls
     assert_output --partial "brew bundle"
-}
-
-@test "deprecated SKIP_BREW still works and says so" {
-    stub brew
-    run env PATH="$STUB_BIN:$DOTFILES_DIR/bin:/usr/bin:/bin" CALL_LOG="$CALL_LOG" \
-        HOME="$TEST_HOME" SKIP_BREW=1 bash "$DOTFILES_DIR/bin/install-kind" brew
-    assert_success
-    assert_output --partial "SKIP_BREW is deprecated"
-    assert_output --partial "Skipping brew"
-    [[ ! -s "$CALL_LOG" ]]
-}
-
-@test "deprecated SKIP_CASKS skips both cask kinds" {
-    stub brew
-    for k in cask cask-extra; do
-        : > "$CALL_LOG"
-        run env PATH="$STUB_BIN:$DOTFILES_DIR/bin:/usr/bin:/bin" CALL_LOG="$CALL_LOG" \
-            HOME="$TEST_HOME" SKIP_CASKS=1 bash "$DOTFILES_DIR/bin/install-kind" "$k"
-        assert_success
-        [[ ! -s "$CALL_LOG" ]]
-    done
 }
 
 # ---------- what each kind actually runs ----------
@@ -135,6 +198,8 @@ calls() { cat "$CALL_LOG"; }
     assert_output --partial "install/Caskfile.extra"
 }
 
+# Regression: Homebrew >= 5 refuses third-party taps until `brew trust`ed, so
+# `brew bundle` on a fresh Mac died on the first tapped cask (aerospace).
 @test "brew kinds trust the declared taps first" {
     stub brew
     run_kind brew
@@ -155,6 +220,32 @@ calls() { cat "$CALL_LOG"; }
     assert_output --partial "npm install --force --location global"
 }
 
+# bin/pacman used to shadow the real pacman on PATH to add sudo. The kind
+# escalates at the call site instead.
+@test "pacman installs the manifest through sudo when not root" {
+    stub_pacman
+    stub_sudo_as_uid 1000
+    run_kind pacman
+    assert_success
+    run calls
+    assert_output --partial "sudo pacman -S --noconfirm -"
+    first="$("$DOTFILES_DIR/bin/manifest" list pacman | head -1)"
+    run grep -cx "$first" "$CALL_LOG.stdin"
+    assert_output "1"
+    run grep -c "#" "$CALL_LOG.stdin"
+    assert_output "0"
+}
+
+@test "pacman runs directly as root, without sudo" {
+    stub_pacman
+    stub_sudo_as_uid 0
+    run_kind pacman
+    assert_success
+    run calls
+    assert_output --partial "pacman -S --noconfirm -"
+    [[ "$output" != *"sudo"* ]]
+}
+
 @test "code prefers codium when both editors exist" {
     stub codium
     stub code
@@ -173,6 +264,193 @@ calls() { cat "$CALL_LOG"; }
     assert_output --partial "code --install-extension"
 }
 
+# Regression: the Makefile used $(shell cat install/npmfile), which flattens
+# the file onto one line so the leading "# comment" turned every package name
+# into a shell comment: `make node-packages` installed nothing and
+# `make rust-packages` ran a bare `cargo install`. Asserted on what the tool
+# actually receives, not on which file a recipe names.
+@test "npm is handed real package names, never a comment" {
+    stub npm
+    run_kind npm
+    assert_success
+    first="$("$DOTFILES_DIR/bin/manifest" list npm | head -1)"
+    run calls
+    assert_output --partial "$first"
+    [[ "$output" != *"#"* ]]
+}
+
+@test "rust runs one cargo install per crate, never a bare one" {
+    stub cargo
+    run_kind rust
+    assert_success
+    run calls
+    [[ "${#lines[@]}" -eq "$("$DOTFILES_DIR/bin/manifest" list rust | wc -l)" ]]
+    [[ "$output" != *"#"* ]]
+    run grep -cxE 'cargo install ?' "$CALL_LOG"
+    assert_output "0"
+}
+
+# ---------- make routes every kind through here ----------
+
+# A claim about make's graph, which is make's job, so `make -n` is the right
+# tool here and only here. What install-kind then does is asserted above.
+@test "every package target routes through install-kind" {
+    local target kind
+    for pair in brew-packages:brew cask-apps:cask cask-apps-extra:cask-extra \
+                node-packages:npm rust-packages:rust vscode-extensions:code \
+                pacman-packages:pacman; do
+        target="${pair%%:*}" kind="${pair#*:}"
+        run make -n -C "$DOTFILES_DIR" "$target"
+        assert_success
+        [[ "$output" == *"install-kind $kind"* ]] || { echo "$target does not run install-kind $kind"; return 1; }
+    done
+}
+
+# ---------- update ----------
+
+@test "update brew refreshes Homebrew, upgrades formulae, then cleans up" {
+    stub brew
+    run_kind update brew
+    assert_success
+    run calls
+    assert_output "brew update
+brew upgrade --formula
+brew cleanup"
+}
+
+@test "update cask upgrades casks greedily; cask-extra adds nothing" {
+    stub brew
+    run_kind update cask
+    assert_success
+    run calls
+    assert_output "brew upgrade --cask --greedy"
+
+    : > "$CALL_LOG"
+    run_kind update cask-extra
+    assert_success
+    assert_output --partial "upgraded with cask"
+    [[ ! -s "$CALL_LOG" ]]
+}
+
+# Regression (was in test_regressions.bats against dotfiles-update): npm
+# outdated exits 1 exactly when there is work to do, which under set -e used
+# to abort the update. Strict, so errexit is live inside the step.
+@test "update npm survives outdated packages under set -e" {
+    cat > "$STUB_BIN/npm" <<'STUB'
+#!/usr/bin/env bash
+printf 'npm %s\n' "$*" >> "$CALL_LOG"
+case "${1:-}" in
+    outdated) printf 'Package Current Wanted\nfoo 1.0.0 2.0.0\n'; exit 1 ;;
+esac
+exit 0
+STUB
+    chmod +x "$STUB_BIN/npm"
+    STRICT_PACKAGES=1 run_kind update npm
+    assert_success
+    assert_output --partial "npm packages updated"
+    run calls
+    assert_output --partial "npm update -g"
+}
+
+@test "update rust installs cargo-update when missing, then upgrades crates" {
+    stub cargo
+    stub rustup
+    run_kind update rust
+    assert_success
+    run calls
+    assert_output "rustup update
+cargo install cargo-update
+cargo install-update -a"
+}
+
+@test "update pacman upgrades the system through sudo when not root" {
+    stub_pacman
+    stub_sudo_as_uid 1000
+    run_kind update pacman
+    assert_success
+    run calls
+    assert_output --partial "sudo pacman -Syu --noconfirm"
+}
+
+@test "update code updates the preferred editor's extensions" {
+    stub codium
+    stub code
+    run_kind update code
+    assert_success
+    run calls
+    assert_output "codium --update-extensions"
+}
+
+@test "SKIP_KINDS applies to update too" {
+    stub brew
+    SKIP_KINDS="brew" run_kind update brew
+    assert_success
+    assert_output --partial "Skipping brew"
+    [[ ! -s "$CALL_LOG" ]]
+}
+
+@test "a failing update is tolerated by default and fatal under STRICT_PACKAGES" {
+    stub brew 1
+    run_kind update brew
+    assert_success
+    assert_output --partial "Continuing after failure"
+    STRICT_PACKAGES=1 run_kind update brew
+    assert_failure
+}
+
+# ---------- record ----------
+
+@test "record writes each kind's snapshot record with a provenance header" {
+    stub_brew_dump
+    for t in npm cargo code codium; do stub_lister "$t"; done
+    local rec="$TEST_TEMP_DIR/record" kind f
+    mkdir -p "$rec"
+    for kind in $("$DOTFILES_DIR/bin/manifest" kinds); do
+        run_kind record "$kind" "$rec"
+        assert_success
+    done
+    for f in Brewfile Caskfile npm-global-list.txt cargo-installed.txt \
+             vscode-extensions.txt vscodium-extensions.txt; do
+        [[ -f "$rec/$f" ]] || { echo "not recorded: $f"; return 1; }
+        run head -1 "$rec/$f"
+        assert_output --partial "not an install manifest"
+    done
+    run grep -c "produced by: npm list -g --depth=0" "$rec/npm-global-list.txt"
+    assert_output "1"
+    run grep -c "listed-by-cargo" "$rec/cargo-installed.txt"
+    assert_output "1"
+    run grep -c "produced by: brew bundle dump --cask" "$rec/Caskfile"
+    assert_output "1"
+}
+
+@test "record needs an existing directory" {
+    run_kind record npm
+    assert_failure
+    assert_output --partial "must be an existing directory"
+    run_kind record npm "$TEST_TEMP_DIR/nope"
+    assert_failure
+}
+
+@test "SKIP_KINDS applies to record too" {
+    stub_lister npm
+    SKIP_KINDS="npm" run_kind record npm "$TEST_TEMP_DIR"
+    assert_success
+    assert_output --partial "Skipping npm"
+    [[ ! -e "$TEST_TEMP_DIR/npm-global-list.txt" ]]
+}
+
+# npm list exits 1 on an extraneous package but still prints the list.
+@test "a failing lister keeps its output and its provenance header" {
+    stub_lister npm 1
+    run_kind record npm "$TEST_TEMP_DIR"
+    assert_success
+    assert_output --partial "Continuing after failure"
+    run head -1 "$TEST_TEMP_DIR/npm-global-list.txt"
+    assert_output --partial "not an install manifest"
+    run grep -c "listed-by-npm" "$TEST_TEMP_DIR/npm-global-list.txt"
+    assert_output "1"
+}
+
 # ---------- missing tools are not failures ----------
 
 @test "a missing tool warns and exits 0" {
@@ -180,6 +458,27 @@ calls() { cat "$CALL_LOG"; }
     run_kind brew
     assert_success
     assert_output --partial "not installed; skipping"
+}
+
+# Regression: `install-kind rust` with neither cargo nor rustup ran
+# `rustup default stable` unguarded and exited 127 under set -e.
+#
+# A PATH of bare utilities only, not /usr/bin: on the Arch image /usr/bin
+# holds the real pacman and the test user has passwordless sudo, so "no tool
+# on PATH" has to be built rather than assumed.
+@test "with no package manager at all, every verb of every kind exits 0" {
+    local bare="$TEST_TEMP_DIR/bare" t verb kind
+    mkdir -p "$bare"
+    for t in bash sh env dirname readlink grep tr awk sed id cat xargs mktemp date mv; do
+        ln -s "$(command -v "$t")" "$bare/$t"
+    done
+    for verb in install update record; do
+        for kind in $("$DOTFILES_DIR/bin/manifest" kinds); do
+            run env PATH="$bare:$DOTFILES_DIR/bin" HOME="$TEST_HOME" \
+                bash "$DOTFILES_DIR/bin/install-kind" "$verb" "$kind" "$TEST_TEMP_DIR"
+            [[ "$status" -eq 0 ]] || { echo "$verb $kind exited $status: $output"; return 1; }
+        done
+    done
 }
 
 @test "code with no editor at all warns and exits 0" {
@@ -203,12 +502,28 @@ calls() { cat "$CALL_LOG"; }
     assert_failure
 }
 
-@test "deprecated BREW_BUNDLE_STRICT still makes it fatal" {
+@test "STRICT_PACKAGES=true is strict too" {
     stub brew 1
-    run env PATH="$STUB_BIN:$DOTFILES_DIR/bin:/usr/bin:/bin" CALL_LOG="$CALL_LOG" \
-        HOME="$TEST_HOME" BREW_BUNDLE_STRICT=1 bash "$DOTFILES_DIR/bin/install-kind" brew
+    STRICT_PACKAGES=true run_kind brew
     assert_failure
-    assert_output --partial "BREW_BUNDLE_STRICT is deprecated"
+}
+
+# Regression: any non-empty value used to be strict, so the obvious way to
+# turn it off (STRICT_PACKAGES=0) turned it on.
+@test "STRICT_PACKAGES=0 and =false are not strict" {
+    stub brew 1
+    for v in 0 false; do
+        STRICT_PACKAGES="$v" run_kind brew
+        assert_success
+        assert_output --partial "Continuing after failure"
+    done
+}
+
+@test "a STRICT_PACKAGES typo is reported, not silently read as on" {
+    stub brew 1
+    STRICT_PACKAGES=yes run_kind brew
+    assert_success
+    assert_output --partial "STRICT_PACKAGES='yes' is not 1/true or 0/false"
 }
 
 # ---------- the flags are documented ----------
@@ -226,3 +541,21 @@ calls() { cat "$CALL_LOG"; }
     ' _ "$DOTFILES_DIR"
     assert_success
 }
+
+# Regression: with no Homebrew rustup, `brew --prefix rustup` is empty and
+# cargo_path prepended "/bin" — on Arch that is rustup's cargo proxy, which
+# then shadowed every cargo later on PATH (and, in the suite, the stub).
+@test "cargo_path adds no bare /bin when Homebrew has no rustup" {
+    cat > "$STUB_BIN/cargo" <<'STUB'
+#!/usr/bin/env bash
+printf 'cargo PATH=%s\n' "$PATH" >> "$CALL_LOG"
+exit 0
+STUB
+    chmod +x "$STUB_BIN/cargo"
+    stub brew
+    run_kind record rust "$TEST_TEMP_DIR"
+    assert_success
+    run grep -m1 '^cargo PATH=' "$CALL_LOG"
+    assert_output "cargo PATH=$TEST_HOME/.cargo/bin:$STUB_BIN:$DOTFILES_DIR/bin:/usr/bin:/bin"
+}
+
