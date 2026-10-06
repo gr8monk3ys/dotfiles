@@ -17,8 +17,8 @@ SQLite-backed shell history with fuzzy search — replaces plain `ctrl-r`.
   selection, Tab pastes it) and `sync.records = true`; **no account is
   configured** — run `atuin register` / `atuin login` per machine if you
   want sync to actually happen.
-- `themes/danse.toml` matches the repo-wide danse palette (same hexes
-  as the README theme table and `FZF_DEFAULT_OPTS`).
+- `themes/danse.toml` is rendered from the danse palette by `bin/palette`
+  (template under `.config/palette/templates/`), like `FZF_DEFAULT_OPTS`.
 
 ## Upstream
 

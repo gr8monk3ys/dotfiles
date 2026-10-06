@@ -1,74 +1,22 @@
-# eza Configuration
+# eza
 
-Modern `ls` replacement with Git integration and icons.
+The `ls` replacement: `ls`, `l`, `ll` and `lt` are eza with icons, Git
+status and directories first when eza is installed, and plain `ls` when it
+is not (`.config/zsh/aliases.zsh`).
 
-## Theme
+## Colours
 
-eza is themed from the danse palette ([`.config/palette/`](../palette/README.md))
-in two places, both rendered by `bin/palette`: `EZA_COLORS` in `.zshenv`, which
-is what applies on this Mac, and `theme.yml` here. Edit the templates, not
-these files.
+Themed from the danse palette in two places, both rendered by `bin/palette`:
+`EZA_COLORS` in `.zshenv`, and `theme.yml` here. Edit the templates under
+`.config/palette/templates/`, not these files.
 
-| Element | Palette colour |
-| --- | --- |
-| Directories | `blue` |
-| Executables | `green` |
-| Symlinks | `cyan` |
-| Modified (Git) | `yellow` |
-| New (Git) | `green` |
-| Deleted (Git) | `vermilion` |
+## Gotchas
 
-## Usage
-
-On macOS the colours come from `EZA_COLORS`; `theme.yml` is not read (see
-below).
-
-```bash
-# Basic listing with icons
-eza --icons
-
-# Long format with git status
-eza -la --icons --git
-
-# Tree view
-eza --tree --icons -L 2
-```
-
-## Aliases
-
-These aliases are configured in `~/.config/zsh/aliases.zsh`:
-
-```bash
-alias ls='eza --icons --group-directories-first'
-alias ll='eza -la --icons --git --group-directories-first'
-alias lt='eza --tree --icons --git -L 2'
-```
-
-## Installation
-
-```bash
-brew install eza
-```
-
-## Resources
-
-- [eza GitHub](https://github.com/eza-community/eza)
-- [eza Themes](https://github.com/eza-community/eza-themes)
-
-## theme.yml is inert on Homebrew builds
-
-`theme.yml` requires a build feature Homebrew's bottle does not enable. This
-machine's eza reports:
-
-```
-v0.23.5 [+git]
-```
-
-`git` is the only feature compiled in. eza silently ignores `theme.yml` —
-malformed YAML included, which is how to check: if a deliberately broken
-`theme.yml` produces no error, theme support is absent.
-
-`EZA_COLORS` is what this build honours, so the palette is rendered there in
-`.zshenv` too. `theme.yml` stays, rendered from the same slots, for eza builds
-that do read it (other platforms' packages, e.g. Arch's, are not built from
-the Homebrew bottle); on this Mac it changes nothing.
+- **`theme.yml` is inert on Homebrew's eza.** The bottle is built without
+  theme support (`eza --version` lists only `[+git]`), and eza then ignores
+  `theme.yml` silently, malformed YAML included. `EZA_COLORS` is what that
+  build honours, so it is the one that applies on macOS; `theme.yml` stays
+  for builds that read it. `test_shell_boot.bats` asserts a booted shell's
+  eza really colours directories from the palette.
+- `EZA_COLORS` is exported from `.zshenv`, so eza run outside a zsh that read
+  it is uncoloured.
