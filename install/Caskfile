@@ -7,42 +7,42 @@
 # ============================================================================
 # Window Management & System Utilities
 # ============================================================================
-cask "aerospace"                       # i3-like tiling window manager for macOS
-cask "karabiner-elements"              # Keyboard customization and remapping
-cask "raycast"                         # Spotlight replacement with extensions
+cask "aerospace"                       # i3-style tiling window manager for macOS without disabling SIP; integrates with SketchyBar workspaces. Alternatives: yabai (needs SIP changes), Rectangle.
+cask "karabiner-elements"              # Low-level keyboard remapping (hyper key, hjkl arrows). Alternatives: BetterTouchTool.
+cask "raycast"                         # Spotlight replacement: launcher, clipboard history, window commands, extensions. Alternatives: Alfred, Spotlight.
 
 # ============================================================================
 # Terminals
 # ============================================================================
-cask "ghostty"                         # Zig-based GPU-accelerated terminal (primary)
+cask "ghostty"                         # Primary terminal: GPU-accelerated, Zig-based, native macOS feel; themed from `.config/palette/`, with frosted glass. Alternatives: kitty, wezterm, alacritty.
 
 # ============================================================================
 # Web Browsers
 # ============================================================================
-cask "zen"                             # Zen browser (privacy-focused, primary)
-cask "firefox"                         # Mozilla Firefox web browser
-cask "brave-browser"                   # Privacy-focused Chromium browser
+cask "zen"                             # Zen browser (privacy-focused).
+cask "firefox"                         # Primary browser, hardened with an arkenfox-based user.js. Alternatives: brave-browser, zen (both installed as alternates).
+cask "brave-browser"                   # Privacy-focused Chromium browser.
 
 # ============================================================================
 # Development Tools
 # ============================================================================
-cask "vscodium"                        # Open-source VS Code without telemetry
-cask "docker-desktop"                  # Docker Desktop (containers + Docker CLI)
+cask "vscodium"                        # Telemetry-free VS Code build as the GUI editor fallback; extensions pinned in install/Codefile. Alternatives: vscode.
+cask "docker-desktop"                  # Docker Desktop — the container runtime plus Docker CLI; used for local services and the fleet's containerised projects.
 
 # ============================================================================
 # Notes, Security & Sync
 # ============================================================================
-cask "obsidian"                        # Markdown-based knowledge base
-cask "keepassxc"                       # Password manager
-cask "proton-drive"                    # End-to-end encrypted cloud storage
+cask "obsidian"                        # Markdown knowledge base on plain files — survives app churn. Alternatives: logseq, notion.
+cask "keepassxc"                       # Offline, open-source password vault; pass covers CLI secrets. Alternatives: 1password, bitwarden.
+cask "proton-drive"                    # End-to-end encrypted cloud storage.
 
 # ============================================================================
 # Music
 # ============================================================================
-cask "tidal"                           # Music streaming service
+cask "tidal"                           # Music streaming service.
 
 # ============================================================================
 # Fonts
 # ============================================================================
-cask "font-jetbrains-mono-nerd-font"   # JetBrains Mono Nerd Font (Ghostty's font)
-cask "font-fira-code-nerd-font"        # Fira Code Nerd Font (ligature support)
+cask "font-jetbrains-mono-nerd-font"   # Primary monospace Nerd Font: Ghostty and SketchyBar are set in it.
+cask "font-fira-code-nerd-font"        # Fira Code Nerd Font, for ligatures.

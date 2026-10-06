@@ -221,6 +221,33 @@ reports() {
     reports ⚠ "eza" "not installed"
 }
 
+@test "the probed tools come from the manifests' tier metadata" {
+    # A tier= on a manifest line is all it takes; no list in doctor to edit.
+    local root="$TEST_TEMP_DIR/root"
+    mkdir -p "$root"
+    cp -R "$DOTFILES_DIR/bin" "$DOTFILES_DIR/install" "$root/"
+    echo 'brew "fixture-tool"  # tier=additional A tool only this fixture ships.' >> "$root/install/Brewfile"
+    run bash "$root/bin/dotfiles-doctor" --list-checked-tools
+    assert_success
+    assert_output --partial "fixture-tool"
+    # cmd= decides the name probed; the unmanifested core commands are there too.
+    assert_output --partial "rg"
+    [[ "$output" != *"ripgrep"* ]]
+    assert_output --partial "zsh"
+}
+
+@test "an unreadable manifest fails the tool sections instead of emptying them" {
+    local root="$TEST_TEMP_DIR/root"
+    mkdir -p "$root"
+    cp -R "$DOTFILES_DIR/bin" "$DOTFILES_DIR/install" "$root/"
+    echo 'brew "fixture-tool"  # tier=vital Not a tier.' >> "$root/install/Brewfile"
+    make_checkout
+    run env HOME="$TEST_HOME" DOTFILES_DIR="$CHECKOUT" PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
+        bash "$root/bin/dotfiles-doctor" --only tool
+    assert_failure
+    assert_output --partial "classifier exited non-zero"
+}
+
 @test "pacman is only reported on Arch" {
     # Repo bin first on PATH, like make doctor: a pacman on PATH off Arch —
     # the repo once shipped a sudo wrapper named pacman — must not register.

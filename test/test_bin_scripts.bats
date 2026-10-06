@@ -103,32 +103,34 @@ teardown() {
     done
 }
 
-# Tool catalog tests
-@test "validate-tool-docs passes on current catalog" {
-    run bin/validate-tool-docs
-    assert_success
-    assert_output --partial "in sync"
-}
-
-@test "validate-tool-docs fails on undocumented package" {
-    cp -r install "$TEST_TEMP_DIR/install"
-    mkdir -p "$TEST_TEMP_DIR/docs" "$TEST_TEMP_DIR/bin"
-    cp docs/TOOLS.md "$TEST_TEMP_DIR/docs/"
-    echo 'brew "made-up-tool"' >> "$TEST_TEMP_DIR/install/Brewfile"
-    run bin/validate-tool-docs "$TEST_TEMP_DIR"
-    assert_failure
-    assert_output --partial "made-up-tool"
-}
-
-@test "dotfiles-why prints a known tool entry" {
+# dotfiles-why tests
+@test "dotfiles-why prints the rationale from the manifest line" {
     run bin/dotfiles-why ripgrep
     assert_success
     assert_output --partial "### ripgrep"
-    assert_output --partial "Why:"
+    assert_output --partial "Fast recursive grep"
+    assert_output --partial "Installed via:** brew, pacman"
+}
+
+@test "dotfiles-why finds a package by the command it provides" {
+    run bin/dotfiles-why rg
+    assert_success
+    assert_output --partial "### ripgrep"
+    assert_output --partial "Command:** \`rg\`"
+    # Only the Brewfile line names rg, but the pacmanfile installs ripgrep too.
+    assert_output --partial "Installed via:** brew, pacman"
+}
+
+@test "dotfiles-why --list lists each package once" {
+    run bash -c 'bin/dotfiles-why --list | sort | uniq -d'
+    assert_success
+    assert_output ""
+    run bin/dotfiles-why --list
+    assert_output --partial "ripgrep"
 }
 
 @test "dotfiles-why fails cleanly on unknown tool" {
     run bin/dotfiles-why this-tool-does-not-exist
     assert_failure
-    assert_output --partial "No catalog entry"
+    assert_output --partial "No manifest entry"
 }

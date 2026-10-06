@@ -2,35 +2,66 @@
 # dotfiles-why - Explain why a tool is part of these dotfiles.
 #
 # Usage:
-#   dotfiles-why              Interactive fzf browser over the tool catalog
-#   dotfiles-why <tool>       Print the catalog entry for <tool>
-#   dotfiles-why --list       List all documented tools
+#   dotfiles-why              Interactive fzf browser over every package
+#   dotfiles-why <tool>       Print why <tool> is here (package or command name)
+#   dotfiles-why --list       List every package, one per line
 #
-# Entries live in docs/TOOLS.md; `bin/validate-tool-docs` keeps that file in
-# sync with the install manifests.
+# The rationale lives on each package's manifest line (install/README.md
+# § Entry format) and is read through bin/manifest, like every other question
+# about what this system installs. A command works as well as a package name:
+# `dotfiles-why rg` finds ripgrep.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CATALOG="${DOTFILES_TOOLS_MD:-$SCRIPT_DIR/../docs/TOOLS.md}"
-
-if [[ ! -f "$CATALOG" ]]; then
-    echo "Tool catalog not found: $CATALOG" >&2
-    exit 1
-fi
+# shellcheck source=lib/preamble.sh
+source "$SCRIPT_DIR/lib/preamble.sh"
+MANIFEST="$SCRIPT_DIR/manifest"
 
 list_tools() {
-    sed -nE 's/^### (.+)$/\1/p' "$CATALOG"
+    "$MANIFEST" entries | cut -f2 | awk '!seen[$0]++' | sort
 }
 
-# Print one entry: from its "### name" heading to the next heading.
+# Print one package or command: one block per distinct package matched (a
+# command can match two, e.g. `jj` is both brew "jj" and pacman "jujutsu"),
+# gathering every manifest line of each — `rg` matches only the Brewfile's
+# ripgrep line, but ripgrep is in the pacmanfile too.
 show_tool() {
-    local name="$1"
-    awk -v name="$1" '
-        $0 == "### " name { found = 1; print; next }
-        found && /^##/ { exit }
-        found { print }
-    ' "$CATALOG"
+    local names
+    names="$("$MANIFEST" describe "$1" | cut -f2 | tr '\n' ' ')" || return 1
+    "$MANIFEST" entries | awk -F'\t' -v dir="$DOTFILES_DIR" -v names="$names" '
+        BEGIN { split(names, list, " "); for (i in list) want[list[i]] = 1 }
+        !($2 in want) { next }
+        !($2 in kinds) { order[++n] = $2 }
+        {
+            kinds[$2] = kinds[$2] (kinds[$2] == "" ? "" : ", ") $1
+            if ($3 != $2) cmd[$2] = $3
+            if ($4 != "") tier[$2] = $4
+            if ($5 != "" && why[$2] == "") why[$2] = $5
+        }
+        END {
+            for (i = 1; i <= n; i++) {
+                p = order[i]
+                if (i > 1) print ""
+                print "### " p
+                print ""
+                print (why[p] != "" ? why[p] : "(no rationale recorded)")
+                print ""
+                print "- **Installed via:** " kinds[p]
+                if (p in cmd) print "- **Command:** `" cmd[p] "`"
+                if (p in tier) print "- **Doctor tier:** " tier[p]
+                # A config directory is derived, not recorded: whichever of
+                # the package or command names one the checkout ships.
+                for (j = 0; j < 2; j++) {
+                    name = (j == 0 ? p : ((p in cmd) ? cmd[p] : ""))
+                    if (name == "") continue
+                    if (system("test -d \"" dir "/.config/" name "\"") == 0) {
+                        print "- **Config:** `.config/" name "/`"
+                        break
+                    }
+                }
+            }
+        }'
 }
 
 render() {
@@ -69,9 +100,8 @@ case "${1:-}" in
         show_tool "$selection" | render
         ;;
     *)
-        entry="$(show_tool "$1")"
-        if [[ -z "$entry" ]]; then
-            echo "No catalog entry for '$1'." >&2
+        if ! entry="$(show_tool "$1")"; then
+            echo "No manifest entry for '$1'." >&2
             echo "Closest matches:" >&2
             list_tools | grep -i -- "$1" >&2 || echo "  (none)" >&2
             exit 1

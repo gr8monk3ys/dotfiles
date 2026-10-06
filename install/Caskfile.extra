@@ -6,51 +6,51 @@
 # ============================================================================
 # System Utilities
 # ============================================================================
-cask "keycastr"                        # Keystroke visualizer for presentations
-cask "balenaetcher"                    # USB/SD card imaging tool
-cask "cameracontroller"                # Webcam control software
-cask "spacedrive"                      # Cross-platform file manager
+cask "keycastr"                        # Keystroke visualizer for presentations.
+cask "balenaetcher"                    # USB/SD card imaging tool.
+cask "cameracontroller"                # Webcam control software.
+cask "spacedrive"                      # Cross-platform file manager.
 
 # ============================================================================
 # Web Browsers
 # ============================================================================
-cask "tor-browser"                     # Anonymous web browser
+cask "tor-browser"                     # Anonymous web browser.
 
 # ============================================================================
 # Development & Design
 # ============================================================================
-cask "db-browser-for-sqlite"           # SQLite database browser
-cask "figma"                           # Interface design and prototyping
+cask "db-browser-for-sqlite"           # SQLite database browser.
+cask "figma"                           # Interface design and prototyping.
 
 # ============================================================================
 # Media Creation & Editing
 # ============================================================================
-cask "audacity"                        # Audio editing software
-cask "obs"                             # Open Broadcaster Software (streaming/recording)
-cask "rode-central"                    # Rode microphone control software
+cask "audacity"                        # Audio editing software.
+cask "obs"                             # Open Broadcaster Software (streaming/recording).
+cask "rode-central"                    # Rode microphone control software.
 
 # ============================================================================
 # Security & Privacy
 # ============================================================================
-cask "monero-wallet"                   # Cryptocurrency wallet
+cask "monero-wallet"                   # Cryptocurrency wallet.
 
 # ============================================================================
 # Communication
 # ============================================================================
-cask "dorion"                          # Discord client alternative
+cask "dorion"                          # Discord client alternative.
 
 # ============================================================================
 # Gaming & Entertainment
 # ============================================================================
-cask "godot"                           # Open-source game engine
-cask "love"                            # LÖVE 2D game framework
-cask "lunar-client"                    # Minecraft client with mods
+cask "godot"                           # Open-source game engine.
+cask "love"                            # LÖVE 2D game framework.
+cask "lunar-client"                    # Minecraft client with mods.
 
 # ============================================================================
 # Fonts
 # ============================================================================
-cask "font-0xproto-nerd-font"          # 0xProto Nerd Font (programming font)
-cask "font-3270-nerd-font"             # IBM 3270 Nerd Font (terminal font)
-cask "font-agave-nerd-font"            # Agave Nerd Font (monospace font)
-cask "font-hack-nerd-font"             # Hack Nerd Font (clean terminal font)
-cask "font-fontawesome"                # Font Awesome icon font
+cask "font-0xproto-nerd-font"          # 0xProto Nerd Font; optional alternate programming font.
+cask "font-3270-nerd-font"             # IBM 3270 Nerd Font; optional alternate terminal font.
+cask "font-agave-nerd-font"            # Agave Nerd Font; optional alternate monospace font.
+cask "font-hack-nerd-font"             # Hack Nerd Font; optional alternate terminal font.
+cask "font-fontawesome"                # Font Awesome icon font, for icon glyphs outside the Nerd Font set.

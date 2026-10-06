@@ -1,12 +1,12 @@
 # Rust/Cargo Packages
 # Rust packages installed via Cargo
-# Install with: grep -Ev '^\s*(#|$)' install/Rustfile | xargs -n1 cargo install
+# Install with: bin/manifest list rust | xargs -n1 cargo install
 
 # ============================================================================
 # Cargo Utilities
 # ============================================================================
-cargo-cache
-cargo-update
+cargo-cache                            # Inspect and prune the global cargo cache.
+cargo-update                           # `cargo install-update -a` — updates cargo-installed binaries; used by dotfiles-update.
 
 # ============================================================================
 # Development Tools
@@ -15,7 +15,7 @@ cargo-update
 # ============================================================================
 # Data Processing & Viewers
 # ============================================================================
-jless
+jless                                  # Pager for huge JSON files (jq/jnv handle querying; jless handles reading).
 
 # ============================================================================
 # Additional Rust Tools

@@ -63,6 +63,24 @@ teardown() {
     assert_success
 }
 
+# The rationale lives on the manifest line (install/README.md § Entry format).
+# A package in two manifests needs it on one of them, not both.
+@test "every package carries a rationale on one of its lines" {
+    run bash -c 'bin/manifest entries | awk -F"\t" "
+        { seen[\$2] = 1 }
+        \$5 != \"\" { why[\$2] = 1 }
+        END { for (n in seen) if (!(n in why)) print n }" | sort'
+    assert_success
+    assert_output ""
+}
+
+@test "a command belongs to at most one doctor tier" {
+    run bash -c 'bin/manifest entries | awk -F"\t" "\$4 != \"\" { print \$3, \$4 }" \
+        | sort -u | awk "{ n[\$1]++ } END { for (c in n) if (n[c] > 1) print c }"'
+    assert_success
+    assert_output ""
+}
+
 # install/duti is not a package manifest (it holds `<bundle-id> <type> [role]`
 # triples consumed directly by `duti -v`), so bin/manifest does not read it
 # and its format is still checked here.
