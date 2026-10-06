@@ -4,6 +4,7 @@
 #
 # Usage:
 #   platform detect           # Output: macos, arch, linux, or unknown
+#   platform describe         # Human-readable OS name and version
 #   platform arch             # Output: arm64, x86_64, or unknown
 #   platform is-macos         # Exit 0 if macOS, 1 otherwise
 #   platform is-omarchy       # Exit 0 if Omarchy (Arch + Hyprland), 1 otherwise
@@ -60,6 +61,29 @@ file_mode() {
     fi
 }
 
+# The OS as a person would name it, for reports: "macOS 15.5", the distro's
+# PRETTY_NAME, or the raw $OSTYPE when nothing better is known — "unknown"
+# alone is useless in a bug report. Lives here so no caller has to know that
+# macOS answers through sw_vers and Linux through /etc/os-release.
+describe_os() {
+    case "$(detect_os)" in
+        macos)
+            printf 'macOS %s\n' "$(sw_vers -productVersion 2>/dev/null || echo unknown)"
+            ;;
+        arch|linux)
+            if [[ -r /etc/os-release ]]; then
+                # shellcheck disable=SC1091 # system file, not in the repo
+                (. /etc/os-release && echo "${PRETTY_NAME:-${NAME:-Linux}}")
+            else
+                echo "Linux"
+            fi
+            ;;
+        *)
+            echo "$OSTYPE"
+            ;;
+    esac
+}
+
 detect_arch() {
     case "$(uname -m)" in
         arm64|aarch64)
@@ -81,6 +105,9 @@ main() {
     case "$cmd" in
         detect)
             detect_os
+            ;;
+        describe)
+            describe_os
             ;;
         arch)
             detect_arch
@@ -121,6 +148,7 @@ platform - Unified platform detection utility
 
 Usage:
   platform detect           Output: macos, arch, linux, or unknown
+  platform describe         Human-readable OS name and version
   platform arch             Output: arm64, x86_64, or unknown
   platform is-macos         Exit 0 if macOS, 1 otherwise
   platform is-omarchy       Exit 0 if Omarchy (~/.local/share/omarchy), 1 otherwise

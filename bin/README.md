@@ -13,6 +13,7 @@ Unified platform detection utility (replaces individual is-* scripts).
 ```bash
 # Detect OS
 platform detect              # Output: macos, arch, linux, or unknown
+platform describe            # For reports: "macOS 15.5", the distro's PRETTY_NAME
 
 # Detect architecture
 platform arch                # Output: arm64, x86_64, or unknown
@@ -57,20 +58,27 @@ Comprehensive health check for your dotfiles installation.
 
 ```bash
 dotfiles-doctor [--verbose]
+dotfiles-doctor --only sync      # one vocabulary: platform sync link manager tool shell local perms
+dotfiles-doctor --states         # the state table: vocabulary, state, severity
 # or
 make doctor
 ```
 
 **Checks:**
 
-- System information
-- Dotfiles repository status
-- Symlink integrity
-- Package managers (Homebrew, npm, Cargo)
+- System information (via `platform describe`)
+- Checkout sync state (via `lib/git-sync.sh`)
+- Link state of every managed path (via `link-state`)
+- Package managers (Homebrew, npm, Cargo; pacman on Arch)
 - Core tools (git, zsh, nvim, stow)
 - Modern CLI tools (eza, bat, fd, rg, yazi, jj, etc.)
 - Shell configuration
+- Local configuration (via `dotfiles-init --status`)
 - File permissions
+
+Each section is a classifier emitting `state<TAB>subject<TAB>detail` rows; one
+table maps each state to pass, info, warn, fail or skip. Exits 1 on any fail.
+See [CONTEXT.md](../CONTEXT.md) § Reporter.
 
 ### [dotfiles-init](dotfiles-init)
 
