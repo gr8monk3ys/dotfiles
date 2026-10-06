@@ -1,0 +1,33 @@
+# danse - Ghostty's view of .config/palette/danse.conf.
+#
+# Derived from Ghostty's built-in "Atom One Dark", which is OneDark exactly;
+# the only departure is the red, retuned to the vermilion of the figures in
+# Matisse's La Danse. ANSI has no orange slot, so terracotta does not appear
+# here — it reaches the terminal through starship, eza and the bat theme.
+#
+# Rendered by bin/palette from .config/palette/templates/.config/ghostty/themes/danse.
+# Edit the template, then run `palette render`; `palette check` fails on hand edits.
+
+palette = 0={{bg-dark}}
+palette = 1={{vermilion}}
+palette = 2={{green}}
+palette = 3={{yellow}}
+palette = 4={{blue}}
+palette = 5={{magenta}}
+palette = 6={{cyan}}
+palette = 7={{fg}}
+palette = 8={{comment}}
+palette = 9={{vermilion}}
+palette = 10={{green}}
+palette = 11={{yellow}}
+palette = 12={{blue}}
+palette = 13={{magenta}}
+palette = 14={{cyan}}
+palette = 15={{fg}}
+
+background = {{bg-dark}}
+foreground = {{fg}}
+cursor-color = {{blue}}
+cursor-text = {{bg-dark}}
+selection-background = {{surface}}
+selection-foreground = {{fg}}

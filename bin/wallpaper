@@ -45,14 +45,16 @@ OUT_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/wallpapers"
 readonly CACHE_DIR OUT_DIR
 
 # Palette colours, so the matte cannot drift from the terminal it sits behind.
-palette() { "$SCRIPT_DIR/palette" get "$1"; }
+palette() { printf '{{%s}}' "$1" | "$SCRIPT_DIR/palette" fill; }
 
 display_size() {
     local w h
+    # `|| true`: under pipefail a missing system_profiler (any Linux) failed
+    # the assignment and set -e exited before the fallback size below.
     w="$(system_profiler SPDisplaysDataType 2> /dev/null |
-        awk '/Resolution:/ {print $2; exit}')"
+        awk '/Resolution:/ {print $2; exit}' || true)"
     h="$(system_profiler SPDisplaysDataType 2> /dev/null |
-        awk '/Resolution:/ {print $4; exit}')"
+        awk '/Resolution:/ {print $4; exit}' || true)"
     if [[ "$w" =~ ^[0-9]+$ && "$h" =~ ^[0-9]+$ ]]; then
         printf '%s %s\n' "$w" "$h"
     else
@@ -92,7 +94,14 @@ build() {
     w="${WALLPAPER_WIDTH:-$w}"
     h="${WALLPAPER_HEIGHT:-$h}"
 
-    local out="$OUT_DIR/$ART_NAME-${w}x${h}.png"
+    local ground ultramarine key
+    ground="$(palette bg-dark)"
+    ultramarine="$(palette ultramarine)"
+    # The matte's colours are part of the cache key: keyed on size alone, a
+    # retune reused the old image and the desktop kept the previous palette.
+    key="$(printf '%s %s' "$ground" "$ultramarine" | cksum | cut -d' ' -f1)"
+
+    local out="$OUT_DIR/$ART_NAME-${w}x${h}-$key.png"
     if [[ -s "$out" && -z "$force" ]]; then
         printf '%s\n' "$out"
         return 0
@@ -105,10 +114,6 @@ build() {
     # The painting is fitted to ~70% of the canvas width and never enlarged:
     # the source is 2000px wide, so on a 2560px display this is a downscale.
     local art_w=$((w * 70 / 100))
-
-    local ground ultramarine
-    ground="$(palette bg-dark)"
-    ultramarine="$(palette ultramarine)"
 
     print_info "Composing ${w}x${h} from $ART_NAME..." >&2
     magick \

@@ -1,0 +1,184 @@
+# Yazi theme — danse palette, from .config/palette/danse.conf
+# https://yazi-rs.github.io/docs/configuration/theme
+# Consistent with Neovim, bat, eza, git-delta, and zellij
+# Rendered by bin/palette from .config/palette/templates/.config/yazi/theme.toml.
+# Edit the template, then run `palette render`; `palette check` fails on hand edits.
+
+[mgr]
+# Active file/directory
+cwd = { fg = "{{blue}}" }
+
+# Hovered item
+hovered         = { fg = "{{bg}}", bg = "{{blue}}", bold = true }
+preview_hovered = { underline = true }
+
+# Selection markers
+find_keyword  = { fg = "{{yellow}}", bold = true, italic = true, underline = true }
+find_position = { fg = "{{magenta}}", bg = "reset", bold = true, italic = true }
+
+# Markers
+marker_copied   = { fg = "{{green}}", bg = "{{green}}" }
+marker_cut      = { fg = "{{vermilion}}", bg = "{{vermilion}}" }
+marker_marked   = { fg = "{{cyan}}", bg = "{{cyan}}" }
+marker_selected = { fg = "{{yellow}}", bg = "{{yellow}}" }
+
+# Tabs
+tab_active   = { fg = "{{bg}}", bg = "{{blue}}" }
+tab_inactive = { fg = "{{fg}}", bg = "{{surface}}" }
+tab_width    = 1
+
+# Count indicators
+count_copied   = { fg = "{{bg}}", bg = "{{green}}" }
+count_cut      = { fg = "{{bg}}", bg = "{{vermilion}}" }
+count_selected = { fg = "{{bg}}", bg = "{{yellow}}" }
+
+# Borders
+border_symbol = "│"
+border_style  = { fg = "{{comment}}" }
+
+# Highlighting
+[mgr.highlighting]
+# File types use the danse palette
+directory = { fg = "{{blue}}", bold = true }
+symlink   = { fg = "{{cyan}}", italic = true }
+orphan    = { fg = "{{vermilion}}", italic = true }
+executable = { fg = "{{green}}", bold = true }
+hidden     = { fg = "{{comment}}" }
+
+[status]
+separator_open  = ""
+separator_close = ""
+separator_style = { fg = "{{surface}}", bg = "{{surface}}" }
+
+# Mode
+mode_normal = { fg = "{{bg}}", bg = "{{blue}}", bold = true }
+mode_select = { fg = "{{bg}}", bg = "{{green}}", bold = true }
+mode_unset  = { fg = "{{bg}}", bg = "{{magenta}}", bold = true }
+
+# Progress
+progress_label  = { fg = "{{fg}}", bold = true }
+progress_normal = { fg = "{{blue}}", bg = "{{surface}}" }
+progress_error  = { fg = "{{vermilion}}", bg = "{{surface}}" }
+
+# Permissions
+permissions_t = { fg = "{{blue}}" }
+permissions_r = { fg = "{{yellow}}" }
+permissions_w = { fg = "{{vermilion}}" }
+permissions_x = { fg = "{{green}}" }
+permissions_s = { fg = "{{comment}}" }
+
+[input]
+border   = { fg = "{{blue}}" }
+title    = {}
+value    = {}
+selected = { reversed = true }
+
+[select]
+border   = { fg = "{{blue}}" }
+active   = { fg = "{{magenta}}", bold = true }
+inactive = {}
+
+[tasks]
+border  = { fg = "{{blue}}" }
+title   = {}
+hovered = { fg = "{{magenta}}", underline = true }
+
+[which]
+cols            = 3
+mask            = { bg = "{{bg}}" }
+cand            = { fg = "{{cyan}}" }
+rest            = { fg = "{{comment}}" }
+desc            = { fg = "{{magenta}}" }
+separator       = "  "
+separator_style = { fg = "{{comment}}" }
+
+[help]
+on      = { fg = "{{cyan}}" }
+run     = { fg = "{{magenta}}" }
+desc    = { fg = "{{fg}}" }
+hovered = { reversed = true, bold = true }
+footer  = { fg = "{{comment}}", bg = "{{bg}}" }
+
+[notify]
+title_info  = { fg = "{{green}}" }
+title_warn  = { fg = "{{yellow}}" }
+title_error = { fg = "{{vermilion}}" }
+
+# Icons (requires Nerd Font)
+[icon]
+# These are built-in but you can customize
+
+[filetype]
+rules = [
+    # Directories
+    { name = ".git",          text = "", fg = "{{vermilion}}" },
+    { name = ".github",       text = "", fg = "{{fg}}" },
+    { name = "node_modules",  text = "", fg = "{{green}}" },
+    { name = ".config",       text = "", fg = "{{blue}}" },
+    { name = "src",           text = "", fg = "{{yellow}}" },
+    { name = "test",          text = "", fg = "{{magenta}}" },
+    { name = "tests",         text = "", fg = "{{magenta}}" },
+
+    # Common files
+    { name = "Makefile",      text = "", fg = "{{comment}}" },
+    { name = "Dockerfile",    text = "󰡨", fg = "{{blue}}" },
+    { name = ".dockerignore", text = "󰡨", fg = "{{comment}}" },
+    { name = ".gitignore",    text = "", fg = "{{vermilion}}" },
+    { name = ".gitmodules",   text = "", fg = "{{vermilion}}" },
+    { name = "LICENSE",       text = "", fg = "{{yellow}}" },
+    { name = "README.md",     text = "", fg = "{{blue}}" },
+
+    # Extensions - Languages
+    { name = "*.rs",      text = "", fg = "{{vermilion}}" },
+    { name = "*.go",      text = "", fg = "{{cyan}}" },
+    { name = "*.py",      text = "", fg = "{{yellow}}" },
+    { name = "*.js",      text = "", fg = "{{yellow}}" },
+    { name = "*.ts",      text = "", fg = "{{blue}}" },
+    { name = "*.tsx",     text = "", fg = "{{blue}}" },
+    { name = "*.jsx",     text = "", fg = "{{blue}}" },
+    { name = "*.lua",     text = "", fg = "{{blue}}" },
+    { name = "*.rb",      text = "", fg = "{{vermilion}}" },
+    { name = "*.zig",     text = "", fg = "{{yellow}}" },
+    { name = "*.nix",     text = "", fg = "{{blue}}" },
+    { name = "*.sh",      text = "", fg = "{{green}}" },
+    { name = "*.zsh",     text = "", fg = "{{green}}" },
+    { name = "*.bash",    text = "", fg = "{{green}}" },
+    { name = "*.fish",    text = "", fg = "{{green}}" },
+
+    # Config files
+    { name = "*.toml",    text = "", fg = "{{comment}}" },
+    { name = "*.yaml",    text = "", fg = "{{comment}}" },
+    { name = "*.yml",     text = "", fg = "{{comment}}" },
+    { name = "*.json",    text = "", fg = "{{yellow}}" },
+    { name = "*.xml",     text = "󰗀", fg = "{{vermilion}}" },
+    { name = "*.conf",    text = "", fg = "{{comment}}" },
+    { name = "*.ini",     text = "", fg = "{{comment}}" },
+
+    # Documents
+    { name = "*.md",      text = "", fg = "{{fg}}" },
+    { name = "*.pdf",     text = "", fg = "{{vermilion}}" },
+    { name = "*.tex",     text = "", fg = "{{green}}" },
+    { name = "*.typ",     text = "", fg = "{{cyan}}" },
+
+    # Media
+    { name = "*.png",     text = "", fg = "{{magenta}}" },
+    { name = "*.jpg",     text = "", fg = "{{magenta}}" },
+    { name = "*.jpeg",    text = "", fg = "{{magenta}}" },
+    { name = "*.gif",     text = "", fg = "{{magenta}}" },
+    { name = "*.svg",     text = "", fg = "{{magenta}}" },
+    { name = "*.webp",    text = "", fg = "{{magenta}}" },
+    { name = "*.mp4",     text = "", fg = "{{magenta}}" },
+    { name = "*.mkv",     text = "", fg = "{{magenta}}" },
+    { name = "*.mp3",     text = "", fg = "{{cyan}}" },
+    { name = "*.flac",    text = "", fg = "{{cyan}}" },
+
+    # Archives
+    { name = "*.zip",     text = "", fg = "{{yellow}}" },
+    { name = "*.tar",     text = "", fg = "{{yellow}}" },
+    { name = "*.gz",      text = "", fg = "{{yellow}}" },
+    { name = "*.7z",      text = "", fg = "{{yellow}}" },
+    { name = "*.rar",     text = "", fg = "{{yellow}}" },
+
+    # Lock files
+    { name = "*.lock",    text = "", fg = "{{comment}}" },
+]

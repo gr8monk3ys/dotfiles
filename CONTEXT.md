@@ -250,3 +250,29 @@ Which OS and architecture a **checkout** is running on, answered by
 refinement of `arch`. macOS and Arch are the two real adapters; anything that
 branches on the OS belongs behind this module rather than testing `$OSTYPE`
 inline.
+
+## Palette
+
+The colours every themed tool shares, defined once in
+`.config/palette/danse.conf` and read only by `bin/palette`. Its interface is
+three verbs: `render` writes every **rendered file** from its **template**,
+`check` fails with a diff when a committed rendered file differs from what
+its template produces, and `fill` expands slots on stdin for scripts.
+
+A **template** lives under `.config/palette/templates/` at the path of the
+file it renders, relative to the **checkout** root, and names colours as
+**slots**: `{{blue}}`, `{{blue:0x}}`, `{{blue:rgb}}`. The three formats are
+the adapters — one per spelling a real consumer needs — and a literal colour
+in a template is an error, because typing one is how off-palette colours got
+in.
+
+A **rendered file** is committed at its real path, because stow links it and
+the tool reads it; it is never edited by hand. It is either **whole** (the
+template is the file) or a **region** (the lines between a `palette:begin`
+and `palette:end` comment in an otherwise hand-edited file, such as
+`.zshrc`). Nothing parses the palette at runtime: shell, lua and sketchybar
+consumers read rendered values, and `install.sh`, which runs before any
+checkout exists, carries its colours as a region.
+
+Retuning is an edit to `danse.conf` plus `palette render`; `make verify` fails
+until the render is committed.

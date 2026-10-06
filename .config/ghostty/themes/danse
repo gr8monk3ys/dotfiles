@@ -5,7 +5,8 @@
 # Matisse's La Danse. ANSI has no orange slot, so terracotta does not appear
 # here — it reaches the terminal through starship, eza and the bat theme.
 #
-# Every hex below must be a palette colour; test_palette.bats asserts it.
+# Rendered by bin/palette from .config/palette/templates/.config/ghostty/themes/danse.
+# Edit the template, then run `palette render`; `palette check` fails on hand edits.
 
 palette = 0=#21252b
 palette = 1=#e06a51

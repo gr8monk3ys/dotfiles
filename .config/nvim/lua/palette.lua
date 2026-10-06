@@ -1,37 +1,28 @@
--- The shared colour palette, read from .config/palette/danse.conf.
+-- The shared colour palette, as a name -> "#rrggbb" table.
 --
--- Every other themed tool in this checkout draws from that file; before this
--- module nvim was the exception, inheriting whatever navarasu/onedark.nvim
--- shipped. That meant the editor kept OneDark's original red while the
--- terminal, the prompt, the bar and the desktop background had all moved to
--- the Matisse vermilion — the one window where "everything matches" was false.
+-- Rendered by bin/palette from .config/palette/templates/.config/nvim/lua/palette.lua.
+-- Edit the template, then run `palette render`; `palette check` fails on hand edits.
 --
--- Returns a name -> "#rrggbb" table. An unreadable palette file returns an
--- empty table rather than raising: a colour scheme is not worth a failed
--- startup, and onedark.nvim's own defaults are a reasonable fallback.
+-- A rendered table rather than a parser: before this module nvim was the one
+-- window where "everything matches" was false, inheriting whatever
+-- navarasu/onedark.nvim shipped, and a runtime read of danse.conf would be one
+-- more parser of it that could drift from bin/palette's.
 
-local M = {}
-
-local function config_home()
-  return os.getenv("XDG_CONFIG_HOME") or (os.getenv("HOME") .. "/.config")
-end
-
-function M.load()
-  local colors = {}
-  local path = config_home() .. "/palette/danse.conf"
-  local fh = io.open(path, "r")
-  if not fh then
-    return colors
-  end
-  for line in fh:lines() do
-    -- name|#hex|role, skipping comments and blanks
-    local name, hex = line:match("^([%w%-]+)|(#%x%x%x%x%x%x)|")
-    if name then
-      colors[name] = hex
-    end
-  end
-  fh:close()
-  return colors
-end
-
-return M
+return {
+  bg = "#282c34",
+  bg_dark = "#21252b",
+  surface = "#3e4451",
+  fg = "#abb2bf",
+  comment = "#5c6370",
+  blue = "#61afef",
+  cyan = "#56b6c2",
+  green = "#98c379",
+  yellow = "#e5c07b",
+  magenta = "#c678dd",
+  vermilion = "#e06a51",
+  terracotta = "#d98c5c",
+  ultramarine = "#2b4468",
+  viridian = "#476a62",
+  diff_add = "#2d3b2d",
+  diff_delete = "#3b2d2d",
+}

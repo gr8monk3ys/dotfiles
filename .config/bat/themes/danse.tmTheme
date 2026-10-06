@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Rendered by bin/palette from .config/palette/templates/.config/bat/themes/danse.tmTheme.
+     Edit the template, then run `palette render` and `bat cache --build`. -->
 <plist version="1.0">
 <dict>
 	<key>author</key>
@@ -13,15 +15,15 @@
 	<key>gutterSettings</key>
 	<dict>
 		<key>background</key>
-		<string>#353b45</string>
+		<string>#3e4451</string>
 		<key>divider</key>
-		<string>#353b45</string>
+		<string>#3e4451</string>
 		<key>foreground</key>
-		<string>#545862</string>
+		<string>#5c6370</string>
 		<key>selectionBackground</key>
 		<string>#3e4451</string>
 		<key>selectionForeground</key>
-		<string>#565c64</string>
+		<string>#5c6370</string>
 	</dict>
 	<key>settings</key>
 	<array>
@@ -35,9 +37,9 @@
 				<key>foreground</key>
 				<string>#abb2bf</string>
 				<key>invisibles</key>
-				<string>#545862</string>
+				<string>#5c6370</string>
 				<key>lineHighlight</key>
-				<string>#54586255</string>
+				<string>#5c637055</string>
 				<key>selection</key>
 				<string>#3e4451</string>
 			</dict>
@@ -61,7 +63,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#545862</string>
+				<string>#5c6370</string>
 			</dict>
 		</dict>
 		<dict>
@@ -138,7 +140,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#be5046</string>
+				<string>#d98c5c</string>
 			</dict>
 		</dict>
 		<dict>
@@ -160,7 +162,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#c8ccd4</string>
+				<string>#abb2bf</string>
 			</dict>
 		</dict>
 		<dict>
@@ -511,7 +513,7 @@
 				<key>background</key>
 				<string>#e06a51</string>
 				<key>foreground</key>
-				<string>#c8ccd4</string>
+				<string>#abb2bf</string>
 			</dict>
 		</dict>
 		<dict>
@@ -535,9 +537,9 @@
 			<key>settings</key>
 			<dict>
 				<key>background</key>
-				<string>#be5046</string>
+				<string>#d98c5c</string>
 				<key>foreground</key>
-				<string>#c8ccd4</string>
+				<string>#abb2bf</string>
 			</dict>
 		</dict>
 		<dict>
@@ -548,9 +550,9 @@
 			<key>settings</key>
 			<dict>
 				<key>background</key>
-				<string>#545862</string>
+				<string>#5c6370</string>
 				<key>foreground</key>
-				<string>#c8ccd4</string>
+				<string>#abb2bf</string>
 			</dict>
 		</dict>
 	</array>

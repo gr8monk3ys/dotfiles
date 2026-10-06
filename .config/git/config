@@ -126,6 +126,7 @@
 	# danse syntax theme, registered with bat (matches nvim/ghostty)
 	syntax-theme = danse
 	# danse colors for diff highlighting (.config/palette/danse.conf)
+	# palette:begin - rendered from .config/palette/templates/.config/git/config; edit it there, then run bin/palette render
 	plus-style = "syntax #2d3b2d"
 	plus-emph-style = "syntax #98c379"
 	minus-style = "syntax #3b2d2d"
@@ -133,9 +134,10 @@
 	line-numbers-minus-style = "#e06a51"
 	line-numbers-plus-style = "#98c379"
 	line-numbers-zero-style = "#5c6370"
+	file-style = "bold #61afef"
+	# palette:end
 	hunk-header-style = "file line-number syntax"
 	hunk-header-decoration-style = "blue box"
-	file-style = "bold #61afef"
 	file-decoration-style = "none"
 
 [color]

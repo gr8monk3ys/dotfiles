@@ -171,6 +171,16 @@ teardown() {
     [[ "$output" == *"/.config/npm/npmrc"* ]]
 }
 
+@test "shell-boot: STARSHIP_CONFIG reaches non-interactive shells" {
+    # It used to be set in .zshrc only, so anything not an interactive zsh
+    # (make verify-config-live, scripts) saw starship's default path instead.
+    run --separate-stderr env -u ZDOTDIR -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_CACHE_HOME \
+        -u STARSHIP_CONFIG HOME="$FAKE_HOME" TERM=xterm \
+        zsh -c 'print -r -- "$STARSHIP_CONFIG"'
+    assert_success
+    assert_output "$FAKE_HOME/.config/starship/starship.toml"
+}
+
 @test "every .config dir shipping a dotfile-named config has a way to be found" {
     # A tool whose config is named .foorc under .config/foo/ almost certainly
     # looks in $HOME by default. Require an env var naming it in .zshenv.
@@ -194,9 +204,9 @@ teardown() {
 @test "shell-boot: eza is themed through the mechanism this build supports" {
     # theme.yml needs a build feature Homebrew does not enable, so eza ignores
     # it silently. EZA_COLORS is what actually applies; assert it is exported
-    # and that eza emits the OneDark directory colour.
+    # and that it carries the palette's blue for directories.
     run --separate-stderr env -u ZDOTDIR -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_CACHE_HOME \
         -u EZA_COLORS HOME="$FAKE_HOME" TERM=xterm zsh -ic 'print -r -- "$EZA_COLORS"'
     assert_success
-    [[ "$output" == *"di=38;2;97;175;239"* ]]
+    [[ "$output" == *"di=38;2;$(printf '{{blue:rgb}}' | "$DOTFILES_DIR/bin/palette" fill)"* ]]
 }

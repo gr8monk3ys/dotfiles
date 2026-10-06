@@ -9,7 +9,8 @@
 # Launched from aerospace.toml's after-startup-command, not as a brew service,
 # so window-manager chrome starts and stops with the window manager.
 #
-# Colours are 0xAARRGGBB and come from .config/palette/danse.conf.
+# Rendered by bin/palette from .config/palette/templates/.config/borders/bordersrc.
+# Edit the template, then run `palette render`; `palette check` fails on hand edits.
 
 options=(
     style=round

@@ -1,0 +1,15 @@
+# danse theme for Atuin's search UI (OneDark retuned to Matisse).
+# Rendered by bin/palette from .config/palette/templates/.config/atuin/themes/danse.toml.
+# Edit the template, then run `palette render`; `palette check` fails on hand edits.
+[theme]
+name = "danse"
+
+[colors]
+Base = "{{fg}}"
+Title = "{{blue}}"
+Annotation = "{{cyan}}"
+Guidance = "{{comment}}"
+Important = "{{magenta}}"
+AlertInfo = "{{green}}"
+AlertWarn = "{{yellow}}"
+AlertError = "{{vermilion}}"
