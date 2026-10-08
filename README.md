@@ -4,6 +4,8 @@
 
 My macOS and Arch (incl. Omarchy) environment: 26 XDG configs linked with GNU
 Stow, package manifests, and a `make verify` gate that keeps the two honest.
+Machines that stay on Windows 11 get the same layout and palette from
+[`windows/`](windows/README.md).
 
 The part that matters: **every package has to justify itself.** `docs/TOOLS.md`
 carries one rationale entry per package, and `bin/validate-tool-docs` fails

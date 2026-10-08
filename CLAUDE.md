@@ -20,7 +20,11 @@ into `~/.config/`; `make` drives install, link and verification.
 - `bin/` — `dotfiles-doctor/update/backup/restore/sync/why`, `platform`, and the
   validators `validate-doc-links`, `validate-tool-docs`, `check-alias-references`.
 - `install/` — manifests: `Brewfile`, `Caskfile[.extra]`, `npmfile`, `Rustfile`,
-  `pacmanfile`, `Codefile`, `duti`.
+  `pacmanfile`, `Codefile`, `wingetfile`, `duti`.
+- `windows/` — the Omarchy-style layer for Windows 11 (GlazeWM, Zebar, a Windows
+  Terminal fragment). Not under `.config/`, because Stow would link it on macOS
+  and Arch; `windows/setup.ps1` (Windows PowerShell 5.1, dry run by default) is
+  its `make link`.
 - `docs/TOOLS.md` — one rationale entry per package; `validate-tool-docs` fails
   when a manifest and the catalog disagree in either direction.
 - `test/` — BATS (`test_*.bats`, helpers in `test_helper/`).

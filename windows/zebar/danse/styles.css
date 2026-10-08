@@ -1,0 +1,114 @@
+/*
+ * danse bar - colours from .config/palette/danse.conf.
+ *
+ * Every hex here must be a palette colour; test_palette.bats asserts it.
+ * Icons are Nerd Font glyph classes from the webfont stylesheet below; text
+ * uses the locally installed JetBrainsMono Nerd Font (install/wingetfile).
+ */
+@import 'https://www.nerdfonts.com/assets/css/webfont.css';
+
+:root {
+  --bg: #282c34; /* bg - base ground, as sketchybar */
+  --surface: #3e4451; /* surface - shown-but-unfocused workspace */
+  --fg: #abb2bf; /* fg - text */
+  --dim: #5c6370; /* comment - icons, idle workspaces */
+  --accent: #61afef; /* blue - focus */
+  --warn: #e5c07b; /* yellow - PAUSED */
+  --hot: #e06a51; /* vermilion - CPU/memory over 85% */
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  color: var(--fg);
+  font-family: 'JetBrainsMono Nerd Font', 'JetBrainsMono NF', ui-monospace, monospace;
+  font-size: 12px;
+  overflow: hidden;
+  user-select: none;
+}
+
+#root {
+  background: var(--bg);
+}
+
+.bar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  height: 100%;
+  padding: 0 12px;
+}
+
+.left,
+.right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.right {
+  justify-self: end;
+}
+
+.center {
+  justify-self: center;
+}
+
+i {
+  color: var(--dim);
+  margin-right: 6px;
+}
+
+button {
+  font: inherit;
+  border: 0;
+  cursor: pointer;
+  background: none;
+  color: inherit;
+  padding: 0;
+}
+
+.workspaces {
+  display: flex;
+  gap: 2px;
+}
+
+.workspace {
+  min-width: 22px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--dim);
+}
+
+.workspace.displayed {
+  color: var(--fg);
+  background: var(--surface);
+}
+
+.workspace.focused,
+.workspace:hover {
+  color: var(--accent);
+}
+
+.paused {
+  color: var(--warn);
+  font-weight: bold;
+}
+
+.direction {
+  color: var(--dim);
+}
+
+.module {
+  display: flex;
+  align-items: center;
+}
+
+.hot {
+  color: var(--hot);
+}
