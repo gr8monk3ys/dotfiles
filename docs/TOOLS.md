@@ -1224,6 +1224,11 @@ on the winget id because that is what `bin/manifest` prints.
 - **Alternatives:** YASB, komorebi-bar
 - **Installed via:** wingetfile
 
+### ImageMagick.ImageMagick
+
+- **Why:** `bin/wallpaper` composes the La Danse background with `magick`; on Windows, `windows/setup.ps1` runs it through Git Bash and sets the result as the desktop. Same role as the `imagemagick` Brewfile entry.
+- **Installed via:** wingetfile
+
 ### DEVCOM.JetBrainsMonoNerdFont
 
 - **Why:** The same Nerd Font Ghostty and SketchyBar use on macOS, so Windows Terminal and the bar render identical glyphs.
