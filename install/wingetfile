@@ -1,0 +1,12 @@
+# wingetfile - Windows packages for the Omarchy-style desktop (windows/).
+#
+# One winget id per line, exactly as `winget install -e --id` wants it: ids
+# are case-sensitive under -e. Read only through bin/manifest; installed by
+# windows/setup.ps1, which is the only consumer.
+
+# Tiling window manager. Ships Zebar (the status bar) in the same installer.
+glzr-io.glazewm
+glzr-io.zebar
+
+# The terminal font every other platform uses (ghostty's font-family).
+DEVCOM.JetBrainsMonoNerdFont

@@ -1205,6 +1205,30 @@ package name.
 - **Alternatives:** xsel, wl-clipboard (Wayland, also installed)
 - **Installed via:** pacmanfile
 
+## Windows (winget)
+
+`install/wingetfile`, installed by `windows/setup.ps1` (Windows has no `make`).
+These give Windows the Omarchy layout — keyboard-driven tiling, a top bar and
+the shared palette — for the machines that stay on Windows. Entries are keyed
+on the winget id because that is what `bin/manifest` prints.
+
+### glzr-io.glazewm
+
+- **Why:** Tiling window manager for Windows: the Hyprland/AeroSpace role, driven by Omarchy's Super-key bindings. Config: `windows/glazewm/`.
+- **Alternatives:** komorebi (closer to Hyprland, but not free for any work use), FancyWM
+- **Installed via:** wingetfile
+
+### glzr-io.zebar
+
+- **Why:** The top bar — Waybar/SketchyBar role — showing GlazeWM workspaces, styled from the palette. Widget pack: `windows/zebar/`.
+- **Alternatives:** YASB, komorebi-bar
+- **Installed via:** wingetfile
+
+### DEVCOM.JetBrainsMonoNerdFont
+
+- **Why:** The same Nerd Font Ghostty and SketchyBar use on macOS, so Windows Terminal and the bar render identical glyphs.
+- **Installed via:** wingetfile
+
 ## Fonts (GUI)
 
 Nerd-Font patched monospace fonts (`font-*` casks). Day-one, from the

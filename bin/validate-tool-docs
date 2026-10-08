@@ -38,6 +38,7 @@ manifest_tools() {
     DOTFILES_DIR="$ROOT_ABS" "$MANIFEST" list npm
     DOTFILES_DIR="$ROOT_ABS" "$MANIFEST" list rust
     DOTFILES_DIR="$ROOT_ABS" "$MANIFEST" list pacman
+    DOTFILES_DIR="$ROOT_ABS" "$MANIFEST" list winget
 }
 
 catalog_entries() {

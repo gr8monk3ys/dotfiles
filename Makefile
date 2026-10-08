@@ -537,7 +537,7 @@ help:
 	@echo ""
 	@echo "Environment:"
 	@echo "  SKIP_KINDS=\"rust pacman\"  - Skip these manifest kinds"
-	@echo "                          (brew cask cask-extra npm rust pacman code)"
+	@echo "                          (brew cask cask-extra npm rust pacman code winget)"
 	@echo "  STRICT_PACKAGES=1       - Make a package install failure fatal"
 	@echo "  SKIP_DOCKER=1           - Skip both container tests in make verify"
 	@echo "  SKIP_ARCH_DOCKER=1      - Skip only the Arch container (slow under"
