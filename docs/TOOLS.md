@@ -375,7 +375,7 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 - **Why:** Interactive resource monitor. Themed from `.config/palette/`, with a transparent background so it inherits Ghostty's blur rather than punching an opaque rectangle through it.
 - **Alternatives:** bottom (kept, non-interactive use), htop, top
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 - **Config:** [`.config/btop/`](../.config/btop/)
 
 ### bottom
