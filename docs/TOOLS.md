@@ -375,7 +375,7 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 - **Why:** Interactive resource monitor. Themed from `.config/palette/`, with a transparent background so it inherits Ghostty's blur rather than punching an opaque rectangle through it.
 - **Alternatives:** bottom (kept, non-interactive use), htop, top
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 - **Config:** [`.config/btop/`](../.config/btop/)
 
 ### bottom
@@ -1222,6 +1222,11 @@ on the winget id because that is what `bin/manifest` prints.
 
 - **Why:** The top bar — Waybar/SketchyBar role — showing GlazeWM workspaces, styled from the palette. Widget pack: `windows/zebar/`.
 - **Alternatives:** YASB, komorebi-bar
+- **Installed via:** wingetfile
+
+### ImageMagick.ImageMagick
+
+- **Why:** `bin/wallpaper` composes the La Danse background with `magick`; on Windows, `windows/setup.ps1` runs it through Git Bash and sets the result as the desktop. Same role as the `imagemagick` Brewfile entry.
 - **Installed via:** wingetfile
 
 ### DEVCOM.JetBrainsMonoNerdFont

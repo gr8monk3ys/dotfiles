@@ -48,11 +48,16 @@ readonly CACHE_DIR OUT_DIR
 palette() { "$SCRIPT_DIR/palette" get "$1"; }
 
 display_size() {
-    local w h
-    w="$(system_profiler SPDisplaysDataType 2> /dev/null |
-        awk '/Resolution:/ {print $2; exit}')"
-    h="$(system_profiler SPDisplaysDataType 2> /dev/null |
-        awk '/Resolution:/ {print $4; exit}')"
+    local w="" h=""
+    # system_profiler is macOS-only. Without the guard, pipefail turns a
+    # missing command into a silent exit, and build's `read` then fails on
+    # empty input under set -e — even when WALLPAPER_WIDTH/HEIGHT are set.
+    if command_exists system_profiler; then
+        w="$(system_profiler SPDisplaysDataType 2> /dev/null |
+            awk '/Resolution:/ {print $2; exit}')"
+        h="$(system_profiler SPDisplaysDataType 2> /dev/null |
+            awk '/Resolution:/ {print $4; exit}')"
+    fi
     if [[ "$w" =~ ^[0-9]+$ && "$h" =~ ^[0-9]+$ ]]; then
         printf '%s %s\n' "$w" "$h"
     else
@@ -87,10 +92,13 @@ build() {
         return 1
     }
 
-    local w h
-    read -r w h < <(display_size)
-    w="${WALLPAPER_WIDTH:-$w}"
-    h="${WALLPAPER_HEIGHT:-$h}"
+    local w="${WALLPAPER_WIDTH:-}" h="${WALLPAPER_HEIGHT:-}"
+    if [[ -z "$w" || -z "$h" ]]; then
+        local dw dh
+        read -r dw dh < <(display_size)
+        w="${w:-$dw}"
+        h="${h:-$dh}"
+    fi
 
     local out="$OUT_DIR/$ART_NAME-${w}x${h}.png"
     if [[ -s "$out" && -z "$force" ]]; then

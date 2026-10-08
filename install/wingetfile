@@ -10,3 +10,6 @@ glzr-io.zebar
 
 # The terminal font every other platform uses (ghostty's font-family).
 DEVCOM.JetBrainsMonoNerdFont
+
+# bin/wallpaper composes the La Danse background with `magick`.
+ImageMagick.ImageMagick

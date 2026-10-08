@@ -39,10 +39,25 @@ From a normal (not elevated) PowerShell, in the checkout that should stay:
   `danse` scheme and sets it and the font on the `Arch` profile, without
   touching Terminal's own `settings.json`.
 
-Not automated, because they are one-click personal settings: hide the Windows
-taskbar (Settings → Personalization → Taskbar → Automatically hide), and turn
-off Snap (Settings → System → Multitasking) if its Win+arrow layouts get in the
-way.
+- **The look**: taskbar auto-hide (only the Zebar bar shows, as in Omarchy),
+  dark mode, the palette's `blue` as accent colour — the whole `AccentPalette`,
+  so Start and the taskbar follow it — and the La Danse wallpaper that
+  [`bin/wallpaper`](../bin/wallpaper) builds at the screen's resolution (needs
+  ImageMagick, from the wingetfile). Each original value is saved once under
+  `HKCU\Software\dotfiles\windows-setup` before the first change; `-Remove`
+  puts it back and deletes that key. Wallpaper Engine, if running, draws over
+  the desktop and can reset the accent; quit it to see this one.
+
+Run it from a normal PowerShell or Windows Terminal window. A shell spawned by
+an MSIX-packaged app (the Claude desktop app is one) inherits that app's
+sandbox: its `HKCU` writes and new `AppData` files go to the app's private
+copy, so the Run value and colours would exist only inside that app. The
+script detects this — it creates a probe folder in `%LOCALAPPDATA%` and checks
+whether it lands in `Packages\<app>\LocalCache` — and refuses to change
+anything.
+
+Not automated: turning off Snap (Settings → System → Multitasking) if its
+Win+arrow layouts get in the way.
 
 ## Keys
 

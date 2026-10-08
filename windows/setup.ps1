@@ -23,13 +23,21 @@
       4. Windows Terminal fragment: windows\windows-terminal\danse.json.tpl,
          with the Arch profile's GUID read from settings.json, written to
          %LOCALAPPDATA%\Microsoft\Windows Terminal\Fragments\dotfiles\
-      5. -Start also launches GlazeWM now (it re-tiles every open window)
+      5. the look: taskbar auto-hide, dark mode, the palette's blue as
+         accent colour, and the La Danse wallpaper built by bin/wallpaper
+         (ImageMagick, at the screen's resolution). Each original value is
+         saved once under HKCU\Software\dotfiles\windows-setup first.
+      6. -Start also launches GlazeWM now (it re-tiles every open window)
 
-    -Remove: undo 2-4 (the junction is unlinked, never recursed into; a
-    backed-up settings.json is restored) and stop GlazeWM. Packages stay
-    installed: `winget uninstall --id <id>` if wanted.
+    -Remove: undo 2-5 (the junction is unlinked, never recursed into; a
+    backed-up settings.json is restored; taskbar, colours and wallpaper go
+    back to the saved originals) and stop GlazeWM. Packages stay installed:
+    `winget uninstall --id <id>` if wanted.
 
-    Run it from the checkout that should stay: links point at this copy.
+    Run it from the checkout that should stay: links point at this copy, and
+    from a normal PowerShell: it refuses to change anything when started
+    inside an MSIX app container (such as a shell a packaged app spawned),
+    because there every HKCU write goes to the app's private copy.
 
 .EXAMPLE
     .\windows\setup.ps1                 # status
@@ -100,6 +108,232 @@ function Get-ArchProfileGuid {
     return $null
 }
 
+# ---------------------------------------------------------------- the look
+# Taskbar auto-hide, dark mode, palette accent and the La Danse wallpaper.
+# Every value this changes is saved once under $BackupKey before the first
+# change, so -Remove can put back exactly what was there.
+
+$BackupKey = 'HKCU:\Software\dotfiles\windows-setup'
+$PersonalizeKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
+$DwmKey = 'HKCU:\Software\Microsoft\Windows\DWM'
+$AccentKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Accent'
+$DesktopKey = 'HKCU:\Control Panel\Desktop'
+# Accent: the palette's blue, #61afef. Windows derives Start and taskbar
+# colours from AccentPalette (8 RGBX shades, light to dark), so all of it is
+# written, not just the accent DWORD; Explorer otherwise recomputes the menu
+# colour from whatever palette was there before.
+$AccentRgb = @(0x61, 0xaf, 0xef)
+
+function Get-Shade([int[]]$Rgb, [int]$Target, [double]$Amount) {
+    return @($Rgb | ForEach-Object { [int][math]::Round($_ + ($Target - $_) * $Amount) })
+}
+
+function Get-AccentShades {
+    return @(
+        (Get-Shade $AccentRgb 255 0.6), (Get-Shade $AccentRgb 255 0.4), (Get-Shade $AccentRgb 255 0.2),
+        $AccentRgb,
+        (Get-Shade $AccentRgb 0 0.2), (Get-Shade $AccentRgb 0 0.4), (Get-Shade $AccentRgb 0 0.6),
+        @(0x3e, 0x44, 0x51)   # palette surface, Windows' neutral last slot
+    )
+}
+
+function ConvertTo-Abgr([int[]]$Rgb) {
+    # 0xAABBGGRR with full alpha, as the unsigned value Windows reports.
+    return [int64]4278190080 + ($Rgb[2] * 65536) + ($Rgb[1] * 256) + $Rgb[0]
+}
+
+function ConvertTo-DwordValue([int64]$Unsigned) {
+    # Set-ItemProperty -Type DWord takes an Int32; values above 0x7FFFFFFF
+    # go through their two's-complement form.
+    if ($Unsigned -gt [int32]::MaxValue) { $Unsigned = $Unsigned - 4294967296 }
+    return [int32]$Unsigned
+}
+
+$AccentAbgr = ConvertTo-Abgr $AccentRgb
+
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class DotfilesShell {
+    [StructLayout(LayoutKind.Sequential)] public struct RECT { public int L, T, R, B; }
+    [StructLayout(LayoutKind.Sequential)] public struct APPBARDATA {
+        public uint cbSize; public IntPtr hWnd; public uint uCallbackMessage; public uint uEdge; public RECT rc; public IntPtr lParam;
+    }
+    [DllImport("shell32.dll")] static extern UIntPtr SHAppBarMessage(uint msg, ref APPBARDATA data);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern IntPtr FindWindow(string cls, string name);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    static extern bool SystemParametersInfo(uint action, uint param, string value, uint flags);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint msg, UIntPtr wParam, string lParam, uint flags, uint timeout, out UIntPtr result);
+    const uint ABM_GETSTATE = 4, ABM_SETSTATE = 10;
+    static APPBARDATA Bar() {
+        APPBARDATA d = new APPBARDATA();
+        d.cbSize = (uint)Marshal.SizeOf(typeof(APPBARDATA));
+        d.hWnd = FindWindow("Shell_TrayWnd", null);
+        return d;
+    }
+    public static bool GetTaskbarAutoHide() { APPBARDATA d = Bar(); return ((ulong)SHAppBarMessage(ABM_GETSTATE, ref d) & 1) != 0; }
+    public static void SetTaskbarAutoHide(bool on) { APPBARDATA d = Bar(); d.lParam = (IntPtr)(on ? 1 : 0); SHAppBarMessage(ABM_SETSTATE, ref d); }
+    // SPI_SETDESKWALLPAPER, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE
+    public static bool SetWallpaper(string path) { return SystemParametersInfo(0x0014, 0, path, 0x01 | 0x02); }
+    // Tell Explorer and apps that the colour set changed (WM_SETTINGCHANGE).
+    public static void BroadcastColorChange() {
+        UIntPtr r;
+        SendMessageTimeout((IntPtr)0xffff, 0x001A, UIntPtr.Zero, "ImmersiveColorSet", 0x0002, 3000, out r);
+    }
+}
+'@
+
+function Get-SandboxPackage {
+    # A shell started by an MSIX-packaged app (the Claude desktop app, for one)
+    # can inherit its container without having a package identity itself, so
+    # GetCurrentPackageFullName says "no package" while HKCU and new AppData
+    # files still go to the app's private copy. Test it directly: create a
+    # folder in LOCALAPPDATA and see whether it lands in some
+    # Packages\<app>\LocalCache instead. Returns that package folder name, or
+    # $null.
+    $name = 'dotfiles-probe-' + [guid]::NewGuid().ToString('N')
+    $probe = Join-Path $env:LOCALAPPDATA $name
+    New-Item -ItemType Directory -Path $probe -Force | Out-Null
+    try {
+        $hit = Get-ChildItem -LiteralPath (Join-Path $env:LOCALAPPDATA 'Packages') -Directory -ErrorAction SilentlyContinue |
+            Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName "LocalCache\Local\$name") } |
+            Select-Object -First 1
+        if ($hit) { return $hit.Name }
+        return $null
+    } finally {
+        Remove-Item -LiteralPath $probe -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+function Get-Reg([string]$Key, [string]$Name) {
+    $p = Get-ItemProperty -Path $Key -Name $Name -ErrorAction SilentlyContinue
+    if (-not $p) { return $null }
+    $v = $p.$Name
+    # A REG_BINARY comes back as byte[]; returning it bare would unroll it
+    # into the pipeline and the caller would get loose bytes, not the array.
+    if ($v -is [array]) { return , $v }
+    return $v
+}
+
+function Save-Original([string]$Name, $Value) {
+    # First write wins: a re-run must not overwrite what was there originally.
+    if (-not (Test-Path $BackupKey)) { New-Item -Path $BackupKey -Force | Out-Null }
+    if ($null -eq (Get-Reg $BackupKey $Name)) {
+        $stored = if ($null -eq $Value) { '<absent>' }
+                  elseif ($Value -is [byte[]]) { 'b64:' + [Convert]::ToBase64String($Value) }
+                  else { [string]$Value }
+        Set-ItemProperty -Path $BackupKey -Name $Name -Value $stored
+    }
+}
+
+function Restore-Original([string]$Name, [string]$Key, [string]$ValueName, [string]$Kind) {
+    $stored = Get-Reg $BackupKey $Name
+    if ($null -eq $stored) { return }
+    if ($stored -eq '<absent>') {
+        Remove-ItemProperty -Path $Key -Name $ValueName -ErrorAction SilentlyContinue
+    } elseif ($Kind -eq 'DWord') {
+        # Windows PowerShell 5.1 returns some DWORDs unsigned (AccentColor came
+        # back as 4285230683), so the saved text can exceed Int32.
+        Set-ItemProperty -Path $Key -Name $ValueName -Value (ConvertTo-DwordValue ([int64]$stored)) -Type DWord
+    } elseif ($Kind -eq 'Binary') {
+        Set-ItemProperty -Path $Key -Name $ValueName -Value ([Convert]::FromBase64String($stored.Substring(4))) -Type Binary
+    } else {
+        Set-ItemProperty -Path $Key -Name $ValueName -Value $stored
+    }
+}
+
+function Get-ScreenSize {
+    # Win32_VideoController reports physical pixels, unlike Forms.Screen under DPI scaling.
+    $v = Get-CimInstance Win32_VideoController | Where-Object { $_.CurrentHorizontalResolution } | Select-Object -First 1
+    if ($v) { return @([int]$v.CurrentHorizontalResolution, [int]$v.CurrentVerticalResolution) }
+    return @(2560, 1440)
+}
+
+function Build-Wallpaper {
+    # bin/wallpaper composes La Danse onto the palette matte; it needs ImageMagick
+    # (install/wingetfile), which a fresh install only put on the machine PATH.
+    $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User')
+    $size = Get-ScreenSize
+    $script = $Repo.Replace('\', '/') + '/bin/wallpaper'
+    $out = & $Bash -c "WALLPAPER_WIDTH=$($size[0]) WALLPAPER_HEIGHT=$($size[1]) '$script' build" 2>&1
+    if ($LASTEXITCODE -ne 0) { throw "bin/wallpaper build failed: $out" }
+    $unix = @($out | Where-Object { $_ -match '\.png$' })[-1]
+    $win = (& $Bash -c "cygpath -w '$unix'" | Select-Object -First 1)
+    if (-not (Test-Path -LiteralPath $win)) { throw "bin/wallpaper reported $unix, but $win does not exist" }
+    return $win
+}
+
+function Get-LookStatus {
+    return [ordered]@{
+        'taskbar auto-hide' = [DotfilesShell]::GetTaskbarAutoHide()
+        'dark mode'         = ((Get-Reg $PersonalizeKey 'AppsUseLightTheme') -eq 0 -and (Get-Reg $PersonalizeKey 'SystemUsesLightTheme') -eq 0)
+        'accent'            = (([int64](Get-Reg $DwmKey 'AccentColor') -band 4294967295) -eq $AccentAbgr)
+        'wallpaper'         = (Get-Reg $DesktopKey 'WallPaper')
+    }
+}
+
+function Apply-Look {
+    Save-Original 'TaskbarAutoHide' ([int][DotfilesShell]::GetTaskbarAutoHide())
+    [DotfilesShell]::SetTaskbarAutoHide($true)
+    Say 'taskbar: auto-hide on'
+
+    # Wallpaper first: a new wallpaper makes Windows (and Wallpaper Engine)
+    # recompute the accent, which would overwrite colours set before it.
+    $wallpaper = Build-Wallpaper
+    Save-Original 'WallPaper' (Get-Reg $DesktopKey 'WallPaper')
+    Save-Original 'WallpaperStyle' (Get-Reg $DesktopKey 'WallpaperStyle')
+    Save-Original 'TileWallpaper' (Get-Reg $DesktopKey 'TileWallpaper')
+    Set-ItemProperty -Path $DesktopKey -Name WallpaperStyle -Value '10'   # Fill
+    Set-ItemProperty -Path $DesktopKey -Name TileWallpaper -Value '0'
+    if (-not [DotfilesShell]::SetWallpaper($wallpaper)) { throw "could not set wallpaper $wallpaper" }
+    Say "wallpaper: $wallpaper"
+    foreach ($n in 'AppsUseLightTheme', 'SystemUsesLightTheme') {
+        Save-Original $n (Get-Reg $PersonalizeKey $n)
+        Set-ItemProperty -Path $PersonalizeKey -Name $n -Value 0 -Type DWord
+    }
+    Save-Original 'AccentColor' (Get-Reg $DwmKey 'AccentColor')
+    Save-Original 'AccentColorMenu' (Get-Reg $AccentKey 'AccentColorMenu')
+    Save-Original 'StartColorMenu' (Get-Reg $AccentKey 'StartColorMenu')
+    Save-Original 'AccentPalette' (Get-Reg $AccentKey 'AccentPalette')
+    Save-Original 'AutoColorization' (Get-Reg $DesktopKey 'AutoColorization')
+    if (-not (Test-Path $AccentKey)) { New-Item -Path $AccentKey -Force | Out-Null }
+    $shades = Get-AccentShades
+    $bytes = New-Object byte[] 32
+    for ($i = 0; $i -lt 8; $i++) { for ($c = 0; $c -lt 3; $c++) { $bytes[$i * 4 + $c] = [byte]$shades[$i][$c] } }
+    Set-ItemProperty -Path $DesktopKey -Name AutoColorization -Value '0'
+    Set-ItemProperty -Path $AccentKey -Name AccentPalette -Value $bytes -Type Binary
+    Set-ItemProperty -Path $AccentKey -Name AccentColorMenu -Value (ConvertTo-DwordValue $AccentAbgr) -Type DWord
+    Set-ItemProperty -Path $AccentKey -Name StartColorMenu -Value (ConvertTo-DwordValue (ConvertTo-Abgr $shades[5])) -Type DWord
+    Set-ItemProperty -Path $DwmKey -Name AccentColor -Value (ConvertTo-DwordValue $AccentAbgr) -Type DWord
+    [DotfilesShell]::BroadcastColorChange()
+    Say 'colours: dark mode on, accent = palette blue (Start and taskbar pick it up fully after sign-out)'
+
+    if (Get-Process wallpaper32, wallpaper64 -ErrorAction SilentlyContinue) {
+        Write-Warning 'Wallpaper Engine is running and draws over the desktop; quit it to see this wallpaper.'
+    }
+}
+
+function Remove-Look {
+    if (-not (Test-Path $BackupKey)) { return }
+    $hide = Get-Reg $BackupKey 'TaskbarAutoHide'
+    if ($null -ne $hide) { [DotfilesShell]::SetTaskbarAutoHide($hide -eq '1') }
+    Restore-Original 'AppsUseLightTheme' $PersonalizeKey 'AppsUseLightTheme' 'DWord'
+    Restore-Original 'SystemUsesLightTheme' $PersonalizeKey 'SystemUsesLightTheme' 'DWord'
+    Restore-Original 'AccentColor' $DwmKey 'AccentColor' 'DWord'
+    Restore-Original 'AccentColorMenu' $AccentKey 'AccentColorMenu' 'DWord'
+    Restore-Original 'StartColorMenu' $AccentKey 'StartColorMenu' 'DWord'
+    Restore-Original 'AccentPalette' $AccentKey 'AccentPalette' 'Binary'
+    Restore-Original 'AutoColorization' $DesktopKey 'AutoColorization' 'String'
+    Restore-Original 'WallpaperStyle' $DesktopKey 'WallpaperStyle' 'String'
+    Restore-Original 'TileWallpaper' $DesktopKey 'TileWallpaper' 'String'
+    $wall = Get-Reg $BackupKey 'WallPaper'
+    if ($null -ne $wall -and $wall -ne '<absent>') { [void][DotfilesShell]::SetWallpaper($wall) }
+    [DotfilesShell]::BroadcastColorChange()
+    Remove-Item -Path $BackupKey -Recurse -Force
+    Say 'restored taskbar, colours and wallpaper'
+}
+
 function Show-Status {
     Say "Checkout: $Repo"
     foreach ($id in Get-WingetIds) {
@@ -118,6 +352,18 @@ function Show-Status {
     $guid = Get-ArchProfileGuid
     Say ('  terminal Arch profile       {0}' -f $(if ($guid) { $guid } else { 'NOT FOUND' }))
     Say ('  GlazeWM running             {0}' -f [bool](Get-Process glazewm -ErrorAction SilentlyContinue))
+    $look = Get-LookStatus
+    foreach ($k in $look.Keys) { Say ('  {0,-27} {1}' -f $k, $look[$k]) }
+}
+
+# Inside an MSIX container every registry write below would land in the
+# app's private hive: the Run value, colours and backups would exist only for
+# that app. Refuse instead of reporting success.
+if ($Apply -or $Remove) {
+    $package = Get-SandboxPackage
+    if ($package) {
+        throw "This shell runs inside the app package '$package', where registry writes are virtualized. Run setup.ps1 from a normal PowerShell or Windows Terminal window."
+    }
 }
 
 # ------------------------------------------------------------------ remove
@@ -148,6 +394,7 @@ if ($Remove) {
         Remove-Item -LiteralPath $WtFragmentDir -Recurse -Force
         Say 'removed terminal fragment'
     }
+    Remove-Look
     exit 0
 }
 
@@ -209,7 +456,10 @@ if ($guid) {
     Write-Warning 'No visible "Arch" profile in Windows Terminal settings.json; terminal theme skipped.'
 }
 
-# 5. start now
+# 5. the look: taskbar, colours, wallpaper
+Apply-Look
+
+# 6. start now
 if ($Start -and -not (Get-Process glazewm -ErrorAction SilentlyContinue)) {
     Start-Process -FilePath $GlazeExe -ArgumentList @('start', '--config', $GlazeConfig)
     Say 'started GlazeWM'
