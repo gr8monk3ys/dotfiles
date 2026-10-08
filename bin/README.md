@@ -340,7 +340,7 @@ about tap-qualified names and which manifests to read.
 
 ```bash
 manifest list <kind>   # one normalized package name per line
-manifest kinds         # brew cask cask-extra npm rust pacman code
+manifest kinds         # brew cask cask-extra npm rust pacman code winget
 manifest taps          # Homebrew taps declared in the Brewfile
 ```
 

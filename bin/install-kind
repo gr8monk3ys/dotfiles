@@ -10,7 +10,7 @@
 # Usage:
 #   install-kind <kind>
 #
-# Kinds come from `bin/manifest kinds`: brew cask cask-extra npm rust pacman code
+# Kinds come from `bin/manifest kinds`: brew cask cask-extra npm rust pacman code winget
 #
 # Environment:
 #   SKIP_KINDS        Space-separated kinds to skip, e.g. SKIP_KINDS="rust pacman"
@@ -193,6 +193,9 @@ main() {
         rust) install_rust ;;
         pacman) install_pacman ;;
         code) install_code ;;
+        # winget only exists on Windows, where there is no make: the Windows
+        # side is installed by windows/setup.ps1, which reads the same manifest.
+        winget) print_info "winget packages are installed by windows/setup.ps1, not here" ;;
     esac
 }
 

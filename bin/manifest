@@ -17,9 +17,10 @@
 #   - Brewfile/Caskfile entries are `brew "name"` / `cask "name"`; a trailing
 #     comment is allowed. Tap-qualified names are reduced to the last segment
 #     ("oven-sh/bun/bun" -> "bun"), because that is the name that lands on PATH.
-#   - npmfile/Rustfile/pacmanfile/Codefile hold one bare name per line, each
-#     validated against that ecosystem's own name grammar (npm scopes, cargo
-#     crate names, pacman names, publisher.extension ids).
+#   - npmfile/Rustfile/pacmanfile/Codefile/wingetfile hold one bare name per
+#     line, each validated against that ecosystem's own name grammar (npm
+#     scopes, cargo crate names, pacman names, publisher.extension ids,
+#     Publisher.Package winget ids).
 #   - A line that matches none of the above is an error, not something to
 #     skip: silently dropping unparseable lines is how the previous five
 #     parsers drifted apart without anyone noticing.
@@ -34,7 +35,7 @@ readonly DOTFILES_DIR
 readonly INSTALL_DIR="$DOTFILES_DIR/install"
 
 # kind -> filename
-readonly KINDS="brew cask cask-extra npm rust pacman code"
+readonly KINDS="brew cask cask-extra npm rust pacman code winget"
 
 # Per-kind name grammar. These were seven hand-rolled regexes in
 # test/test_packages.bats; they live here so the rule that parses a manifest
@@ -46,6 +47,8 @@ kind_pattern() {
         rust) echo '^[a-z0-9][a-z0-9_-]*$' ;;
         pacman) echo '^[a-z0-9][a-z0-9._+-]*$' ;;
         code) echo '^[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+$' ;;
+        # winget ids are Publisher.Package; ids are case-sensitive for `-e`.
+        winget) echo '^[A-Za-z0-9][A-Za-z0-9-]*\.[A-Za-z0-9][A-Za-z0-9.+_-]*$' ;;
         *) return 1 ;;
     esac
 }
@@ -59,6 +62,7 @@ kind_file() {
         rust) echo "Rustfile" ;;
         pacman) echo "pacmanfile" ;;
         code) echo "Codefile" ;;
+        winget) echo "wingetfile" ;;
         *) return 1 ;;
     esac
 }
