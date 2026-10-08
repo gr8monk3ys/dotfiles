@@ -367,6 +367,23 @@ See CONTEXT.md § Link state for the vocabulary. The directory list is derived
 from what the checkout ships; doctor previously carried a hand-written list of
 8 while stow links all 26.
 
+### [bin/link](link)
+
+The write side of link state: the only thing that links the checkout into a
+home directory. `make link`, `make link-dry-run` and `make unlink` call it.
+
+```bash
+link apply          # .zshenv, stow .config, tool-owned dirs, SSH Include, runtime dir
+link dry-run        # print exactly the rows apply would print; change nothing
+link undo           # remove the links, restore a pre-link ~/.zshenv
+link tool-owned     # directories linked unfolded because the tool writes into them
+link include-line   # the SSH Include line (dotfiles-init asks has-include)
+```
+
+apply and dry-run share one planner: every action and conflict is decided
+before anything is touched, so a conflict leaves the home directory as it was.
+See CONTEXT.md § Link for tool-owned paths.
+
 ### [install-kind](install-kind)
 
 Installs one manifest **kind**. How a kind installs — which manifest, which

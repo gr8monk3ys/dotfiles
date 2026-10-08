@@ -25,7 +25,7 @@
 #
 # Out of scope: ~/.ssh permissions, the SSH Include line and ~/.local/runtime.
 # Those are permission and directory state, not link state; dotfiles-doctor's
-# check_permissions covers the perms and SSH_INCLUDE_RE owns the Include.
+# check_permissions covers the perms and bin/link owns the Include.
 
 set -euo pipefail
 
