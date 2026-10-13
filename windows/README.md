@@ -38,6 +38,12 @@ From a normal (not elevated) PowerShell, in the checkout that should stay:
   `%LOCALAPPDATA%\Microsoft\Windows Terminal\Fragments\dotfiles\`: adds the
   `danse` scheme and sets it and the font on the `Arch` profile, without
   touching Terminal's own `settings.json`.
+- **Claude Code themes**: each theme in
+  [`.config\claude\themes`](../.config/claude/README.md) is copied to
+  `%USERPROFILE%\.claude\themes` (a same-named file that differs is kept as
+  `<name>.json.bak-<date>`). Copied, not linked, so re-run `-Apply` after
+  editing one; `-Remove` deletes only copies still identical to the
+  checkout's. Pick one with `/theme` in Claude Code.
 
 - **The look**: taskbar auto-hide (only the Zebar bar shows, as in Omarchy),
   dark mode, the palette's `blue` as accent colour — the whole `AccentPalette`,

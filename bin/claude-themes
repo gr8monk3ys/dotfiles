@@ -1,0 +1,235 @@
+#!/usr/bin/env bash
+# claude-themes - Install this checkout's Claude Code themes where Claude reads them.
+#
+# `.config/claude/themes/` is stowed to `~/.config/claude/themes/`, which
+# Claude Code never opens: custom themes are read from `themes/` inside its
+# own config directory (`~/.claude`, or `$CLAUDE_CONFIG_DIR`). This module
+# puts each tracked theme there.
+#
+# Usage:
+#   claude-themes status  [options]   # state<TAB>path, one row per theme
+#   claude-themes install [options]   # place every tracked theme
+#   claude-themes remove  [options]   # take out the ones this checkout placed
+#   claude-themes --states            # the state vocabulary, one per line
+#
+# Options:
+#   --copy        copy instead of symlinking (see "Symlink, not copy")
+#   --dry-run     report what install/remove would do; change nothing
+#   --target DIR  the themes directory to operate on
+#                 (default: ${CLAUDE_CONFIG_DIR:-$HOME/.claude}/themes)
+#
+# States:
+#   linked     the theme is a symlink resolving to this checkout's copy
+#   installed  the theme is a regular file identical to this checkout's copy
+#   foreign    a file of that name is present that this checkout did not put there
+#   absent     the theme is not in the themes directory
+#
+# --- Per file, never the directory -----------------------------------------
+#
+# Each theme is placed on its own; the themes directory itself is never
+# linked. `/theme` → "New custom theme…" writes new files into that
+# directory, and a directory link would drop every such experiment into the
+# checkout as an untracked file.
+#
+# --- Symlink, not copy -----------------------------------------------------
+#
+# Default is a symlink into the checkout: Claude Code watches the themes
+# directory and reloads on change, so an edit to the tracked file reaches a
+# running session with no reinstall step. `--copy` is for where a symlink is
+# not available or not followed — Git Bash on Windows turns `ln -s` into a
+# copy anyway, and `windows/setup.ps1` copies for the same reason.
+#
+# --- Never clobber ---------------------------------------------------------
+#
+# A `foreign` theme is moved aside to `<name>.json.bak.<timestamp>` before
+# being replaced (`.bak.*` is not `*.json`, so Claude Code does not list it).
+# Idempotent: a theme already in the desired state is left alone. `remove`
+# only deletes `linked` and `installed` themes; a `foreign` one stays.
+#
+# Selecting a theme is not this module's job: that is the `theme` key in
+# Claude Code's settings.json (`custom:<slug>`), set with `/theme`.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/preamble.sh
+source "$SCRIPT_DIR/lib/preamble.sh"
+# shellcheck source=lib/ui.sh
+source "$SCRIPT_DIR/lib/ui.sh"
+
+readonly SOURCE_DIR="$DOTFILES_DIR/.config/claude/themes"
+
+# The vocabulary, so callers and tests do not re-type it.
+readonly THEME_STATES="linked installed foreign absent"
+
+default_target() {
+    printf '%s\n' "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/themes"
+}
+
+# Tracked theme paths, one per line. An empty directory is not an error.
+tracked_themes() {
+    local f
+    for f in "$SOURCE_DIR"/*.json; do
+        [[ -f "$f" ]] && printf '%s\n' "$f"
+    done
+    return 0
+}
+
+theme_state() {
+    local source="$1" target="$2"
+    if [[ -L "$target" ]]; then
+        if [[ -e "$target" && "$(readlink -f "$target")" == "$(readlink -f "$source")" ]]; then
+            echo linked
+        else
+            echo foreign
+        fi
+    elif [[ -f "$target" ]]; then
+        if cmp -s "$source" "$target"; then echo installed; else echo foreign; fi
+    elif [[ -e "$target" ]]; then
+        echo foreign
+    else
+        echo absent
+    fi
+}
+
+cmd_status() {
+    local source
+    while IFS= read -r source; do
+        [[ -n "$source" ]] || continue
+        printf '%s\t%s\n' "$(theme_state "$source" "$TARGET_DIR/$(basename "$source")")" \
+            "$TARGET_DIR/$(basename "$source")"
+    done < <(tracked_themes)
+}
+
+place() {
+    local source="$1" target="$2"
+    if [[ "$COPY" == "1" ]]; then
+        cp "$source" "$target"
+    else
+        ln -s "$source" "$target"
+    fi
+}
+
+install_one() {
+    local source="$1" target state want backup
+    target="$TARGET_DIR/$(basename "$source")"
+    state="$(theme_state "$source" "$target")"
+    want="linked"
+    [[ "$COPY" == "1" ]] && want="installed"
+
+    if [[ "$state" == "$want" ]]; then
+        print_success "$(basename "$source") already $want"
+        return 0
+    fi
+
+    if [[ "$state" == "foreign" ]]; then
+        backup="$target.bak.$(date +%Y%m%d_%H%M%S)"
+        if [[ "$DRY_RUN" == "1" ]]; then
+            print_info "Would back up $target -> $backup"
+        else
+            mv "$target" "$backup"
+            print_warn "Backed up existing $(basename "$target") -> $backup"
+        fi
+    fi
+
+    if [[ "$DRY_RUN" == "1" ]]; then
+        print_info "Would place $(basename "$source") in $TARGET_DIR ($want)"
+        return 0
+    fi
+
+    # Our own file in the other mode: nothing of the user's to lose, so no
+    # backup, and rm makes `ln -s` idempotent without -f hiding a surprise.
+    rm -f "$target"
+    place "$source" "$target"
+    print_success "$(basename "$source") -> $target ($want)"
+}
+
+cmd_install() {
+    local source found=0
+    if [[ "$DRY_RUN" != "1" ]]; then
+        mkdir -p "$TARGET_DIR"
+    fi
+    while IFS= read -r source; do
+        [[ -n "$source" ]] || continue
+        found=1
+        install_one "$source"
+    done < <(tracked_themes)
+    if [[ "$found" == "0" ]]; then
+        print_warn "No themes tracked in $SOURCE_DIR"
+    fi
+}
+
+cmd_remove() {
+    local source target state
+    while IFS= read -r source; do
+        [[ -n "$source" ]] || continue
+        target="$TARGET_DIR/$(basename "$source")"
+        state="$(theme_state "$source" "$target")"
+        case "$state" in
+            linked | installed)
+                if [[ "$DRY_RUN" == "1" ]]; then
+                    print_info "Would remove $target"
+                else
+                    rm -f "$target"
+                    print_success "Removed $target"
+                fi
+                ;;
+            foreign) print_warn "$target is not this checkout's; left alone" ;;
+            absent) ;;
+        esac
+    done < <(tracked_themes)
+}
+
+usage() {
+    sed -n '/^# Usage:/,/^#   absent/p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+}
+
+COMMAND=""
+COPY=0
+DRY_RUN=0
+TARGET_DIR=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        status | install | remove)
+            if [[ -n "$COMMAND" ]]; then
+                print_error "Only one command at a time" >&2
+                exit 2
+            fi
+            COMMAND="$1"
+            ;;
+        --states)
+            printf '%s\n' $THEME_STATES
+            exit 0
+            ;;
+        --copy) COPY=1 ;;
+        --dry-run) DRY_RUN=1 ;;
+        --target)
+            if [[ $# -lt 2 ]]; then
+                print_error "--target needs a directory" >&2
+                exit 2
+            fi
+            TARGET_DIR="$2"
+            shift
+            ;;
+        -h | --help)
+            usage
+            exit 0
+            ;;
+        *)
+            print_error "Unknown argument: $1" >&2
+            usage >&2
+            exit 2
+            ;;
+    esac
+    shift
+done
+
+if [[ -z "$COMMAND" ]]; then
+    usage >&2
+    exit 2
+fi
+
+[[ -n "$TARGET_DIR" ]] || TARGET_DIR="$(default_target)"
+
+"cmd_$COMMAND"
