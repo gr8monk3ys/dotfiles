@@ -23,15 +23,21 @@
       4. Windows Terminal fragment: windows\windows-terminal\danse.json.tpl,
          with the Arch profile's GUID read from settings.json, written to
          %LOCALAPPDATA%\Microsoft\Windows Terminal\Fragments\dotfiles\
-      5. the look: taskbar auto-hide, dark mode, the palette's blue as
+      5. Claude Code themes: every theme in .config\claude\themes is
+         copied to %USERPROFILE%\.claude\themes (or
+         %CLAUDE_CONFIG_DIR%\themes). Copied, not linked: a file symlink
+         needs Developer Mode or admin. A same-named file that differs is
+         kept as <name>.json.bak-<date>.
+      6. the look: taskbar auto-hide, dark mode, the palette's blue as
          accent colour, and the La Danse wallpaper built by bin/wallpaper
          (ImageMagick, at the screen's resolution). Each original value is
          saved once under HKCU\Software\dotfiles\windows-setup first.
-      6. -Start also launches GlazeWM now (it re-tiles every open window)
+      7. -Start also launches GlazeWM now (it re-tiles every open window)
 
-    -Remove: undo 2-5 (the junction is unlinked, never recursed into; a
-    backed-up settings.json is restored; taskbar, colours and wallpaper go
-    back to the saved originals) and stop GlazeWM. Packages stay installed:
+    -Remove: undo 2-6 (the junction is unlinked, never recursed into; a
+    backed-up settings.json is restored; Claude Code themes still identical
+    to the checkout's are deleted; taskbar, colours and wallpaper go back to
+    the saved originals) and stop GlazeWM. Packages stay installed:
     `winget uninstall --id <id>` if wanted.
 
     Run it from the checkout that should stay: links point at this copy, and
@@ -68,6 +74,9 @@ $WtFragmentDir = Join-Path $env:LOCALAPPDATA 'Microsoft\Windows Terminal\Fragmen
 $WtFragment = Join-Path $WtFragmentDir 'danse.json'
 $WtTemplate = Join-Path $Repo 'windows\windows-terminal\danse.json.tpl'
 $Bash = Join-Path $env:ProgramFiles 'Git\bin\bash.exe'
+$ClaudeThemesSource = Join-Path $Repo '.config\claude\themes'
+$ClaudeConfigDir = if ($env:CLAUDE_CONFIG_DIR) { $env:CLAUDE_CONFIG_DIR } else { Join-Path $env:USERPROFILE '.claude' }
+$ClaudeThemesDir = Join-Path $ClaudeConfigDir 'themes'
 
 function Say([string]$Message) { Write-Host $Message }
 
@@ -96,6 +105,18 @@ function Get-JunctionTarget([string]$Path) {
     $item = Get-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
     if ($item -and $item.Target) { return @($item.Target)[0] }
     return $null
+}
+
+function Get-ClaudeThemes {
+    return @(Get-ChildItem -LiteralPath $ClaudeThemesSource -Filter '*.json' -File -ErrorAction SilentlyContinue | Sort-Object Name)
+}
+
+function Get-ClaudeThemeState([IO.FileInfo]$Source) {
+    # Same vocabulary as bin/claude-themes, minus `linked`: nothing is linked here.
+    $dest = Join-Path $ClaudeThemesDir $Source.Name
+    if (-not (Test-Path -LiteralPath $dest)) { return 'absent' }
+    if ((Get-FileHash -LiteralPath $dest).Hash -eq (Get-FileHash -LiteralPath $Source.FullName).Hash) { return 'installed' }
+    return 'foreign'
 }
 
 function Get-ArchProfileGuid {
@@ -352,6 +373,9 @@ function Show-Status {
     $guid = Get-ArchProfileGuid
     Say ('  terminal Arch profile       {0}' -f $(if ($guid) { $guid } else { 'NOT FOUND' }))
     Say ('  GlazeWM running             {0}' -f [bool](Get-Process glazewm -ErrorAction SilentlyContinue))
+    foreach ($theme in Get-ClaudeThemes) {
+        Say ('  {0,-27} {1}' -f "claude $($theme.BaseName)", (Get-ClaudeThemeState $theme))
+    }
     $look = Get-LookStatus
     foreach ($k in $look.Keys) { Say ('  {0,-27} {1}' -f $k, $look[$k]) }
 }
@@ -393,6 +417,13 @@ if ($Remove) {
     if (Test-Path -LiteralPath $WtFragmentDir) {
         Remove-Item -LiteralPath $WtFragmentDir -Recurse -Force
         Say 'removed terminal fragment'
+    }
+    foreach ($theme in Get-ClaudeThemes) {
+        # Only a copy still identical to the checkout's: an edited one is the user's.
+        if ((Get-ClaudeThemeState $theme) -eq 'installed') {
+            Remove-Item -LiteralPath (Join-Path $ClaudeThemesDir $theme.Name)
+            Say "removed claude theme $($theme.Name)"
+        }
     }
     Remove-Look
     exit 0
@@ -456,10 +487,26 @@ if ($guid) {
     Write-Warning 'No visible "Arch" profile in Windows Terminal settings.json; terminal theme skipped.'
 }
 
-# 5. the look: taskbar, colours, wallpaper
+# 5. Claude Code themes
+New-Item -ItemType Directory -Path $ClaudeThemesDir -Force | Out-Null
+foreach ($theme in Get-ClaudeThemes) {
+    $state = Get-ClaudeThemeState $theme
+    if ($state -eq 'installed') { continue }
+    $dest = Join-Path $ClaudeThemesDir $theme.Name
+    if ($state -eq 'foreign') {
+        $bak = '{0}.bak-{1:yyyy-MM-dd}' -f $dest, (Get-Date)
+        Copy-Item -LiteralPath $dest -Destination $bak -Force
+        Say "claude theme $($theme.Name) replaced (previous kept as $(Split-Path $bak -Leaf))"
+    } else {
+        Say "claude theme $($theme.Name) written"
+    }
+    Copy-Item -LiteralPath $theme.FullName -Destination $dest -Force
+}
+
+# 6. the look: taskbar, colours, wallpaper
 Apply-Look
 
-# 6. start now
+# 7. start now
 if ($Start -and -not (Get-Process glazewm -ErrorAction SilentlyContinue)) {
     Start-Process -FilePath $GlazeExe -ArgumentList @('start', '--config', $GlazeConfig)
     Say 'started GlazeWM'
