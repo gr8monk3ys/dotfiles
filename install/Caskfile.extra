@@ -37,7 +37,10 @@ cask "monero-wallet"                   # Cryptocurrency wallet
 # ============================================================================
 # Communication
 # ============================================================================
-cask "dorion"                          # Discord client alternative
+# Tap-qualified so the tap is fetched only when this optional file is
+# installed. As a `tap` line in the Brewfile, a broken cask in that
+# third-party tap failed the core `brew bundle`.
+cask "psharma04/dorion/dorion"         # Discord client alternative
 
 # ============================================================================
 # Gaming & Entertainment
