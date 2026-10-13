@@ -422,7 +422,6 @@ does not do the obvious way, each for a reason:
 `user.js` is read once, at startup, so `install` warns when Firefox is
 running instead of quietly doing nothing visible.
 
-
 ### [claude-themes](claude-themes)
 
 Installs this checkout's Claude Code themes into the directory Claude Code
