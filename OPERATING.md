@@ -208,6 +208,10 @@ echo "# New App Configuration" > .config/new-app/README.md
 make link
 ```
 
+If the app writes its own files into its config directory (caches, generated
+defaults, saved state), add it to `TOOL_OWNED` in `bin/link` with the write that
+justifies it, so it is linked unfolded and those files stay out of the repo.
+
 The `.config/new-app/README.md` should document why the config exists, any non-obvious choices, and a link to upstream docs. This is a repo-wide convention (see [Per-config README](#per-config-readme)).
 
 ### Add a Homebrew formula (CLI tool)
@@ -322,7 +326,8 @@ make link
 ### `.zshenv` symlink lost
 
 ```bash
-make restore-zshenv
+make link     # relinks it; a real ~/.zshenv in the way is moved to ~/.zshenv.bak
+make unlink   # the reverse: removes the links and restores ~/.zshenv.bak
 ```
 
 ### Homebrew prefix confusion

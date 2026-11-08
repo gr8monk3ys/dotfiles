@@ -35,3 +35,7 @@ across both vim-navigation rules were byte-identical. Review the diff rather
 than assuming, then commit it.
 
 `automatic_backups/` and `assets/` are the GUI's own state and are gitignored.
+
+The directory stays folded on purpose, unlike `bin/link`'s tool-owned dirs:
+Karabiner-Elements does not notice changes to a `karabiner.json` that is
+itself a symlink, and upstream says to link the directory instead.

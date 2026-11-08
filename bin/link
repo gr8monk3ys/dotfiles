@@ -1,0 +1,464 @@
+#!/usr/bin/env bash
+# link - Link this checkout into a home directory: the write side of link state.
+#
+# `bin/link-state` classifies what is linked; this module is the only thing
+# that changes it. Before it existed, linking lived in three Makefile recipes:
+# `link`, a hand-written `link-dry-run` mirror of it that had already drifted
+# (it never mentioned the runtime directory), and `unlink`, whose .zshenv
+# restore was copied again into `restore-zshenv`. The SSH Include line was
+# defined twice — in the Makefile and in dotfiles-init — with a grep test whose
+# only job was to keep the copies equal.
+#
+# Usage:
+#   link apply              link the checkout into $HOME
+#   link dry-run            print what apply would do; change nothing
+#   link undo               reverse apply; restore a pre-link ~/.zshenv
+#   link tool-owned         the tool-owned directories, one per line
+#   link include-line       the SSH Include line apply ensures
+#   link has-include [FILE] exit 0 if FILE (default ~/.ssh/config) carries it
+#
+# apply and dry-run run the same planner. Every action is decided — and every
+# conflict found — before anything is touched; then each one is printed on
+# stdout and, in apply, performed. So dry-run's stdout is exactly apply's
+# stdout, and a conflict aborts with the home directory unchanged. Narration
+# goes to stderr.
+#
+# Targets: $HOME, and ${XDG_CONFIG_HOME:-$HOME/.config} for the .config tree.
+# Tests point both at a fixture; nothing here assumes the real home.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/preamble.sh
+source "$SCRIPT_DIR/lib/preamble.sh"
+
+# --- tool-owned paths --------------------------------------------------------
+# Config directories a tool writes its own files into. stow folds a directory
+# it can link whole into a single symlink, so for these every write the tool
+# makes lands in the checkout. They are linked unfolded instead: a real
+# directory under ~/.config holding one link per shipped file, so the tool's
+# own files stay out of the repository.
+#
+#   cava  writes default shaders/ and themes/ into its config dir on every
+#         start when they are missing, whatever output method is configured.
+#         Folded, that is how ~1,000 lines of never-loaded GLSL and themes got
+#         committed (this config uses `method = ncurses`).
+#   mpd   mpd.conf sets `playlist_directory "~/.config/mpd/playlists"`; saved
+#         playlists would be written into the checkout, untracked.
+#
+# Deliberately not tool-owned:
+#
+#   karabiner  must stay folded. Karabiner-Elements does not notice changes to
+#              a karabiner.json that is itself a symlink (upstream docs say to
+#              link the directory), so unfolding would break live reload. Its
+#              generated automatic_backups/ and assets/ are gitignored instead.
+#   btop       its only write is rewriting btop.conf in place (an ofstream
+#              with trunc), which follows a file link exactly as it follows a
+#              folded directory; its log is under XDG_STATE_HOME since 1.4.
+#              Unfolding would change nothing.
+#   zsh        .zcompdump goes where .zshrc tells compinit to put it; that is
+#              a config choice, fixed in .zshrc if anywhere.
+#
+# Names only, no slashes: each is a directory directly under .config/.
+readonly TOOL_OWNED="cava mpd"
+
+# --- the SSH Include line ----------------------------------------------------
+# One definition. The pattern tolerates leading whitespace and a trailing
+# comment so a hand-edited config is still recognised, and matches the `*`
+# literally: an escaping mismatch between two copies of this once made
+# `make link` append a fresh block on every run.
+readonly SSH_INCLUDE_LINE='Include ~/.config/ssh/config.d/*.conf'
+readonly SSH_INCLUDE_RE='^[[:space:]]*Include[[:space:]]+~/\.config/ssh/config\.d/\*\.conf([[:space:]]|$)'
+
+TARGET_HOME="$HOME"
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+readonly TARGET_HOME CONFIG_HOME
+readonly SRC_CONFIG="$DOTFILES_DIR/.config"
+readonly ZSHENV="$TARGET_HOME/.zshenv"
+readonly SSH_DIR="$TARGET_HOME/.ssh"
+readonly SSH_CONFIG="$SSH_DIR/config"
+readonly RUNTIME_DIR="$TARGET_HOME/.local/runtime"
+MODE=""
+
+usage() {
+    sed -n '/^# Usage:/,/^# apply and dry-run/p' "$0" | sed '$d' | sed 's/^# \{0,1\}//'
+}
+
+die() {
+    echo "link: $*" >&2
+    exit 1
+}
+
+# --- the plan ----------------------------------------------------------------
+# Newline-separated `verb<TAB>path<TAB>arg` rows. Strings, not arrays: this
+# runs under macOS's bash 3.2 on a fresh Mac, where `set -u` rejects an empty
+# array expansion.
+
+PLAN=""
+CONFLICTS=""
+# Directories the plan creates (or empties by removing a folded link). What is
+# under them is decided without looking: what is there now is either nothing
+# or the checkout seen through the link.
+FRESH=$'\n'
+# Paths undo's plan removes, so it can tell which directories end up empty.
+REMOVED=$'\n'
+
+add() { PLAN+="$1"$'\t'"$2"$'\t'"${3:-}"$'\n'; }
+conflict() { CONFLICTS+="  $1"$'\n'; }
+mark_fresh() { FRESH+="$1"$'\n'; }
+is_fresh() { [[ "$FRESH" == *$'\n'"$1"$'\n'* ]]; }
+mark_removed() { REMOVED+="$1"$'\n'; }
+is_removed() { [[ "$REMOVED" == *$'\n'"$1"$'\n'* ]]; }
+
+checkout_phys() { (cd "$DOTFILES_DIR" && pwd -P); }
+
+# Does this existing link resolve to that source? Both sides canonicalised:
+# readlink -f turns /var into /private/var on macOS.
+points_to() {
+    [[ -L "$1" && -e "$1" && -e "$2" ]] || return 1
+    [[ "$(readlink -f "$1")" == "$(readlink -f "$2")" ]]
+}
+
+# Does a directory physically live inside the checkout? Guards undo from ever
+# removing anything reached through a folded link.
+in_checkout() {
+    local phys
+    phys="$(cd "$1" 2> /dev/null && pwd -P)" || return 1
+    [[ "$phys" == "$(checkout_phys)"/* ]]
+}
+
+# A symlink holds no data, so one that is broken or resolves into the checkout
+# (ours, but stale) may be replaced. One to a real file elsewhere may not.
+replaceable_link() {
+    [[ -L "$1" ]] || return 1
+    [[ -e "$1" ]] || return 0
+    [[ "$(readlink -f "$1")" == "$(checkout_phys)"/* ]]
+}
+
+# Exact permission bits; `find -perm MODE` means the same on BSD and GNU.
+has_mode() { [[ -n "$(find "$1" -maxdepth 0 -perm "$2" 2> /dev/null)" ]]; }
+
+# --- planning: apply ---------------------------------------------------------
+
+plan_zshenv() {
+    points_to "$ZSHENV" "$DOTFILES_DIR/.zshenv" && return 0
+    if [[ -L "$ZSHENV" ]]; then
+        : # a foreign or broken link holds no data; ln -sfn replaces it
+    elif [[ -d "$ZSHENV" ]]; then
+        conflict "$ZSHENV is a directory"
+        return 0
+    elif [[ -e "$ZSHENV" ]]; then
+        if [[ -e "$ZSHENV.bak" || -L "$ZSHENV.bak" ]]; then
+            conflict "$ZSHENV is a real file and $ZSHENV.bak already exists; move one aside"
+            return 0
+        fi
+        add backup "$ZSHENV" "$ZSHENV.bak"
+    fi
+    add symlink "$ZSHENV" "$DOTFILES_DIR/.zshenv"
+}
+
+plan_config_home() {
+    if [[ ! -d "$CONFIG_HOME" ]]; then
+        add mkdir "$CONFIG_HOME"
+        mark_fresh "$CONFIG_HOME"
+    fi
+}
+
+# Link one tool-owned directory unfolded: a real directory for every shipped
+# directory, a link for every shipped file. A folded link left by an earlier
+# stow is removed and the directory rebuilt. The checkout is not touched, and
+# anything the tool had written there is linked like the rest, so nothing it
+# could see before disappears.
+plan_tool_owned_dir() {
+    local src="$SRC_CONFIG/$1" dst="$CONFIG_HOME/$1" d f t
+    [[ -d "$src" ]] || return 0
+
+    while IFS= read -r d; do
+        t="$dst${d#"$src"}"
+        if is_fresh "$(dirname "$t")"; then
+            add mkdir "$t"
+            mark_fresh "$t"
+        elif [[ -L "$t" ]]; then
+            if points_to "$t" "$d"; then
+                add unfold "$t"
+                add mkdir "$t"
+                mark_fresh "$t"
+            else
+                conflict "$t is a link to $(readlink "$t"), not to $d"
+            fi
+        elif [[ -d "$t" ]]; then
+            :
+        elif [[ -e "$t" ]]; then
+            conflict "$t exists and is not a directory"
+        else
+            add mkdir "$t"
+            mark_fresh "$t"
+        fi
+    done < <(find "$src" -type d | sort)
+
+    while IFS= read -r f; do
+        t="$dst${f#"$src"}"
+        if is_fresh "$(dirname "$t")"; then
+            add symlink "$t" "$f"
+        elif points_to "$t" "$f"; then
+            :
+        elif replaceable_link "$t" || [[ ! -e "$t" ]]; then
+            add symlink "$t" "$f"
+        else
+            conflict "$t exists and is not a link into this checkout"
+        fi
+    done < <(find "$src" ! -type d | sort)
+}
+
+# stow must leave the tool-owned directories alone: they are linked above.
+# stow anchors each --ignore at the end of the path relative to the target,
+# so `^cava` matches the top-level entry and nothing else.
+stow_run() {
+    local args="" name
+    for name in $TOOL_OWNED; do args="$args --ignore=^$name"; done
+    # shellcheck disable=SC2086 # one flag per word, by construction
+    stow "$@" -d "$DOTFILES_DIR" $args .config
+}
+
+# stow does its own planning; ask it with -n so a conflict aborts here, before
+# anything in the plan has run. Each operation it reports becomes a
+# display-only row, followed by one row that performs the lot.
+plan_stow() {
+    local direction="$1" target="$CONFIG_HOME" scratch="" out status=0 line any=0
+    local -a flags=(-n -v)
+    [[ "$direction" == delete ]] && flags+=(-D)
+    if ! command_exists stow; then
+        if [[ "$MODE" == dry-run ]]; then
+            echo "link: stow is not installed, so its links cannot be previewed ('make link' installs it)" >&2
+            return 0
+        fi
+        die "stow is not installed ('make link' installs it)"
+    fi
+    if [[ ! -d "$target" ]]; then
+        # Nothing to unstow from a directory that is not there.
+        [[ "$direction" == delete ]] && return 0
+        # It is planned for creation, so ask stow about an empty stand-in.
+        # Link targets are relative to the target, which is why rows keep
+        # only the operation and the name.
+        scratch="$(mktemp -d)"
+        target="$scratch"
+    fi
+    out="$(stow_run "${flags[@]}" -t "$target" 2>&1)" || status=$?
+    if [[ -n "$scratch" ]]; then rm -rf "$scratch"; fi
+    if [[ "$status" -ne 0 ]]; then
+        CONFLICTS+="$(printf '%s\n' "$out" | sed 's/^/  stow: /')"$'\n'
+        return 0
+    fi
+    while IFS= read -r line; do
+        case "$line" in
+            LINK:* | UNLINK:* | MKDIR:* | RMDIR:* | MV:*)
+                add stow-op "$CONFIG_HOME" "${line%% => *}"
+                any=1
+                ;;
+        esac
+    done <<< "$out"
+    if [[ "$any" -eq 1 ]]; then add stow "$CONFIG_HOME" "$direction"; fi
+}
+
+plan_ssh() {
+    if [[ ! -d "$SSH_DIR" ]]; then
+        add mkdir "$SSH_DIR" 700
+    elif ! has_mode "$SSH_DIR" 700; then
+        add chmod "$SSH_DIR" 700
+    fi
+    if [[ ! -f "$SSH_CONFIG" ]]; then
+        add create "$SSH_CONFIG" 600
+    else
+        has_mode "$SSH_CONFIG" 600 || add chmod "$SSH_CONFIG" 600
+        grep -Eq "$SSH_INCLUDE_RE" "$SSH_CONFIG" && return 0
+    fi
+    add append "$SSH_CONFIG" "$SSH_INCLUDE_LINE"
+}
+
+# A private per-user runtime directory for tools that want one.
+plan_runtime() {
+    if [[ ! -d "$RUNTIME_DIR" ]]; then
+        add mkdir "$RUNTIME_DIR" 700
+    elif ! has_mode "$RUNTIME_DIR" 700; then
+        add chmod "$RUNTIME_DIR" 700
+    fi
+}
+
+plan_apply() {
+    local name
+    plan_zshenv
+    plan_config_home
+    for name in $TOOL_OWNED; do plan_tool_owned_dir "$name"; done
+    plan_stow stow
+    plan_ssh
+    plan_runtime
+}
+
+# --- planning: undo ----------------------------------------------------------
+# The reverse of the link-shaped half of apply. The SSH Include and the runtime
+# directory stay: ~/.ssh/config is the user's file, an Include of an empty glob
+# is harmless, and a runtime directory may hold another program's sockets.
+
+plan_undo_tool_owned_dir() {
+    local src="$SRC_CONFIG/$1" dst="$CONFIG_HOME/$1" d f t entry all
+    [[ -d "$src" ]] || return 0
+
+    # A folded link from before this module: one link, one removal.
+    if [[ -L "$dst" ]]; then
+        if points_to "$dst" "$src"; then add unlink "$dst"; fi
+        return 0
+    fi
+    [[ -d "$dst" ]] || return 0
+
+    while IFS= read -r f; do
+        t="$dst${f#"$src"}"
+        if points_to "$t" "$f"; then
+            add unlink "$t"
+            mark_removed "$t"
+        fi
+    done < <(find "$src" ! -type d | sort)
+
+    # Deepest first, so a directory is judged after its children. Removed
+    # only if everything left in it is something this plan removes: files the
+    # tool wrote keep their directory.
+    while IFS= read -r d; do
+        t="$dst${d#"$src"}"
+        if [[ -L "$t" ]]; then
+            if points_to "$t" "$d"; then
+                add unlink "$t"
+                mark_removed "$t"
+            fi
+            continue
+        fi
+        [[ -d "$t" ]] || continue
+        in_checkout "$t" && continue
+        all=1
+        while IFS= read -r entry; do
+            is_removed "$entry" || {
+                all=0
+                break
+            }
+        done < <(find "$t" -mindepth 1 -maxdepth 1)
+        if [[ "$all" -eq 1 ]]; then
+            add rmdir "$t"
+            mark_removed "$t"
+        fi
+    done < <(find "$src" -type d | sort -r)
+}
+
+plan_undo_zshenv() {
+    local gone=0
+    if points_to "$ZSHENV" "$DOTFILES_DIR/.zshenv"; then
+        add unlink "$ZSHENV"
+        gone=1
+    elif [[ ! -e "$ZSHENV" && ! -L "$ZSHENV" ]]; then
+        gone=1
+    fi
+    if [[ "$gone" -eq 1 && -f "$ZSHENV.bak" ]]; then
+        add restore "$ZSHENV" "$ZSHENV.bak"
+    fi
+}
+
+plan_undo() {
+    local name
+    plan_stow delete
+    for name in $TOOL_OWNED; do plan_undo_tool_owned_dir "$name"; done
+    plan_undo_zshenv
+}
+
+# --- running the plan --------------------------------------------------------
+
+describe() {
+    local verb="$1" path="$2" arg="$3"
+    case "$verb" in
+        backup) printf 'backup   %s -> %s\n' "$path" "$arg" ;;
+        symlink) printf 'link     %s -> %s\n' "$path" "$arg" ;;
+        unfold) printf 'unfold   %s (was one folded link into the checkout)\n' "$path" ;;
+        mkdir) printf 'mkdir    %s%s\n' "$path" "${arg:+ ($arg)}" ;;
+        chmod) printf 'chmod    %s %s\n' "$arg" "$path" ;;
+        create) printf 'create   %s (%s)\n' "$path" "$arg" ;;
+        append) printf 'append   %s: %s\n' "$path" "$arg" ;;
+        stow-op) printf 'stow     %s\n' "$arg" ;;
+        stow) ;; # its operations were listed already, one row each
+        unlink) printf 'unlink   %s\n' "$path" ;;
+        rmdir) printf 'rmdir    %s\n' "$path" ;;
+        restore) printf 'restore  %s -> %s\n' "$arg" "$path" ;;
+    esac
+}
+
+perform() {
+    local verb="$1" path="$2" arg="$3"
+    case "$verb" in
+        backup) mv "$path" "$arg" ;;
+        symlink) ln -sfn "$arg" "$path" ;;
+        unfold | unlink) rm "$path" ;;
+        mkdir)
+            mkdir -p "$path"
+            if [[ -n "$arg" ]]; then chmod "$arg" "$path"; fi
+            ;;
+        chmod) chmod "$arg" "$path" ;;
+        create) (umask 077 && : > "$path") && chmod "$arg" "$path" ;;
+        append) printf '\n# Dotfiles managed SSH host snippets\n%s\n' "$arg" >> "$path" ;;
+        stow-op) ;;
+        stow)
+            if [[ "$arg" == delete ]]; then
+                stow_run -D -t "$path"
+            else
+                stow_run -t "$path"
+            fi
+            ;;
+        rmdir) rmdir "$path" ;;
+        restore) mv "$arg" "$path" ;;
+    esac
+}
+
+run_plan() {
+    local verb path arg
+    if [[ -n "$CONFLICTS" ]]; then
+        echo "link: refusing to $MODE; nothing was changed:" >&2
+        printf '%s' "$CONFLICTS" >&2
+        exit 1
+    fi
+    if [[ -z "$PLAN" ]]; then
+        echo "link: nothing to do" >&2
+        return 0
+    fi
+    while IFS=$'\t' read -r verb path arg; do
+        [[ -n "$verb" ]] || continue
+        describe "$verb" "$path" "$arg"
+        if [[ "$MODE" != dry-run ]]; then perform "$verb" "$path" "$arg"; fi
+    done <<< "$PLAN"
+}
+
+main() {
+    MODE="${1:-}"
+    case "$MODE" in
+        apply | dry-run)
+            plan_apply
+            run_plan
+            if [[ "$MODE" == dry-run ]]; then
+                echo "link: dry run; nothing was changed ('make link' applies it)" >&2
+            fi
+            ;;
+        undo)
+            plan_undo
+            run_plan
+            ;;
+        tool-owned)
+            # shellcheck disable=SC2086 # the list is space-separated names
+            printf '%s\n' $TOOL_OWNED
+            ;;
+        include-line) echo "$SSH_INCLUDE_LINE" ;;
+        has-include)
+            local file="${2:-$SSH_CONFIG}"
+            [[ -f "$file" ]] && grep -Eq "$SSH_INCLUDE_RE" "$file"
+            ;;
+        -h | --help | help) usage ;;
+        *)
+            usage >&2
+            exit 2
+            ;;
+    esac
+}
+
+main "$@"

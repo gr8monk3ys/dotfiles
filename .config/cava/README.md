@@ -35,6 +35,15 @@ That is a system audio change with real consequences if you get it wrong —
 notably, volume keys stop working on a Multi-Output Device — so it is left for
 you to do deliberately rather than applied by `make`.
 
+## Linked unfolded
+
+cava writes default `shaders/` and `themes/` into its config directory on
+every start when they are missing. With the directory folded into the
+checkout, those files landed in the repo and were once committed, although this
+config never loads them (`method = ncurses`). `.config/cava/` is a tool-owned
+path in `bin/link`, so `make link` makes `~/.config/cava` a real directory
+holding a link per tracked file; cava's own files stay outside the checkout.
+
 ## Gotchas
 
 - Needs Microphone permission for whatever terminal it runs in; macOS prompts

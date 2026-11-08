@@ -59,6 +59,28 @@ preserve. This is the opposite of the tool lists in **command vs package**,
 where the severity tiers are a real editorial choice and the validator checks
 a curated list instead of replacing it.
 
+## Link
+
+Changing **link state** is `bin/link`'s job, and only its: `link-state` is the
+read side, `link` the write side. It owns the `.zshenv` symlink and its backup,
+the stow invocation, the SSH `Include` line (one definition; `dotfiles-init`
+asks `link has-include`), and `~/.local/runtime`.
+
+Three modes, one planner. `apply` and `dry-run` compute the same plan — every
+action decided and every conflict found before anything is touched — and print
+the same rows; only `apply` performs them. `undo` plans the reverse. A dry run
+that is its own code path drifts from the real one, which is how the old
+`link-dry-run` came to omit the runtime directory.
+
+A **tool-owned path** is a config directory a tool writes its own files into.
+stow folds a directory it can link whole into one symlink, so those writes land
+in the checkout; tool-owned directories are linked **unfolded** instead — a
+real directory holding one link per shipped file — and a folded link left by an
+older `make link` is converted in place. The list is curated in `bin/link`
+(`link tool-owned` prints it), each entry with the write that justifies it.
+Karabiner is the deliberate exception: it must stay folded, because
+Karabiner-Elements does not notice changes to a symlinked `karabiner.json`.
+
 ## Local config
 
 The gitignored per-machine files the **checkout** expects but deliberately does

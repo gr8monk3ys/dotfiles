@@ -63,13 +63,9 @@ readonly JJ_EXAMPLE="$DOTFILES_DIR/.config/jj/conf.d/user.toml.example"
 readonly SSH_CONFIG="$HOME/.ssh/config"
 readonly SSH_SNIPPET_DIR="$CONFIG_HOME/ssh/config.d"
 
-# The same Include line `make link` appends, and the same pattern it matches
-# with. Deliberately duplicated rather than shared: make cannot source a shell
-# library, and the alternative — a flag on this script that exists only so the
-# Makefile can call it — is more interface than the duplication is worth.
-# test_dotfiles_init.bats asserts the two copies still agree.
-readonly SSH_INCLUDE_LINE='Include ~/.config/ssh/config.d/*.conf'
-readonly SSH_INCLUDE_RE='^[[:space:]]*Include[[:space:]]+~/\.config/ssh/config\.d/\*\.conf([[:space:]]|$)'
+# The Include line itself belongs to bin/link, which appends it; this module
+# only asks whether it is there, so there is one definition to keep right.
+readonly LINK="$SCRIPT_DIR/link"
 
 # --- values ----------------------------------------------------------------
 
@@ -207,9 +203,7 @@ status_jj() {
 }
 
 status_ssh_include() {
-    # grep against a file, not a pipeline: `producer | grep -q` under
-    # `set -o pipefail` reports failure when grep exits on the first match.
-    if [[ -f "$SSH_CONFIG" ]] && grep -Eq "$SSH_INCLUDE_RE" "$SSH_CONFIG"; then
+    if "$LINK" has-include "$SSH_CONFIG"; then
         emit configured ssh-include "$SSH_CONFIG includes $SSH_SNIPPET_DIR"
     else
         emit unconfigured ssh-include "$SSH_CONFIG does not include $SSH_SNIPPET_DIR (run 'make link')"
@@ -451,7 +445,7 @@ main() {
     configure_git
     configure_jj
     echo ""
-    # The report is advisory here, not the verdict: `make link` owns the SSH
+    # The report is advisory here, not the verdict: bin/link owns the SSH
     # Include line and host snippets are the machine's business, so neither is
     # this command's to fail over. --check is the gate.
     report || true
