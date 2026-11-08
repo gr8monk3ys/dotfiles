@@ -1,0 +1,48 @@
+{
+  "name": "lscaturchio.xyz (light)",
+  "base": "light",
+  "overrides": {
+    "claude": "#184e35",
+    "claudeShimmer": "#397f5e",
+    "text": "#1a1f23",
+    "inverseText": "#f9f7f4",
+    "inactive": "#606976",
+    "inactiveShimmer": "#8b93a0",
+    "subtle": "#cfc6bd",
+    "suggestion": "#397f5e",
+    "permission": "#184e35",
+    "permissionShimmer": "#397f5e",
+    "remember": "#397f5e",
+
+    "success": "#397f5e",
+    "error": "#a71b1b",
+    "warning": "#96660f",
+    "warningShimmer": "#c08a2a",
+    "merged": "#6b4fa8",
+
+    "promptBorder": "#cfc6bd",
+    "promptBorderShimmer": "#a89d92",
+    "planMode": "#2f6f8f",
+    "autoAccept": "#6b4fa8",
+    "bashBorder": "#96660f",
+    "ide": "#2f6f8f",
+
+    "diffAdded": "#d6ebdf",
+    "diffRemoved": "#f3d9d6",
+    "diffAddedDimmed": "#e6f1ea",
+    "diffRemovedDimmed": "#f6e8e6",
+    "diffAddedWord": "#a9d6bd",
+    "diffRemovedWord": "#e6aaa5",
+
+    "userMessageBackground": "#eeece7",
+    "userMessageBackgroundHover": "#e2dbd5",
+    "bashMessageBackgroundColor": "#eeece7",
+    "memoryBackgroundColor": "#e3eee7",
+    "selectionBg": "#bfe0cd",
+
+    "rate_limit_fill": "#397f5e",
+    "rate_limit_empty": "#e2dbd5",
+    "briefLabelYou": "#606976",
+    "briefLabelClaude": "#184e35"
+  }
+}

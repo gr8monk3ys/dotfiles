@@ -27,7 +27,7 @@ LINK = DOTFILES_DIR="$(DOTFILES_DIR)" HOME="$(HOME)" XDG_CONFIG_HOME="$(XDG_CONF
 
 .PHONY: all macos arch link unlink link-dry-run test test-setup verify \
         verify-config-live verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-doctor-tools verify-tests \
-        doctor init update backup firefox worktree-add worktree-list worktree-remove worktree-prune \
+        doctor init update backup firefox claude-themes worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
         brew git packages-macos packages-arch core-macos core-arch \
         stow-arch stow-macos stow-linux linux unknown cask-apps cask-apps-extra vscode-extensions node-packages \
@@ -298,6 +298,13 @@ firefox:
 	@DOTFILES_DIR="$(DOTFILES_DIR)" $(MAKEFILE_DIR)/bin/firefox-user-js install \
 		$(if $(filter all,$(profiles)),--all) $(if $(copy),--copy) $(if $(dry),--dry-run)
 
+## Install this checkout's Claude Code themes into Claude's own config dir
+# Not folded into `link` for the same reason as `firefox`: stow's target
+# (~/.config/claude/themes) is a path Claude Code never opens. Themes are read
+# from ~/.claude/themes (or $$CLAUDE_CONFIG_DIR/themes).
+claude-themes:
+	@DOTFILES_DIR="$(DOTFILES_DIR)" $(MAKEFILE_DIR)/bin/claude-themes install 		$(if $(copy),--copy) $(if $(dry),--dry-run)
+
 ## Benchmark interactive zsh startup against a performance budget
 bench-shell:
 	@bin/dotfiles-bench-shell --runs "$(if $(runs),$(runs),7)" --budget-ms "$(if $(budget),$(budget),900)"
@@ -464,6 +471,8 @@ help:
 	@echo "  make firefox [profiles=all] [copy=1] [dry=1] - Install user.js into"
 	@echo "                      the Firefox profiles that read it (bin/firefox-user-js status"
 	@echo "                      reports where it landed)"
+	@echo "  make claude-themes [copy=1] [dry=1] - Install the tracked Claude Code themes"
+	@echo "                      into ~/.claude/themes (bin/claude-themes status reports them)"
 	@echo "  make restore [backup=/path] - Restore latest/specified backup snapshot"
 	@echo "  make restore-zshenv - Same as unlink: undo links, restore the pre-link .zshenv"
 	@echo "  make bench-shell [runs=7] [budget=900] - Benchmark zsh startup budget"
@@ -488,7 +497,7 @@ help:
 	@echo ""
 	@echo "Environment:"
 	@echo "  SKIP_KINDS=\"rust pacman\"  - Skip these manifest kinds"
-	@echo "                          (brew cask cask-extra npm rust pacman code)"
+	@echo "                          (brew cask cask-extra npm rust pacman code winget)"
 	@echo "  STRICT_PACKAGES=1       - Make a package install failure fatal"
 	@echo "  SKIP_DOCKER=1           - Skip both container tests in make verify"
 	@echo "  SKIP_ARCH_DOCKER=1      - Skip only the Arch container (slow under"

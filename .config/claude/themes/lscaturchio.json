@@ -1,0 +1,54 @@
+{
+  "name": "lscaturchio.xyz",
+  "base": "dark",
+  "overrides": {
+    "claude": "#42a979",
+    "claudeShimmer": "#7fd0aa",
+    "text": "#fafafa",
+    "inverseText": "#111317",
+    "inactive": "#abb0ba",
+    "inactiveShimmer": "#d0d4db",
+    "subtle": "#3b3f47",
+    "suggestion": "#42a979",
+    "permission": "#42a979",
+    "permissionShimmer": "#7fd0aa",
+    "remember": "#337154",
+
+    "success": "#42a979",
+    "error": "#e87d7d",
+    "warning": "#d4a657",
+    "warningShimmer": "#e8c88f",
+    "merged": "#a78bda",
+
+    "promptBorder": "#3b3f47",
+    "promptBorderShimmer": "#5a5f6a",
+    "planMode": "#6aa9c9",
+    "autoAccept": "#a78bda",
+    "bashBorder": "#d4a657",
+    "ide": "#6aa9c9",
+
+    "diffAdded": "#1c3a2c",
+    "diffRemoved": "#3d2224",
+    "diffAddedDimmed": "#18261f",
+    "diffRemovedDimmed": "#291b1c",
+    "diffAddedWord": "#2b6247",
+    "diffRemovedWord": "#6b3134",
+
+    "userMessageBackground": "#16181d",
+    "userMessageBackgroundHover": "#25272d",
+    "bashMessageBackgroundColor": "#16181d",
+    "memoryBackgroundColor": "#1a2a23",
+    "selectionBg": "#2b5a45",
+
+    "rate_limit_fill": "#42a979",
+    "rate_limit_empty": "#292c32",
+    "briefLabelYou": "#abb0ba",
+    "briefLabelClaude": "#42a979",
+
+    "green_FOR_SUBAGENTS_ONLY": "#42a979",
+    "red_FOR_SUBAGENTS_ONLY": "#e87d7d",
+    "yellow_FOR_SUBAGENTS_ONLY": "#d4a657",
+    "blue_FOR_SUBAGENTS_ONLY": "#6aa9c9",
+    "purple_FOR_SUBAGENTS_ONLY": "#a78bda"
+  }
+}

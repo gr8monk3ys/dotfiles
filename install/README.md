@@ -98,6 +98,14 @@ Packages for Arch Linux systems installed via [pacman](https://wiki.archlinux.or
 - **Version Control**: git, git-delta
 - **Editor**: nano
 
+### [wingetfile](wingetfile)
+
+Windows 11 packages for the Omarchy-style layer in
+[`windows/`](../windows/README.md): GlazeWM, Zebar and JetBrainsMono Nerd Font.
+One winget id per line, exactly as `winget install -e --id` wants it (ids are
+case-sensitive under `-e`). Installed by `windows/setup.ps1 -Apply`, not by
+`make`.
+
 ### [Codefile](Codefile)
 
 **VSCodium/VS Code extensions** - Editor extensions.
@@ -215,6 +223,7 @@ pacman -Qqe > install/pacmanfile
 - **npmfile**: Cross-platform (macOS, Linux, Windows)
 - **Rustfile**: Cross-platform (macOS, Linux, Windows)
 - **pacmanfile**: Arch Linux and derivatives only
+- **wingetfile**: Windows 11 only
 
 ## Cleanup
 

@@ -17,7 +17,7 @@ The `.config` directory centralizes application configurations in a single locat
 ├── aerospace/            # AeroSpace window manager
 ├── atuin/                # Atuin shell history (OneDark theme)
 ├── bat/                  # bat pager/cat theme
-├── claude/               # Claude Code notes
+├── claude/               # Claude Code themes and notes
 ├── curl/                 # cURL HTTP client defaults
 ├── eza/                  # eza ls-replacement theme
 ├── fastfetch/            # Fastfetch system info splash

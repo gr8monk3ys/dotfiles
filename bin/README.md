@@ -340,7 +340,7 @@ about tap-qualified names and which manifests to read.
 
 ```bash
 manifest list <kind>   # one normalized package name per line
-manifest kinds         # brew cask cask-extra npm rust pacman code
+manifest kinds         # brew cask cask-extra npm rust pacman code winget
 manifest taps          # Homebrew taps declared in the Brewfile
 ```
 
@@ -439,6 +439,27 @@ does not do the obvious way, each for a reason:
 `user.js` is read once, at startup, so `install` warns when Firefox is
 running instead of quietly doing nothing visible.
 
+### [claude-themes](claude-themes)
+
+Installs this checkout's Claude Code themes into the directory Claude Code
+reads them from. `make link` stows `.config/claude/` to `~/.config/claude/`, a
+path Claude Code never opens — custom themes live in `themes/` inside its own
+config directory (`~/.claude`, or `$CLAUDE_CONFIG_DIR`).
+
+```bash
+claude-themes status          # state<TAB>path, one row per theme
+claude-themes install         # symlink every tracked theme
+claude-themes install --copy --dry-run
+claude-themes remove          # only the ones this checkout placed
+claude-themes --states        # the state vocabulary
+# or
+make claude-themes [copy=1] [dry=1]
+```
+
+Each theme is placed on its own and the directory is never linked, so a theme
+made with `/theme` stays local. A file of the same name that this checkout did
+not write is moved to `<name>.json.bak.<timestamp>` first.
+
 ### [validate-config-live](validate-config-live)
 
 Asserts that tools actually honour the configs this repo tracks. `make link`
@@ -501,3 +522,4 @@ Helps non-root installations on Arch Linux.
 | dotfiles-worktree | ✓ | ✓ | ✓ |
 | dotfiles-sync | ✓ | — | — |
 | firefox-user-js | ✓ | ✓ | ✓ |
+| claude-themes | ✓ | ✓ | ✓ |

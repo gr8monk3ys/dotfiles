@@ -114,8 +114,9 @@ load test_helper/common
 }
 
 @test "every colour in a generated theme is a palette colour" {
-    # ghostty/themes/danse, btop/themes/danse.theme and cava/config are all
-    # derived from the palette by hand-running `palette get`. Nothing re-runs
+    # ghostty/themes/danse, btop/themes/danse.theme, cava/config and the
+    # windows/ theme files are all derived from the palette by hand-running
+    # `palette get`. Nothing re-runs
     # that, so this is what keeps them true — and it is what catches a colour
     # typed straight into a theme instead of taken from the palette.
     run bash -c '
@@ -125,7 +126,10 @@ load test_helper/common
         status=0
         for f in .config/ghostty/themes/danse \
                  .config/btop/themes/danse.theme \
-                 .config/cava/config; do
+                 .config/cava/config \
+                 windows/glazewm/config.yaml \
+                 windows/zebar/danse/styles.css \
+                 windows/windows-terminal/danse.json.tpl; do
             [[ -f "$repo/$f" ]] || { echo "missing generated theme: $f"; status=1; continue; }
             for hex in $(grep -oE "#[0-9a-f]{6}" "$repo/$f" | sort -u); do
                 printf "%s\n" "$allowed" | grep -Fxq "$hex" \

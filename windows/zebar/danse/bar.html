@@ -1,0 +1,137 @@
+<!doctype html>
+<!--
+  danse bar - Omarchy's Waybar layout for Zebar + GlazeWM.
+
+  Left: workspaces. Centre: clock. Right: WM state, network, CPU, memory.
+  Adapted from Zebar's own starter widget (glzr-io/zebar, resources/starter,
+  GPL-3.0). Colours live in styles.css and come from the palette.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" type="text/css" href="./styles.css" />
+    <!-- Lets React run without a build step via the text/babel script below. -->
+    <script
+      src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"
+      integrity="sha256-aS0B0wnsaDByLfE16h4MDCP1fQFccysd1YWOcV+gbBo="
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+      import React, { useState, useEffect } from 'https://esm.sh/react@18';
+      import { createRoot } from 'https://esm.sh/react-dom@18/client';
+      import * as zebar from 'https://esm.sh/zebar@3.0';
+
+      const providers = zebar.createProviderGroup({
+        glazewm: { type: 'glazewm' },
+        network: { type: 'network' },
+        cpu: { type: 'cpu' },
+        memory: { type: 'memory' },
+        // Omarchy's clock: weekday, day, month, 24-hour time.
+        date: { type: 'date', formatting: 'EEE d MMM  HH:mm' },
+      });
+
+      createRoot(document.getElementById('root')).render(<App />);
+
+      function networkIcon(network) {
+        switch (network.defaultInterface?.type) {
+          case 'ethernet':
+            return 'nf-md-ethernet_cable';
+          case 'proprietary_virtual':
+            return 'nf-md-shield_lock_outline';
+          case 'wifi': {
+            const s = network.defaultGateway?.signalStrength ?? 0;
+            if (s >= 80) return 'nf-md-wifi_strength_4';
+            if (s >= 65) return 'nf-md-wifi_strength_3';
+            if (s >= 40) return 'nf-md-wifi_strength_2';
+            if (s >= 25) return 'nf-md-wifi_strength_1';
+            return 'nf-md-wifi_strength_outline';
+          }
+          default:
+            return 'nf-md-wifi_strength_off_outline';
+        }
+      }
+
+      function App() {
+        const [output, setOutput] = useState(providers.outputMap);
+
+        useEffect(() => {
+          providers.onOutput(() => setOutput(providers.outputMap));
+        }, []);
+
+        const wm = output.glazewm;
+
+        return (
+          <div className="bar">
+            <div className="left">
+              {wm && (
+                <div className="workspaces">
+                  {wm.currentWorkspaces.map(ws => (
+                    <button
+                      key={ws.name}
+                      className={[
+                        'workspace',
+                        ws.hasFocus ? 'focused' : '',
+                        ws.isDisplayed ? 'displayed' : '',
+                      ].join(' ')}
+                      onClick={() => wm.runCommand(`focus --workspace ${ws.name}`)}
+                    >
+                      {ws.displayName ?? ws.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="center">{output.date?.formatted}</div>
+
+            <div className="right">
+              {wm?.isPaused && (
+                <button className="paused" onClick={() => wm.runCommand('wm-toggle-pause')}>
+                  PAUSED
+                </button>
+              )}
+              {wm && (
+                <button
+                  className={`direction nf ${
+                    wm.tilingDirection === 'horizontal'
+                      ? 'nf-md-swap_horizontal'
+                      : 'nf-md-swap_vertical'
+                  }`}
+                  title="Tiling direction (Super+J)"
+                  onClick={() => wm.runCommand('toggle-tiling-direction')}
+                ></button>
+              )}
+              {output.network && (
+                <div className="module">
+                  <i className={`nf ${networkIcon(output.network)}`}></i>
+                  {output.network.defaultGateway?.ssid}
+                </div>
+              )}
+              {output.cpu && (
+                <div className="module">
+                  <i className="nf nf-oct-cpu"></i>
+                  <span className={output.cpu.usage > 85 ? 'hot' : ''}>
+                    {Math.round(output.cpu.usage)}%
+                  </span>
+                </div>
+              )}
+              {output.memory && (
+                <div className="module">
+                  <i className="nf nf-fae-chip"></i>
+                  <span className={output.memory.usage > 85 ? 'hot' : ''}>
+                    {Math.round(output.memory.usage)}%
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      }
+    </script>
+  </body>
+</html>
