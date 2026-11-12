@@ -12,7 +12,7 @@
 # Usage:
 #   omarchy/setup.sh                     # dry run, every step
 #   omarchy/setup.sh --apply             # do it
-#   omarchy/setup.sh --only hypr         # one step: theme|plugins|bar|hypr
+#   omarchy/setup.sh --only hypr         # one step: theme|plugins|bar|hypr|ghostty
 #
 # Steps, in order:
 #   theme    ~/.config/omarchy/themes/monochrome-43: colors.toml and
@@ -30,6 +30,10 @@
 #            shell.json.dotfiles-bak.<epoch>).
 #   hypr     hypr/monochrome_43.lua linked into ~/.config/hypr and a
 #            require() for it appended once to ~/.config/hypr/looknfeel.lua.
+#   ghostty  one line in ~/.config/ghostty/config.local (gitignored) that
+#            includes ghostty.conf from here: zsh as the terminal's command
+#            and the Omarchy-only Ghostty settings. Skipped while zsh is
+#            missing, since Ghostty could not start a shell at all.
 
 set -euo pipefail
 
@@ -52,20 +56,23 @@ readonly WALLPAPER_SHA256="acffe6dc9dd07a5d0e2d7539a7725430239be418a3817b4c58be2
 readonly WALLPAPER_NAME="00-43pr-wallhaven.jpg"
 readonly HYPR_MODULE="monochrome_43"
 readonly HYPR_REQUIRE="require(\"hypr.$HYPR_MODULE\")"
+readonly GHOSTTY_INCLUDE="config-file = $HERE/ghostty.conf"
+# Overridable for tests only; ghostty.conf itself names /usr/bin/zsh.
+GHOSTTY_ZSH="${OMARCHY_GHOSTTY_ZSH:-/usr/bin/zsh}"
 
 APPLY=0
 ONLY=""
 CHANGES=0
 
-usage() { sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//'; }
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --apply) APPLY=1 ;;
         --only)
             ONLY="${2:-}"
-            [[ "$ONLY" =~ ^(theme|plugins|bar|hypr)$ ]] || {
-                echo "setup.sh: --only takes theme|plugins|bar|hypr" >&2
+            [[ "$ONLY" =~ ^(theme|plugins|bar|hypr|ghostty)$ ]] || {
+                echo "setup.sh: --only takes theme|plugins|bar|hypr|ghostty" >&2
                 exit 2
             }
             shift
@@ -275,6 +282,25 @@ step_hypr() {
     fi
 }
 
+step_ghostty() {
+    echo "ghostty: $HERE/ghostty.conf"
+    local local_conf="$CONFIG_DIR/ghostty/config.local"
+    if [[ -f "$local_conf" ]] && grep -Fxq "$GHOSTTY_INCLUDE" "$local_conf"; then
+        ok "$local_conf includes ghostty.conf"
+    elif [[ ! -x "$GHOSTTY_ZSH" ]]; then
+        warn "$GHOSTTY_ZSH not found; install zsh (make arch) before pointing Ghostty at it"
+    elif change "append '$GHOSTTY_INCLUDE' to $local_conf"; then
+        mkdir -p "$(dirname "$local_conf")"
+        printf '# Omarchy-only Ghostty settings, from the dotfiles (omarchy/setup.sh)\n%s\n' \
+            "$GHOSTTY_INCLUDE" >> "$local_conf"
+    fi
+    # The include only takes effect from the repo's config, which stow links.
+    if [[ -f "$CONFIG_DIR/ghostty/config" ]] &&
+        ! grep -Fq 'config-file = ?"config.local"' "$CONFIG_DIR/ghostty/config"; then
+        note "$CONFIG_DIR/ghostty/config is not the dotfiles one, so it never reads config.local; see omarchy/README.md"
+    fi
+}
+
 main() {
     if ! "$DOTFILES_DIR/bin/platform" is-omarchy; then
         ((APPLY)) && die "not an Omarchy machine (bin/platform is-omarchy); nothing applied"
@@ -294,6 +320,7 @@ main() {
     wants plugins && step_plugins
     wants bar && step_bar
     wants hypr && step_hypr
+    wants ghostty && step_ghostty
 
     if ((CHANGES == 0)); then
         echo "Everything already in place."

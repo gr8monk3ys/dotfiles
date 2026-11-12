@@ -110,15 +110,20 @@ Or `stow --adopt` then `git checkout -- .config` to discard the adopted copies.
 `~/.config/git/config` (Omarchy's) does not collide: this repo ships `git/ignore`
 and a `config.local.example`, not `git/config`. Starship: Omarchy writes
 `~/.config/starship.toml`; `.zshrc` sets `STARSHIP_CONFIG` to
-`~/.config/starship/starship.toml`, so zsh uses ours.
+`~/.config/starship/starship.toml`, so zsh uses ours (bash keeps Omarchy's).
 
 **Shell.** Omarchy's login shell is bash, and `~/.bashrc` sources Omarchy's
 environment (`/usr/share/omarchy/default/bash/env-bootstrap`) and its rc
 (`$OMARCHY_PATH/default/bash/rc`). Rather than `chsh -s $(which zsh)`, launch zsh
-from the terminal: `command = /usr/bin/zsh` in a gitignored
-`~/.config/ghostty/config.local`, or `exec zsh` at the end of `~/.bashrc`
-guarded so it only fires interactively. `make doctor` reports this. The
-terminal is chosen in `~/.config/xdg-terminals.list` (Ghostty on this machine).
+from the terminal: `make omarchy apply=1 only=ghostty` adds one line to the
+gitignored `~/.config/ghostty/config.local` that includes
+[`omarchy/ghostty.conf`](omarchy/ghostty.conf) — `command = /usr/bin/zsh` plus
+the Omarchy Ghostty settings the shared config would otherwise drop. It only
+takes effect once `~/.config/ghostty/config` is this repo's (see the conflict
+list above). The Hyprland session (uwsm) already exports `OMARCHY_PATH` and
+Omarchy's `PATH`, so zsh inherits them without bash's rc. `make doctor`
+reports the login shell. The terminal is chosen in
+`~/.config/xdg-terminals.list` (Ghostty on this machine).
 
 **Packages.** `install/pacmanfile` overlaps Omarchy's base set (harmless
 re-install). Nothing in it conflicts with an Omarchy package.

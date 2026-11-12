@@ -26,7 +26,8 @@ into `~/.config/`; `make` drives install, link and verification.
   and Arch; `windows/setup.ps1` (Windows PowerShell 5.1, dry run by default) is
   its `make link`.
 - `omarchy/` — the Monochrome 43 rice for Omarchy 4.x (theme, Hyprland snippet,
-  pinned shell plugins, bar layout). Outside `.config/` because Omarchy owns
+  pinned shell plugins, bar layout, a Linux-only Ghostty include that runs
+  zsh). Outside `.config/` because Omarchy owns
   `~/.config/hypr` and `~/.config/omarchy`; `omarchy/setup.sh` (dry run by
   default, `make omarchy apply=1`) places single files instead of stowing.
 - `docs/TOOLS.md` — one rationale entry per package; `validate-tool-docs` fails

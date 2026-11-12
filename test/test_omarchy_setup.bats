@@ -160,3 +160,34 @@ be_omarchy() { mkdir -p "$PLATFORM_OMARCHY_SYSTEM_DIR"; }
     ' _ "$DOTFILES_DIR"
     assert_success
 }
+
+@test "ghostty step appends the include to config.local exactly once" {
+    be_omarchy
+    export OMARCHY_GHOSTTY_ZSH="$STUB_BIN/omarchy" # any executable will do
+    mkdir -p "$XDG_CONFIG_HOME/ghostty"
+    echo 'theme = danse' > "$XDG_CONFIG_HOME/ghostty/config.local"
+    run "$SETUP" --apply --only ghostty
+    assert_success
+    run "$SETUP" --apply --only ghostty
+    assert_output --partial "Everything already in place"
+    run grep -c "^config-file = $DOTFILES_DIR/omarchy/ghostty.conf\$" "$XDG_CONFIG_HOME/ghostty/config.local"
+    assert_output "1"
+    # The user's own lines survive.
+    grep -qx 'theme = danse' "$XDG_CONFIG_HOME/ghostty/config.local"
+}
+
+@test "ghostty step leaves Ghostty alone while zsh is missing" {
+    be_omarchy
+    export OMARCHY_GHOSTTY_ZSH="$TEST_TEMP_DIR/no-such-zsh"
+    run "$SETUP" --apply --only ghostty
+    assert_success
+    assert_output --partial "not found"
+    [[ ! -e "$XDG_CONFIG_HOME/ghostty/config.local" ]]
+}
+
+@test "omarchy/ghostty.conf runs zsh and is valid Ghostty config" {
+    grep -qx 'command = /usr/bin/zsh' "$DOTFILES_DIR/omarchy/ghostty.conf"
+    command -v ghostty > /dev/null || skip "ghostty not installed"
+    run ghostty +validate-config --config-file="$DOTFILES_DIR/omarchy/ghostty.conf"
+    assert_success
+}

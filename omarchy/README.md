@@ -15,13 +15,14 @@ drives Omarchy's own commands instead. It is this directory's `make link`.
 | Hyprland look | [`hypr/monochrome_43.lua`](hypr/monochrome_43.lua) | `~/.config/hypr/monochrome_43.lua` (symlink), loaded by one `require` line appended to `looknfeel.lua` |
 | Shell plugins | [`plugins.tsv`](plugins.tsv) | `~/.config/omarchy/plugins/<id>`, via `omarchy plugin add`, pinned |
 | Bar | [`bar.json`](bar.json) | position via `omarchy bar position`; layout merged into `~/.config/omarchy/shell.json` |
+| Ghostty | [`ghostty.conf`](ghostty.conf) | included from `~/.config/ghostty/config.local` by one appended line: zsh as the terminal's command, Omarchy's font size, keybinds and `async-backend` |
 
 ## Use
 
 ```bash
 make omarchy                 # dry run: what would change
 make omarchy apply=1         # do it
-make omarchy only=hypr       # one step: theme | plugins | bar | hypr
+make omarchy only=hypr       # one step: theme | plugins | bar | hypr | ghostty
 omarchy/setup.sh --help
 ```
 
@@ -45,6 +46,11 @@ What `apply=1` changes, and how to undo it:
 - **Hypr**: if `looknfeel.lua` already holds a pasted copy of the rice (the
   `riceOut` curve), setup warns and does not add the `require` — delete the
   pasted block first, or the look is applied twice.
+- **Ghostty**: appends `config-file = <checkout>/omarchy/ghostty.conf` to
+  `~/.config/ghostty/config.local`; delete that line to undo. Skipped while
+  `/usr/bin/zsh` is missing. It does nothing until `~/.config/ghostty/config`
+  is this repo's (Omarchy's own config never reads `config.local`; setup
+  notes this) — see the conflict list in OPERATING.md.
 
 ## Plugins and pins
 
@@ -85,12 +91,13 @@ it installed, its bar slot is simply empty.
   vertical slide-fade workspaces — 43PR's `look.lua` values. Border colours
   come from the theme.
 - Bar on the left (`bar.json`).
-- The matching macOS look is opt-in: see
+- The matching macOS look (SketchyBar, borders, AeroSpace gaps) is the
+  default there too: see
   [`.config/sketchybar/README.md`](../.config/sketchybar/README.md).
 
 ## Not automated
 
-- The terminal configs' Monochrome 43 variants (Ghostty, Starship, fastfetch,
-  cava, btop) are opt-in per machine; their READMEs under `.config/` say how.
-  Ghostty already follows the Omarchy theme once this repo's config is linked.
+- The terminal configs (Ghostty, Starship, fastfetch, cava, btop) are
+  Monochrome 43 by default and come from `make link`, not from here. Ghostty
+  also follows the Omarchy theme once this repo's config is linked.
 - Spotify theming: see [`spicetify/README.md`](../spicetify/README.md).

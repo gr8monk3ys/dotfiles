@@ -106,10 +106,18 @@ ghostty +validate-config --config-file ~/.config/ghostty/config
 - [Ghostty GitHub](https://github.com/ghostty-org/ghostty)
 - [Configuration Reference](https://ghostty.org/docs/config)
 
-## Includes
+## Includes and Omarchy
 
-The config ends with two optional (`?`) includes; a missing file is skipped.
-Later wins. Omarchy's live theme colours
-(`~/.local/state/omarchy/current/theme/ghostty.conf`, only on Omarchy) keep
-`omarchy theme set` theming this terminal; `config.local` is gitignored and
-per machine.
+The config ends with two optional (`?`) includes; a missing file is skipped,
+so neither changes anything on a machine without it. Later wins.
+
+1. Omarchy's live theme colours,
+   `~/.local/state/omarchy/current/theme/ghostty.conf` — only exists on
+   Omarchy, where it keeps `omarchy theme set` theming this terminal.
+2. `config.local` — gitignored, per machine.
+
+On Omarchy, `omarchy/setup.sh` (step `ghostty`) puts one line in
+`config.local` that includes [`omarchy/ghostty.conf`](../../omarchy/ghostty.conf):
+`command = /usr/bin/zsh` (Omarchy keeps bash as the login shell, see
+OPERATING.md) plus the Omarchy defaults this file would otherwise drop
+(font size, Linux-only keybinds, `async-backend`). The Mac never reads it.
