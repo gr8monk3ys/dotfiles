@@ -179,3 +179,42 @@ load test_helper/common
     ' _ "$DOTFILES_DIR"
     assert_success
 }
+
+@test "PALETTE selects another palette file by name" {
+    PALETTE=monochrome-43 run "$DOTFILES_DIR/bin/palette" get bg
+    assert_success
+    assert_output "#000000"
+    # The default is unchanged.
+    run "$DOTFILES_DIR/bin/palette" get bg
+    assert_output "#282c34"
+}
+
+@test "PALETTE refuses a name that is a path" {
+    PALETTE=../danse run "$DOTFILES_DIR/bin/palette" get bg
+    assert_failure
+    assert_output --partial "bad palette name"
+}
+
+@test "palettes lists every shipped palette" {
+    run "$DOTFILES_DIR/bin/palette" palettes
+    assert_success
+    assert_output --partial "danse"
+    assert_output --partial "monochrome-43"
+}
+
+@test "every entry in every palette is a valid six-digit hex with a role" {
+    run bash -c '
+        set -euo pipefail
+        status=0
+        for p in $("$1/bin/palette" palettes); do
+            while IFS="	" read -r name hex role; do
+                [[ "$hex" =~ ^\#[0-9a-f]{6}$ ]] || { echo "$p: bad hex for $name: $hex"; status=1; }
+                [[ -n "$role" ]] || { echo "$p: no role documented for $name"; status=1; }
+            done < <(PALETTE="$p" "$1/bin/palette" list)
+            dupes="$(PALETTE="$p" "$1/bin/palette" names | sort | uniq -d)"
+            [[ -z "$dupes" ]] || { echo "$p: duplicate names: $dupes"; status=1; }
+        done
+        exit $status
+    ' _ "$DOTFILES_DIR"
+    assert_success
+}

@@ -17,7 +17,14 @@ as decimal SGR triples that a hex grep cannot see.
 the Makefile's `verify-stale-refs` pattern, which fails the build on any copy
 left anywhere under `.config`, `bin` or `.zshenv` — including in prose.)
 
-`danse.conf` is the one place a colour is defined. `bin/palette` reads it.
+Each `<name>.conf` here is one palette, and the one place its colours are
+defined. `bin/palette` reads `danse.conf` by default; `PALETTE=<name>` picks
+another (`palette palettes` lists them).
+
+| Palette | Used by |
+| --- | --- |
+| `danse` | zsh, starship's peers (zellij, yazi, eza, atuin, bat, delta), nvim, `windows/` |
+| `monochrome-43` | the Monochrome 43 rice: ghostty, starship, btop, cava, sketchybar, borders, the Omarchy theme, spicetify |
 
 ## The palette
 
@@ -37,6 +44,15 @@ sampled colour unchanged and are used only for chrome.
 
 Run `palette list` for the current table.
 
+## monochrome-43
+
+Pure black ground, white text, greys for structure, and colour only where it
+means something (errors, warnings, the one blue accent). Taken from
+[43PR/dotfiles](https://github.com/43PR/dotfiles) (MIT), its
+`.config/43pr/themes/default.toml`; see the header of
+[`monochrome-43.conf`](monochrome-43.conf) for the two departures. The ANSI
+slots are 43PR's terminal colours, so `ansi-*` names exist only here.
+
 ## Usage
 
 ```bash
@@ -47,6 +63,8 @@ palette get blue --format 0x      # 0xff61afef   (sketchybar)
 palette get blue --format rgb     # 97;175;239   (EZA_COLORS and other SGR)
 palette get blue --format raw     # 61afef
 palette export SB                 # SB_BLUE='#61afef' ...
+PALETTE=monochrome-43 palette get fg   # #ffffff
+palette palettes                  # danse, monochrome-43
 ```
 
 An unknown colour name is an error, not an empty string: a typo in a theme
