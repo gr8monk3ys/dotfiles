@@ -17,10 +17,10 @@ here runs unless you run it.
 
 ## Install
 
-`spicetify-cli` is opt-in and deliberately in no install manifest, so
-`make macos` and `make arch` never install it. Install it by hand:
-`brew install spicetify-cli` on macOS, `yay -S spicetify-cli` on Arch
-(AUR-only). Spotify itself must be installed and opened once.
+`spicetify-cli` and Spotify come from the Brewfile and Caskfile on macOS
+(`make macos`); installing them themes nothing until you run the commands
+below. On Arch both are by hand: `yay -S spicetify-cli` (AUR-only) and
+`sudo pacman -S spotify-launcher`. Spotify must be opened once first.
 
 ```bash
 spicetify                                   # first run creates its config
