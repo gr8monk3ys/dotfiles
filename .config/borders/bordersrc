@@ -20,4 +20,21 @@ options=(
     background_color=0x00000000
 )
 
+# Opt-in Monochrome 43 look (same switch as sketchybar/colors.sh): a 1px
+# white hairline on the focused window, #333333 on the rest, as on Omarchy.
+# Colours from .config/palette/monochrome-43.conf (fg, inactive).
+rice=""
+rice_file="${XDG_CONFIG_HOME:-$HOME/.config}/palette/rice.local"
+[ -r "$rice_file" ] && read -r rice < "$rice_file"
+if [ "$rice" = monochrome-43 ]; then
+    options=(
+        style=round
+        width=1.0
+        hidpi=on
+        active_color=0xffffffff   # fg - focused
+        inactive_color=0xff333333 # inactive - everything else
+        background_color=0x00000000
+    )
+fi
+
 borders "${options[@]}"

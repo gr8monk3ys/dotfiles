@@ -79,7 +79,9 @@ load test_helper/common
     run bash -c '
         set -euo pipefail
         repo="$1"
-        names="$("$repo/bin/palette" names | tr "[:lower:]-" "[:upper:]_")"
+        # colors.sh maps danse by default and monochrome-43 when opted in
+        # (palette/rice.local), so a name must exist in one of the two.
+        names="$({ "$repo/bin/palette" names; PALETTE=monochrome-43 "$repo/bin/palette" names; } | tr "[:lower:]-" "[:upper:]_")"
         status=0
         for var in $(grep -oE "\$PAL_[A-Z_]+" "$repo/.config/sketchybar/colors.sh" | sort -u); do
             want="${var#\$PAL_}"

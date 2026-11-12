@@ -19,6 +19,12 @@ From [`.config/palette/danse.conf`](../palette/danse.conf), as `0xAARRGGBB`:
 | Focused | `blue` | `0xff61afef` |
 | Everything else | `surface` | `0xff3e4451` |
 
+### Monochrome 43 (opt-in)
+
+With `monochrome-43` in `~/.config/palette/rice.local` (see the SketchyBar
+README) the border becomes a 1px hairline as on Omarchy's Hyprland:
+`fg` `0xffffffff` focused, `inactive` `0xff333333` otherwise.
+
 ## Lifecycle
 
 Launched from `aerospace.toml`'s `after-startup-command`, **not** as a brew

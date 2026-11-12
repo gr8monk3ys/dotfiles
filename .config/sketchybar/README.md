@@ -14,6 +14,25 @@ Floating macOS status bar with AeroSpace workspace integration.
 - **Colors:** OneDark palette (same hexes as Starship, zsh, Ghostty, Neovim)
 - **Font:** SF Pro (ships with macOS)
 
+## Monochrome 43 (opt-in)
+
+The default look above is unchanged. One word in a gitignored file switches
+this bar and `borders` to the Monochrome 43 rice whose Omarchy half lives in
+`omarchy/` at the repo root:
+
+```bash
+echo monochrome-43 > ~/.config/palette/rice.local
+sketchybar --reload; killall borders; aerospace reload-config
+```
+
+That gives a slim (28pt) flat pure-black strip flush with the top edge, white
+JetBrainsMono Nerd Font text and icons, an inverted active workspace, and
+colour only for warning/error (from
+[`.config/palette/monochrome-43.conf`](../palette/monochrome-43.conf)). Delete
+the file to go back. AeroSpace's gaps are not switched (TOML has no
+conditionals); for the matching 4/8 spacing set `inner.* = 4` and
+`outer.top = 36` in `aerospace.toml` by hand.
+
 ## File Structure
 
 ```

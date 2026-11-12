@@ -11,7 +11,21 @@
 # with a minimal environment and this checkout's bin/ is not reliably on that
 # PATH. The file is two fields and a comment character; a parser is overkill.
 
-PALETTE_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/palette/danse.conf"
+# Which look: danse (the default) or the opt-in Monochrome 43 rice. The
+# choice lives in palette/rice.local - one word, gitignored, per machine:
+#   echo monochrome-43 > ~/.config/palette/rice.local
+# Anything else, or no file, keeps danse. borders/bordersrc reads the same.
+_PALETTE_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/palette"
+RICE=danse
+if [ -r "$_PALETTE_DIR/rice.local" ]; then
+    read -r RICE < "$_PALETTE_DIR/rice.local" || true
+fi
+case "$RICE" in
+    monochrome-43) ;;
+    *) RICE=danse ;;
+esac
+export RICE
+PALETTE_FILE="$_PALETTE_DIR/$RICE.conf"
 
 # name -> 0xaarrggbb, as $PAL_<NAME> with kebab-case folded to underscores.
 if [ -r "$PALETTE_FILE" ]; then
@@ -25,23 +39,43 @@ else
     echo "sketchybar/colors.sh: cannot read $PALETTE_FILE" >&2
 fi
 
-export BAR_COLOR="$PAL_BG"
-export BAR_BORDER_COLOR="$PAL_SURFACE"
-export BACKGROUND="$PAL_SURFACE"
-export FOREGROUND="$PAL_FG"
-export ACCENT="$PAL_MAGENTA"
-export GREEN="$PAL_GREEN"
-export RED="$PAL_VERMILION"
-export YELLOW="$PAL_YELLOW"
-export BLUE="$PAL_BLUE"
-export PEACH="$PAL_TERRACOTTA"
-export TEAL="$PAL_CYAN"
-export LAVENDER="$PAL_BLUE"
-export SUBTEXT="$PAL_COMMENT"
-export OVERLAY="$PAL_COMMENT"
+if [ "$RICE" = monochrome-43 ]; then
+    # White on black, greys for structure; colour only for warning/error.
+    export BAR_COLOR="$PAL_BG"
+    export BAR_BORDER_COLOR="$PAL_INACTIVE"
+    export BACKGROUND="$PAL_SURFACE"
+    export FOREGROUND="$PAL_FG"
+    export ACCENT="$PAL_FG"
+    export GREEN="$PAL_FG_DIM"
+    export RED="$PAL_DANGER"
+    export YELLOW="$PAL_URGENT"
+    export BLUE="$PAL_FG"
+    export PEACH="$PAL_FG_MUTED"
+    export TEAL="$PAL_FG_DIM"
+    export LAVENDER="$PAL_FG"
+    export SUBTEXT="$PAL_FG_DARK"
+    export OVERLAY="$PAL_FG_FAINT"
+    export ULTRAMARINE="$PAL_SURFACE"
+    export VIRIDIAN="$PAL_SURFACE"
+else
+    export BAR_COLOR="$PAL_BG"
+    export BAR_BORDER_COLOR="$PAL_SURFACE"
+    export BACKGROUND="$PAL_SURFACE"
+    export FOREGROUND="$PAL_FG"
+    export ACCENT="$PAL_MAGENTA"
+    export GREEN="$PAL_GREEN"
+    export RED="$PAL_VERMILION"
+    export YELLOW="$PAL_YELLOW"
+    export BLUE="$PAL_BLUE"
+    export PEACH="$PAL_TERRACOTTA"
+    export TEAL="$PAL_CYAN"
+    export LAVENDER="$PAL_BLUE"
+    export SUBTEXT="$PAL_COMMENT"
+    export OVERLAY="$PAL_COMMENT"
 
-# Matisse fills, for chrome that sits behind text rather than being text.
-export ULTRAMARINE="$PAL_ULTRAMARINE"
-export VIRIDIAN="$PAL_VIRIDIAN"
+    # Matisse fills, for chrome that sits behind text rather than being text.
+    export ULTRAMARINE="$PAL_ULTRAMARINE"
+    export VIRIDIAN="$PAL_VIRIDIAN"
+fi
 
 export TRANSPARENT=0x00000000

@@ -5,7 +5,7 @@
 sketchybar --add item apple.logo left \
     --set apple.logo \
         icon="$ICON_APPLE" \
-        icon.font="SF Pro:Black:16.0" \
+        icon.font="$APPLE_ICON_FONT" \
         icon.color="$ACCENT" \
         background.drawing=off \
         label.drawing=off \

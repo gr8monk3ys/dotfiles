@@ -24,7 +24,7 @@ another (`palette palettes` lists them).
 | Palette | Used by |
 | --- | --- |
 | `danse` | zsh, starship's peers (zellij, yazi, eza, atuin, bat, delta), nvim, `windows/` |
-| `monochrome-43` | the opt-in Monochrome 43 variants (`ghostty/themes/monochrome-43`, `btop/themes/monochrome-43.theme`, `cava/monochrome-43`) and the Omarchy theme |
+| `monochrome-43` | the opt-in Monochrome 43 variants (`ghostty/themes/monochrome-43`, `btop/themes/monochrome-43.theme`, `cava/monochrome-43`), SketchyBar and borders when `rice.local` says `monochrome-43`, and the Omarchy theme |
 
 ## The palette
 
