@@ -1377,3 +1377,8 @@ package manifests. Documented here so the gap is visible.
 
 - **Why:** On Arch, Discord, Spotify, GIMP, Inkscape, Blender, Godot, OBS, Steam and Proton Mail Bridge come from the official repos (`discord`, `spotify-launcher`, `gimp`, `inkscape`, `blender`, `godot`, `obs-studio`, `steam` from multilib, `protonmail-bridge`); VSCodium, DaVinci Resolve and spicetify-cli from the AUR. None are in pacmanfile: it mirrors the Brewfile (terminal tools the repo configures), not the Caskfiles, `test/Dockerfile.arch` installs every line of it, and Omarchy already provides Obsidian and Docker. Install them by hand: `sudo pacman -S --needed discord spotify-launcher gimp inkscape blender godot obs-studio protonmail-bridge steam`.
 - **Installed via:** by hand on Arch
+
+### hermes-agent
+
+- **Why:** NousResearch's terminal agent, run fully offline against the local ollama (`model.provider: custom`, `gpt-oss:20b`, 64K context). Its config holds sessions and keys, so it is not tracked: `bin/hermes-offline` sets the four model keys.
+- **Installed via:** vendor installer, by `make hermes-offline apply=1` (see [docs/hermes.md](hermes.md))

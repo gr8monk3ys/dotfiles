@@ -172,6 +172,7 @@ Commands you re-run routinely.
 | `make verify` | Full repo verification: shell syntax + stale-ref check + doc links + tests. |
 | `make clean` | Remove broken symlinks in `~/.config/`. |
 | `make omarchy [apply=1]` | Omarchy only: install the Monochrome 43 rice (`omarchy/setup.sh`). Dry run unless `apply=1`. |
+| `make hermes-offline [apply=1]` | Point Hermes Agent at the local Ollama (`docs/hermes.md`). Dry run unless `apply=1`. |
 | `make claude-sync [apply=1]` | Add the tracked Claude Code marketplaces, plugins and user-scope MCP servers (`bin/claude-sync`). Dry run unless `apply=1`. |
 | `make restore [backup=/path]` | Restore the latest (or a named) `dotfiles-backup` snapshot. |
 | `make help` | List every target with its one-line description. |

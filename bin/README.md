@@ -469,6 +469,18 @@ elsewhere). An MCP server that already exists is left as it is, not compared.
 Plugins synced from a claude.ai account arrive with the login and are not
 listed.
 
+### [hermes-offline](hermes-offline)
+
+Points Hermes Agent at the local Ollama: sets `model.provider`,
+`model.base_url`, `model.default` and `model.ollama_num_ctx` with
+`hermes config set`, installing Hermes first if it is missing. Dry run by
+default; idempotent. See [`docs/hermes.md`](../docs/hermes.md).
+
+```bash
+hermes-offline [--apply] [--pull]
+make hermes-offline [apply=1] [pull=1]
+```
+
 ### [validate-config-live](validate-config-live)
 
 Asserts that tools actually honour the configs this repo tracks. `make link`
@@ -533,3 +545,4 @@ Helps non-root installations on Arch Linux.
 | firefox-user-js | ✓ | ✓ | ✓ |
 | claude-themes | ✓ | ✓ | ✓ |
 | claude-sync | ✓ | ✓ | ✓ |
+| hermes-offline | ✓ | ✓ | ✓ |

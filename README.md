@@ -83,7 +83,7 @@ the script fetches it and the repo carries the recipe.
 bin/         dotfiles-doctor/update/backup/restore/sync/why, palette, wallpaper, validators
 install/     Brewfile, Caskfile, Caskfile.extra, npmfile, Rustfile, pacmanfile, Codefile, duti
 test/        BATS suite
-docs/        TOOLS.md
+docs/        TOOLS.md, hermes.md
 install.sh   one-line installer
 Makefile     install, link, verify targets (make help)
 ```

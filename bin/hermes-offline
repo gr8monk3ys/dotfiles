@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+# hermes-offline - Point Hermes Agent at the local Ollama, on macOS or Arch.
+#
+# Hermes Agent (NousResearch) keeps its configuration in ~/.hermes/config.yaml,
+# next to its sessions, memories and API keys, so that file is never tracked.
+# This sets only the four model keys, through `hermes config set`, and leaves
+# everything else in the file alone. Idempotent; dry run by default.
+#
+# Usage:
+#   hermes-offline                 # dry run: what would change
+#   hermes-offline --apply         # set the keys (installs Hermes if missing)
+#   hermes-offline --apply --pull  # ...and `ollama pull` the model if absent
+#
+# Keys it sets (see docs/hermes.md):
+#   model.provider        custom   (Hermes' name for any OpenAI-compatible API)
+#   model.base_url        http://127.0.0.1:11434/v1   (Ollama's OpenAI API)
+#   model.default         gpt-oss:20b, or $HERMES_MODEL
+#   model.ollama_num_ctx  65536, or $HERMES_NUM_CTX; Hermes needs at least
+#                         64K of context and Ollama otherwise defaults to 2048
+#
+# Installing Hermes runs its official installer,
+#   curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
+# which clones it under ~/.hermes and puts `hermes` in ~/.local/bin. Ollama
+# itself comes from the Brewfile / pacmanfile; on macOS start it with
+# `brew services start ollama`, on Arch `systemctl --user` or `ollama serve`.
+
+set -euo pipefail
+
+readonly INSTALL_URL="https://hermes-agent.nousresearch.com/install.sh"
+readonly BASE_URL="http://127.0.0.1:11434/v1"
+readonly MIN_CTX=65536
+MODEL="${HERMES_MODEL:-gpt-oss:20b}"
+NUM_CTX="${HERMES_NUM_CTX:-$MIN_CTX}"
+
+APPLY=0
+PULL=0
+CHANGES=0
+
+usage() { sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//'; }
+ok() { printf '  ok      %s\n' "$*"; }
+note() { printf '  note    %s\n' "$*"; }
+die() { printf 'hermes-offline: %s\n' "$*" >&2; exit 1; }
+
+change() {
+    CHANGES=$((CHANGES + 1))
+    if ((APPLY)); then
+        printf '  do      %s\n' "$*"
+        return 0
+    fi
+    printf '  would   %s\n' "$*"
+    return 1
+}
+
+find_hermes() {
+    command -v hermes 2> /dev/null && return 0
+    [[ -x "$HOME/.local/bin/hermes" ]] && printf '%s\n' "$HOME/.local/bin/hermes"
+    return 0
+}
+
+set_key() {
+    local key="$1" want="$2" have=""
+    if [[ -n "$HERMES" ]]; then
+        have="$("$HERMES" config get "$key" 2> /dev/null || true)"
+    fi
+    if [[ "$have" == "$want" ]]; then
+        ok "$key = $want"
+    elif change "hermes config set $key $want (was: ${have:-unset})"; then
+        "$HERMES" config set "$key" "$want"
+    fi
+}
+
+main() {
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --apply) APPLY=1 ;;
+            --pull) PULL=1 ;;
+            -h | --help) usage; return 0 ;;
+            *) die "unknown argument: $1 (try --help)" ;;
+        esac
+        shift
+    done
+    if [[ ! "$NUM_CTX" =~ ^[0-9]+$ ]] || ((NUM_CTX < MIN_CTX)); then
+        die "HERMES_NUM_CTX must be a number >= $MIN_CTX (Hermes needs a 64K context)"
+    fi
+
+    ((APPLY)) || echo "Dry run: nothing will change. Re-run with --apply to act."
+
+    HERMES="$(find_hermes)"
+    if [[ -n "$HERMES" ]]; then
+        ok "hermes: $HERMES"
+    elif change "install Hermes Agent: curl -fsSL $INSTALL_URL | bash"; then
+        command -v curl > /dev/null 2>&1 || die "curl not found"
+        curl -fsSL "$INSTALL_URL" | bash
+        HERMES="$(find_hermes)"
+        [[ -n "$HERMES" ]] || die "installer finished but no hermes on PATH or in ~/.local/bin"
+    fi
+
+    set_key model.provider custom
+    set_key model.base_url "$BASE_URL"
+    set_key model.default "$MODEL"
+    set_key model.ollama_num_ctx "$NUM_CTX"
+
+    if ! command -v ollama > /dev/null 2>&1; then
+        note "ollama not installed (it is in install/Brewfile and install/pacmanfile)"
+    elif ! ollama list > /dev/null 2>&1; then
+        note "ollama is installed but not running; start it, then re-run to check the model"
+    elif ollama list | awk 'NR > 1 { print $1 }' | grep -Fxq "$MODEL"; then
+        ok "ollama has $MODEL"
+    elif ((PULL)); then
+        if change "ollama pull $MODEL"; then
+            ollama pull "$MODEL"
+        fi
+    else
+        note "ollama does not have $MODEL yet: ollama pull $MODEL (or re-run with --pull)"
+    fi
+
+    if ((CHANGES == 0)); then
+        echo "Everything already in place."
+    elif ((!APPLY)); then
+        echo "$CHANGES change(s) pending; run with --apply."
+    fi
+}
+
+main "$@"
