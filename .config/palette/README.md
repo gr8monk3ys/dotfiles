@@ -18,13 +18,28 @@ the Makefile's `verify-stale-refs` pattern, which fails the build on any copy
 left anywhere under `.config`, `bin` or `.zshenv` — including in prose.)
 
 Each `<name>.conf` here is one palette, and the one place its colours are
-defined. `bin/palette` reads `danse.conf` by default; `PALETTE=<name>` picks
-another (`palette palettes` lists them).
+defined. `bin/palette` reads `danse.conf` by default (it is the palette most
+tracked files are checked against); `PALETTE=<name>` picks another
+(`palette palettes` lists them).
 
 | Palette | Used by |
 | --- | --- |
-| `danse` | zsh, starship's peers (zellij, yazi, eza, atuin, bat, delta), nvim, `windows/` |
-| `monochrome-43` | the opt-in Monochrome 43 variants (`ghostty/themes/monochrome-43`, `btop/themes/monochrome-43.theme`, `cava/monochrome-43`), SketchyBar and borders when `rice.local` says `monochrome-43`, and the Omarchy theme |
+| `monochrome-43` | the default rice: Ghostty (`themes/monochrome-43`), btop, fastfetch, cava, SketchyBar, borders, the starship prompt, spicetify and the Omarchy theme |
+| `danse` | zsh highlighting, zellij, yazi, eza, atuin, bat, delta, nvim, `windows/`, and the rice when `rice.local` says `danse` |
+
+## Choosing the rice
+
+The rice is Monochrome 43 unless `~/.config/palette/rice.local` (one word,
+gitignored, per machine) says `danse`:
+
+```bash
+echo danse > ~/.config/palette/rice.local   # opt back in to danse
+rm ~/.config/palette/rice.local             # back to Monochrome 43
+```
+
+Read at start-up by SketchyBar (`colors.sh`) and borders (`bordersrc`).
+Ghostty, btop, fastfetch, cava and AeroSpace cannot read it; their READMEs
+say what to change by hand. `test/test_rice.bats` boots each reader both ways.
 
 ## The palette
 

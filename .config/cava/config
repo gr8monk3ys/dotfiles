@@ -1,23 +1,29 @@
-# cava - console audio visualiser.
+# cava - console audio visualiser, Monochrome 43 (the default). The older
+# danse gradient is ~/.config/cava/danse: cava -p ~/.config/cava/danse
 #
-# Colours are .config/palette/danse.conf, and the gradient is the painting's
-# own progression: the ultramarine sky at the quiet end, up through the
-# viridian ground, to the vermilion figures at the peaks.
+# After 43PR/dotfiles' cava config (MIT): bars that run from faint grey at the
+# quiet end to white at the peaks, colours from
+# .config/palette/monochrome-43.conf. The shaders/ and themes/ beside this
+# file are cava's own upstream examples (MIT); 43PR ships the same copies.
 #
-# On macOS cava captures an *input* device. Without an audio loopback that
-# means the microphone, so out of the box this visualises the room, not your
-# music. See the README for the BlackHole setup that fixes it.
+# [input] method is deliberately unset, so each platform's cava build picks
+# its own default backend (the default config pins portaudio for macOS). On
+# macOS that captures an *input* device - see the README.
 
 [general]
 framerate = 60
-autosens = 1
+# 43PR's fixed sensitivity rather than autosens: quiet passages stay low
+# instead of being stretched to the full height.
+autosens = 0
+sensitivity = 60
 overshoot = 20
 # 0 lets cava fill whatever width the pane has, which is the right answer
 # under a tiling window manager where that width is not up to cava.
 bars = 0
+bar_width = 2
+bar_spacing = 1
 
 [input]
-method = portaudio
 source = auto
 
 [output]
@@ -26,18 +32,14 @@ channels = stereo
 mono_option = average
 
 [smoothing]
-noise_reduction = 77
+noise_reduction = 90
 
 [color]
 background = default
 foreground = default
 gradient = 1
-gradient_count = 8
-gradient_color_1 = '#2b4468'
-gradient_color_2 = '#61afef'
-gradient_color_3 = '#56b6c2'
-gradient_color_4 = '#476a62'
-gradient_color_5 = '#98c379'
-gradient_color_6 = '#e5c07b'
-gradient_color_7 = '#d98c5c'
-gradient_color_8 = '#e06a51'
+gradient_count = 4
+gradient_color_1 = '#4a4a4a'
+gradient_color_2 = '#6f6f6f'
+gradient_color_3 = '#c2c2c2'
+gradient_color_4 = '#ffffff'

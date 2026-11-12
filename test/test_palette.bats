@@ -135,14 +135,15 @@ load test_helper/common
         done <<THEMES
 danse         .config/ghostty/themes/danse
 danse         .config/btop/themes/danse.theme
-danse         .config/cava/config
+danse         .config/cava/danse
 danse         windows/glazewm/config.yaml
 danse         windows/zebar/danse/styles.css
 danse         windows/windows-terminal/danse.json.tpl
 monochrome-43 .config/ghostty/themes/monochrome-43
 monochrome-43 .config/btop/themes/monochrome-43.theme
-monochrome-43 .config/cava/monochrome-43
+monochrome-43 .config/cava/config
 monochrome-43 omarchy/themes/monochrome-43/colors.toml
+monochrome-43 .config/ghostty/config
 THEMES
         exit $status
     ' _ "$DOTFILES_DIR"

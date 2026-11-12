@@ -2,7 +2,7 @@
 
 # SketchyBar's view of the shared palette.
 #
-# The hexes are NOT written here. They come from .config/palette/danse.conf,
+# The hexes are NOT written here. They come from .config/palette/<rice>.conf,
 # the one place this checkout defines a colour, so the bar cannot drift from
 # the prompt, Ghostty, Neovim and the desktop background. This file only maps
 # palette names onto the role names the item scripts already use.
@@ -11,18 +11,19 @@
 # with a minimal environment and this checkout's bin/ is not reliably on that
 # PATH. The file is two fields and a comment character; a parser is overkill.
 
-# Which look: danse (the default) or the opt-in Monochrome 43 rice. The
+# Which look: Monochrome 43 (the default) or the older danse rice. The
 # choice lives in palette/rice.local - one word, gitignored, per machine:
-#   echo monochrome-43 > ~/.config/palette/rice.local
-# Anything else, or no file, keeps danse. borders/bordersrc reads the same.
+#   echo danse > ~/.config/palette/rice.local
+# Anything else, or no file, is Monochrome 43. borders/bordersrc and
+# .zshrc (the prompt) read the same file.
 _PALETTE_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/palette"
-RICE=danse
+RICE=monochrome-43
 if [ -r "$_PALETTE_DIR/rice.local" ]; then
     read -r RICE < "$_PALETTE_DIR/rice.local" || true
 fi
 case "$RICE" in
-    monochrome-43) ;;
-    *) RICE=danse ;;
+    danse) ;;
+    *) RICE=monochrome-43 ;;
 esac
 export RICE
 PALETTE_FILE="$_PALETTE_DIR/$RICE.conf"

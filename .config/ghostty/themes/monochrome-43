@@ -4,8 +4,8 @@
 # the ANSI slots 43PR's kitty used. Slot 0 is the ground and slot 15 is fg,
 # so a TUI that paints "black" or "bright white" stays in the monochrome.
 #
-# OPT-IN: the config still says `theme = danse`. Put `theme = monochrome-43`
-# in ~/.config/ghostty/config.local (gitignored; included last by config).
+# The default: the config says `theme = monochrome-43`. `theme = danse` in
+# ~/.config/ghostty/config.local (gitignored; included last) opts back out.
 #
 # Every hex below must be a palette colour; test_palette.bats asserts it.
 

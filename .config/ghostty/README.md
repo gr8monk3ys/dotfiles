@@ -51,16 +51,28 @@ brew install --cask ghostty
 
 ## Theme
 
-`theme = Atom One Dark` matches the repo-wide OneDark palette (verify names with `ghostty +list-themes`).
+`theme = monochrome-43` — [`themes/monochrome-43`](themes/monochrome-43) is
+generated from [`.config/palette/monochrome-43.conf`](../palette/monochrome-43.conf):
+black ground, white text, the ANSI colours of
+[43PR/dotfiles](https://github.com/43PR/dotfiles) (MIT). Split chrome and the
+Dock icon use the same palette.
 
 UI/UX profile in this repo:
 
-- Frosted-glass effect (`background-opacity = 0.8`, `background-blur = 90`)
+- Frosted-glass effect (`background-opacity = 0.86`, `background-blur = 90`)
 - Comfortable spacing (`window-padding-x = 10`, balanced padding enabled)
-- Clean native chrome (`macos-titlebar-style = transparent`)
+- Clean native chrome (`macos-titlebar-style = hidden`)
 
 On Linux, blur depends on compositor support.
-Popular theme alternatives right now: Catppuccin Mocha, Rose Pine Moon, TokyoNight Storm.
+
+### danse (opt back in)
+
+[`themes/danse`](themes/danse) is still shipped. Ghostty cannot read
+`~/.config/palette/rice.local`, so opt back in per machine:
+
+```bash
+echo 'theme = danse' >> ~/.config/ghostty/config.local
+```
 
 ## Why Ghostty over Kitty?
 
@@ -94,19 +106,10 @@ ghostty +validate-config --config-file ~/.config/ghostty/config
 - [Ghostty GitHub](https://github.com/ghostty-org/ghostty)
 - [Configuration Reference](https://ghostty.org/docs/config)
 
-## Monochrome 43 (opt-in)
+## Includes
 
-[`themes/monochrome-43`](themes/monochrome-43) is generated from
-[`.config/palette/monochrome-43.conf`](../palette/monochrome-43.conf): black
-ground, white text, the ANSI colours of [43PR/dotfiles](https://github.com/43PR/dotfiles) (MIT). The default stays
-`theme = danse`. To opt in on one machine:
-
-```bash
-echo 'theme = monochrome-43' >> ~/.config/ghostty/config.local
-```
-
-`config.local` is gitignored and included last, so it wins. Before it, the
-config includes Omarchy's live theme file
-(`~/.local/state/omarchy/current/theme/ghostty.conf`) when it exists — on
-Omarchy that keeps `omarchy theme set` theming Ghostty once this config is
-linked; on macOS the file does not exist and the include is skipped.
+The config ends with two optional (`?`) includes; a missing file is skipped.
+Later wins. Omarchy's live theme colours
+(`~/.local/state/omarchy/current/theme/ghostty.conf`, only on Omarchy) keep
+`omarchy theme set` theming this terminal; `config.local` is gitignored and
+per machine.

@@ -14,7 +14,7 @@ source "$CONFIG_DIR/icons.sh"
 # Bar Appearance
 # ============================================================================
 if [ "$RICE" = monochrome-43 ]; then
-    # Monochrome 43 (opt-in, see colors.sh): a slim, flat, pure-black strip
+    # Monochrome 43 (the default, see colors.sh): a slim, flat, black strip
     # flush with the top edge, white text in the Nerd Font Ghostty uses.
     FONT="JetBrainsMono Nerd Font"
     APPLE_ICON_FONT="$FONT:Bold:15.0"
@@ -47,6 +47,9 @@ if [ "$RICE" = monochrome-43 ]; then
         icon.padding_left=8 \
         icon.padding_right=4
 else
+    # danse (rice.local = danse): the floating, rounded, blurred bar.
+    # AeroSpace's gaps.outer.top is sized for the 28pt bar above; with this
+    # 37pt one set it back to 45 by hand (see README).
     APPLE_ICON_FONT="SF Pro:Black:16.0"
     sketchybar --bar \
         height=37 \
