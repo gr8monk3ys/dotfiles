@@ -31,7 +31,10 @@ measure_once_ms() {
     local warn_on_nonzero="${1:-true}"
     local output real status=0
     set +e
-    output="$({ /usr/bin/time -p zsh -i -c 'exit' >/dev/null; } 2>&1)"
+    # bash's own `time -p` keyword, not /usr/bin/time: Arch (and so Omarchy)
+    # does not install the `time` package by default, and the keyword prints
+    # the same POSIX `real <seconds>` line on bash 3.2 and 5.
+    output="$({ time -p zsh -i -c 'exit' >/dev/null; } 2>&1)"
     status=$?
     set -e
     if (( status != 0 )) && [[ "$warn_on_nonzero" == "true" ]]; then
@@ -76,7 +79,6 @@ main() {
     [[ "$budget_ms" =~ ^[0-9]+$ ]] || die "--budget-ms must be an integer"
     (( runs >= 1 )) || die "--runs must be >= 1"
     command -v zsh >/dev/null 2>&1 || die "zsh is not installed"
-    [[ -x /usr/bin/time ]] || die "/usr/bin/time is required"
 
     echo "Benchmarking zsh interactive startup (${runs} runs, budget ${budget_ms}ms)..."
 
