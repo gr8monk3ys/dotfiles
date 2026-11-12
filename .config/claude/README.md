@@ -44,3 +44,18 @@ desktop. The site defines no warning, plan-mode or diff colours, so those
 tokens are chosen to sit beside its green. Each file has three fields —
 `name`, `base`, and `overrides` (a map of colour token to `#rrggbb`); a token
 left out falls through to the base preset.
+
+## Plugins and MCP servers
+
+`~/.claude.json` (user-scope MCP servers) and `~/.claude/plugins/` hold OAuth
+tokens and session state next to the configuration, so they are not tracked
+either. [bin/claude-sync](../../bin/claude-sync) holds the list instead and
+adds what is missing through the `claude` CLI, dry run by default:
+
+```bash
+make claude-sync               # what would be added
+make claude-sync apply=1       # add it
+```
+
+The github plugin authenticates with `$GITHUB_PERSONAL_ACCESS_TOKEN`, exported
+by `.zshrc` from `gh auth token`; run `gh auth login` once per machine.

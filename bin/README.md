@@ -443,6 +443,32 @@ Each theme is placed on its own and the directory is never linked, so a theme
 made with `/theme` stays local. A file of the same name that this checkout did
 not write is moved to `<name>.json.bak.<timestamp>` first.
 
+### [claude-sync](claude-sync)
+
+Gives a machine this user's Claude Code marketplaces, plugins and user-scope
+MCP servers by driving the `claude` CLI. `~/.claude` and `~/.claude.json` are
+never tracked — they hold OAuth tokens and session state — so the script
+holds the list and adds only what is missing. Dry run by default; idempotent.
+
+```bash
+claude-sync                   # dry run: ok / would per item
+claude-sync --apply
+claude-sync --only mcp        # marketplaces | plugins | mcp
+# or
+make claude-sync [apply=1] [only=mcp]
+```
+
+No tokens: the github plugin reads `$GITHUB_PERSONAL_ACCESS_TOKEN`, which
+`.zshrc` exports from `gh auth token`. Machine-specific MCP servers are
+skipped, with the reason, when their prerequisite is missing: `omarchy`
+(OMCP; Omarchy only), `gimp` (a gimp-mcp checkout at `~/code/gimp-mcp` or
+`$GIMP_MCP_DIR`, run on Python 3.13 via `uv`), `blender` (`uvx`, with
+`DISABLE_TELEMETRY=true`), `godot` (`GODOT_PATH` is
+`/Applications/Godot.app/Contents/MacOS/Godot` on macOS, `godot` on `PATH`
+elsewhere). An MCP server that already exists is left as it is, not compared.
+Plugins synced from a claude.ai account arrive with the login and are not
+listed.
+
 ### [validate-config-live](validate-config-live)
 
 Asserts that tools actually honour the configs this repo tracks. `make link`
@@ -506,3 +532,4 @@ Helps non-root installations on Arch Linux.
 | dotfiles-sync | ✓ | — | — |
 | firefox-user-js | ✓ | ✓ | ✓ |
 | claude-themes | ✓ | ✓ | ✓ |
+| claude-sync | ✓ | ✓ | ✓ |

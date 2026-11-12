@@ -32,7 +32,7 @@ export STOW_DIR = $(DOTFILES_DIR)
 
 .PHONY: all macos arch link unlink link-dry-run test test-setup verify \
         verify-config-live verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-doctor-tools verify-tests \
-        doctor init update backup firefox claude-themes omarchy worktree-add worktree-list worktree-remove worktree-prune \
+        doctor init update backup firefox claude-themes claude-sync omarchy worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
         brew git packages-macos packages-arch core-macos core-arch \
         stow-arch stow-macos stow-linux linux unknown cask-apps cask-apps-extra vscode-extensions node-packages \
@@ -343,6 +343,12 @@ firefox:
 claude-themes:
 	@DOTFILES_DIR="$(DOTFILES_DIR)" $(MAKEFILE_DIR)/bin/claude-themes install 		$(if $(copy),--copy) $(if $(dry),--dry-run)
 
+## Add the tracked Claude Code marketplaces, plugins and MCP servers
+# Dry run unless apply=1. Drives the `claude` CLI; ~/.claude and
+# ~/.claude.json are never tracked (they hold tokens and session state).
+claude-sync:
+	@$(MAKEFILE_DIR)/bin/claude-sync $(if $(apply),--apply) $(if $(only),--only $(only))
+
 ## Install the Monochrome 43 rice on Omarchy (dry run unless apply=1)
 # Not folded into `link`: Omarchy owns ~/.config/hypr and ~/.config/omarchy,
 # so omarchy/setup.sh places single files and drives Omarchy's own commands
@@ -538,7 +544,9 @@ help:
 	@echo "                      reports where it landed)"
 	@echo "  make claude-themes [copy=1] [dry=1] - Install the tracked Claude Code themes"
 	@echo "                      into ~/.claude/themes (bin/claude-themes status reports them)"
-	@echo "  make omarchy [apply=1] [only=theme|plugins|bar|hypr] - Monochrome 43 rice"
+	@echo "  make claude-sync [apply=1] [only=marketplaces|plugins|mcp] - Claude Code"
+	@echo "                      plugins and user-scope MCP servers (dry run by default)"
+	@echo "  make omarchy [apply=1] [only=theme|plugins|bar|hypr|ghostty] - Monochrome 43 rice"
 	@echo "                      on Omarchy (omarchy/setup.sh; dry run unless apply=1)"
 	@echo "  make restore [backup=/path] - Restore latest/specified backup snapshot"
 	@echo "  make restore-zshenv - Restore legacy .zshenv backup only"
