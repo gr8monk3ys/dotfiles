@@ -142,6 +142,7 @@ danse         windows/windows-terminal/danse.json.tpl
 monochrome-43 .config/ghostty/themes/monochrome-43
 monochrome-43 .config/btop/themes/monochrome-43.theme
 monochrome-43 .config/cava/monochrome-43
+monochrome-43 omarchy/themes/monochrome-43/colors.toml
 THEMES
         exit $status
     ' _ "$DOTFILES_DIR"

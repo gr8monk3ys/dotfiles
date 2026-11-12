@@ -1,0 +1,16 @@
+{
+  "title": "System",
+  "cpu": "CPU",
+  "memory": "Memory",
+  "swap": "Swap",
+  "temperature": "Temperature",
+  "load": "Load %1 · %2 · %3",
+  "cores": { "one": "%1 core", "other": "%1 cores" },
+  "uptime.days": { "one": "Up %1 day, %2 h", "other": "Up %1 days, %2 h" },
+  "uptime.hours": "Up %1 h %2 min",
+  "usedOf": "%1 of %2",
+  "topProcesses": "Top processes",
+  "noProcesses": "Sampling…",
+  "openBtop": "Open btop",
+  "unavailable": "—"
+}

@@ -1,0 +1,24 @@
+# Omarchy shell plugins for the Monochrome 43 rice, read by omarchy/setup.sh.
+#
+# Columns (tab- or space-separated):
+#   id       the plugin id from its manifest.json (= its directory name)
+#   source   a git URL, or `local` for a plugin shipped in omarchy/plugins/<id>
+#   commit   the full commit a third-party plugin is pinned to, `-` for local
+#   enable   yes | no
+#
+# Pins are the commits that were security-reviewed before install. Plugins
+# run unsandboxed inside omarchy-shell: change a pin only after reviewing the
+# diff, and do not run `omarchy plugin update`, which moves them to HEAD.
+expose.window-overview	https://github.com/kristofferR/omarchy-expose.git	5f3d76d629eeeb717023ba169116995c0366511c	yes
+io.github.jcarcinogen.rice-bar	https://github.com/jcarcinogen/omarchy-rice-bar.git	5f5e50b9122bcf53839422b14d3f0e719fc7dbb9	no
+io.github.ofa14-prog.dynamic-island	https://github.com/ofa14-prog/omarchy-dynamic-island.git	fe09021183a9f60bc80a6aed3564191f25e65af8	yes
+io.github.qempexe.omaudix	https://github.com/qempexe/omarchy-omaudix.git	f897744c59c3ae62a8ba1cf6c1b0135d5b95f574	yes
+io.github.steveb98.segue	https://github.com/SteveB98/omarchy-segue.git	7d276fcdd2423657190aaf0391f1a7044b0fa121	yes
+meviusisback.hw-monitor	https://github.com/meviusisback/omarchy-hw-monitor.git	2ca32ed7ad64e0305f229598209163bcd7872d60	yes
+oliwier.agent-skills-manager	https://github.com/oliwier-xiao/agent-skills-manager.git	b5525c03b704a714fe52bfbc27bdc59ec29c2c6b	yes
+pennyfx.spectrum	https://github.com/pennyfx/omarchy-spectrum.git	05e22dfee468dd4c811c523d5e47adc77ebd184f	yes
+robzolkos.agent-usage	https://github.com/robzolkos/omarchy-agent-usage.git	4aa25832b4c9c3b3aefd52533f4cf84d75021255	yes
+ssandys.colophon	https://github.com/ssandys/colophon.git	858aa78a3f44afca60888b18cabcbd55891462ee	yes
+tornikegomareli.spaces	https://github.com/tornikegomareli/omarchy-spaces.git	458852c88336722f61d8c67487bc03d4d3523893	yes
+tsouth89.omcp	https://github.com/btsouth/omarchy-omcp.git	da28c82cfb2b7122ace69a7722c6e426ebcd710c	yes
+gr8monk3ys.sysstats	local	-	yes

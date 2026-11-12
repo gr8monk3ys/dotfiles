@@ -25,6 +25,10 @@ into `~/.config/`; `make` drives install, link and verification.
   Terminal fragment). Not under `.config/`, because Stow would link it on macOS
   and Arch; `windows/setup.ps1` (Windows PowerShell 5.1, dry run by default) is
   its `make link`.
+- `omarchy/` — the Monochrome 43 rice for Omarchy 4.x (theme, Hyprland snippet,
+  pinned shell plugins, bar layout). Outside `.config/` because Omarchy owns
+  `~/.config/hypr` and `~/.config/omarchy`; `omarchy/setup.sh` (dry run by
+  default, `make omarchy apply=1`) places single files instead of stowing.
 - `docs/TOOLS.md` — one rationale entry per package; `validate-tool-docs` fails
   when a manifest and the catalog disagree in either direction.
 - `test/` — BATS (`test_*.bats`, helpers in `test_helper/`).

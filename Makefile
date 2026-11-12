@@ -32,7 +32,7 @@ export STOW_DIR = $(DOTFILES_DIR)
 
 .PHONY: all macos arch link unlink link-dry-run test test-setup verify \
         verify-config-live verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-doctor-tools verify-tests \
-        doctor init update backup firefox claude-themes worktree-add worktree-list worktree-remove worktree-prune \
+        doctor init update backup firefox claude-themes omarchy worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
         brew git packages-macos packages-arch core-macos core-arch \
         stow-arch stow-macos stow-linux linux unknown cask-apps cask-apps-extra vscode-extensions node-packages \
@@ -343,6 +343,13 @@ firefox:
 claude-themes:
 	@DOTFILES_DIR="$(DOTFILES_DIR)" $(MAKEFILE_DIR)/bin/claude-themes install 		$(if $(copy),--copy) $(if $(dry),--dry-run)
 
+## Install the Monochrome 43 rice on Omarchy (dry run unless apply=1)
+# Not folded into `link`: Omarchy owns ~/.config/hypr and ~/.config/omarchy,
+# so omarchy/setup.sh places single files and drives Omarchy's own commands
+# instead of stowing. On any other machine it says so and does nothing.
+omarchy:
+	@$(MAKEFILE_DIR)/omarchy/setup.sh $(if $(apply),--apply) $(if $(only),--only $(only))
+
 ## Benchmark interactive zsh startup against a performance budget
 bench-shell:
 	@bin/dotfiles-bench-shell --runs "$(if $(runs),$(runs),7)" --budget-ms "$(if $(budget),$(budget),900)"
@@ -531,6 +538,8 @@ help:
 	@echo "                      reports where it landed)"
 	@echo "  make claude-themes [copy=1] [dry=1] - Install the tracked Claude Code themes"
 	@echo "                      into ~/.claude/themes (bin/claude-themes status reports them)"
+	@echo "  make omarchy [apply=1] [only=theme|plugins|bar|hypr] - Monochrome 43 rice"
+	@echo "                      on Omarchy (omarchy/setup.sh; dry run unless apply=1)"
 	@echo "  make restore [backup=/path] - Restore latest/specified backup snapshot"
 	@echo "  make restore-zshenv - Restore legacy .zshenv backup only"
 	@echo "  make bench-shell [runs=7] [budget=900] - Benchmark zsh startup budget"
