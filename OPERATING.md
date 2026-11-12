@@ -54,8 +54,9 @@ make
 [Omarchy](https://github.com/basecamp/omarchy) is Arch + Hyprland. `bin/platform detect`
 still says `arch` on it; `bin/platform is-omarchy` distinguishes it. The install
 path is `make arch`: `pacman -Syu` via `bin/pacman` (sudo wrapper), then
-`install/pacmanfile`, then `make link`. The Omarchy rice is a separate, opt-in
-step: `make omarchy` (see [`omarchy/README.md`](omarchy/README.md)).
+`install/pacmanfile`, then `make link`. The Omarchy half of the rice (theme,
+Hyprland, bar, plugins, zsh in Ghostty) is a separate, dry-run-first step:
+`make omarchy` (see [`omarchy/README.md`](omarchy/README.md)).
 
 Facts below were read off an Omarchy 4.5 machine (`omarchy version` →
 `4.5.0-3`). Re-check them after a major Omarchy update.

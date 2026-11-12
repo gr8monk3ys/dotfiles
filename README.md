@@ -71,10 +71,13 @@ make doctor    # health check of the linked machine
 or [docs/TOOLS.md](docs/TOOLS.md).
 
 Everything is themed from one place. [`.config/palette/`](.config/palette/)
-holds the palette — OneDark, with two accents and two chrome fills tuned to
-Matisse's _La Danse_ (1910), which `bin/wallpaper` also composes into the
-desktop background. The artwork is public domain but is not tracked here;
-the script fetches it and the repo carries the recipe.
+holds the palettes. The desktop look on both macOS and Omarchy is
+**Monochrome 43** — black ground, white text, greys for structure, colour
+only for errors — across Ghostty, the starship powerline prompt, SketchyBar,
+borders, btop, fastfetch, cava and the Omarchy theme. The older `danse`
+palette (OneDark, tuned to Matisse's _La Danse_, which `bin/wallpaper`
+composes into a desktop background) still themes the CLI tools, and one
+word in `~/.config/palette/rice.local` brings back its desktop look.
 
 ## Layout
 
