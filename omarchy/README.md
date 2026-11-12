@@ -14,7 +14,6 @@ drives Omarchy's own commands instead. It is this directory's `make link`.
 | Backgrounds | not tracked | copied from Omarchy's Vantablack theme, plus 43PR's wallpaper fetched by URL and SHA-256 checked |
 | Hyprland look | [`hypr/monochrome_43.lua`](hypr/monochrome_43.lua) | `~/.config/hypr/monochrome_43.lua` (symlink), loaded by one `require` line appended to `looknfeel.lua` |
 | Shell plugins | [`plugins.tsv`](plugins.tsv) | `~/.config/omarchy/plugins/<id>`, via `omarchy plugin add`, pinned |
-| Own plugin | [`plugins/gr8monk3ys.sysstats/`](plugins/gr8monk3ys.sysstats/) | `~/.config/omarchy/plugins/` (symlink) |
 | Bar | [`bar.json`](bar.json) | position via `omarchy bar position`; layout merged into `~/.config/omarchy/shell.json` |
 
 ## Use
@@ -40,15 +39,12 @@ What `apply=1` changes, and how to undo it:
   marked `yes`. Note `plugin add` clones the default branch first, so the
   pinned checkout happens a moment after the clone — the plugin is not
   enabled in between.
-- **Bar**: `shell.json` is copied to `shell.json.dotfiles-bak` before the
-  layout is replaced; restore that file to undo.
+- **Bar**: `shell.json` is copied to `shell.json.dotfiles-bak.<epoch>`, then
+  only `.bar.layout` is replaced (other keys keep their values and order);
+  restore that file to undo.
 - **Hypr**: if `looknfeel.lua` already holds a pasted copy of the rice (the
   `riceOut` curve), setup warns and does not add the `require` — delete the
   pasted block first, or the look is applied twice.
-
-Backups of a replaced local plugin go to `~/.config/omarchy/plugins.dotfiles-bak/`,
-not beside it: Omarchy loads every `plugins/*/manifest.json`, so a backup
-there would be a second plugin with the same id.
 
 ## Plugins and pins
 
@@ -73,10 +69,10 @@ the commit in `plugins.tsv`, run `make omarchy apply=1 only=plugins`.
 | Spaces | tornikegomareli/omarchy-spaces | yes |
 | OMCP | btsouth/omarchy-omcp | yes |
 
-`gr8monk3ys.sysstats` is this repo's own bar widget (CPU, memory,
-temperature). Its pure helpers are in `Model.js` and tested with
-`node --test omarchy/plugins/gr8monk3ys.sysstats/tests/`, which
-`test/test_omarchy_setup.bats` runs when `node` is present.
+`gr8monk3ys.sysstats` (CPU, memory, temperature) is placed by `bar.json`
+but is `external` in `plugins.tsv`: it is maintained outside this repo, and
+`setup.sh` never creates, replaces, links or enables its directory. Without
+it installed, its bar slot is simply empty.
 
 ## The look
 

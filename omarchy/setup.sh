@@ -21,10 +21,13 @@
 #            checked against a SHA-256 (images are not tracked here); then
 #            `omarchy theme set monochrome-43` if it is not already current.
 #   plugins  each plugin in plugins.tsv: `omarchy plugin add`, then checked
-#            out at its pinned commit and validated; `local` plugins are
-#            linked from plugins/<id>; then enabled if marked yes.
-#   bar      `omarchy bar position` and bar.json's layout merged into
-#            ~/.config/omarchy/shell.json (backed up first).
+#            out at its pinned commit and validated; then enabled if marked
+#            yes. `external` plugins are managed outside this repo: their
+#            directory is never created, linked, moved or enabled from here.
+#   bar      `omarchy bar position`, and bar.json's layout written to
+#            .bar.layout in ~/.config/omarchy/shell.json (other keys and
+#            their order untouched; backed up first to
+#            shell.json.dotfiles-bak.<epoch>).
 #   hypr     hypr/monochrome_43.lua linked into ~/.config/hypr and a
 #            require() for it appended once to ~/.config/hypr/looknfeel.lua.
 
@@ -92,10 +95,9 @@ change() {
 wants() { [[ -z "$ONLY" || "$ONLY" == "$1" ]]; }
 
 # Point dest at src with a symlink. Something else already there is moved to
-# $3 (default dest.dotfiles-bak) - unless it is an identical copy, which is
-# simply replaced.
+# dest.dotfiles-bak - unless it is an identical copy, which is simply replaced.
 link() {
-    local src="$1" dest="$2" backup="${3:-$2.dotfiles-bak}"
+    local src="$1" dest="$2" backup="$2.dotfiles-bak"
     if [[ -L "$dest" && "$(readlink "$dest")" == "$src" ]]; then
         ok "$dest"
         return 0
@@ -177,11 +179,14 @@ step_plugins() {
         [[ -z "$id" || "$id" == \#* ]] && continue
         dir="$plugins_dir/$id"
 
-        if [[ "$src" == local ]]; then
-            [[ -d "$HERE/plugins/$id" ]] || die "plugins.tsv: no $HERE/plugins/$id"
-            # Backed up outside plugins/: Omarchy discovers every
-            # plugins/*/manifest.json, so a backup there is a duplicate id.
-            link "$HERE/plugins/$id" "$dir" "$OMARCHY_CONFIG/plugins.dotfiles-bak/$id"
+        if [[ "$src" == external ]]; then
+            # Owned elsewhere (bar.json places it); report, never touch.
+            if [[ -e "$dir" ]]; then
+                ok "$id (external, not managed here)"
+            else
+                note "$id is external and not installed; its bar slot stays empty"
+            fi
+            continue
         else
             [[ "$commit" =~ ^[0-9a-f]{40}$ ]] || die "plugins.tsv: $id: bad commit $commit"
             if [[ ! -d "$dir" ]]; then
@@ -236,13 +241,16 @@ step_bar() {
 
     if [[ "$have" == "$want" ]]; then
         ok "bar layout"
-    elif change "merge bar.json layout into $shell_json (backup: shell.json.dotfiles-bak)"; then
-        local tmp
+    elif change "set .bar.layout in $shell_json from bar.json (backup: shell.json.dotfiles-bak.<epoch>)"; then
+        local tmp backup
         mkdir -p "$OMARCHY_CONFIG"
         [[ -s "$shell_json" ]] || echo '{"version": 1}' > "$shell_json"
-        cp "$shell_json" "$shell_json.dotfiles-bak"
+        backup="$shell_json.dotfiles-bak.$(date +%s)"
+        [[ -e "$backup" ]] && die "$backup already exists; re-run in a second"
+        cp -p "$shell_json" "$backup"
         tmp="$(mktemp "$shell_json.XXXXXX")"
-        jq -S --slurpfile b "$HERE/bar.json" '.bar.layout = $b[0].layout' "$shell_json" > "$tmp"
+        # No -S: the user's keys keep their order; only .bar.layout changes.
+        jq --slurpfile b "$HERE/bar.json" '.bar.layout = $b[0].layout' "$shell_json" > "$tmp"
         mv "$tmp" "$shell_json"
         omarchy-shell shell reloadConfig > /dev/null 2>&1 || true
     fi

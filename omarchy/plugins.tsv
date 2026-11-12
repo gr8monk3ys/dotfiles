@@ -2,8 +2,9 @@
 #
 # Columns (tab- or space-separated):
 #   id       the plugin id from its manifest.json (= its directory name)
-#   source   a git URL, or `local` for a plugin shipped in omarchy/plugins/<id>
-#   commit   the full commit a third-party plugin is pinned to, `-` for local
+#   source   a git URL, or `external` for a plugin managed outside this repo
+#            (setup.sh never creates, moves, links or enables it)
+#   commit   the full commit a third-party plugin is pinned to, `-` for external
 #   enable   yes | no
 #
 # Pins are the commits that were security-reviewed before install. Plugins
@@ -21,4 +22,4 @@ robzolkos.agent-usage	https://github.com/robzolkos/omarchy-agent-usage.git	4aa25
 ssandys.colophon	https://github.com/ssandys/colophon.git	858aa78a3f44afca60888b18cabcbd55891462ee	yes
 tornikegomareli.spaces	https://github.com/tornikegomareli/omarchy-spaces.git	458852c88336722f61d8c67487bc03d4d3523893	yes
 tsouth89.omcp	https://github.com/btsouth/omarchy-omcp.git	da28c82cfb2b7122ace69a7722c6e426ebcd710c	yes
-gr8monk3ys.sysstats	local	-	yes
+gr8monk3ys.sysstats	external	-	no

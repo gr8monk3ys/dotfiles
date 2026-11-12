@@ -93,19 +93,40 @@ be_omarchy() { mkdir -p "$PLATFORM_OMARCHY_SYSTEM_DIR"; }
     assert_output "0"
 }
 
-@test "a differing local plugin is backed up outside the dir Omarchy scans" {
+@test "an external plugin's directory is never touched or enabled" {
     be_omarchy
     local plugins="$XDG_CONFIG_HOME/omarchy/plugins"
-    mkdir -p "$plugins/gr8monk3ys.sysstats"
-    echo '{"id": "gr8monk3ys.sysstats"}' > "$plugins/gr8monk3ys.sysstats/manifest.json"
-    printf 'gr8monk3ys.sysstats\tlocal\t-\tno\n' > "$TEST_TEMP_DIR/plugins.tsv"
+    mkdir -p "$plugins/someone.widget"
+    echo '{"id": "someone.widget"}' > "$plugins/someone.widget/manifest.json"
+    printf 'someone.widget\texternal\t-\tyes\n' > "$TEST_TEMP_DIR/plugins.tsv"
     OMARCHY_PLUGINS_TSV="$TEST_TEMP_DIR/plugins.tsv" run "$SETUP" --apply --only plugins
     assert_success
-    [[ "$(readlink "$plugins/gr8monk3ys.sysstats")" == "$DOTFILES_DIR/omarchy/plugins/gr8monk3ys.sysstats" ]]
-    [[ -f "$XDG_CONFIG_HOME/omarchy/plugins.dotfiles-bak/gr8monk3ys.sysstats/manifest.json" ]]
-    # Nothing but the link is left under plugins/.
-    run ls -A "$plugins"
-    assert_output "gr8monk3ys.sysstats"
+    assert_output --partial "external, not managed here"
+    [[ -d "$plugins/someone.widget" && ! -L "$plugins/someone.widget" ]]
+    run ls -A "$XDG_CONFIG_HOME/omarchy"
+    assert_output "plugins"
+    run grep -vE '^plugin list --json$' "$OMARCHY_LOG"
+    assert_output ""
+}
+
+@test "bar step replaces only .bar.layout, keeps key order, and backs up by epoch" {
+    command -v jq > /dev/null || skip "jq not installed"
+    be_omarchy
+    local cfg="$XDG_CONFIG_HOME/omarchy"
+    mkdir -p "$cfg"
+    printf '{"zeta": 1, "bar": {"position": "left", "layout": {"x": 1}, "a": 2}, "alpha": 3}\n' > "$cfg/shell.json"
+    : > "$cfg/shell.json.dotfiles-bak"
+    run "$SETUP" --apply --only bar
+    assert_success
+    run jq -c 'keys_unsorted' "$cfg/shell.json"
+    assert_output '["zeta","bar","alpha"]'
+    run jq -c '.bar | keys_unsorted' "$cfg/shell.json"
+    assert_output '["position","layout","a"]'
+    [[ "$(jq -c .bar.layout "$cfg/shell.json")" == "$(jq -c .layout "$DOTFILES_DIR/omarchy/bar.json")" ]]
+    # The older plain backup is left alone; a new epoch-stamped one holds the original.
+    [[ ! -s "$cfg/shell.json.dotfiles-bak" ]]
+    run bash -c 'jq -c .bar.layout "$1"/shell.json.dotfiles-bak.[0-9]*' _ "$cfg"
+    assert_output '{"x":1}'
 }
 
 @test "plugins.tsv pins every third-party plugin to a full commit over https" {
@@ -114,8 +135,8 @@ be_omarchy() { mkdir -p "$PLATFORM_OMARCHY_SYSTEM_DIR"; }
         while read -r id src commit enable; do
             [[ -z "$id" || "$id" == \#* ]] && continue
             [[ "$enable" =~ ^(yes|no)$ ]] || { echo "$id: enable must be yes|no"; status=1; }
-            if [[ "$src" == local ]]; then
-                [[ -f "$1/omarchy/plugins/$id/manifest.json" ]] || { echo "$id: no local plugin"; status=1; }
+            if [[ "$src" == external ]]; then
+                [[ "$commit" == - && "$enable" == no ]] || { echo "$id: external takes - and no"; status=1; }
             else
                 [[ "$src" =~ ^https://github\.com/[^/]+/[^/]+\.git$ ]] || { echo "$id: bad source $src"; status=1; }
                 [[ "$commit" =~ ^[0-9a-f]{40}$ ]] || { echo "$id: commit not pinned: $commit"; status=1; }
@@ -137,11 +158,5 @@ be_omarchy() { mkdir -p "$PLATFORM_OMARCHY_SYSTEM_DIR"; }
         done
         exit $status
     ' _ "$DOTFILES_DIR"
-    assert_success
-}
-
-@test "the local sysstats plugin's own tests pass" {
-    command -v node > /dev/null || skip "node not installed"
-    run node --test "$DOTFILES_DIR/omarchy/plugins/gr8monk3ys.sysstats/tests/"
     assert_success
 }
