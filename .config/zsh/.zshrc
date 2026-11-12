@@ -196,6 +196,19 @@ if command -v mise &> /dev/null; then
     eval "$(mise activate zsh)"
 fi
 
+# GitHub token for tools that want it in the environment - the github
+# Claude Code plugin's MCP server sends $GITHUB_PERSONAL_ACCESS_TOKEN as its
+# bearer token. Taken from gh's own keyring login, never written to a file;
+# empty (and unset) when gh is not logged in. An already-set value wins.
+if [[ -z "$GITHUB_PERSONAL_ACCESS_TOKEN" ]] && command -v gh &> /dev/null; then
+  GITHUB_PERSONAL_ACCESS_TOKEN="$(gh auth token 2> /dev/null)"
+  if [[ -n "$GITHUB_PERSONAL_ACCESS_TOKEN" ]]; then
+    export GITHUB_PERSONAL_ACCESS_TOKEN
+  else
+    unset GITHUB_PERSONAL_ACCESS_TOKEN
+  fi
+fi
+
 # Machine type detection (personal, work, server). $(<file) is read by
 # zsh itself — no fork, unlike $(cat ...).
 if [[ -z "$MACHINE_TYPE" ]]; then

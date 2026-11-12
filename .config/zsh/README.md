@@ -57,6 +57,10 @@ exists). OMZ itself is **not** installed.
   [`../atuin/`](../atuin/))
 - **direnv** — per-directory environments
 - **mise** — runtime version manager
+- **gh** — `GITHUB_PERSONAL_ACCESS_TOKEN` is exported from `gh auth token`
+  (gh's keyring login) when it is not already set, for the github Claude Code
+  plugin's MCP server. Nothing is written to disk; log in once with
+  `gh auth login`. Costs one `gh` call (~70ms) per shell start.
 
 ## Local overrides & machine types
 
