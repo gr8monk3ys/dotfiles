@@ -97,3 +97,4 @@ temperature). Its pure helpers are in `Model.js` and tested with
 - The terminal configs' Monochrome 43 variants (Ghostty, Starship, fastfetch,
   cava, btop) are opt-in per machine; their READMEs under `.config/` say how.
   Ghostty already follows the Omarchy theme once this repo's config is linked.
+- Spotify theming: see [`spicetify/README.md`](../spicetify/README.md).

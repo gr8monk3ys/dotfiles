@@ -1,0 +1,16 @@
+/* Monochrome 43 - square, flat, monospace. Colours come from color.ini. */
+:root {
+  --font-family: "JetBrainsMono Nerd Font", monospace;
+}
+
+body,
+.encore-text {
+  font-family: var(--font-family) !important;
+}
+
+/* No rounded cards or cover art: hairlines, not bubbles. */
+.main-card-card,
+.main-image-image,
+.main-cardImage-image {
+  border-radius: 0 !important;
+}

@@ -149,6 +149,25 @@ THEMES
     assert_success
 }
 
+@test "every colour in the spicetify theme is a monochrome-43 colour" {
+    # Spicetify wants bare hex, so the generated-theme check above (which
+    # looks for #rrggbb) cannot see these values.
+    run bash -c '
+        set -euo pipefail
+        allowed="$(PALETTE=monochrome-43 "$1/bin/palette" list | cut -f2)"
+        status=0
+        for hex in $(sed -nE "s/^[a-z-]+[[:space:]]*=[[:space:]]*([0-9a-f]{6})[[:space:]]*$/\1/p" \
+                "$1/spicetify/Themes/monochrome-43/color.ini" | sort -u); do
+            printf "%s\n" "$allowed" | grep -Fxq "#$hex" \
+                || { echo "color.ini uses $hex, not in monochrome-43"; status=1; }
+        done
+        n="$(grep -cE "^[a-z-]+[[:space:]]*=" "$1/spicetify/Themes/monochrome-43/color.ini")"
+        [[ "$n" -gt 0 ]] || { echo "no values parsed from color.ini"; status=1; }
+        exit $status
+    ' _ "$DOTFILES_DIR"
+    assert_success
+}
+
 @test "a booted neovim renders the palette's vermilion, not onedark.nvim's red" {
     # Computed against the palette rather than a literal, so retuning a colour
     # fails here instead of silently leaving the editor behind. nvim was the

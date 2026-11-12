@@ -706,6 +706,13 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 - **Why:** Time tracking.
 - **Installed via:** Brewfile
 
+### spicetify-cli
+
+- **Why:** Themes the Spotify desktop client; applies the Monochrome 43 theme in `spicetify/` and installs custom apps such as Spotify Stats. Opt-in: nothing runs until you run `spicetify` yourself.
+- **Alternatives:** none comparable; Spotify has no theming of its own
+- **Installed via:** Brewfile. On Arch it is AUR-only (`spicetify-cli`), and `pacman -S` cannot reach the AUR, so it is not in pacmanfile: `yay -S spicetify-cli`.
+- **Config:** [`spicetify/`](../spicetify/README.md) (not stowed; see its README)
+
 ### spotify_player
 
 - **Why:** Spotify TUI player.
