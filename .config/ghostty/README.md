@@ -93,3 +93,20 @@ ghostty +validate-config --config-file ~/.config/ghostty/config
 - [Ghostty Documentation](https://ghostty.org/docs)
 - [Ghostty GitHub](https://github.com/ghostty-org/ghostty)
 - [Configuration Reference](https://ghostty.org/docs/config)
+
+## Monochrome 43 (opt-in)
+
+[`themes/monochrome-43`](themes/monochrome-43) is generated from
+[`.config/palette/monochrome-43.conf`](../palette/monochrome-43.conf): black
+ground, white text, the ANSI colours of [43PR/dotfiles](https://github.com/43PR/dotfiles) (MIT). The default stays
+`theme = danse`. To opt in on one machine:
+
+```bash
+echo 'theme = monochrome-43' >> ~/.config/ghostty/config.local
+```
+
+`config.local` is gitignored and included last, so it wins. Before it, the
+config includes Omarchy's live theme file
+(`~/.local/state/omarchy/current/theme/ghostty.conf`) when it exists — on
+Omarchy that keeps `omarchy theme set` theming Ghostty once this config is
+linked; on macOS the file does not exist and the include is skipped.

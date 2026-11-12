@@ -34,3 +34,13 @@ why there is no fastfetch entry in the generated-theme test.
   anywhere, which is expected.
 - The `width`/`height` in the logo block are **cells**, not pixels. Changing
   the font size changes how large the painting appears.
+
+## Monochrome 43 (opt-in)
+
+[`monochrome-43.jsonc`](monochrome-43.jsonc) is [43PR/dotfiles](https://github.com/43PR/dotfiles) (MIT)'s boxed layout —
+Hardware and Software sections keyed by grey tree glyphs and Nerd Font icons,
+the OS logo recoloured white/grey. `config.jsonc` stays the default:
+
+```bash
+fastfetch -c ~/.config/fastfetch/monochrome-43.jsonc
+```

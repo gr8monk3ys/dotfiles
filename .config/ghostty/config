@@ -157,3 +157,14 @@ keybind = global:ctrl+grave_accent=toggle_quick_terminal
 macos-icon = glass
 macos-icon-ghost-color = #61afef
 macos-icon-screen-color = #282c34
+
+# --- optional includes -------------------------------------------------------
+# The leading `?` makes each include optional: a missing file is skipped, so
+# on a machine with neither file this section changes nothing. Later wins.
+#
+# Omarchy's live theme colours. Only exists on Omarchy, where it keeps
+# `omarchy theme set` theming this terminal once this config is linked.
+config-file = ?"~/.local/state/omarchy/current/theme/ghostty.conf"
+# Per-machine overrides, gitignored (*.local) - e.g. `theme = monochrome-43`
+# to opt in to the Monochrome 43 look (see README).
+config-file = ?"config.local"

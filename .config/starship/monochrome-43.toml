@@ -1,0 +1,72 @@
+# Starship prompt — Monochrome 43 (.config/palette/monochrome-43.conf), after
+# 43PR/dotfiles' starship.toml (MIT): white directory, everything else
+# bright-black, a white ❯. Colour names, not hexes, so the prompt follows the
+# terminal's palette (Ghostty's monochrome-43 theme, or Omarchy's on Omarchy).
+#
+# The layout is still the repo's lean Powerlevel10k one:
+# `user@host dir git duration` on line 1, `venv ❯` on line 2.
+# OPT-IN: starship.toml stays the default. To use this one, put
+#   export STARSHIP_CONFIG="$HOME/.config/starship/monochrome-43.toml"
+# in ~/.config/zsh/zshrc.local (starship reads the variable on every prompt).
+"$schema" = 'https://starship.rs/config-schema.json'
+
+# Blank line between prompts, like POWERLEVEL9K_PROMPT_ADD_NEWLINE.
+add_newline = true
+
+format = """
+$username$hostname$directory$git_branch$git_status$cmd_duration
+$python$character"""
+
+# user@host only over SSH or as root, matching p10k's lean context segment.
+[username]
+format = '[$user]($style)[@](bright-black)'
+style_user = 'white'
+style_root = 'bold red'
+
+[hostname]
+ssh_only = true
+format = '[$hostname]($style) '
+style = 'white'
+
+[directory]
+style = 'bold white'
+truncation_length = 4
+truncate_to_repo = false
+read_only = ' '
+
+[git_branch]
+symbol = '󰘬 '
+format = '[$symbol$branch]($style) '
+style = 'bright-black'
+
+[git_status]
+format = '([$all_status$ahead_behind]($style) )'
+style = 'bright-black'
+conflicted = '✘'
+ahead = '⇡'
+behind = '⇣'
+diverged = '⇕'
+untracked = '?'
+modified = '!'
+staged = '+'
+stashed = '$'
+
+# Show duration of commands slower than 3s (p10k's default threshold).
+[cmd_duration]
+min_time = 3000
+format = '[took $duration]($style) '
+style = 'bright-black'
+
+# Active virtualenv only (no interpreter version noise), like p10k's
+# virtualenv segment on line 2.
+[python]
+format = '[(\($virtualenv\) )]($style)'
+style = 'bright-black'
+detect_extensions = []
+detect_files = []
+detect_folders = []
+
+[character]
+success_symbol = '[❯](white)'
+error_symbol = '[❯](bold red)'
+vimcmd_symbol = '[❮](white)'

@@ -41,3 +41,19 @@ you to do deliberately rather than applied by `make`.
   on first run and cava draws a flat line until it is granted.
 - `framerate = 60` is cheap here but it is a busy-loop on battery. Drop it to
   30 if that matters.
+
+## Monochrome 43 (opt-in)
+
+[`monochrome-43`](monochrome-43) is a grey-to-white gradient from
+[`.config/palette/monochrome-43.conf`](../palette/monochrome-43.conf) with
+[43PR/dotfiles](https://github.com/43PR/dotfiles) (MIT)'s fixed sensitivity. It leaves `[input] method` unset so each
+platform's build picks its default backend (PipeWire on Arch/Omarchy).
+`config` stays the default:
+
+```bash
+cava -p ~/.config/cava/monochrome-43
+```
+
+`shaders/` and `themes/` are cava's own upstream examples
+([karlstav/cava](https://github.com/karlstav/cava), MIT); 43PR ships the same
+files.

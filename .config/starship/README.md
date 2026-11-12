@@ -16,3 +16,14 @@ Cross-shell prompt — the default prompt for these dotfiles.
 ## Upstream
 
 - <https://starship.rs> · <https://starship.rs/config/>
+
+## Monochrome 43 (opt-in)
+
+[`monochrome-43.toml`](monochrome-43.toml) keeps this layout with
+[43PR/dotfiles](https://github.com/43PR/dotfiles) (MIT)'s colours: bold white directory, bright-black git/duration/venv, white
+`❯`, red only on failure or root. They are ANSI names, so they follow the
+terminal theme. Opt in per machine in `~/.config/zsh/zshrc.local`:
+
+```bash
+export STARSHIP_CONFIG="$HOME/.config/starship/monochrome-43.toml"
+```

@@ -42,3 +42,12 @@ The rationale that used to live in the file:
   there is no `validate-config-live` probe for it — the theme is guarded by
   `test_palette.bats` asserting every hex in it is a palette colour, which is
   honest about being a text check rather than a liveness one.
+
+## Monochrome 43 (opt-in)
+
+[`themes/monochrome-43.theme`](themes/monochrome-43.theme), from
+[`.config/palette/monochrome-43.conf`](../palette/monochrome-43.conf): grey
+gradients to white, the palette's danger red only at the top of temperature
+and memory used. `btop.conf` still selects `danse`; pick the theme in btop's
+options menu. Note btop then rewrites the tracked `btop.conf` (see above), so
+either commit that change or switch back.

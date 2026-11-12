@@ -1,0 +1,59 @@
+// fastfetch - Monochrome 43. OPT-IN: config.jsonc stays the default; run
+//   fastfetch -c ~/.config/fastfetch/monochrome-43.jsonc
+//
+// Layout after 43PR/dotfiles' fastfetch config (MIT): two boxed sections,
+// Hardware and Software, each line keyed by a dim tree glyph and a Nerd Font
+// icon. Keys are 256-colour grey (38;5;240), values the terminal's white.
+//
+// The logo is the OS's own, drawn in white and grey rather than its brand
+// colours, so the same file reads right on macOS and on Omarchy without an
+// image to fetch first.
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+
+  "logo": {
+    "color": {
+      "1": "white",
+      "2": "90",
+      "3": "white",
+      "4": "90",
+      "5": "white",
+      "6": "90"
+    },
+    "padding": {
+      "top": 1,
+      "right": 3
+    }
+  },
+
+  "display": {
+    "separator": " ",
+    "color": {
+      "keys": "38;5;240",
+      "title": "white"
+    }
+  },
+
+  "modules": [
+    "break",
+    { "type": "custom", "format": "┌─────────────── Hardware ───────────────┐" },
+    { "type": "host", "key": " ├─ 󰌢 " },
+    { "type": "cpu", "key": " ├─  " },
+    { "type": "gpu", "key": " ├─ 󰍛 " },
+    { "type": "memory", "key": " ├─ 󰘚 " },
+    { "type": "disk", "key": " ├─ 󰋊 ", "folders": "/" },
+    { "type": "battery", "key": " └─ 󰁹 " },
+    { "type": "custom", "format": "└────────────────────────────────────────┘" },
+    { "type": "custom", "format": "┌─────────────── Software ───────────────┐" },
+    { "type": "os", "key": " ├─ 󰌽 " },
+    { "type": "kernel", "key": " ├─  " },
+    { "type": "wm", "key": " ├─ 󰨇 " },
+    { "type": "theme", "key": " ├─ 󰉼 " },
+    { "type": "terminal", "key": " ├─ 󰞷 " },
+    { "type": "terminalfont", "key": " ├─ 󰛖 " },
+    { "type": "shell", "key": " ├─  " },
+    { "type": "uptime", "key": " └─ 󰅐 " },
+    { "type": "custom", "format": "└────────────────────────────────────────┘" },
+    "break"
+  ]
+}

@@ -114,28 +114,33 @@ load test_helper/common
 }
 
 @test "every colour in a generated theme is a palette colour" {
-    # ghostty/themes/danse, btop/themes/danse.theme, cava/config and the
-    # windows/ theme files are all derived from the palette by hand-running
-    # `palette get`. Nothing re-runs
-    # that, so this is what keeps them true — and it is what catches a colour
-    # typed straight into a theme instead of taken from the palette.
+    # The theme files below are all derived from a palette by hand-running
+    # `palette get`. Nothing re-runs that, so this is what keeps them true —
+    # and it is what catches a colour typed straight into a theme instead of
+    # taken from the palette. Each file is checked against its own palette.
     run bash -c '
         set -euo pipefail
         repo="$1"
-        allowed="$("$repo/bin/palette" list | cut -f2)"
         status=0
-        for f in .config/ghostty/themes/danse \
-                 .config/btop/themes/danse.theme \
-                 .config/cava/config \
-                 windows/glazewm/config.yaml \
-                 windows/zebar/danse/styles.css \
-                 windows/windows-terminal/danse.json.tpl; do
+        while read -r pal f; do
+            [[ -n "$pal" ]] || continue
+            allowed="$(PALETTE="$pal" "$repo/bin/palette" list | cut -f2)"
             [[ -f "$repo/$f" ]] || { echo "missing generated theme: $f"; status=1; continue; }
             for hex in $(grep -oE "#[0-9a-f]{6}" "$repo/$f" | sort -u); do
                 printf "%s\n" "$allowed" | grep -Fxq "$hex" \
-                    || { echo "$f uses $hex, which is not in the palette"; status=1; }
+                    || { echo "$f uses $hex, which is not in the $pal palette"; status=1; }
             done
-        done
+        done <<THEMES
+danse         .config/ghostty/themes/danse
+danse         .config/btop/themes/danse.theme
+danse         .config/cava/config
+danse         windows/glazewm/config.yaml
+danse         windows/zebar/danse/styles.css
+danse         windows/windows-terminal/danse.json.tpl
+monochrome-43 .config/ghostty/themes/monochrome-43
+monochrome-43 .config/btop/themes/monochrome-43.theme
+monochrome-43 .config/cava/monochrome-43
+THEMES
         exit $status
     ' _ "$DOTFILES_DIR"
     assert_success
