@@ -1,0 +1,113 @@
+{
+  "layout": {
+    "center": [
+      {
+        "format": "dddd HH:mm",
+        "formatAlt": "d MMMM 'W'ww yyyy",
+        "id": "omarchy.clock",
+        "verticalFormat": "HH\n—\nmm"
+      }
+    ],
+    "centerBegin": [
+      {
+        "id": "omarchy.indicators"
+      }
+    ],
+    "centerEnd": [
+      {
+        "cities": [
+          {
+            "name": "Los Angeles",
+            "zone": "America/Los_Angeles"
+          },
+          {
+            "name": "New York",
+            "zone": "America/New_York"
+          },
+          {
+            "name": "London",
+            "zone": "Europe/London"
+          },
+          {
+            "name": "Dubai",
+            "zone": "Asia/Dubai"
+          },
+          {
+            "name": "Tokyo",
+            "zone": "Asia/Tokyo"
+          }
+        ],
+        "id": "omarchy.elsewhen"
+      },
+      {
+        "id": "omarchy.weather"
+      },
+      {
+        "id": "pennyfx.spectrum"
+      },
+      {
+        "id": "gr8monk3ys.sysstats"
+      },
+      {
+        "id": "omarchy.system-update"
+      }
+    ],
+    "left": [
+      {
+        "id": "omarchy.menu"
+      },
+      {
+        "id": "tornikegomareli.spaces"
+      },
+      {
+        "id": "io.github.qempexe.omaudix"
+      }
+    ],
+    "right": [
+      {
+        "id": "omarchy.tray"
+      },
+      {
+        "id": "meviusisback.hw-monitor"
+      },
+      {
+        "id": "io.github.steveb98.segue"
+      },
+      {
+        "id": "tsouth89.omcp"
+      },
+      {
+        "id": "oliwier.agent-skills-manager"
+      },
+      {
+        "id": "ssandys.colophon"
+      },
+      {
+        "id": "robzolkos.agent-usage"
+      },
+      {
+        "id": "omarchy.keyboard-layout"
+      },
+      {
+        "id": "omarchy.agents"
+      },
+      {
+        "id": "omarchy.bluetooth"
+      },
+      {
+        "id": "omarchy.network"
+      },
+      {
+        "id": "omarchy.audio"
+      },
+      {
+        "id": "omarchy.monitor"
+      },
+      {
+        "id": "omarchy.power"
+      }
+    ],
+    "tray": []
+  },
+  "position": "left"
+}

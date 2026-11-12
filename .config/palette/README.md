@@ -17,7 +17,30 @@ as decimal SGR triples that a hex grep cannot see.
 the Makefile's `verify-stale-refs` pattern, which fails the build on any copy
 left anywhere under `.config`, `bin` or `.zshenv` — including in prose.)
 
-`danse.conf` is the one place a colour is defined. `bin/palette` reads it.
+Each `<name>.conf` here is one palette, and the one place its colours are
+defined. `bin/palette` reads `danse.conf` by default (it is the palette most
+tracked files are checked against); `PALETTE=<name>` picks another
+(`palette palettes` lists them).
+
+| Palette | Used by |
+| --- | --- |
+| `monochrome-43` | the default rice: Ghostty (`themes/monochrome-43`), btop, fastfetch, cava, SketchyBar, borders, the starship prompt, spicetify and the Omarchy theme |
+| `danse` | zsh highlighting, zellij, yazi, eza, atuin, bat, delta, nvim, `windows/`, and the rice when `rice.local` says `danse` |
+
+## Choosing the rice
+
+The rice is Monochrome 43 unless `~/.config/palette/rice.local` (one word,
+gitignored, per machine) says `danse`:
+
+```bash
+echo danse > ~/.config/palette/rice.local   # opt back in to danse
+rm ~/.config/palette/rice.local             # back to Monochrome 43
+```
+
+Read at start-up by SketchyBar (`colors.sh`), borders (`bordersrc`) and
+`.zshrc`, which picks `starship/danse.toml` and aliases `fastfetch`/`cava` to
+their danse files. Ghostty, btop and AeroSpace cannot read it; their READMEs
+say what to change by hand. `test/test_rice.bats` boots each reader both ways.
 
 ## The palette
 
@@ -37,6 +60,15 @@ sampled colour unchanged and are used only for chrome.
 
 Run `palette list` for the current table.
 
+## monochrome-43
+
+Pure black ground, white text, greys for structure, and colour only where it
+means something (errors, warnings, the one blue accent). Taken from
+[43PR/dotfiles](https://github.com/43PR/dotfiles) (MIT), its
+`.config/43pr/themes/default.toml`; see the header of
+[`monochrome-43.conf`](monochrome-43.conf) for the two departures. The ANSI
+slots are 43PR's terminal colours, so `ansi-*` names exist only here.
+
 ## Usage
 
 ```bash
@@ -47,6 +79,8 @@ palette get blue --format 0x      # 0xff61afef   (sketchybar)
 palette get blue --format rgb     # 97;175;239   (EZA_COLORS and other SGR)
 palette get blue --format raw     # 61afef
 palette export SB                 # SB_BLUE='#61afef' ...
+PALETTE=monochrome-43 palette get fg   # #ffffff
+palette palettes                  # danse, monochrome-43
 ```
 
 An unknown colour name is an error, not an empty string: a typo in a theme

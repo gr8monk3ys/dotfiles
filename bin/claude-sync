@@ -1,0 +1,227 @@
+#!/usr/bin/env bash
+# claude-sync - Give any machine this user's Claude Code plugins and MCP servers.
+#
+# Claude Code keeps its marketplaces and plugins in ~/.claude and its
+# user-scope MCP servers in ~/.claude.json, alongside session state, OAuth
+# tokens and caches that must never be tracked. So neither file is vendored:
+# this script holds the *list* (below) and drives the `claude` CLI to add
+# whatever is missing. Idempotent - anything already present is reported as
+# ok and left alone (an existing MCP server is not compared or rewritten).
+#
+# Dry run by default: prints what it would do and changes nothing.
+#
+# Usage:
+#   claude-sync                  # dry run
+#   claude-sync --apply          # do it
+#   claude-sync --only mcp       # one part: marketplaces|plugins|mcp
+#   make claude-sync [apply=1]
+#
+# No secrets live here. The github plugin authenticates with
+# $GITHUB_PERSONAL_ACCESS_TOKEN, which .zshrc exports from `gh auth token`;
+# no server below takes a token, header or secret env var. Plugins synced
+# from a claude.ai account (the "Synced from claude.ai" block of
+# `claude plugin list`) arrive with the login and are not listed here.
+#
+# Machine-specific MCP servers are platform-aware and skipped, with the
+# reason, when their prerequisite is missing:
+#   omarchy  OMCP shell plugin; Omarchy only (omarchy/plugins.tsv installs it)
+#   gimp     needs a gimp-mcp checkout at $GIMP_MCP_DIR (~/code/gimp-mcp) and
+#            uv; runs on Python 3.13 via uv
+#   blender  needs uvx; runs with DISABLE_TELEMETRY=true
+#   godot    needs Godot: /Applications/Godot.app/Contents/MacOS/Godot on
+#            macOS, `godot` on PATH elsewhere; needs npx
+#   discord  HTTP, http://127.0.0.1:8085/mcp (a local Discord MCP server)
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/preamble.sh
+source "$SCRIPT_DIR/lib/preamble.sh"
+
+# name<TAB>GitHub source. The built-in Anthropic directory is not listed.
+readonly MARKETPLACES='claude-plugins-official	anthropics/claude-plugins-official
+impeccable	pbakaus/impeccable
+agent-browser	vercel-labs/agent-browser
+godot-claude-skills	alexmeckes/godot-claude-skills
+claude-hud	jarrodwatts/claude-hud'
+
+# plugin@marketplace, user scope.
+readonly PLUGINS='chrome-devtools-mcp@claude-plugins-official
+claude-hud@claude-hud
+claude-md-management@claude-plugins-official
+commit-commands@claude-plugins-official
+context7@claude-plugins-official
+github@claude-plugins-official
+impeccable@impeccable
+pr-review-toolkit@claude-plugins-official
+pyright-lsp@claude-plugins-official
+security-guidance@claude-plugins-official
+superpowers@claude-plugins-official
+typescript-lsp@claude-plugins-official
+vercel@claude-plugins-official'
+
+readonly GODOT_MCP_PACKAGE="@coding-solo/godot-mcp@0.1.1"
+readonly OMCP_BIN="${XDG_CONFIG_HOME:-$HOME/.config}/omarchy/plugins/tsouth89.omcp/bin/omcp"
+GIMP_MCP_DIR="${GIMP_MCP_DIR:-$HOME/code/gimp-mcp}"
+CLAUDE_JSON="${CLAUDE_CONFIG_DIR:-$HOME}/.claude.json"
+
+APPLY=0
+ONLY=""
+CHANGES=0
+
+usage() { sed -n '2,33p' "$0" | sed 's/^# \{0,1\}//'; }
+
+ok() { printf '  ok      %s\n' "$*"; }
+skip() { printf '  skip    %s\n' "$*"; }
+warn() { printf '  WARN    %s\n' "$*" >&2; }
+die() { printf 'claude-sync: %s\n' "$*" >&2; exit 1; }
+
+# Announce a change and say whether to make it: true under --apply.
+change() {
+    CHANGES=$((CHANGES + 1))
+    if ((APPLY)); then
+        printf '  do      %s\n' "$*"
+        return 0
+    fi
+    printf '  would   %s\n' "$*"
+    return 1
+}
+
+wants() { [[ -z "$ONLY" || "$ONLY" == "$1" ]]; }
+
+# Run a claude command; under --apply a failure is reported, not fatal, so
+# one bad plugin does not stop the rest.
+run_claude() {
+    "$CLAUDE" "$@" || warn "failed: claude $*"
+}
+
+sync_marketplaces() {
+    echo "marketplaces:"
+    local have name src
+    have="$("$CLAUDE" plugin marketplace list --json 2> /dev/null | jq -r '.[].name' 2> /dev/null || true)"
+    while IFS=$'\t' read -r name src; do
+        if printf '%s\n' "$have" | grep -Fxq "$name"; then
+            ok "$name"
+        elif change "claude plugin marketplace add $src"; then
+            run_claude plugin marketplace add "$src"
+        fi
+    done <<< "$MARKETPLACES"
+}
+
+sync_plugins() {
+    echo "plugins:"
+    local have id
+    have="$("$CLAUDE" plugin list --json 2> /dev/null | jq -r '.[].id' 2> /dev/null || true)"
+    while read -r id; do
+        if printf '%s\n' "$have" | grep -Fxq "$id"; then
+            ok "$id"
+        elif change "claude plugin install $id --scope user"; then
+            run_claude plugin install "$id" --scope user
+        fi
+    done <<< "$PLUGINS"
+}
+
+# User-scope server names already configured.
+mcp_names() {
+    [[ -f "$CLAUDE_JSON" ]] || return 0
+    jq -r '(.mcpServers // {}) | keys[]' "$CLAUDE_JSON" 2> /dev/null || true
+}
+
+# add_mcp <name> <claude mcp add args after the name...>
+add_mcp() {
+    local name="$1"
+    shift
+    if printf '%s\n' "$MCP_HAVE" | grep -Fxq "$name"; then
+        ok "$name (present; not compared)"
+    elif change "claude mcp add --scope user $name $*"; then
+        run_claude mcp add --scope user "$name" "$@"
+    fi
+}
+
+godot_path() {
+    if "$SCRIPT_DIR/platform" is-macos; then
+        local app="/Applications/Godot.app/Contents/MacOS/Godot"
+        [[ -x "$app" ]] && printf '%s\n' "$app"
+        return 0
+    fi
+    command -v godot 2> /dev/null || true
+}
+
+sync_mcp() {
+    echo "mcp servers (user scope):"
+    MCP_HAVE="$(mcp_names)"
+
+    if "$SCRIPT_DIR/platform" is-omarchy; then
+        if [[ -x "$OMCP_BIN" ]]; then
+            add_mcp omarchy -- "$OMCP_BIN" serve
+        else
+            skip "omarchy: $OMCP_BIN missing (make omarchy apply=1 only=plugins)"
+        fi
+    else
+        skip "omarchy: Omarchy only"
+    fi
+
+    if [[ ! -f "$GIMP_MCP_DIR/gimp_mcp_server.py" ]]; then
+        skip "gimp: no gimp-mcp checkout at $GIMP_MCP_DIR (clone it there, or set GIMP_MCP_DIR)"
+    elif ! command_exists uv; then
+        skip "gimp: uv not installed"
+    else
+        add_mcp gimp -- uv run --python 3.13 --directory "$GIMP_MCP_DIR" gimp_mcp_server.py
+    fi
+
+    if command_exists uvx; then
+        add_mcp blender -e DISABLE_TELEMETRY=true -- uvx --python 3.13 mcp-for-blender
+    else
+        skip "blender: uvx not installed (it comes with uv)"
+    fi
+
+    local godot
+    godot="$(godot_path)"
+    if [[ -z "$godot" ]]; then
+        skip "godot: Godot not installed"
+    elif ! command_exists npx; then
+        skip "godot: npx not installed"
+    else
+        add_mcp godot -e "GODOT_PATH=$godot" -- npx -y "$GODOT_MCP_PACKAGE"
+    fi
+
+    add_mcp discord --transport http http://127.0.0.1:8085/mcp
+}
+
+main() {
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --apply) APPLY=1 ;;
+            --only)
+                ONLY="${2:-}"
+                [[ "$ONLY" =~ ^(marketplaces|plugins|mcp)$ ]] ||
+                    die "--only takes marketplaces|plugins|mcp"
+                shift
+                ;;
+            -h | --help)
+                usage
+                return 0
+                ;;
+            *) die "unknown argument: $1 (try --help)" ;;
+        esac
+        shift
+    done
+
+    command_exists jq || die "jq not found on PATH"
+    CLAUDE="$(command -v claude 2> /dev/null || true)"
+    [[ -n "$CLAUDE" ]] || CLAUDE="$HOME/.local/bin/claude"
+    [[ -x "$CLAUDE" ]] || die "claude not found (install Claude Code first: see docs/TOOLS.md)"
+
+    ((APPLY)) || echo "Dry run: nothing will change. Re-run with --apply to act."
+    wants marketplaces && sync_marketplaces
+    wants plugins && sync_plugins
+    wants mcp && sync_mcp
+
+    if ((CHANGES == 0)); then
+        echo "Everything already in place."
+    elif ((!APPLY)); then
+        echo "$CHANGES change(s) pending; run with --apply."
+    fi
+}
+
+main "$@"

@@ -1,72 +1,59 @@
-// fastfetch - the screenshot.
+// fastfetch - Monochrome 43, the default. The older danse layout (the
+// painting as the logo) is danse.jsonc: fastfetch -c ~/.config/fastfetch/danse.jsonc
 //
-// The logo is the painting itself, not ASCII approximating it: Ghostty speaks
-// the Kitty graphics protocol, so `kitty-direct` hands it the file and lets the
-// terminal draw it. `bin/wallpaper logo` produces that crop from the same
-// cached scan the desktop background comes from. If it is missing — a fresh
-// machine where `wallpaper` has not run yet — fastfetch falls back to the
-// built-in ASCII logo silently, which is the right behaviour.
+// Layout after 43PR/dotfiles' fastfetch config (MIT): two boxed sections,
+// Hardware and Software, each line keyed by a dim tree glyph and a Nerd Font
+// icon. Keys are 256-colour grey (38;5;240), values the terminal's white.
 //
-// Colours are deliberately *named*, not hex. Named colours resolve through the
-// terminal's own palette, and Ghostty's palette is .config/palette/danse.conf,
-// so fastfetch inherits the retune instead of carrying a copy that can drift.
+// The logo is the OS's own, drawn in white and grey rather than its brand
+// colours, so the same file reads right on macOS and on Omarchy without an
+// image to fetch first.
 {
   "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
 
   "logo": {
-    "type": "kitty-direct",
-    "source": "~/.local/share/wallpapers/danse-logo.png",
-    "width": 32,
-    "height": 16,
+    "color": {
+      "1": "white",
+      "2": "90",
+      "3": "white",
+      "4": "90",
+      "5": "white",
+      "6": "90"
+    },
     "padding": {
-      "top": 2,
-      "right": 4
+      "top": 1,
+      "right": 3
     }
   },
 
   "display": {
-    "separator": "  ",
+    "separator": " ",
     "color": {
-      "keys": "blue",
-      "title": "magenta"
-    },
-    "key": {
-      "width": 11
+      "keys": "38;5;240",
+      "title": "white"
     }
   },
 
   "modules": [
     "break",
-    {
-      "type": "title",
-      "color": {
-        "user": "magenta",
-        "at": "white",
-        "host": "cyan"
-      }
-    },
-    {
-      "type": "separator",
-      "string": "─"
-    },
-    { "type": "os", "key": "os" },
-    { "type": "kernel", "key": "kernel" },
-    { "type": "uptime", "key": "uptime" },
-    { "type": "packages", "key": "packages" },
-    { "type": "shell", "key": "shell" },
-    "break",
-    { "type": "wm", "key": "wm" },
-    { "type": "terminal", "key": "term" },
-    { "type": "terminalfont", "key": "font" },
-    { "type": "editor", "key": "editor" },
-    "break",
-    { "type": "cpu", "key": "cpu" },
-    { "type": "gpu", "key": "gpu" },
-    { "type": "memory", "key": "memory" },
-    { "type": "disk", "key": "disk", "folders": "/" },
-    { "type": "battery", "key": "battery" },
-    "break",
-    { "type": "colors", "symbol": "circle" },
+    { "type": "custom", "format": "┌─────────────── Hardware ───────────────┐" },
+    { "type": "host", "key": " ├─ 󰌢 " },
+    { "type": "cpu", "key": " ├─  " },
+    { "type": "gpu", "key": " ├─ 󰍛 " },
+    { "type": "memory", "key": " ├─ 󰘚 " },
+    { "type": "disk", "key": " ├─ 󰋊 ", "folders": "/" },
+    { "type": "battery", "key": " └─ 󰁹 " },
+    { "type": "custom", "format": "└────────────────────────────────────────┘" },
+    { "type": "custom", "format": "┌─────────────── Software ───────────────┐" },
+    { "type": "os", "key": " ├─ 󰌽 " },
+    { "type": "kernel", "key": " ├─  " },
+    { "type": "wm", "key": " ├─ 󰨇 " },
+    { "type": "theme", "key": " ├─ 󰉼 " },
+    { "type": "terminal", "key": " ├─ 󰞷 " },
+    { "type": "terminalfont", "key": " ├─ 󰛖 " },
+    { "type": "shell", "key": " ├─  " },
+    { "type": "uptime", "key": " └─ 󰅐 " },
+    { "type": "custom", "format": "└────────────────────────────────────────┘" },
     "break"
   ]
 }

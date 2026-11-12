@@ -772,8 +772,21 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 - **Why:** Console audio visualiser, themed with the palette's eight-stop gradient. Pure rice — it does no work. On macOS it captures an input device, so it hears the microphone until a BlackHole loopback is set up; see the config README.
 - **Alternatives:** glava (Linux only), projectM
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 - **Config:** [`.config/cava/`](../.config/cava/)
+
+### spicetify-cli
+
+- **Why:** Themes the Spotify desktop client; applies the Monochrome 43 theme in `spicetify/` and installs custom apps such as Spotify Stats. In the Brewfile since the Mac gets the same Monochrome 43 desktop as the Omarchy box: installing it themes nothing on its own, it only acts when you run `spicetify` (see its README).
+- **Alternatives:** none comparable; Spotify has no theming of its own
+- **Installed via:** Brewfile. On Arch it is AUR-only, and `pacman -S` cannot reach the AUR, so it is not in pacmanfile: `yay -S spicetify-cli`.
+- **Config:** [`spicetify/`](../spicetify/README.md) (not stowed; see its README)
+
+### media-control
+
+- **Why:** macOS's answer to playerctl: now-playing info and play/pause/next from the command line, for scripts and the bar. Chosen over `nowplaying-cli`, which stopped working when macOS 15.4 restricted the private MediaRemote framework; media-control works around that restriction.
+- **Alternatives:** nowplaying-cli (broken on macOS 15.4+), playerctl (Linux/MPRIS only)
+- **Installed via:** Brewfile
 
 ## AI & Machine Learning
 
@@ -856,12 +869,35 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 - **Why:** Docker Desktop — the container runtime plus Docker CLI; used for local services and the fleet's containerised projects.
 - **Installed via:** Caskfile
 
+### discord
+
+- **Why:** Discord itself, for parity with the Omarchy box (where it comes from the `discord` package by hand); the Discord MCP server in `bin/claude-sync` talks to a running client. Core rather than extra: it is a daily app, not a one-off.
+- **Alternatives:** dorion (Caskfile.extra, a lighter client)
+- **Installed via:** Caskfile
+
 ### db-browser-for-sqlite
 
 - **Why:** SQLite database browser.
 - **Installed via:** Caskfile.extra
 
 ## Design & Creative Tools (GUI)
+
+### gimp
+
+- **Why:** Raster image editing; also the app the gimp MCP server (`bin/claude-sync`) drives. Core: small enough, used often.
+- **Alternatives:** Photopea, Pixelmator Pro
+- **Installed via:** Caskfile
+
+### inkscape
+
+- **Why:** Vector graphics (SVG) editing; the open-source counterpart of Figma for drawings rather than UI.
+- **Alternatives:** figma (Caskfile.extra), Affinity Designer
+- **Installed via:** Caskfile
+
+### blender
+
+- **Why:** 3D modelling, rendering and animation; the blender MCP server (`bin/claude-sync`) drives it. Extra, not core: about 1GB, and not needed on day one.
+- **Installed via:** Caskfile.extra
 
 ### figma
 
@@ -885,6 +921,12 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 - **Why:** Open Broadcaster Software (streaming/recording).
 - **Installed via:** Caskfile.extra
 
+### fl-studio
+
+- **Why:** Digital audio workstation, for parity with the Omarchy box. Extra: a large download that needs a paid licence to be useful.
+- **Alternatives:** Logic Pro, Ableton Live, audacity (editing only)
+- **Installed via:** Caskfile.extra
+
 ### rode-central
 
 - **Why:** Rode microphone control software.
@@ -895,6 +937,12 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 ### tidal
 
 - **Why:** Music streaming service.
+- **Installed via:** Caskfile
+
+### spotify
+
+- **Why:** Spotify desktop client, themed Monochrome 43 by spicetify-cli (`spicetify/`). Core, like on the Omarchy box.
+- **Alternatives:** spotify_player (Brewfile; a TUI client)
 - **Installed via:** Caskfile
 
 ## Note-Taking & Knowledge Management (GUI)
@@ -913,6 +961,11 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 - **Installed via:** Caskfile.extra
 
 ## Security & Privacy (GUI)
+
+### proton-mail-bridge
+
+- **Why:** Local IMAP/SMTP bridge to Proton Mail, so neomutt, himalaya, isync and msmtp can reach an end-to-end-encrypted mailbox. Core: the terminal mail setup depends on it.
+- **Installed via:** Caskfile
 
 ### keepassxc
 
@@ -954,6 +1007,16 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 ### lunar-client
 
 - **Why:** Minecraft client with mods.
+- **Installed via:** Caskfile.extra
+
+### steam
+
+- **Why:** Steam game store and launcher. Extra: games are not day-one software, and the client pulls several GB of content.
+- **Installed via:** Caskfile.extra
+
+### robloxstudio
+
+- **Why:** Roblox Studio for Roblox game development (the cask is `robloxstudio`; `roblox` is the player). Extra: a large, fast-updating app needed only for that work.
 - **Installed via:** Caskfile.extra
 
 ### love
@@ -1167,6 +1230,12 @@ package name.
 - **Why:** Documentation generator. Arch's name for Homebrew's `sphinx-doc`.
 - **Installed via:** pacmanfile
 
+### playerctl
+
+- **Why:** MPRIS media control (play/pause/next, now-playing) from the command line; what Omarchy shell widgets and media keys use to talk to Spotify and browsers. Linux only — macOS has no MPRIS.
+- **Alternatives:** dbus-send by hand
+- **Installed via:** pacmanfile
+
 ### spotify-player
 
 - **Why:** Spotify TUI. Arch spells it with a hyphen where Homebrew uses `spotify_player`.
@@ -1298,3 +1367,18 @@ package manifests. Documented here so the gap is visible.
 - **Why:** LaTeX build orchestration; ships with TeX distributions (not separately installed).
 - **Installed via:** TeX distribution
 - **Config:** [`.config/latexmk/`](../.config/latexmk/)
+
+### davinci-resolve
+
+- **Why:** Video editing and colour grading, as on the Omarchy box (AUR `davinci-resolve` there). There is no Homebrew cask: Blackmagic gates the download behind a registration form. Install the free version from the Mac App Store (`DaVinci Resolve`) or blackmagicdesign.com.
+- **Installed via:** by hand (Mac App Store or vendor download); AUR on Arch
+
+### Linux counterparts of the GUI casks
+
+- **Why:** On Arch, Discord, Spotify, GIMP, Inkscape, Blender, Godot, OBS, Steam and Proton Mail Bridge come from the official repos (`discord`, `spotify-launcher`, `gimp`, `inkscape`, `blender`, `godot`, `obs-studio`, `steam` from multilib, `protonmail-bridge`); VSCodium, DaVinci Resolve and spicetify-cli from the AUR. None are in pacmanfile: it mirrors the Brewfile (terminal tools the repo configures), not the Caskfiles, `test/Dockerfile.arch` installs every line of it, and Omarchy already provides Obsidian and Docker. Install them by hand: `sudo pacman -S --needed discord spotify-launcher gimp inkscape blender godot obs-studio protonmail-bridge steam`.
+- **Installed via:** by hand on Arch
+
+### hermes-agent
+
+- **Why:** NousResearch's terminal agent, run fully offline against the local ollama (`model.provider: custom`, `gpt-oss:20b`, 64K context). Its config holds sessions and keys, so it is not tracked: `bin/hermes-offline` sets the four model keys.
+- **Installed via:** vendor installer, by `make hermes-offline apply=1` (see [docs/hermes.md](hermes.md))

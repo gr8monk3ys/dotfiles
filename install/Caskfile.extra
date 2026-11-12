@@ -28,6 +28,8 @@ cask "figma"                           # Interface design and prototyping
 cask "audacity"                        # Audio editing software
 cask "obs"                             # Open Broadcaster Software (streaming/recording)
 cask "rode-central"                    # Rode microphone control software
+cask "blender"                         # 3D creation suite (~1GB; blender-mcp drives it)
+cask "fl-studio"                       # Digital audio workstation (paid licence)
 
 # ============================================================================
 # Security & Privacy
@@ -48,6 +50,8 @@ cask "psharma04/dorion/dorion"         # Discord client alternative
 cask "godot"                           # Open-source game engine
 cask "love"                            # LÖVE 2D game framework
 cask "lunar-client"                    # Minecraft client with mods
+cask "steam"                           # Steam game store and launcher
+cask "robloxstudio"                    # Roblox Studio (game development)
 
 # ============================================================================
 # Fonts

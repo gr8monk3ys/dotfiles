@@ -17,6 +17,10 @@
 #   palette names                    # names only
 #   palette get <name> [--format F]  # F: hex (default) | raw | 0x | rgb
 #   palette export [prefix]          # PREFIX_NAME='#hex' shell assignments
+#   palette palettes                 # the palettes this checkout ships
+#
+# Palette selection: PALETTE=<name> reads .config/palette/<name>.conf
+# (default: danse). PALETTE_FILE=<path> overrides both.
 #
 # Formats:
 #   hex   #61afef      most config files
@@ -33,8 +37,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/preamble.sh
 source "$SCRIPT_DIR/lib/preamble.sh"
 
-PALETTE_FILE="${PALETTE_FILE:-$DOTFILES_DIR/.config/palette/danse.conf}"
-readonly PALETTE_FILE
+PALETTE_DIR="$DOTFILES_DIR/.config/palette"
+PALETTE="${PALETTE:-danse}"
+# A name, not a path: refuse anything that could walk out of PALETTE_DIR.
+if [[ -z "${PALETTE_FILE:-}" && ! "$PALETTE" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
+    printf 'palette: bad palette name %q\n' "$PALETTE" >&2
+    exit 2
+fi
+PALETTE_FILE="${PALETTE_FILE:-$PALETTE_DIR/$PALETTE.conf}"
+readonly PALETTE_DIR PALETTE PALETTE_FILE
 
 # Strip comments and blanks once; every subcommand reads this.
 rows() {
@@ -101,6 +112,14 @@ cmd_get() {
     return 1
 }
 
+cmd_palettes() {
+    local f
+    for f in "$PALETTE_DIR"/*.conf; do
+        [[ -f "$f" ]] && basename "$f" .conf
+    done
+    return 0
+}
+
 # Shell assignments, for configs that are themselves shell.
 cmd_export() {
     local prefix="${1:-PALETTE}" name hex rest var
@@ -120,13 +139,14 @@ main() {
         names) cmd_names ;;
         get) cmd_get "$@" ;;
         export) cmd_export "$@" ;;
+        palettes) cmd_palettes ;;
         -h | --help | "")
-            sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'
+            sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//'
             [[ -z "$cmd" ]] && return 2
             return 0
             ;;
         *)
-            printf 'palette: unknown command %q (list|names|get|export)\n' "$cmd" >&2
+            printf 'palette: unknown command %q (list|names|get|export|palettes)\n' "$cmd" >&2
             return 2
             ;;
     esac

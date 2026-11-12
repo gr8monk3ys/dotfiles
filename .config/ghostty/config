@@ -20,8 +20,9 @@ font-feature = dlig
 # ============================================================================
 # Theme & Colors
 # ============================================================================
-# danse everywhere (matches zsh-syntax-highlighting, fzf, bat, starship)
-theme = danse
+# Monochrome 43 (.config/palette/monochrome-43.conf): black ground, white
+# text. For the older danse look put `theme = danse` in config.local.
+theme = monochrome-43
 
 # Frosted glass effect
 background-opacity = 0.86
@@ -131,15 +132,15 @@ focus-follows-mouse = false
 link-url = true
 
 # --- rice ------------------------------------------------------------------
-# The desktop background is a painting (bin/wallpaper), so the terminal has to
-# sit on top of something busy. Opacity is a touch higher than the usual 0.8
-# for that reason; opacity-cells extends it to cells that carry their own
-# background, which otherwise read as opaque patches over the blur.
+# The terminal sits on top of a busy desktop background, so opacity is a
+# touch higher than the usual 0.8; opacity-cells extends it to cells that
+# carry their own background, which otherwise read as opaque patches over
+# the blur.
 background-opacity-cells = true
 
-# Chrome, from .config/palette/danse.conf.
-unfocused-split-fill = #21252b
-split-divider-color = #2b4468
+# Chrome, from .config/palette/monochrome-43.conf (bg, inactive).
+unfocused-split-fill = #000000
+split-divider-color = #333333
 
 # The titlebar is hidden rather than the decoration removed: AeroSpace tiles
 # these windows so the titlebar is dead space, but keeping the decoration
@@ -153,7 +154,18 @@ quick-terminal-position = top
 quick-terminal-animation-duration = 0.15
 keybind = global:ctrl+grave_accent=toggle_quick_terminal
 
-# The Dock icon matches the palette too.
+# The Dock icon matches the palette too (fg on bg).
 macos-icon = glass
-macos-icon-ghost-color = #61afef
-macos-icon-screen-color = #282c34
+macos-icon-ghost-color = #ffffff
+macos-icon-screen-color = #000000
+
+# --- optional includes -------------------------------------------------------
+# The leading `?` makes each include optional: a missing file is skipped, so
+# on a machine with neither file this section changes nothing. Later wins.
+#
+# Omarchy's live theme colours. Only exists on Omarchy, where it keeps
+# `omarchy theme set` theming this terminal once this config is linked.
+config-file = ?"~/.local/state/omarchy/current/theme/ghostty.conf"
+# Per-machine overrides, gitignored (*.local) - e.g. `theme = danse` to opt
+# back in to the older look (see README).
+config-file = ?"config.local"

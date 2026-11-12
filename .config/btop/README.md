@@ -4,7 +4,15 @@ Resource monitor. Replaces `top` for anything interactive.
 
 ## Theme
 
-`themes/danse.theme` is generated from
+`btop.conf` selects [`themes/monochrome-43.theme`](themes/monochrome-43.theme),
+from [`.config/palette/monochrome-43.conf`](../palette/monochrome-43.conf):
+grey gradients to white, the palette's danger red only at the top of
+temperature and memory used.
+
+The older `themes/danse.theme` is still shipped; pick it in btop's options
+menu (btop has no per-machine override file, so it then rewrites the tracked
+`btop.conf` — see below — and the change shows up in `git status`). It is
+generated from
 [`.config/palette/danse.conf`](../palette/danse.conf). The gradients are where
 the Matisse colours earn their place: load and temperature run viridian →
 ochre → vermilion, which is the painting's own ground-to-figures progression.

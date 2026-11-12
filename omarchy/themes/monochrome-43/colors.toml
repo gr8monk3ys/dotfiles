@@ -1,0 +1,33 @@
+# Monochrome 43 — after github.com/43PR/dotfiles (MIT, default theme), built on Omarchy's Vantablack.
+# Every hex is a colour in .config/palette/monochrome-43.conf (test_palette.bats).
+mode = "dark"
+
+accent = "#ffffff"
+selection = "#2a2a2a"
+muted = "#6f6f6f"
+
+background = "#000000"
+dark_background = "#050505"
+darker_background = "#000000"
+lighter_background = "#0d0d0d"
+
+foreground = "#ffffff"
+dark_foreground = "#4a4a4a"
+light_foreground = "#e6eaf2"
+bright_foreground = "#ffffff"
+
+red = "#cc0403"
+yellow = "#cecb00"
+orange = "#f7768e"
+green = "#e2e2e2"
+cyan = "#0dcdcd"
+blue = "#7aa2f7"
+magenta = "#cb1ed1"
+brown = "#6f6f6f"
+
+bright_red = "#f2201f"
+bright_yellow = "#fffd00"
+bright_green = "#23fd00"
+bright_cyan = "#14ffff"
+bright_blue = "#1a8fff"
+bright_magenta = "#fd28ff"

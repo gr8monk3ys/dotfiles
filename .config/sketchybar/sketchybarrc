@@ -13,39 +13,75 @@ source "$CONFIG_DIR/icons.sh"
 # ============================================================================
 # Bar Appearance
 # ============================================================================
-sketchybar --bar \
-    height=37 \
-    color=$BAR_COLOR \
-    border_color=$BAR_BORDER_COLOR \
-    border_width=2 \
-    shadow=on \
-    position=top \
-    sticky=on \
-    padding_right=10 \
-    padding_left=10 \
-    corner_radius=9 \
-    y_offset=10 \
-    margin=10 \
-    blur_radius=20 \
-    notch_width=188
+if [ "$RICE" = monochrome-43 ]; then
+    # Monochrome 43 (the default, see colors.sh): a slim, flat, black strip
+    # flush with the top edge, white text in the Nerd Font Ghostty uses.
+    FONT="JetBrainsMono Nerd Font"
+    APPLE_ICON_FONT="$FONT:Bold:15.0"
+    sketchybar --bar \
+        height=28 \
+        color=$BAR_COLOR \
+        border_width=0 \
+        shadow=off \
+        position=top \
+        sticky=on \
+        padding_right=8 \
+        padding_left=8 \
+        corner_radius=0 \
+        y_offset=0 \
+        margin=0 \
+        blur_radius=0 \
+        notch_width=188
+    sketchybar --default \
+        icon.font="$FONT:Bold:13.0" \
+        icon.color=$FOREGROUND \
+        label.font="$FONT:Medium:12.0" \
+        label.color=$FOREGROUND \
+        background.color=$BACKGROUND \
+        background.corner_radius=0 \
+        background.height=20 \
+        padding_left=4 \
+        padding_right=4 \
+        label.padding_left=4 \
+        label.padding_right=8 \
+        icon.padding_left=8 \
+        icon.padding_right=4
+else
+    # danse (rice.local = danse): the floating, rounded, blurred bar.
+    # AeroSpace's gaps.outer.top is sized for the 28pt bar above; with this
+    # 37pt one set it back to 45 by hand (see README).
+    APPLE_ICON_FONT="SF Pro:Black:16.0"
+    sketchybar --bar \
+        height=37 \
+        color=$BAR_COLOR \
+        border_color=$BAR_BORDER_COLOR \
+        border_width=2 \
+        shadow=on \
+        position=top \
+        sticky=on \
+        padding_right=10 \
+        padding_left=10 \
+        corner_radius=9 \
+        y_offset=10 \
+        margin=10 \
+        blur_radius=20 \
+        notch_width=188
 
-# ============================================================================
-# Default Values
-# ============================================================================
-sketchybar --default \
-    icon.font="SF Pro:Semibold:14.0" \
-    icon.color=$FOREGROUND \
-    label.font="SF Pro:Medium:13.0" \
-    label.color=$FOREGROUND \
-    background.color=$BACKGROUND \
-    background.corner_radius=5 \
-    background.height=24 \
-    padding_left=5 \
-    padding_right=5 \
-    label.padding_left=4 \
-    label.padding_right=10 \
-    icon.padding_left=10 \
-    icon.padding_right=4
+    sketchybar --default \
+        icon.font="SF Pro:Semibold:14.0" \
+        icon.color=$FOREGROUND \
+        label.font="SF Pro:Medium:13.0" \
+        label.color=$FOREGROUND \
+        background.color=$BACKGROUND \
+        background.corner_radius=5 \
+        background.height=24 \
+        padding_left=5 \
+        padding_right=5 \
+        label.padding_left=4 \
+        label.padding_right=10 \
+        icon.padding_left=10 \
+        icon.padding_right=4
+fi
 
 # ============================================================================
 # Load Items

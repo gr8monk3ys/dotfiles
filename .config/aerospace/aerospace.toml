@@ -40,13 +40,17 @@ on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
 
 # Gaps are what make a tiled screen read as tiled rather than as maximised
 # windows: without them AeroSpace is invisible and the setup looks like stock
-# macOS. `outer.top` clears SketchyBar (height 37) plus a little air.
+# macOS. Monochrome 43 spacing: 4 between windows, 8 at the screen edge, and
+# `outer.top` clears its flush 28pt SketchyBar plus the same 8.
+# TOML has no conditionals, so `danse` in ~/.config/palette/rice.local cannot
+# switch these: for the danse bar (37pt, floating 10pt down) use inner 8 and
+# outer.top 45.
 [gaps]
-inner.horizontal = 8
-inner.vertical = 8
+inner.horizontal = 4
+inner.vertical = 4
 outer.left = 8
 outer.bottom = 8
-outer.top = 45
+outer.top = 36
 outer.right = 8
 
 # 'main' binding mode declaration, always must be present
