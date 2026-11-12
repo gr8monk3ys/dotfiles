@@ -772,7 +772,7 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 - **Why:** Console audio visualiser, themed with the palette's eight-stop gradient. Pure rice — it does no work. On macOS it captures an input device, so it hears the microphone until a BlackHole loopback is set up; see the config README.
 - **Alternatives:** glava (Linux only), projectM
-- **Installed via:** Brewfile
+- **Installed via:** Brewfile, pacmanfile
 - **Config:** [`.config/cava/`](../.config/cava/)
 
 ## AI & Machine Learning
@@ -1165,6 +1165,12 @@ package name.
 ### python-sphinx
 
 - **Why:** Documentation generator. Arch's name for Homebrew's `sphinx-doc`.
+- **Installed via:** pacmanfile
+
+### playerctl
+
+- **Why:** MPRIS media control (play/pause/next, now-playing) from the command line; what Omarchy shell widgets and media keys use to talk to Spotify and browsers. Linux only — macOS has no MPRIS.
+- **Alternatives:** dbus-send by hand
 - **Installed via:** pacmanfile
 
 ### spotify-player
