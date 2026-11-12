@@ -284,4 +284,3 @@ brew "ollama"                          # Local LLM runner
 # Media
 # ============================================================================
 brew "cava"                            # Console audio visualiser
-brew "spicetify-cli"                   # Spotify client theming (Monochrome 43 theme)
