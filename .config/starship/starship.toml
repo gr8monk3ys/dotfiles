@@ -1,54 +1,164 @@
-# Starship prompt — danse palette (.config/palette/), replicating the repo's lean Powerlevel10k
-# layout: `user@host dir git duration` on line 1, `venv ❯` on line 2.
-# Initialised from .config/zsh/.zshrc.
+# Starship prompt - Monochrome 43 powerline, the default on macOS and Omarchy.
+#
+# White/grey segments on the black terminal ground, black or white text on
+# them, and colour only where something went wrong (a failed command, root).
+# Glyphs are Nerd Font (JetBrainsMono Nerd Font on both machines): powerline
+# caps U+E0B0/E0B4/E0B6, the OS logo, the git branch, language icons.
+#
+#   line 1, left:  [os user@host] [dir] [git branch status] [language]
+#   line 1, right: [took 4s] [exit 1] [time]
+#   line 2:        ❯
+#
+# Every colour is in the palette table below, and every value there is a
+# .config/palette/monochrome-43.conf colour (test_palette.bats asserts it).
+#
+# Fast by construction: nothing here runs a command outside a directory that
+# needs it. Language segments appear only when their files are present, and
+# the slow defaults (package versions, cloud contexts) are not in `format`.
+# Alternatives: danse.toml (the older danse lean prompt; picked by .zshrc when
+# ~/.config/palette/rice.local says `danse`) and monochrome-43.toml (lean).
 "$schema" = 'https://starship.rs/config-schema.json'
 
-# Blank line between prompts, like POWERLEVEL9K_PROMPT_ADD_NEWLINE.
 add_newline = true
+command_timeout = 500
+scan_timeout = 30
+palette = 'monochrome43'
 
 format = """
-$username$hostname$directory$git_branch$git_status$cmd_duration
-$python$character"""
+[](fg:white)\
+$os\
+$username\
+$hostname\
+[](fg:white bg:dir)\
+$directory\
+[](fg:dir bg:git)\
+$git_branch\
+$git_status\
+[](fg:git bg:lang)\
+$python\
+$nodejs\
+$bun\
+$rust\
+$golang\
+$lua\
+$zig\
+[](fg:lang)\
+$line_break\
+$character"""
 
-# user@host only over SSH or as root, matching p10k's lean context segment.
+right_format = """$cmd_duration$status$time"""
+
+[palettes.monochrome43]
+black = '#000000'   # bg
+white = '#ffffff'   # fg
+dir = '#c2c2c2'     # fg-dim
+git = '#4a4a4a'     # fg-faint
+lang = '#2a2a2a'    # surface
+muted = '#8b93a7'   # fg-muted
+danger = '#ff003c'  # danger
+
+[os]
+disabled = false
+style = 'bg:white fg:black'
+format = '[$symbol ]($style)'
+
+[os.symbols]
+Macos = ''
+Arch = ''
+Linux = ''
+
+# user@host only over SSH or as root; root is the one red word on the left.
 [username]
-format = '[$user]($style)[@](fg:#5c6370)'
-style_user = '#e5c07b'
-style_root = 'bold #e06a51'
+style_user = 'bg:white fg:black'
+style_root = 'bg:white fg:danger bold'
+format = '[$user@]($style)'
 
 [hostname]
 ssh_only = true
-format = '[$hostname]($style) '
-style = '#e5c07b'
+style = 'bg:white fg:black'
+format = '[$hostname ]($style)'
 
 [directory]
-style = '#61afef'
-truncation_length = 4
-truncate_to_repo = false
+style = 'bg:dir fg:black bold'
+format = '[ $path ]($style)[$read_only]($read_only_style)'
+truncation_length = 3
+truncate_to_repo = true
+truncation_symbol = '…/'
+read_only = '󰌾 '
+read_only_style = 'bg:dir fg:black'
 
 [git_branch]
-format = '[$branch]($style) '
-style = '#98c379'
+symbol = ''
+style = 'bg:git fg:white'
+format = '[ $symbol $branch ]($style)'
 
 [git_status]
-format = '([$all_status$ahead_behind]($style) )'
-style = '#e5c07b'
+style = 'bg:git fg:white'
+format = '[($all_status$ahead_behind )]($style)'
+conflicted = '='
+ahead = '⇡$count'
+behind = '⇣$count'
+diverged = '⇕'
+untracked = '?'
+modified = '!'
+staged = '+'
+stashed = '≡'
 
-# Show duration of commands slower than 3s (p10k's default threshold).
+[python]
+symbol = '󰌠'
+style = 'bg:lang fg:white'
+format = '[ $symbol $version(\($virtualenv\)) ]($style)'
+
+[nodejs]
+symbol = '󰎙'
+style = 'bg:lang fg:white'
+format = '[ $symbol $version ]($style)'
+
+[bun]
+symbol = 'bun'
+style = 'bg:lang fg:white'
+format = '[ $symbol $version ]($style)'
+
+[rust]
+symbol = '󱘗'
+style = 'bg:lang fg:white'
+format = '[ $symbol $version ]($style)'
+
+[golang]
+symbol = '󰟓'
+style = 'bg:lang fg:white'
+format = '[ $symbol $version ]($style)'
+
+[lua]
+symbol = '󰢱'
+style = 'bg:lang fg:white'
+format = '[ $symbol $version ]($style)'
+
+[zig]
+symbol = ''
+style = 'bg:lang fg:white'
+format = '[ $symbol $version ]($style)'
+
+# Right side: separate pills, so any of them can be absent.
 [cmd_duration]
 min_time = 3000
-format = '[$duration]($style) '
-style = '#d98c5c'
+style = 'bg:git fg:white'
+format = '[](fg:git)[ $duration]($style)[ ](fg:git)'
 
-# Active virtualenv only (no interpreter version noise), like p10k's
-# virtualenv segment on line 2.
-[python]
-format = '[(\($virtualenv\) )]($style)'
-style = '#56b6c2'
-detect_extensions = []
-detect_files = []
-detect_folders = []
+# Off by default in starship; on here, and the only coloured pill.
+[status]
+disabled = false
+symbol = '✘'
+style = 'bg:danger fg:white bold'
+format = '[](fg:danger)[$symbol $status]($style)[ ](fg:danger)'
+
+[time]
+disabled = false
+time_format = '%H:%M'
+style = 'bg:lang fg:muted'
+format = '[](fg:lang)[ $time]($style)[](fg:lang)'
 
 [character]
-success_symbol = '[❯](#c678dd)'
-error_symbol = '[❯](#e06a51)'
+success_symbol = '[❯](bold white)'
+error_symbol = '[❯](bold danger)'
+vimcmd_symbol = '[❮](bold white)'

@@ -143,7 +143,9 @@ monochrome-43 .config/ghostty/themes/monochrome-43
 monochrome-43 .config/btop/themes/monochrome-43.theme
 monochrome-43 .config/cava/config
 monochrome-43 omarchy/themes/monochrome-43/colors.toml
+monochrome-43 .config/starship/starship.toml
 monochrome-43 .config/ghostty/config
+danse         .config/starship/danse.toml
 THEMES
         exit $status
     ' _ "$DOTFILES_DIR"

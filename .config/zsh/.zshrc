@@ -103,6 +103,10 @@ else
   PROMPT='%F{blue}%~%f'$'\n''%F{green}❯%f '
 fi
 
+# Monochrome 43 by default; rice.zsh switches the prompt (and fastfetch/cava)
+# to danse when ~/.config/palette/rice.local says so.
+[[ -f "$ZDOTDIR/rice.zsh" ]] && source "$ZDOTDIR/rice.zsh"
+
 # Keybindings
 bindkey -e
 bindkey '^p' history-search-backward

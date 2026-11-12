@@ -102,3 +102,33 @@ border_options() {
     grep -qE '^inner\.vertical = 4$' "$toml"
     grep -qE '^outer\.(left|right|bottom) = 8$' "$toml"
 }
+
+shell_rice() {
+    XDG_CONFIG_HOME="$FAKE_XDG" zsh -f -c '
+        STARSHIP_CONFIG=default
+        source "$1/.config/zsh/rice.zsh"
+        print -r -- "$DOTFILES_RICE $STARSHIP_CONFIG ${aliases[fastfetch]:-none}"
+    ' _ "$DOTFILES_DIR"
+}
+
+@test "rice: the shell keeps the default prompt with no rice.local" {
+    command -v zsh > /dev/null || skip "zsh not installed"
+    run shell_rice
+    assert_success
+    assert_output "monochrome-43 default none"
+}
+
+@test "rice: rice.local = danse switches the prompt, fastfetch and cava" {
+    command -v zsh > /dev/null || skip "zsh not installed"
+    echo danse > "$FAKE_XDG/palette/rice.local"
+    run shell_rice
+    assert_success
+    assert_output "danse $FAKE_XDG/starship/danse.toml fastfetch -c $FAKE_XDG/fastfetch/danse.jsonc"
+}
+
+@test "rice: every file the danse switch points at is shipped" {
+    for f in starship/danse.toml fastfetch/danse.jsonc cava/danse ghostty/themes/danse \
+        btop/themes/danse.theme palette/danse.conf; do
+        [[ -f "$DOTFILES_DIR/.config/$f" ]] || { echo "missing .config/$f"; return 1; }
+    done
+}

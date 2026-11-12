@@ -37,8 +37,9 @@ echo danse > ~/.config/palette/rice.local   # opt back in to danse
 rm ~/.config/palette/rice.local             # back to Monochrome 43
 ```
 
-Read at start-up by SketchyBar (`colors.sh`) and borders (`bordersrc`).
-Ghostty, btop, fastfetch, cava and AeroSpace cannot read it; their READMEs
+Read at start-up by SketchyBar (`colors.sh`), borders (`bordersrc`) and
+`.zshrc`, which picks `starship/danse.toml` and aliases `fastfetch`/`cava` to
+their danse files. Ghostty, btop and AeroSpace cannot read it; their READMEs
 say what to change by hand. `test/test_rice.bats` boots each reader both ways.
 
 ## The palette

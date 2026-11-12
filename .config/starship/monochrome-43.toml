@@ -5,7 +5,8 @@
 #
 # The layout is still the repo's lean Powerlevel10k one:
 # `user@host dir git duration` on line 1, `venv ❯` on line 2.
-# OPT-IN: starship.toml stays the default. To use this one, put
+# The lean alternative to the default powerline prompt (starship.toml). To
+# use it, put
 #   export STARSHIP_CONFIG="$HOME/.config/starship/monochrome-43.toml"
 # in ~/.config/zsh/zshrc.local (starship reads the variable on every prompt).
 "$schema" = 'https://starship.rs/config-schema.json'

@@ -219,7 +219,7 @@ verify-docker:
 verify-shell:
 	@echo "Running shell syntax checks..."
 	@if command -v zsh >/dev/null 2>&1; then \
-		zsh -n .zshenv .config/zsh/.zshrc .config/zsh/aliases.zsh .config/zsh/functions.zsh; \
+		zsh -n .zshenv .config/zsh/.zshrc .config/zsh/aliases.zsh .config/zsh/functions.zsh .config/zsh/rice.zsh; \
 	else \
 		echo "⚠️  zsh not found; skipping zsh syntax checks"; \
 	fi
