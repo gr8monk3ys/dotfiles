@@ -23,3 +23,30 @@ load 'test_helper/common'
 	assert_success
 	[[ "$output" != *"stow-'"* ]]
 }
+
+# Regression: stow-arch depended on core-arch, so on Arch `make link-dry-run`
+# — a preview — ran `pacman -Syu`. OS is forced so this holds on every runner.
+@test "link-dry-run on Arch never upgrades the system" {
+	run make -n -C "$DOTFILES_DIR" link-dry-run OS=arch
+	assert_success
+	[[ "$output" != *"-Syu"* ]]
+}
+
+@test "link on Arch never upgrades the system" {
+	run make -n -C "$DOTFILES_DIR" link OS=arch
+	assert_success
+	[[ "$output" != *"-Syu"* ]]
+}
+
+@test "link on Arch installs only stow when stow is missing" {
+	run make -n -C "$DOTFILES_DIR" link OS=arch HAVE_STOW=
+	assert_success
+	[[ "$output" == *"pacman -S --needed --noconfirm stow"* ]]
+	[[ "$output" != *"-Syu"* ]]
+}
+
+@test "make arch still runs the full upgrade" {
+	run make -n -C "$DOTFILES_DIR" arch OS=arch
+	assert_success
+	[[ "$output" == *"pacman -Syu --noconfirm"* ]]
+}

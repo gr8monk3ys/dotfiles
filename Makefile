@@ -62,8 +62,17 @@ core-macos: brew git
 core-arch:
 	pacman -Syu --noconfirm
 
-stow-arch: core-arch
-	bin/platform has stow || pacman -S --noconfirm stow
+# `link`, `unlink` and `link-dry-run` depend on this, so it may only ensure
+# stow is present. It used to depend on core-arch, which made even
+# `make link-dry-run` run `pacman -Syu`: a preview that upgraded the system.
+# The full upgrade belongs to `make arch` alone, which lists core-arch first.
+ifeq ($(HAVE_STOW),yes)
+stow-arch:
+	@true
+else
+stow-arch:
+	pacman -S --needed --noconfirm stow
+endif
 
 # Only pull in the Homebrew bootstrap when stow is actually missing, so
 # `make link` on a machine that already has stow touches nothing else.
