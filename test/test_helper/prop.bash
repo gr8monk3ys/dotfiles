@@ -56,7 +56,7 @@ prop_init() {
     PROP_CASE=0
     if [[ -n "${PROP_SEED_LOG:-}" ]]; then
         printf '%s\t%s\t%s\t%s\n' "$(basename "$BATS_TEST_FILENAME")" \
-            "$BATS_TEST_DESCRIPTION" "$_PROP_SEED" "$PROP_CASES" >> "$PROP_SEED_LOG"
+            "$BATS_TEST_DESCRIPTION" "$_PROP_SEED" "$_PROP_CASES_ARG" >> "$PROP_SEED_LOG"
     fi
 }
 

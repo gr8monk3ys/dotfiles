@@ -148,7 +148,17 @@ test:
 		echo "Run 'make test-setup' and then retry."; \
 		exit 1; \
 	fi
-	bats test
+	@if [ -n "$(BATS_REPORT_DIR)" ]; then \
+		dir="$(BATS_REPORT_DIR)"; case "$$dir" in /*) ;; *) dir="$$PWD/$$dir" ;; esac; \
+		mkdir -p "$$dir" && : > "$$dir/prop-seeds.tsv"; \
+		echo "bats test (TAP, junit and property seeds -> $$dir)"; \
+		{ PROP_SEED_LOG="$$dir/prop-seeds.tsv" bats --formatter tap \
+			--report-formatter junit --output "$$dir" test; \
+		  echo $$? > "$$dir/bats.status"; } | tee "$$dir/bats.tap"; \
+		exit "$$(cat "$$dir/bats.status")"; \
+	else \
+		echo "bats test"; bats test; \
+	fi
 
 test-setup:
 	@echo "Installing test dependencies (bats)..."
@@ -546,6 +556,9 @@ help:
 	@echo "  SKIP_ARCH_DOCKER=1      - Skip only the Arch container (slow under"
 	@echo "                          amd64 emulation on Apple Silicon; CI still runs it)"
 	@echo "  SKIP_LINTERS=1          - Skip shellcheck/markdownlint in make verify"
+	@echo "  BATS_REPORT_DIR=dir     - make test also writes bats.tap, junit report.xml"
+	@echo "                          and property-test seeds there (CI's report)"
+	@echo "  PROP_CASES=n            - Inputs per property test (default 40)"
 	@echo "  GIT_USER_NAME=...       - Git identity for make init (else it prompts)"
 	@echo "  GIT_USER_EMAIL=...      - Git email for make init"
 	@echo "  GIT_SIGNING_KEY=...     - Optional GPG signing key for make init"
