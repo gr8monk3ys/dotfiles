@@ -47,6 +47,8 @@ while IFS='|' read -r i loc mode plat; do
         override) RICE_PLATFORM="$plat"; rice_select; p="$plat" ;;
         detect) rice_select; p="$RICE_PLATFORM" ;;
     esac
+    # A platform outside the table means "any" (rice.sh, rice_select).
+    case "$p" in macos | omarchy | "") ;; *) p="" ;; esac
     ok=no
     if rice_available "$RICE" "$p"; then ok=yes; fi
     printf '%s|%s|%s|%s\n' "$i" "$RICE" "$p" "$ok"
