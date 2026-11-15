@@ -7,6 +7,12 @@
 
 load test_helper/common
 
+# bin/palette's default is the machine's active Rice (ADR 0003), so a test
+# that wants a particular palette names it. The default has its own tests.
+setup() {
+    export PALETTE=danse
+}
+
 @test "palette is executable" {
     [[ -x "$DOTFILES_DIR/bin/palette" ]]
 }
@@ -92,27 +98,104 @@ load test_helper/common
     assert_success
 }
 
-@test "every truecolor triple in EZA_COLORS is a palette colour" {
+@test "every truecolor triple in each rice's EZA_COLORS is that rice's colour" {
     # EZA_COLORS encodes colours as decimal SGR triples, so a hex-based grep
     # cannot see them: a retune that rewrote every "#e06c75" left "224;108;117"
-    # behind in .zshenv and the listing kept the old red.
+    # behind and the listing kept the old red. EZA_COLORS now lives in each
+    # rice's rendered zsh file.
     run bash -c '
         set -euo pipefail
         repo="$1"
-        allowed=""
-        while IFS="	" read -r name hex role; do
-            allowed="$allowed $(printf "%d;%d;%d" "0x${hex:1:2}" "0x${hex:3:2}" "0x${hex:5:2}")"
-        done < <("$repo/bin/palette" list)
         status=0
-        for triple in $(grep -oE "38;2;[0-9]+;[0-9]+;[0-9]+" "$repo/.zshenv" | sed "s/^38;2;//" | sort -u); do
-            case " $allowed " in
-                *" $triple "*) ;;
-                *) echo "EZA_COLORS uses $triple, which is not in the palette"; status=1 ;;
-            esac
+        for rice in danse field-notebook monochrome-43; do
+            f="$repo/.config/zsh/rices/$rice.zsh"
+            grep -q "^export EZA_COLORS=" "$f" || { echo "$f sets no EZA_COLORS"; status=1; continue; }
+            allowed=""
+            while IFS="	" read -r name hex role; do
+                allowed="$allowed $(printf "%d;%d;%d" "0x${hex:1:2}" "0x${hex:3:2}" "0x${hex:5:2}")"
+            done < <(PALETTE="$rice" "$repo/bin/palette" list)
+            for triple in $(grep -oE "38;2;[0-9]+;[0-9]+;[0-9]+" "$f" | sed "s/^38;2;//" | sort -u); do
+                case " $allowed " in
+                    *" $triple "*) ;;
+                    *) echo "$rice EZA_COLORS uses $triple, which is not in its palette"; status=1 ;;
+                esac
+            done
         done
         exit $status
     ' _ "$DOTFILES_DIR"
     assert_success
+}
+
+@test "rice-themes: every rendered theme is up to date with its template" {
+    # The outputs are committed so a fresh clone needs no render step; this is
+    # what stops one drifting from its template or being edited by hand.
+    run "$DOTFILES_DIR/bin/rice-themes" check
+    assert_success
+}
+
+@test "rice-themes: every rendered theme uses only its own rice's colours" {
+    # The rendered set is rice-themes' own explicit table (ADR 0001); each
+    # file is checked against the palette of the rice it was rendered for.
+    run bash -c '
+        set -euo pipefail
+        repo="$1"
+        status=0 n=0
+        while IFS="	" read -r template rice f; do
+            n=$((n + 1))
+            allowed="$(PALETTE="$rice" "$repo/bin/palette" list | cut -f2)"
+            [[ -f "$repo/$f" ]] || { echo "missing rendered theme: $f"; status=1; continue; }
+            for hex in $(grep -oiE "#[0-9a-f]{6}" "$repo/$f" | tr "[:upper:]" "[:lower:]" | sort -u); do
+                printf "%s\n" "$allowed" | grep -Fxq "$hex" \
+                    || { echo "$f uses $hex, which is not in the $rice palette"; status=1; }
+            done
+        done < <("$repo/bin/rice-themes" list)
+        [[ "$n" -ge 26 ]] || { echo "rice-themes lists only $n files"; status=1; }
+        exit $status
+    ' _ "$DOTFILES_DIR"
+    assert_success
+}
+
+@test "rice-themes: two rices render the same template differently" {
+    # A role map that silently fell back to danse would pass every check
+    # above; the rice switch has to actually change the colours.
+    run diff -q "$DOTFILES_DIR/.config/bat/themes/danse.tmTheme" \
+        "$DOTFILES_DIR/.config/bat/themes/field-notebook.tmTheme"
+    assert_failure
+    run grep -c "$(PALETTE=field-notebook "$DOTFILES_DIR/bin/palette" get pen)" \
+        "$DOTFILES_DIR/.config/zsh/rices/field-notebook.zsh"
+    assert_success
+}
+
+@test "roles: every rice maps every role to one of its own colours" {
+    run bash -c '
+        set -euo pipefail
+        repo="$1"
+        roles="$(PALETTE=danse "$repo/bin/palette" names | sort)"
+        status=0
+        for rice in $(sh -c ". \"\$1/.config/palette/rice.sh\"; rice_list \"\"" _ "$repo"); do
+            mapped="$(PALETTE="$rice" "$repo/bin/palette" roles)" \
+                || { echo "$rice: role map unreadable"; status=1; continue; }
+            got="$(printf "%s\n" "$mapped" | cut -f1 | sort)"
+            [[ "$got" == "$roles" ]] || { echo "$rice: roles differ from danse names:"; diff <(echo "$roles") <(echo "$got") || true; status=1; }
+        done
+        exit $status
+    ' _ "$DOTFILES_DIR"
+    assert_success
+}
+
+@test "roles: danse's role map is the identity" {
+    # This is what makes danse render exactly as it did before the templates.
+    run bash -c 'PALETTE=danse "$1/bin/palette" roles | awk -F "\t" "\$1 != \$2"' _ "$DOTFILES_DIR"
+    assert_success
+    assert_output ""
+}
+
+@test "role resolves through the rice's map" {
+    PALETTE=field-notebook run "$DOTFILES_DIR/bin/palette" role green
+    assert_success
+    assert_output "$(PALETTE=field-notebook "$DOTFILES_DIR/bin/palette" get pen)"
+    PALETTE=field-notebook run "$DOTFILES_DIR/bin/palette" role nosuchrole
+    assert_failure
 }
 
 @test "every colour in a generated theme is a palette colour" {
@@ -147,7 +230,7 @@ field-notebook omarchy/rices/field-notebook/theme/colors.toml
 field-notebook omarchy/rices/field-notebook/share/make-wallpapers.sh
 monochrome-43 .config/starship/starship.toml
 monochrome-43 .config/ghostty/config
-danse         .config/starship/danse.toml
+monochrome-43 .config/starship/monochrome-43.toml
 THEMES
         exit $status
     ' _ "$DOTFILES_DIR"
@@ -173,16 +256,39 @@ THEMES
     assert_success
 }
 
-@test "a booted neovim renders the palette's vermilion, not onedark.nvim's red" {
+# Boot this checkout's Neovim config against a fake config dir whose
+# rice.local says $1, and print "<Normal bg> <ErrorMsg fg> <String fg>".
+# Plugins come from the real data dir; RICE_PLATFORM="" makes every rice
+# available whatever machine runs this.
+nvim_colours() {
+    local xdg
+    xdg="$(mktemp -d)"
+    mkdir -p "$xdg/palette"
+    # Never link a rice.local: writing it below would write into the checkout.
+    ln -s "$DOTFILES_DIR"/.config/palette/*.conf "$DOTFILES_DIR"/.config/palette/*.roles \
+        "$DOTFILES_DIR"/.config/palette/rice.sh "$xdg/palette/"
+    ln -s "$DOTFILES_DIR/.config/nvim" "$xdg/nvim"
+    printf '%s\n' "$1" > "$xdg/palette/rice.local"
+    XDG_CONFIG_HOME="$xdg" RICE_PLATFORM="" nvim --headless \
+        -c 'lua local function hl(n, k) local v = vim.api.nvim_get_hl(0, { name = n, link = false })[k]; return v and string.format("#%06x", v) or "none" end; io.stderr:write(hl("Normal", "bg") .. " " .. hl("ErrorMsg", "fg") .. " " .. hl("String", "fg"))' \
+        -c qa 2>&1
+    rm -rf "$xdg"
+}
+
+@test "a booted neovim wears each rice's own colours" {
     # Computed against the palette rather than a literal, so retuning a colour
-    # fails here instead of silently leaving the editor behind. nvim was the
-    # one window where "everything matches" was false: it inherited whatever
-    # navarasu/onedark.nvim shipped while every other tool had moved.
+    # fails here instead of silently leaving the editor behind. nvim was once
+    # the one window where "everything matches" was false; then it stayed on
+    # danse whatever the desktop rice was (ADR 0003 ended that).
     command -v nvim > /dev/null || skip "nvim not installed"
-    want="$("$DOTFILES_DIR/bin/palette" get vermilion)"
-    run bash -c 'nvim --headless -c "lua local v = vim.api.nvim_get_hl(0, { name = \"ErrorMsg\", link = false }); io.stderr:write(v.fg and string.format(\"#%06x\", v.fg) or \"none\")" -c qa 2>&1'
-    assert_success
-    assert_output "$want"
+    [[ -d "${XDG_DATA_HOME:-$HOME/.local/share}/nvim/lazy/onedark.nvim" ]] || skip "onedark.nvim not installed"
+    for rice in danse field-notebook monochrome-43; do
+        role() { PALETTE="$rice" "$DOTFILES_DIR/bin/palette" role "$1"; }
+        # danse keeps onedark's own ground (#282c34, which is danse's bg).
+        run nvim_colours "$rice"
+        assert_success
+        assert_output "$(role bg) $(role vermilion) $(role green)"
+    done
 }
 
 @test "every workspace sketchybar draws is declared persistent in aerospace" {
@@ -216,9 +322,23 @@ THEMES
     PALETTE=monochrome-43 run "$DOTFILES_DIR/bin/palette" get bg
     assert_success
     assert_output "#000000"
-    # The default is unchanged.
-    run "$DOTFILES_DIR/bin/palette" get bg
+    PALETTE=danse run "$DOTFILES_DIR/bin/palette" get bg
     assert_output "#282c34"
+}
+
+@test "with no PALETTE, palette reads the active rice's palette" {
+    # ADR 0003: the default describes what the machine shows.
+    unset PALETTE
+    xdg="$(mktemp -d)"
+    mkdir -p "$xdg/palette"
+    XDG_CONFIG_HOME="$xdg" RICE_PLATFORM=omarchy run "$DOTFILES_DIR/bin/palette" get bg
+    assert_output "$(PALETTE=field-notebook "$DOTFILES_DIR/bin/palette" get bg)"
+    XDG_CONFIG_HOME="$xdg" RICE_PLATFORM=macos run "$DOTFILES_DIR/bin/palette" get bg
+    assert_output "$(PALETTE=monochrome-43 "$DOTFILES_DIR/bin/palette" get bg)"
+    echo danse > "$xdg/palette/rice.local"
+    XDG_CONFIG_HOME="$xdg" RICE_PLATFORM=macos run "$DOTFILES_DIR/bin/palette" get bg
+    assert_output "$(PALETTE=danse "$DOTFILES_DIR/bin/palette" get bg)"
+    rm -rf "$xdg"
 }
 
 @test "PALETTE refuses a name that is a path" {

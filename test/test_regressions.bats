@@ -23,12 +23,17 @@ teardown() {
 	assert_success
 }
 
-@test "git delta and neovim are configured for the danse palette" {
+@test "git delta and neovim are configured for the rice palettes" {
 	# git's own parser, not a regex over git's syntax: this passes only if
-	# the setting is in a section git actually reads.
-	run git config --file .config/git/config --get delta.syntax-theme
-	assert_success
-	assert_output "danse"
+	# the setting is in a section git actually reads, through the include.
+	local rice
+	for rice in danse field-notebook monochrome-43; do
+		run git config --file .config/git/config --includes --get "delta.rice-$rice.syntax-theme"
+		assert_success
+		assert_output "$rice"
+	done
+	run git config --file .config/git/config --get delta.features
+	assert_output "rice-danse"
 
 	# nvim would need a headless boot to observe; a text check is the
 	# proportionate tool here.

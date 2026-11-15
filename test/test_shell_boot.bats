@@ -39,6 +39,11 @@ setup() {
     cp -R "$DOTFILES_DIR/.config/zsh" "$FAKE_HOME/.config/zsh"
     ln -s "$DOTFILES_DIR/.config/starship" "$FAKE_HOME/.config/starship"
     ln -s "$DOTFILES_DIR/.config/atuin" "$FAKE_HOME/.config/atuin"
+    # The Rice module and palettes, never a rice.local: the shell picks this
+    # machine's default rice, as it would on a fresh install.
+    mkdir -p "$FAKE_HOME/.config/palette"
+    ln -s "$DOTFILES_DIR"/.config/palette/*.conf "$DOTFILES_DIR"/.config/palette/*.roles \
+        "$DOTFILES_DIR/.config/palette/rice.sh" "$FAKE_HOME/.config/palette/"
     ln -s "${XDG_DATA_HOME:-$HOME/.local/share}" "$FAKE_HOME/.local/share"
     ln -s "${XDG_CACHE_HOME:-$HOME/.cache}" "$FAKE_HOME/.cache"
     cp "$DOTFILES_DIR/.zshenv" "$FAKE_HOME/.zshenv"
@@ -95,11 +100,16 @@ teardown() {
     [[ "$output" == *"c="*clear* ]]
 }
 
-@test "shell-boot: BAT_THEME is exported as danse" {
+@test "shell-boot: BAT_THEME and DELTA_FEATURES are exported for the active rice" {
+    # ADR 0003: bat and delta follow the Rice, so the names are the rice's.
     run --separate-stderr env -u ZDOTDIR -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_CACHE_HOME HOME="$FAKE_HOME" TERM=xterm \
-        zsh -ic 'print -r -- $BAT_THEME'
+        zsh -ic 'print -r -- "$DOTFILES_RICE"; zsh -fc '"'"'print -r -- "$BAT_THEME $DELTA_FEATURES"'"'"''
     assert_success
-    assert_output "danse"
+    local rice
+    rice="$(printf '%s\n' "$output" | sed -n 1p)"
+    [[ -n "$rice" ]]
+    [[ -f "$DOTFILES_DIR/.config/bat/themes/$rice.tmTheme" ]]
+    [[ "$(printf '%s\n' "$output" | sed -n 2p)" == "$rice rice-$rice" ]]
 }
 
 @test "shell-boot: starship is registered as the live prompt hook" {
@@ -196,9 +206,12 @@ teardown() {
 @test "shell-boot: eza is themed through the mechanism this build supports" {
     # theme.yml needs a build feature Homebrew does not enable, so eza ignores
     # it silently. EZA_COLORS is what actually applies; assert it is exported
-    # and that eza emits the OneDark directory colour.
+    # (a child process sees it) and carries the active rice's directory colour.
     run --separate-stderr env -u ZDOTDIR -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_CACHE_HOME \
-        -u EZA_COLORS HOME="$FAKE_HOME" TERM=xterm zsh -ic 'print -r -- "$EZA_COLORS"'
+        -u EZA_COLORS HOME="$FAKE_HOME" TERM=xterm zsh -ic 'print -r -- "$DOTFILES_RICE"; zsh -fc '"'"'print -r -- "$EZA_COLORS"'"'"''
     assert_success
-    [[ "$output" == *"di=38;2;97;175;239"* ]]
+    local rice blue
+    rice="$(printf '%s\n' "$output" | sed -n 1p)"
+    blue="$(PALETTE="$rice" "$DOTFILES_DIR/bin/palette" role blue --format rgb)"
+    [[ "$(printf '%s\n' "$output" | sed -n 2p)" == *"di=38;2;$blue"* ]]
 }
