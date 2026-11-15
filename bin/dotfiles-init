@@ -63,13 +63,9 @@ readonly JJ_EXAMPLE="$DOTFILES_DIR/.config/jj/conf.d/user.toml.example"
 readonly SSH_CONFIG="$HOME/.ssh/config"
 readonly SSH_SNIPPET_DIR="$CONFIG_HOME/ssh/config.d"
 
-# The same Include line `make link` appends, and the same pattern it matches
-# with. Deliberately duplicated rather than shared: make cannot source a shell
-# library, and the alternative — a flag on this script that exists only so the
-# Makefile can call it — is more interface than the duplication is worth.
-# test_dotfiles_init.bats asserts the two copies still agree.
-readonly SSH_INCLUDE_LINE='Include ~/.config/ssh/config.d/*.conf'
-readonly SSH_INCLUDE_RE='^[[:space:]]*Include[[:space:]]+~/\.config/ssh/config\.d/\*\.conf([[:space:]]|$)'
+# The Include line bin/dotfiles-link appends, and the pattern both match with.
+# shellcheck source=lib/ssh-include.sh
+source "$SCRIPT_DIR/lib/ssh-include.sh"
 
 # --- values ----------------------------------------------------------------
 

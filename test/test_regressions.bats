@@ -273,7 +273,7 @@ EOS
 @test "make link has a rule for generic linux" {
 	run make -n OS=linux link
 	assert_success
-	[[ "$output" == *"stow -t"* ]]
+	[[ "$output" == *"bin/dotfiles-link\" --apply"* ]]
 }
 
 # Regression: Homebrew >= 5 refuses third-party taps until `brew trust`ed,
@@ -328,7 +328,7 @@ EOS
 	# Before linking, the dry run must say it would append.
 	run make -C "$DOTFILES_DIR" link-dry-run HOME="$TEST_HOME" XDG_CONFIG_HOME="$TEST_HOME/.config"
 	assert_success
-	[[ "$output" == *"Would append"* ]]
+	[[ "$output" == *"would   append Include"* ]]
 
 	run make -C "$DOTFILES_DIR" link HOME="$TEST_HOME" XDG_CONFIG_HOME="$TEST_HOME/.config"
 	assert_success

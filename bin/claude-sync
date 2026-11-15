@@ -37,6 +37,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/preamble.sh
 source "$SCRIPT_DIR/lib/preamble.sh"
+PLAN_NAME=claude-sync
+# shellcheck source=lib/plan.sh
+source "$SCRIPT_DIR/lib/plan.sh"
 
 # name<TAB>GitHub source. The built-in Anthropic directory is not listed.
 readonly MARKETPLACES='claude-plugins-official	anthropics/claude-plugins-official
@@ -67,25 +70,8 @@ CLAUDE_JSON="${CLAUDE_CONFIG_DIR:-$HOME}/.claude.json"
 
 APPLY=0
 ONLY=""
-CHANGES=0
 
 usage() { sed -n '2,33p' "$0" | sed 's/^# \{0,1\}//'; }
-
-ok() { printf '  ok      %s\n' "$*"; }
-skip() { printf '  skip    %s\n' "$*"; }
-warn() { printf '  WARN    %s\n' "$*" >&2; }
-die() { printf 'claude-sync: %s\n' "$*" >&2; exit 1; }
-
-# Announce a change and say whether to make it: true under --apply.
-change() {
-    CHANGES=$((CHANGES + 1))
-    if ((APPLY)); then
-        printf '  do      %s\n' "$*"
-        return 0
-    fi
-    printf '  would   %s\n' "$*"
-    return 1
-}
 
 wants() { [[ -z "$ONLY" || "$ONLY" == "$1" ]]; }
 
@@ -217,11 +203,7 @@ main() {
     wants plugins && sync_plugins
     wants mcp && sync_mcp
 
-    if ((CHANGES == 0)); then
-        echo "Everything already in place."
-    elif ((!APPLY)); then
-        echo "$CHANGES change(s) pending; run with --apply."
-    fi
+    plan_summary
 }
 
 main "$@"

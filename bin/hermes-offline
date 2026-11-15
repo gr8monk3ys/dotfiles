@@ -26,6 +26,11 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PLAN_NAME=hermes-offline
+# shellcheck source=lib/plan.sh
+source "$SCRIPT_DIR/lib/plan.sh"
+
 readonly INSTALL_URL="https://hermes-agent.nousresearch.com/install.sh"
 readonly BASE_URL="http://127.0.0.1:11434/v1"
 readonly MIN_CTX=65536
@@ -34,22 +39,8 @@ NUM_CTX="${HERMES_NUM_CTX:-$MIN_CTX}"
 
 APPLY=0
 PULL=0
-CHANGES=0
 
 usage() { sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//'; }
-ok() { printf '  ok      %s\n' "$*"; }
-note() { printf '  note    %s\n' "$*"; }
-die() { printf 'hermes-offline: %s\n' "$*" >&2; exit 1; }
-
-change() {
-    CHANGES=$((CHANGES + 1))
-    if ((APPLY)); then
-        printf '  do      %s\n' "$*"
-        return 0
-    fi
-    printf '  would   %s\n' "$*"
-    return 1
-}
 
 find_hermes() {
     command -v hermes 2> /dev/null && return 0
@@ -114,11 +105,7 @@ main() {
         note "ollama does not have $MODEL yet: ollama pull $MODEL (or re-run with --pull)"
     fi
 
-    if ((CHANGES == 0)); then
-        echo "Everything already in place."
-    elif ((!APPLY)); then
-        echo "$CHANGES change(s) pending; run with --apply."
-    fi
+    plan_summary
 }
 
 main "$@"

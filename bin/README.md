@@ -103,6 +103,28 @@ complete it — because it is the one thing on the machine nothing else can
 reproduce. `dotfiles-doctor` is a reporter over `--status` and carries no
 detection of its own.
 
+### [dotfiles-link](dotfiles-link)
+
+Links this checkout into `$HOME` — the steps behind `make link`: `~/.zshenv`
+to the checkout's `.zshenv` (a real file there is moved to
+`~/.zshenv.dotfiles-bak` first; `make unlink` puts it back), `stow` of
+`.config/` into `$XDG_CONFIG_HOME`, `~/.ssh` (700) and `~/.ssh/config` (600)
+with the `config.d` Include appended once, and `~/.local/runtime` (700). Dry
+run by default, showing stow's own `LINK`/`UNLINK` lines; idempotent.
+
+**Usage:**
+
+```bash
+dotfiles-link                # dry run (also --dry-run)
+dotfiles-link --apply        # do it
+# or
+make link-dry-run
+make link
+```
+
+A stow conflict (a real file where a link should go) is reported by the dry
+run and stops `--apply` before anything is stowed.
+
 ### [dotfiles-update](dotfiles-update)
 
 Update all packages and configurations.
@@ -303,6 +325,28 @@ source "$SCRIPT_DIR/lib/preamble.sh"
 
 Non-bash callers use `bin/platform has` for the same predicate; `install.sh`
 keeps its own copy because it runs before the checkout exists.
+
+### [lib/plan.sh](lib/plan.sh)
+
+The dry-run / apply engine shared by `dotfiles-link`, `claude-sync`,
+`hermes-offline` and `omarchy/setup.sh`: `APPLY`, the `ok`/`note`/`skip`/
+`warn`/`die` reporters (`die` prefixed with `PLAN_NAME`), `change` (counts a
+change and returns true only under `--apply`), `plan_backup` (a
+`<path>.dotfiles-bak` name that does not exist yet), `plan_link` and the
+closing `plan_summary`. The header of the file is the interface.
+
+```bash
+PLAN_NAME=my-script
+source "$SCRIPT_DIR/lib/plan.sh"
+change "write $file" && write_it
+plan_summary
+```
+
+### [lib/ssh-include.sh](lib/ssh-include.sh)
+
+`SSH_INCLUDE_LINE` and `SSH_INCLUDE_RE`: the `Include` that hands OpenSSH the
+gitignored snippets in `~/.config/ssh/config.d/`, and the pattern that
+recognises it. `dotfiles-link` appends it; `dotfiles-init` reports on it.
 
 ### [lib/git-sync.sh](lib/git-sync.sh)
 
@@ -536,6 +580,7 @@ Helps non-root installations on Arch Linux.
 | platform | ✓ | ✓ | ✓ |
 | dotfiles-doctor | ✓ | ✓ | ✓ |
 | dotfiles-init | ✓ | ✓ | ✓ |
+| dotfiles-link | ✓ | ✓ | ✓ |
 | dotfiles-update | ✓ | ✓ | ✓ |
 | dotfiles-backup | ✓ | ✓ | ✓ |
 | dotfiles-restore | ✓ | ✓ | ✓ |

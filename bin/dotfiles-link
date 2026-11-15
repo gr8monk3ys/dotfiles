@@ -1,0 +1,160 @@
+#!/usr/bin/env bash
+# dotfiles-link - Link this checkout into $HOME: what `make link` does.
+#
+# Dry run by default: prints what it would do and changes nothing.
+# Idempotent: a second --apply reports "Everything already in place."
+#
+# Usage:
+#   dotfiles-link                # dry run (same as --dry-run)
+#   dotfiles-link --apply        # do it
+#   make link-dry-run / make link
+#
+# Steps, in order:
+#   zshenv   ~/.zshenv linked to the checkout's .zshenv. A real file there is
+#            moved to ~/.zshenv.dotfiles-bak first (an identical copy is
+#            just replaced); `make unlink` puts it back.
+#   stow     `stow -t $XDG_CONFIG_HOME .config` from the checkout; the dry
+#            run shows stow's own LINK/UNLINK lines. A conflict (a real
+#            file where stow wants a link) is reported, and stops --apply.
+#   ssh      ~/.ssh (700) and ~/.ssh/config (600) exist, and the config has
+#            the Include for ~/.config/ssh/config.d/*.conf, appended once.
+#   runtime  ~/.local/runtime exists and is 700.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/preamble.sh
+source "$SCRIPT_DIR/lib/preamble.sh"
+PLAN_NAME=dotfiles-link
+# shellcheck source=lib/plan.sh
+source "$SCRIPT_DIR/lib/plan.sh"
+# shellcheck source=lib/ssh-include.sh
+source "$SCRIPT_DIR/lib/ssh-include.sh"
+
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+SSH_DIR="$HOME/.ssh"
+SSH_CONFIG="$SSH_DIR/config"
+RUNTIME_DIR="$HOME/.local/runtime"
+
+APPLY=0
+
+usage() { sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'; }
+
+# Does <path> have exactly <mode>? `find -perm` with no prefix is an exact
+# match in POSIX find, so this holds on macOS and Linux alike.
+has_mode() {
+    [[ -n "$(find "$1" -prune -perm "$2" 2> /dev/null)" ]]
+}
+
+# ensure_dir <path> <mode>
+ensure_dir() {
+    local dir="$1" mode="$2"
+    if [[ ! -d "$dir" ]]; then
+        change "mkdir -m $mode $dir" || return 0
+        mkdir -p "$dir"
+        chmod "$mode" "$dir"
+    elif ! has_mode "$dir" "$mode"; then
+        change "chmod $mode $dir" || return 0
+        chmod "$mode" "$dir"
+    else
+        ok "$dir ($mode)"
+    fi
+}
+
+link_zshenv() {
+    echo "zshenv:"
+    plan_link "$DOTFILES_DIR/.zshenv" "$HOME/.zshenv"
+}
+
+link_config() {
+    echo "stow (.config -> $CONFIG_HOME):"
+    command_exists stow || die "stow not found on PATH (make link installs it)"
+    if [[ ! -d "$CONFIG_HOME" ]]; then
+        if ! change "mkdir $CONFIG_HOME"; then
+            change "stow every entry of $DOTFILES_DIR/.config into it" || true
+            return 0
+        fi
+        mkdir -p "$CONFIG_HOME"
+    fi
+
+    local preview status=0 line pending=0
+    preview="$(STOW_DIR="$DOTFILES_DIR" stow -n -v -d "$DOTFILES_DIR" -t "$CONFIG_HOME" .config 2>&1)" ||
+        status=$?
+    if ((status != 0)); then
+        printf '%s\n' "$preview" | sed 's/^/          /' >&2
+        if ((APPLY)); then
+            die "stow would conflict with files in $CONFIG_HOME; move them aside and re-run"
+        fi
+        warn "stow would conflict with files in $CONFIG_HOME (above); --apply will stop here"
+        return 0
+    fi
+    while IFS= read -r line; do
+        [[ "$line" =~ ^(LINK|UNLINK): ]] || continue
+        pending=$((pending + 1))
+        ((APPLY)) || printf '  would   stow %s\n' "$line"
+    done <<< "$preview"
+
+    if ((pending == 0)); then
+        ok "$CONFIG_HOME (nothing for stow to do)"
+        return 0
+    fi
+    # One change for the whole stow run; the dry run listed each link above.
+    if ((APPLY)); then
+        change "stow -t $CONFIG_HOME .config ($pending link operation(s))"
+        STOW_DIR="$DOTFILES_DIR" stow -d "$DOTFILES_DIR" -t "$CONFIG_HOME" .config
+    else
+        CHANGES=$((CHANGES + 1))
+    fi
+}
+
+link_ssh() {
+    echo "ssh:"
+    ensure_dir "$SSH_DIR" 700
+    if [[ ! -f "$SSH_CONFIG" ]]; then
+        if change "create $SSH_CONFIG (600)"; then
+            : > "$SSH_CONFIG"
+            chmod 600 "$SSH_CONFIG"
+        fi
+    elif ! has_mode "$SSH_CONFIG" 600; then
+        change "chmod 600 $SSH_CONFIG" && chmod 600 "$SSH_CONFIG"
+    else
+        ok "$SSH_CONFIG (600)"
+    fi
+
+    # grep against a file, not a pipeline: under pipefail `producer | grep -q`
+    # can report failure when grep exits on the first match.
+    if [[ -f "$SSH_CONFIG" ]] && grep -Eq "$SSH_INCLUDE_RE" "$SSH_CONFIG"; then
+        ok "SSH Include already present in $SSH_CONFIG"
+    elif change "append $SSH_INCLUDE_LINE to $SSH_CONFIG"; then
+        printf '\n# Dotfiles managed SSH host snippets\n%s\n' "$SSH_INCLUDE_LINE" >> "$SSH_CONFIG"
+    fi
+}
+
+link_runtime() {
+    echo "runtime:"
+    ensure_dir "$RUNTIME_DIR" 700
+}
+
+main() {
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --apply) APPLY=1 ;;
+            -n | --dry-run) APPLY=0 ;;
+            -h | --help)
+                usage
+                return 0
+                ;;
+            *) die "unknown argument: $1 (try --help)" ;;
+        esac
+        shift
+    done
+
+    ((APPLY)) || echo "Dry run: nothing will change. Re-run with --apply to act."
+    link_zshenv
+    link_config
+    link_ssh
+    link_runtime
+    plan_summary
+}
+
+main "$@"
