@@ -1,0 +1,149 @@
+#!/usr/bin/env python3
+"""Resume your last Spotify track on this computer's Spotify app.
+
+The desktop app starts with nothing loaded, so MPRIS "play" has nothing to
+resume. This asks the Web API (with your own app's login, Client ID in
+~/.config/spotify-player/app.toml) for the most recently played track and its
+playlist/album, and starts it on this machine's Spotify device.
+
+Exit 0 when playback started, 1 otherwise. Messages go to stderr.
+"""
+import json
+import os
+import pathlib
+import socket
+import sys
+import time
+import tomllib
+import urllib.error
+import urllib.parse
+import urllib.request
+
+HOME = pathlib.Path.home()
+APP_TOML = HOME / ".config/spotify-player/app.toml"
+OWN = HOME / ".cache/field-notebook/spotify-token.json"   # our refreshed copy
+API = "https://api.spotify.com/v1"
+
+
+def log(msg):
+    print(f"fn-spotify-resume: {msg}", file=sys.stderr)
+
+
+def client_id():
+    with open(APP_TOML, "rb") as f:
+        cid = tomllib.load(f).get("client_id", "")
+    if not (len(cid) == 32 and all(c in "0123456789abcdef" for c in cid)):
+        raise SystemExit(log("no valid client_id in app.toml") or 1)
+    return cid
+
+
+def load_token(cid):
+    for path in (OWN, HOME / f".cache/spotify-player/{cid}_token.json"):
+        if path.exists():
+            return json.loads(path.read_text())
+    raise SystemExit(log("not signed in (no token file)") or 1)
+
+
+def save_token(tok):
+    OWN.parent.mkdir(parents=True, exist_ok=True)
+    tmp = OWN.with_suffix(".tmp")
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as f:
+        json.dump(tok, f)
+    tmp.replace(OWN)
+
+
+def expired(tok):
+    exp = tok.get("expires_at_epoch")
+    if exp is None:  # spotify_player's ISO timestamp
+        try:
+            from datetime import datetime
+            exp = datetime.fromisoformat(tok["expires_at"][:26].rstrip("Z") + "+00:00").timestamp()
+        except Exception:
+            return True
+    return time.time() > exp - 60
+
+
+def refresh(cid, tok):
+    body = urllib.parse.urlencode({
+        "grant_type": "refresh_token",
+        "refresh_token": tok["refresh_token"],
+        "client_id": cid,
+    }).encode()
+    req = urllib.request.Request("https://accounts.spotify.com/api/token", data=body,
+                                 headers={"Content-Type": "application/x-www-form-urlencoded"})
+    with urllib.request.urlopen(req, timeout=10) as r:
+        new = json.load(r)
+    tok = {
+        "access_token": new["access_token"],
+        # Spotify may rotate the refresh token; keep the old one if it does not.
+        "refresh_token": new.get("refresh_token", tok["refresh_token"]),
+        "expires_at_epoch": time.time() + int(new.get("expires_in", 3600)),
+    }
+    save_token(tok)
+    return tok
+
+
+def call(tok, method, path, body=None):
+    data = json.dumps(body).encode() if body is not None else None
+    req = urllib.request.Request(API + path, data=data, method=method, headers={
+        "Authorization": f"Bearer {tok['access_token']}",
+        "Content-Type": "application/json",
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            raw = r.read(2_000_000)
+            return r.status, (json.loads(raw) if raw else None)
+    except urllib.error.HTTPError as e:
+        return e.code, None
+
+
+def this_device(tok):
+    host = socket.gethostname().lower()
+    for _ in range(20):  # the app registers its device a few seconds after start
+        status, data = call(tok, "GET", "/me/player/devices")
+        devices = (data or {}).get("devices", []) if status == 200 else []
+        mine = [d for d in devices if d.get("type") == "Computer" and str(d.get("name", "")).lower() == host]
+        mine = mine or [d for d in devices if d.get("type") == "Computer"]
+        if mine and mine[0].get("id"):
+            return mine[0]["id"]
+        time.sleep(1.5)
+    return None
+
+
+def main():
+    cid = client_id()
+    tok = load_token(cid)
+    if expired(tok):
+        tok = refresh(cid, tok)
+
+    device = this_device(tok)
+    if not device:
+        log("Spotify app on this computer never showed up as a device")
+        return 1
+
+    status, data = call(tok, "GET", "/me/player/recently-played?limit=1")
+    items = (data or {}).get("items", []) if status == 200 else []
+    if items:
+        track = items[0].get("track", {}).get("uri", "")
+        ctx = (items[0].get("context") or {}).get("uri", "")
+        body = {"context_uri": ctx, "offset": {"uri": track}} if ctx else {"uris": [track]}
+    else:
+        body = None  # nothing in history: just transfer and play
+
+    q = "?device_id=" + urllib.parse.quote(device)
+    status, _ = call(tok, "PUT", "/me/player/play" + q, body)
+    if status in (200, 202, 204):
+        log("resumed" if body else "started")
+        return 0
+    if body and "context_uri" in body:  # e.g. the playlist is gone: play the track
+        status, _ = call(tok, "PUT", "/me/player/play" + q, {"uris": [body["offset"]["uri"]]})
+        if status in (200, 202, 204):
+            log("resumed (track only)")
+            return 0
+    log(f"play request failed: HTTP {status}")
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

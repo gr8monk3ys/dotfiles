@@ -11,20 +11,14 @@
 # with a minimal environment and this checkout's bin/ is not reliably on that
 # PATH. The file is two fields and a comment character; a parser is overkill.
 
-# Which look: Monochrome 43 (the default) or the older danse rice. The
-# choice lives in palette/rice.local - one word, gitignored, per machine:
+# Which look: the Rice module (palette/rice.sh) decides, from the one-word,
+# gitignored palette/rice.local; on macOS that is Monochrome 43 (default) or
+# danse:
 #   echo danse > ~/.config/palette/rice.local
-# Anything else, or no file, is Monochrome 43. borders/bordersrc and
-# .zshrc (the prompt) read the same file.
 _PALETTE_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/palette"
 RICE=monochrome-43
-if [ -r "$_PALETTE_DIR/rice.local" ]; then
-    read -r RICE < "$_PALETTE_DIR/rice.local" || true
-fi
-case "$RICE" in
-    danse) ;;
-    *) RICE=monochrome-43 ;;
-esac
+# shellcheck source=../palette/rice.sh
+[ -r "$_PALETTE_DIR/rice.sh" ] && . "$_PALETTE_DIR/rice.sh" && rice_select macos
 export RICE
 PALETTE_FILE="$_PALETTE_DIR/$RICE.conf"
 

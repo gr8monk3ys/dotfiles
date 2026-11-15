@@ -1,0 +1,39 @@
+# Field Notebook — lscaturchio.xyz at night. Night paper, one forest-green pen,
+# sand-quiet hairlines. Tokens from lscaturchio.xyz/DESIGN.md (night mode).
+mode = "dark"
+
+accent = "#42a979"              # forest-ink-dark: the one pen
+selection = "#1c342c"           # pen at 22% over night: the site's text selection
+selection_background = "#1c342c"
+selection_foreground = "#fafafa"
+muted = "#767c87"               # ink-faint
+
+background = "#111317"          # night
+dark_background = "#0d0f12"     # frame, one step below night
+darker_background = "#0a0b0d"
+lighter_background = "#16181d"  # night-card
+
+foreground = "#eceef1"
+dark_foreground = "#abb0ba"     # night-ink-muted
+light_foreground = "#d5d8de"
+bright_foreground = "#fafafa"   # night-ink
+
+# ANSI: site status colours softened for night paper so none shouts.
+red = "#e87c7c"                 # signal-error (dark)
+green = "#42a979"               # forest-ink-dark
+yellow = "#e3b25e"              # signal-warning, toned down
+orange = "#e08d55"
+blue = "#7aa0e6"                # signal-info, toned down
+magenta = "#b796c8"
+cyan = "#5fb3a1"                # between moss and info
+brown = "#a07d5a"               # paper-warm at night
+
+bright_red = "#f09a9a"
+bright_green = "#5fc493"
+bright_yellow = "#efc883"
+bright_blue = "#9bb9ef"
+bright_magenta = "#ccb1da"
+bright_cyan = "#83cbbb"
+
+hyprland_active_border = "rgba(42a979ee) rgba(397f5eee) 45deg"
+hyprland_inactive_border = "rgba(292c32aa)"

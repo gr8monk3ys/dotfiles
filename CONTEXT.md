@@ -117,8 +117,9 @@ The authoritative answer to what this system installs, read only through
 manifest: it lists file associations, not packages.
 
 A manifest **kind** is the abstract name for one of them (`brew`, `cask`,
-`cask-extra`, `npm`, `rust`, `pacman`, `code`); callers ask for a kind, not a
-path. `docs/TOOLS.md` carries one rationale entry per manifest entry, and
+`cask-extra`, `npm`, `rust`, `pacman`, `code`, plus `rice-pacman` and
+`rice-aur`, which a **Rice** keeps in its own directory); callers ask for a
+kind, not a path. `docs/TOOLS.md` carries one rationale entry per manifest entry, and
 `bin/validate-tool-docs` fails when the two disagree in either direction.
 
 Installing a kind is `bin/install-kind`'s job; the Makefile keeps only the
@@ -130,6 +131,43 @@ not cask".
 Which kinds a caller cares about is that caller's policy, not the module's:
 `validate-tool-docs` excludes `font-*` casks (its Fonts section covers them),
 `check-alias-references` reads only the kinds that put a command on PATH.
+
+## Rice
+
+One whole desktop look: colours, Hyprland or SketchyBar styling, wallpapers,
+and the apps and scripts that carry it. The rices are `monochrome-43`
+(macOS and Omarchy), `danse` (macOS) and `field-notebook` (Omarchy).
+
+Which rice a machine shows is answered only by the Rice module,
+`.config/palette/rice.sh` (sourced, POSIX sh): the one word in the gitignored
+`~/.config/palette/rice.local`, else the platform default (`monochrome-43`
+on macOS, `field-notebook` on Omarchy). A rice that does not ship on the
+platform is treated as unset. The module detects the platform itself
+(`rice_platform`; `RICE_PLATFORM` overrides it), so every caller that asks
+gets the rice the desktop shows. A rice's palette is `palette/<rice>.conf`.
+
+Every themed tool follows the active rice (ADR 0003, superseding 0002):
+the editor, the prompt and the CLI tools as well as the desktop. `bin/palette`
+with no `PALETTE=` reads the active rice's palette.
+
+A **role** is one of danse's colour names used as a slot ("the error
+colour", "the comment colour"). Tool themes are written once against roles
+(`palette/templates/`); `palette/<rice>.roles` maps each role to one of that
+rice's colours, and `bin/rice-themes` renders one file per tool per rice.
+Danse's role map is the identity.
+
+On Omarchy a rice is a directory, `omarchy/rices/<rice>/`, and
+`omarchy/setup.sh` acts on whatever it ships; no step names a rice.
+
+## Plan
+
+The dry-run / apply contract every machine-changing script follows, owned by
+`bin/lib/plan.sh`: dry run by default, `--apply` to act, each change
+announced as `would` or `do`, a second run reporting "Everything already in
+place". It owns the one backup convention (`<path>.dotfiles-bak`, then an
+epoch-stamped name that never collides) and the linking rule (`plan_link`).
+Used by `omarchy/setup.sh`, `bin/dotfiles-link`, `bin/claude-sync` and
+`bin/hermes-offline`.
 
 ## Snapshot
 

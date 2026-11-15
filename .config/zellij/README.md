@@ -134,6 +134,15 @@ layout {
 
 Use with: `zellij --layout dev`
 
+## Theme
+
+The active Rice's (ADR 0003). `themes/<rice>.kdl` holds one theme per rice,
+rendered by `bin/rice-themes` from `.config/palette/templates/zellij.kdl`.
+Zellij reads no theme from the environment, so the shell wraps the bare
+command: `zellij` with no arguments runs `zellij options --theme <rice>`
+(`.config/zsh/rice.zsh`); subcommands pass straight through. `config.kdl`'s
+`theme "danse"` is the fallback for a session started any other way.
+
 ## Resources
 
 - [Zellij Documentation](https://zellij.dev/documentation/)

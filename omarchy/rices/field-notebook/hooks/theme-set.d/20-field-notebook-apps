@@ -1,0 +1,3 @@
+#!/bin/bash
+# Regenerate cava / spotify_player / Firefox styles from the new Omarchy theme.
+exec python3 "$HOME/.local/share/field-notebook/themed.py"

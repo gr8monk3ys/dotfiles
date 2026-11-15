@@ -11,6 +11,9 @@
     "centerBegin": [
       {
         "id": "omarchy.indicators"
+      },
+      {
+        "id": "omarchy.media"
       }
     ],
     "centerEnd": [
@@ -43,10 +46,8 @@
         "id": "omarchy.weather"
       },
       {
-        "id": "pennyfx.spectrum"
-      },
-      {
-        "id": "gr8monk3ys.sysstats"
+        "id": "meviusisback.hw-monitor",
+        "mode": "compact"
       },
       {
         "id": "omarchy.system-update"
@@ -57,6 +58,7 @@
         "id": "omarchy.menu"
       },
       {
+        "groupApps": false,
         "id": "tornikegomareli.spaces"
       },
       {
@@ -68,22 +70,10 @@
         "id": "omarchy.tray"
       },
       {
-        "id": "meviusisback.hw-monitor"
+        "id": "omarchy.microphone"
       },
       {
         "id": "io.github.steveb98.segue"
-      },
-      {
-        "id": "tsouth89.omcp"
-      },
-      {
-        "id": "oliwier.agent-skills-manager"
-      },
-      {
-        "id": "ssandys.colophon"
-      },
-      {
-        "id": "robzolkos.agent-usage"
       },
       {
         "id": "omarchy.keyboard-layout"
@@ -107,7 +97,23 @@
         "id": "omarchy.power"
       }
     ],
-    "tray": []
+    "tray": [
+      {
+        "id": "tsouth89.omcp"
+      },
+      {
+        "id": "oliwier.agent-skills-manager"
+      },
+      {
+        "id": "ssandys.colophon"
+      },
+      {
+        "id": "robzolkos.agent-usage"
+      },
+      {
+        "id": "superwhisper.panel"
+      }
+    ]
   },
   "position": "left"
 }

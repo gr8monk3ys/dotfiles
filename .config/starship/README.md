@@ -45,6 +45,10 @@ prompt.
 | File | What | Selected by |
 | --- | --- | --- |
 | [`danse.toml`](danse.toml) | the previous default: the lean p10k layout (`user@host dir git duration` / `venv ❯`) in the danse palette | `danse` in `~/.config/palette/rice.local` (see `.config/zsh/rice.zsh`) |
+| [`field-notebook.toml`](field-notebook.toml) | the same lean layout in Field Notebook colours | the Field Notebook rice (the Omarchy default) |
+
+`danse.toml` and `field-notebook.toml` are rendered by `bin/rice-themes`
+from `.config/palette/templates/starship.toml`; edit that, not them.
 | [`monochrome-43.toml`](monochrome-43.toml) | the same lean layout in Monochrome 43 colours, after [43PR/dotfiles](https://github.com/43PR/dotfiles) (MIT) | `export STARSHIP_CONFIG="$HOME/.config/starship/monochrome-43.toml"` in `~/.config/zsh/zshrc.local` |
 
 `zshrc.local` is sourced last, so it beats `rice.local`.

@@ -4,23 +4,14 @@ Modern `ls` replacement with Git integration and icons.
 
 ## Theme
 
-This directory contains the OneDark theme for eza, matching the overall
-dotfiles color scheme.
-
-### OneDark Colors Used
-
-| Element | Color | Hex |
-| --- | --- | --- |
-| Directories | Blue | `#61afef` |
-| Executables | Green | `#98c379` |
-| Symlinks | Cyan | `#56b6c2` |
-| Modified (Git) | Yellow | `#e5c07b` |
-| New (Git) | Green | `#98c379` |
-| Deleted (Git) | Vermilion | `#e06a51` |
+The active Rice's (ADR 0003). `rices/<rice>/theme.yml` is rendered per rice
+by `bin/rice-themes` from `.config/palette/templates/eza-theme.yml`, and the
+shell points `EZA_CONFIG_DIR` at the rice's directory
+(`.config/zsh/rice.zsh`). `theme.yml` here links to danse's, the fallback
+outside such a shell. Directories take the rice's blue, executables and new
+files its green (Field Notebook: the pen), deletions its red.
 
 ## Usage
-
-eza automatically loads the theme from `~/.config/eza/theme.yml`.
 
 ```bash
 # Basic listing with icons
@@ -67,7 +58,8 @@ v0.23.5 [+git]
 malformed YAML included, which is how to check: if a deliberately broken
 `theme.yml` produces no error, theme support is absent.
 
-`EZA_COLORS` is what this build honours, so the same OneDark palette is
-expressed there in `.zshenv`. `theme.yml` is kept because it is the upstream
-format and will work on a build with the feature enabled, but **editing it
-changes nothing today** — change `EZA_COLORS` instead.
+Arch's build (also `v0.23.5 [+git]`) ignores it too. `EZA_COLORS` is what
+these builds honour, so the same theme is rendered there as well, into
+`.config/zsh/rices/<rice>.zsh`. `theme.yml` is kept because it is the
+upstream format and will work on a build with the feature enabled; both come
+from templates, so edit `.config/palette/templates/` and render.

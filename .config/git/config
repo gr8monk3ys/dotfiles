@@ -123,20 +123,18 @@
 	light = false
 	side-by-side = true
 	line-numbers = true
-	# danse syntax theme, registered with bat (matches nvim/ghostty)
-	syntax-theme = danse
-	# danse colors for diff highlighting (.config/palette/danse.conf)
-	plus-style = "syntax #2d3b2d"
-	plus-emph-style = "syntax #98c379"
-	minus-style = "syntax #3b2d2d"
-	minus-emph-style = "syntax #e06a51"
-	line-numbers-minus-style = "#e06a51"
-	line-numbers-plus-style = "#98c379"
-	line-numbers-zero-style = "#5c6370"
 	hunk-header-style = "file line-number syntax"
-	hunk-header-decoration-style = "blue box"
-	file-style = "bold #61afef"
 	file-decoration-style = "none"
+	# Colours and syntax theme follow the Rice: one feature per rice, rendered
+	# by bin/rice-themes into delta/<rice>.gitconfig. The shell selects one
+	# with DELTA_FEATURES=rice-<rice> (.config/zsh/rice.zsh); a git run
+	# outside such a shell gets danse.
+	features = rice-danse
+
+[include]
+	path = delta/danse.gitconfig
+	path = delta/field-notebook.gitconfig
+	path = delta/monochrome-43.gitconfig
 
 [color]
 

@@ -17,8 +17,9 @@ SQLite-backed shell history with fuzzy search — replaces plain `ctrl-r`.
   selection, Tab pastes it) and `sync.records = true`; **no account is
   configured** — run `atuin register` / `atuin login` per machine if you
   want sync to actually happen.
-- `themes/danse.toml` matches the repo-wide danse palette (same hexes
-  as the README theme table and `FZF_DEFAULT_OPTS`).
+- `themes/<rice>.toml`, one per Rice, rendered by `bin/rice-themes`; the
+  shell picks the active rice's with `ATUIN_THEME__NAME`
+  (`.config/zsh/rice.zsh`). `config.toml`'s `danse` is the fallback.
 
 ## Upstream
 

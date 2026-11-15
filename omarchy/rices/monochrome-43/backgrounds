@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Monochrome 43 backgrounds: not tracked. Omarchy's own Vantablack ones are
+# copied, plus 43PR's wallpaper, fetched by a commit-pinned URL and refused
+# unless its SHA-256 matches. omarchy/setup.sh calls this with the theme's
+# backgrounds dir.
+#
+#   backgrounds --check DIR   exit 0 when the pinned wallpaper is in DIR
+#   backgrounds DIR           copy and fetch into DIR
+set -euo pipefail
+
+readonly WALLPAPER_URL="https://raw.githubusercontent.com/43PR/dotfiles/b015f39d558cdd4c77907132532d56be8ab34594/wallhaven-k8jvm7.jpg"
+readonly WALLPAPER_SHA256="acffe6dc9dd07a5d0e2d7539a7725430239be418a3817b4c58be2b5af7ab2759"
+readonly WALLPAPER_NAME="00-43pr-wallhaven.jpg"
+OMARCHY_SYSTEM_DIR="${PLATFORM_OMARCHY_SYSTEM_DIR:-/usr/share/omarchy}"
+
+has_wallpaper() {
+    [[ -f "$1/$WALLPAPER_NAME" ]] && sha256sum "$1/$WALLPAPER_NAME" | grep -q "^$WALLPAPER_SHA256 "
+}
+
+if [[ "${1:-}" == --check ]]; then
+    has_wallpaper "$2"
+    exit
+fi
+
+bg="$1"
+mkdir -p "$bg"
+vanta="$(omarchy theme dir vantablack 2> /dev/null || true)"
+[[ -d "$vanta" ]] || vanta="$OMARCHY_SYSTEM_DIR/themes/vantablack"
+if [[ -d "$vanta/backgrounds" ]]; then
+    for f in "$vanta"/backgrounds/*; do
+        [[ -f "$f" && ! -f "$bg/$(basename "$f")" ]] && cp "$f" "$bg/"
+    done
+else
+    echo "monochrome-43 backgrounds: no Vantablack backgrounds under $vanta; skipped" >&2
+fi
+
+if ! has_wallpaper "$bg"; then
+    wp="$bg/$WALLPAPER_NAME"
+    curl -fsSL --max-time 120 -o "$wp.part" "$WALLPAPER_URL" ||
+        { rm -f "$wp.part"; echo "could not fetch $WALLPAPER_URL" >&2; exit 1; }
+    sha256sum "$wp.part" | grep -q "^$WALLPAPER_SHA256 " ||
+        { rm -f "$wp.part"; echo "wallpaper hash mismatch; refusing it" >&2; exit 1; }
+    mv "$wp.part" "$wp"
+fi

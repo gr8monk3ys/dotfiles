@@ -4,8 +4,10 @@ A `cat` clone with syntax highlighting and Git integration.
 
 ## Theme
 
-Configured to use `danse`, matching the shared danse palette
-used throughout these dotfiles.
+The active Rice's (ADR 0003): `themes/<rice>.tmTheme`, one per rice,
+rendered by `bin/rice-themes` from `.config/palette/templates/bat.tmTheme`.
+The shell sets `BAT_THEME` to the rice's name (`.config/zsh/rice.zsh`);
+`config`'s `--theme="danse"` is the fallback outside such a shell.
 
 ## Features
 
@@ -71,10 +73,10 @@ bat integrates well with:
 - [bat GitHub](https://github.com/sharkdp/bat)
 - [Available Themes](https://github.com/sharkdp/bat#highlighting-theme)
 
-## The theme is vendored
+## The themes are vendored
 
-`danse` is **not** one of bat's built-in themes. `themes/danse.tmTheme`
-is vendored here and compiled into bat's cache:
+None of the rice themes is one of bat's built-ins. `themes/*.tmTheme` are
+vendored here and compiled into bat's cache:
 
 ```bash
 bat cache --build
@@ -85,5 +87,6 @@ Without that step bat silently falls back to its default and prints
 long as this config has existed. `make link` puts the theme in place;
 `bat cache --build` is the part a fresh machine still needs.
 
-The same name is used by delta (`.config/git/config` `syntax-theme`), which
-shares bat's syntect engine and the same cache.
+Run it again after rendering a new rice. The same names are used by delta
+(`syntax-theme` in `.config/git/delta/<rice>.gitconfig`), which shares bat's
+syntect engine and the same cache.

@@ -76,23 +76,8 @@ zinit light Aloxaf/fzf-tab
 zinit light zsh-users/zsh-autosuggestions
 zinit light zsh-users/zsh-syntax-highlighting
 
-# OneDark palette for zsh-syntax-highlighting (same hexes as the README
-# theme table): valid commands green, errors red, paths underlined, etc.
-typeset -A ZSH_HIGHLIGHT_STYLES
-ZSH_HIGHLIGHT_STYLES[command]='fg=#98c379'
-ZSH_HIGHLIGHT_STYLES[builtin]='fg=#98c379'
-ZSH_HIGHLIGHT_STYLES[function]='fg=#98c379'
-ZSH_HIGHLIGHT_STYLES[alias]='fg=#98c379'
-ZSH_HIGHLIGHT_STYLES[precommand]='fg=#98c379,italic'
-ZSH_HIGHLIGHT_STYLES[reserved-word]='fg=#c678dd'
-ZSH_HIGHLIGHT_STYLES[unknown-token]='fg=#e06a51'
-ZSH_HIGHLIGHT_STYLES[path]='fg=#61afef,underline'
-ZSH_HIGHLIGHT_STYLES[globbing]='fg=#56b6c2'
-ZSH_HIGHLIGHT_STYLES[single-quoted-argument]='fg=#e5c07b'
-ZSH_HIGHLIGHT_STYLES[double-quoted-argument]='fg=#e5c07b'
-ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]='fg=#d98c5c'
-ZSH_HIGHLIGHT_STYLES[comment]='fg=#5c6370,italic'
-ZSH_HIGHLIGHT_STYLES[redirection]='fg=#c678dd'
+# Their colours (highlight styles, the autosuggestion ghost text) follow the
+# Rice: rice.zsh, below, sources zsh/rices/<rice>.zsh.
 
 # Prompt: starship (install/Brewfile). Until it is installed, a plain
 # two-line prompt so the shell is still usable.
@@ -103,8 +88,8 @@ else
   PROMPT='%F{blue}%~%f'$'\n''%F{green}❯%f '
 fi
 
-# Monochrome 43 by default; rice.zsh switches the prompt (and fastfetch/cava)
-# to danse when ~/.config/palette/rice.local says so.
+# The Rice (palette/rice.sh) picks every tool's colours: the prompt, the
+# highlight styles, fzf, eza, bat, delta and the rest (see rice.zsh).
 [[ -f "$ZDOTDIR/rice.zsh" ]] && source "$ZDOTDIR/rice.zsh"
 
 # Keybindings
@@ -163,15 +148,11 @@ fi
 # ============================================================================
 
 # fzf - Fuzzy finder
-# OneDark palette (matches the README theme table); bg:-1 keeps the
-# terminal's own background so Ghostty's frosted glass shows through.
+# The colours are the Rice's (DOTFILES_FZF_COLORS, from rice.zsh).
 # Inherited by fzf-tab, ctrl-r/ctrl-t, and fzf-based scripts (dotfiles-why).
 export FZF_DEFAULT_OPTS="
   --height=60% --layout=reverse --border=rounded --info=inline
-  --color=bg:-1,fg:#abb2bf,hl:#61afef
-  --color=bg+:#3e4451,fg+:#e6efff,hl+:#61afef
-  --color=prompt:#98c379,pointer:#c678dd,marker:#98c379
-  --color=info:#e5c07b,spinner:#56b6c2,header:#56b6c2,border:#5c6370"
+  ${DOTFILES_FZF_COLORS:-}"
 if command -v fzf &> /dev/null; then
     eval "$(fzf --zsh)"
 fi

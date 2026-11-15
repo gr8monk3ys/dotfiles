@@ -128,3 +128,14 @@ manifest() {
     assert_success
     [[ "$output" != *"fixture-only-tool"* ]]
 }
+
+@test "rice kinds read one rice's packages, every rice's with none named, and refuse a path" {
+    run bin/manifest list rice-aur field-notebook
+    assert_success
+    assert_output --partial "gh-dash-bin"
+    run bin/manifest list rice-pacman
+    assert_success
+    run bin/manifest list rice-pacman ../../etc
+    assert_failure
+    assert_output --partial "no such rice"
+}

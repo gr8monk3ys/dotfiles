@@ -17,7 +17,7 @@ into `~/.config/`; `make` drives install, link and verification.
 
 - `.config/<app>/` — one dir per tool, each with a README. `.zshenv` at the root
   is the only file linked into `$HOME` directly.
-- `bin/` — `dotfiles-doctor/update/backup/restore/sync/why`, `platform`, and the
+- `bin/` — `dotfiles-doctor/link/update/backup/restore/sync/why`, `platform`, and the
   validators `validate-doc-links`, `validate-tool-docs`, `check-alias-references`.
 - `install/` — manifests: `Brewfile`, `Caskfile[.extra]`, `npmfile`, `Rustfile`,
   `pacmanfile`, `Codefile`, `wingetfile`, `duti`.
@@ -25,9 +25,10 @@ into `~/.config/`; `make` drives install, link and verification.
   Terminal fragment). Not under `.config/`, because Stow would link it on macOS
   and Arch; `windows/setup.ps1` (Windows PowerShell 5.1, dry run by default) is
   its `make link`.
-- `omarchy/` — the Monochrome 43 rice for Omarchy 4.x (theme, Hyprland snippet,
-  pinned shell plugins, bar layout, a Linux-only Ghostty include that runs
-  zsh). Outside `.config/` because Omarchy owns
+- `omarchy/` — the Omarchy 4.x layer: one directory per Rice under
+  `omarchy/rices/` (theme, Hyprland module, packages, session scripts), plus pinned shell plugins, bar
+  layout, idle timeouts, theme hooks and a Linux-only Ghostty include that
+  runs zsh. Outside `.config/` because Omarchy owns
   `~/.config/hypr` and `~/.config/omarchy`; `omarchy/setup.sh` (dry run by
   default, `make omarchy apply=1`) places single files instead of stowing.
 - `docs/TOOLS.md` — one rationale entry per package; `validate-tool-docs` fails

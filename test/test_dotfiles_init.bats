@@ -369,11 +369,17 @@ link_git_include_chain() {
     assert_failure
 }
 
-@test "dotfiles-init and the Makefile agree on the SSH Include line" {
-    run grep -cF 'Include ~/.config/ssh/config.d/*.conf' "$DOTFILES_DIR/Makefile"
+# The Include is defined once, in bin/lib/ssh-include.sh: dotfiles-init checks
+# for it and dotfiles-link (behind `make link`) appends it. A private copy in
+# either would be free to drift again.
+@test "dotfiles-init and dotfiles-link share one SSH Include definition" {
+    run grep -cF 'Include ~/.config/ssh/config.d/*.conf' "$DOTFILES_DIR/bin/lib/ssh-include.sh"
     assert_success
-    run grep -cF 'Include ~/.config/ssh/config.d/*.conf' "$DOTFILES_DIR/bin/dotfiles-init"
-    assert_success
+    for script in dotfiles-init dotfiles-link; do
+        grep -q 'source "$SCRIPT_DIR/lib/ssh-include.sh"' "$DOTFILES_DIR/bin/$script"
+        run grep -E '^(readonly )?SSH_INCLUDE_(LINE|RE)=' "$DOTFILES_DIR/bin/$script"
+        assert_failure
+    done
 }
 
 @test "every identity variable the Makefile reads appears in make help" {

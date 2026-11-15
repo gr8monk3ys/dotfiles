@@ -1,0 +1,137 @@
+#!/usr/bin/env bash
+# rice-themes - Render every tool's theme for every Rice from one template.
+#
+# Each tool's colours are written once, in .config/palette/templates/, with
+# placeholders naming a role instead of a colour: {{blue}}, {{comment:rgb}}.
+# The roles are danse's colour names; .config/palette/<rice>.roles says which
+# of that rice's colours fills each one (danse's map is the identity). This
+# writes one file per tool per rice, so a tool picks its rice by file name
+# and no colour is ever typed twice (ADR 0003).
+#
+# The output is committed: a fresh clone needs no render step, and
+# `rice-themes check` (run by test_palette.bats) fails if any output is
+# stale or was edited by hand.
+#
+# Usage:
+#   rice-themes render   # write every target
+#   rice-themes check    # exit 1, with a diff, if any target is out of date
+#   rice-themes list     # template<TAB>rice<TAB>output, one line per file
+#
+# Placeholders:
+#   {{role}}         #rrggbb
+#   {{role:FORMAT}}  any bin/palette format: raw | 0x | rgb
+#   {{rice}}         the rice's name
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/preamble.sh
+source "$SCRIPT_DIR/lib/preamble.sh"
+
+TEMPLATE_DIR="$DOTFILES_DIR/.config/palette/templates"
+
+# The targets: template, output path ({rice} is replaced), and which rices
+# get one ("all", or a list). An explicit table rather than a header in each
+# template, because some formats cannot carry a comment (ADR 0001).
+targets() {
+    cat <<'EOF'
+bat.tmTheme      .config/bat/themes/{rice}.tmTheme       all
+eza-theme.yml    .config/eza/rices/{rice}/theme.yml      all
+yazi-theme.toml  .config/yazi/rices/{rice}/theme.toml    all
+atuin.toml       .config/atuin/themes/{rice}.toml        all
+zellij.kdl       .config/zellij/themes/{rice}.kdl        all
+delta.gitconfig  .config/git/delta/{rice}.gitconfig      all
+zsh.zsh          .config/zsh/rices/{rice}.zsh            all
+zathurarc        .config/zathura/rices/{rice}/zathurarc  all
+starship.toml    .config/starship/{rice}.toml            danse field-notebook
+EOF
+}
+
+# Every rice, platform aside: the Rice module's table is the list.
+all_rices() {
+    # shellcheck source=../.config/palette/rice.sh
+    (. "$DOTFILES_DIR/.config/palette/rice.sh" && rice_list "")
+}
+
+# One sed script per rice: every role in every format, plus {{rice}}.
+sed_script() {
+    local rice="$1" role name hex fmt value
+    printf 's/{{rice}}/%s/g\n' "$rice"
+    while IFS=$'\t' read -r role name hex; do
+        printf 's/{{%s}}/%s/g\n' "$role" "$hex"
+        for fmt in raw 0x rgb; do
+            value="$(PALETTE="$rice" "$SCRIPT_DIR/palette" get "$name" --format "$fmt")"
+            printf 's/{{%s:%s}}/%s/g\n' "$role" "$fmt" "$value"
+        done
+    done < <(PALETTE="$rice" "$SCRIPT_DIR/palette" roles)
+}
+
+# render_into <root>: write every target under <root>.
+render_into() {
+    local root="$1" rice template pattern rices out script status=0
+    local tmp
+    tmp="$(mktemp -d)"
+    for rice in $(all_rices); do
+        sed_script "$rice" > "$tmp/$rice.sed"
+    done
+    while read -r template pattern rices; do
+        [[ -n "$template" ]] || continue
+        [[ "$rices" == all ]] && rices="$(all_rices)"
+        for rice in $rices; do
+            out="$root/${pattern//\{rice\}/$rice}"
+            mkdir -p "$(dirname "$out")"
+            sed -f "$tmp/$rice.sed" "$TEMPLATE_DIR/$template" > "$out"
+            # A placeholder left over is a role the rice does not map, or a typo.
+            if grep -n '{{' "$out" > "$tmp/left"; then
+                printf 'rice-themes: %s for %s has unknown placeholders:\n' "$template" "$rice" >&2
+                cat "$tmp/left" >&2
+                status=1
+            fi
+        done
+    done < <(targets)
+    script="$tmp"
+    rm -rf "$script"
+    return "$status"
+}
+
+cmd_list() {
+    local template pattern rices rice
+    while read -r template pattern rices; do
+        [[ "$rices" == all ]] && rices="$(all_rices)"
+        for rice in $rices; do
+            printf '%s\t%s\t%s\n' "$template" "$rice" "${pattern//\{rice\}/$rice}"
+        done
+    done < <(targets)
+}
+
+cmd_check() {
+    local tmp out status=0
+    tmp="$(mktemp -d)"
+    render_into "$tmp" || status=1
+    while IFS=$'\t' read -r _ _ out; do
+        if ! diff -u "$DOTFILES_DIR/$out" "$tmp/$out" > "$tmp/diff" 2>&1; then
+            printf 'rice-themes: %s is out of date (run bin/rice-themes render):\n' "$out" >&2
+            head -n 20 "$tmp/diff" >&2
+            status=1
+        fi
+    done < <(cmd_list)
+    rm -rf "$tmp"
+    return "$status"
+}
+
+main() {
+    case "${1:-}" in
+        render) render_into "$DOTFILES_DIR" ;;
+        check) cmd_check ;;
+        list) cmd_list ;;
+        -h | --help)
+            sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//'
+            ;;
+        *)
+            sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//' >&2
+            return 2
+            ;;
+    esac
+}
+
+main "$@"

@@ -2,7 +2,9 @@
 # Location: ~/.config/bat/config
 # Syntax: bat --help
 
-# Use the danse theme (themes/danse.tmTheme, from .config/palette/)
+# The theme follows the Rice: themes/<rice>.tmTheme (rendered by
+# bin/rice-themes), picked by BAT_THEME in .config/zsh/rice.zsh, which bat
+# reads after this file. danse is the fallback outside such a shell.
 --theme="danse"
 
 # Show line numbers

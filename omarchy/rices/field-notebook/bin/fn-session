@@ -1,0 +1,86 @@
+#!/bin/bash
+# Field Notebook login session: opens the workspace-1 terminals in a fixed
+# order (master layout: Claude Code is the big left pane; the system plate,
+# now-playing + visualizer, and gh-dash stack on the right), then starts music.
+#
+#   fn-session          open whatever is missing (safe to re-run)
+#   fn-session --music  only (re)start Spotify and resume playback
+#
+# Panes are matched by class, so re-running never duplicates a window.
+set -u
+# Panes must start as fresh sessions, not children of whatever ran this script.
+for v in $(env | grep -o '^CLAUDE_CODE_[A-Z_]*\|^CLAUDECODE'); do unset "$v"; done
+CODE_DIR="${FN_CODE_DIR:-$HOME/code}"
+WS="${FN_WS:-1}"
+LOG="${XDG_STATE_HOME:-$HOME/.local/state}/field-notebook/session.log"
+mkdir -p "${LOG%/*}"
+exec >>"$LOG" 2>&1
+echo "== $(date -Is) fn-session $*"
+
+has_window() { hyprctl clients -j | jq -e --arg c "$1" 'any(.[]; .class == $c)' >/dev/null; }
+
+wait_window() {
+  for _ in $(seq 1 50); do has_window "$1" && return 0; sleep 0.2; done
+  echo "timed out waiting for $1"; return 1
+}
+
+# open <class> <title> <ghostty extra args...> -- <command...>
+open() {
+  local class=$1 title=$2; shift 2
+  local extra=()
+  while [[ $1 != -- ]]; do extra+=("$1"); shift; done; shift
+  if has_window "$class"; then echo "$class already open"; return 0; fi
+  setsid -f uwsm-app -- ghostty --gtk-single-instance=false --class="$class" --title="$title" \
+    "${extra[@]}" -e "$@" >/dev/null 2>&1
+  wait_window "$class" || return 1
+  # Pin it to the session workspace even if you switched away mid-launch.
+  local addr; addr=$(hyprctl clients -j | jq -r --arg c "$class" '.[] | select(.class == $c) | .address' | head -1)
+  hyprctl dispatch "hl.dsp.window.move({ workspace = \"$WS\", follow = false, window = \"address:$addr\" })" >/dev/null 2>&1
+}
+
+spotify_addr() {
+  hyprctl clients -j | jq -r '.[] | select(.class == "Spotify" or .initialClass == "Spotify" or (.title | test("^Spotify( Premium| Free)?$"))) | .address' | head -1
+}
+
+# The official Spotify app plays; it lives out of sight on special:music and
+# the now-playing pane shows and controls it. (spotify_player is broken upstream
+# as of Nov 2026: aome510/spotify-player#1107.)
+start_music() {
+  command -v spotify-launcher >/dev/null || { echo "spotify: spotify-launcher missing"; return 0; }
+  if ! playerctl -l 2>/dev/null | grep -qx spotify && [[ -z $(spotify_addr) ]]; then
+    setsid -f uwsm-app -- spotify-launcher >/dev/null 2>&1
+  fi
+  # Spotify names its window late, so watch for it and tuck it away.
+  local addr=""
+  for _ in $(seq 1 60); do addr=$(spotify_addr); [[ -n $addr ]] && break; sleep 0.5; done
+  [[ -n $addr ]] && hyprctl dispatch "hl.dsp.window.move({ workspace = \"special:music\", follow = false, window = \"address:$addr\" })" >/dev/null 2>&1
+  # Wait for the app to answer on MPRIS. It starts with nothing loaded, so
+  # resume the last played track through the Web API (fn-spotify-resume);
+  # plain MPRIS play is only the fallback.
+  for _ in $(seq 1 40); do playerctl -p spotify status >/dev/null 2>&1 && break; sleep 0.5; done
+  if [[ $(playerctl -p spotify status 2>/dev/null) == Playing ]]; then echo "spotify: already playing"; return 0; fi
+  if timeout 60 fn-spotify-resume; then echo "spotify: resumed via Web API"; return 0; fi
+  playerctl -p spotify play 2>/dev/null && { echo "spotify: resumed via MPRIS"; return 0; }
+  echo "spotify: could not start playback"
+}
+
+if [[ ${1:-} == --music ]]; then start_music; exit; fi
+
+# Land on the session workspace (default 1) so the layout builds where you are looking.
+hyprctl dispatch "hl.dsp.focus({ workspace = \"$WS\" })" >/dev/null 2>&1
+
+open org.fieldnotebook.claude "claude · field notebook" --working-directory="$CODE_DIR" \
+  -- bash -lc 'claude; exec "${SHELL:-bash}" -l'
+open org.fieldnotebook.dash "field log" --font-size=10 \
+  -- fn-dashboard
+open org.fieldnotebook.music "now playing" \
+  -- fn-nowplaying
+open org.fieldnotebook.gh "github" \
+  -- bash -lc 'if gh dash --help >/dev/null 2>&1; then gh dash; else
+       printf "\n  \e[90mG I T H U B\e[0m\n\n  gh-dash is not installed yet. Install it with:\n\n    \e[32momarchy pkg aur add gh-dash-bin\e[0m\n\n  then run \e[32mgh dash\e[0m here.\n\n"; fi; exec "${SHELL:-bash}" -l'
+
+# Hand focus back to Claude Code, the pane you will type in.
+addr=$(hyprctl clients -j | jq -r '.[] | select(.class == "org.fieldnotebook.claude") | .address' | head -1)
+[[ -n $addr ]] && hyprctl dispatch "hl.dsp.focus({ window = \"address:$addr\" })" >/dev/null 2>&1
+
+start_music

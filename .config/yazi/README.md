@@ -99,7 +99,12 @@ Key differences:
 
 ## Theme
 
-Using OneDark colors for consistency with Neovim, Ghostty, and other tools.
+The active Rice's (ADR 0003), like Neovim, Ghostty and the other tools.
+Each rice has a directory, `rices/<rice>/`, holding its `theme.toml`
+(rendered by `bin/rice-themes`) beside links to the shared `yazi.toml` and
+`keymap.toml`; the shell sets `YAZI_CONFIG_HOME` to it
+(`.config/zsh/rice.zsh`). `theme.toml` here links to danse's, the fallback
+outside such a shell.
 
 ## Shell Integration
 

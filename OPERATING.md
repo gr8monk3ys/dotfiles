@@ -162,8 +162,8 @@ Commands you re-run routinely.
 
 | Command | What it does |
 | --- | --- |
-| `make link` | Create/refresh all symlinks via Stow. Safe to re-run. |
-| `make link-dry-run` | Preview symlink changes without applying. |
+| `make link` | Create/refresh all symlinks via Stow, plus `~/.zshenv`, the `~/.ssh` Include and `~/.local/runtime` (`bin/dotfiles-link --apply`). Safe to re-run. |
+| `make link-dry-run` | Preview those changes without applying (`bin/dotfiles-link`). |
 | `make init` | Create the git-ignored identity files (git, jj). Safe to re-run; never overwrites. |
 | `make doctor` | Comprehensive health check (symlinks, package managers, shell config, local config, tool presence). |
 | `make update` | Update all packages (Homebrew, npm, Cargo, Zinit plugins). |
@@ -172,7 +172,7 @@ Commands you re-run routinely.
 | `make daily` | Fast pre-push check: shell syntax + doc links + tests. |
 | `make verify` | Full repo verification: shell syntax + stale-ref check + doc links + tests. |
 | `make clean` | Remove broken symlinks in `~/.config/`. |
-| `make omarchy [apply=1]` | Omarchy only: install the Monochrome 43 rice (`omarchy/setup.sh`). Dry run unless `apply=1`. |
+| `make omarchy [apply=1]` | Omarchy only: install the Omarchy rice (the Rice module picks it; Field Notebook by default) and the desktop settings (`omarchy/setup.sh`). Dry run unless `apply=1`. |
 | `make hermes-offline [apply=1]` | Point Hermes Agent at the local Ollama (`docs/hermes.md`). Dry run unless `apply=1`. |
 | `make claude-sync [apply=1]` | Add the tracked Claude Code marketplaces, plugins and user-scope MCP servers (`bin/claude-sync`). Dry run unless `apply=1`. |
 | `make restore [backup=/path]` | Restore the latest (or a named) `dotfiles-backup` snapshot. |
@@ -313,15 +313,15 @@ Set `~/.machine_type` to `personal`, `work`, or `server`. On shell startup, `.co
 Top-level directories, one sentence each.
 
 - **`.config/`** — XDG-compliant app configs (26 directories). Managed by Stow. Each has its own README.
-- **`bin/`** — Helper scripts: platform detection, `dotfiles-doctor/update/backup/restore/bench-shell/worktree/sync/why`, and the validators `validate-doc-links`, `validate-tool-docs`, `check-alias-references`. See `bin/README.md`.
+- **`bin/`** — Helper scripts: platform detection, `dotfiles-doctor/link/update/backup/restore/bench-shell/worktree/sync/why`, and the validators `validate-doc-links`, `validate-tool-docs`, `check-alias-references`. See `bin/README.md`.
 - **`install/`** — Package manifests: `Brewfile`, `Caskfile`, `npmfile`, `Rustfile`, `pacmanfile`, `Codefile` (VSCodium extensions), `duti` (macOS file associations).
 - **`test/`** — BATS test suite. Run with `make test`. Pattern: `test_*.bats`, helpers in `test_helper/`.
 - **`.github/`** — `workflows/ci.yml` (shellcheck, markdownlint, validators, BATS on macOS and Ubuntu, the curl installer on Ubuntu) and `dependabot.yml`. `make verify` before pushing is still the local gate. `.pre-commit-config.yaml` is available for local hooks (`pre-commit install`).
 - **`docs/`** — `TOOLS.md` (the tool catalog).
-- **`omarchy/`** — The Monochrome 43 rice for Omarchy 4.x: theme, Hyprland snippet, pinned shell plugins, bar layout, and `setup.sh` (`make omarchy`). Not stowed.
+- **`omarchy/`** — The Omarchy 4.x layer: the Field Notebook and Monochrome 43 rices (theme, Hyprland module, packages, session scripts), pinned shell plugins, bar layout, idle timeouts, theme hooks, and `setup.sh` (`make omarchy`). Not stowed.
 - **`spicetify/`** — Monochrome 43 Spotify theme, linked into Spicetify by hand (see its README). Not stowed.
 
-The Stow target is `~/.config/`. The only exception is `.zshenv`, which is manually symlinked from the repo root to `~/.zshenv` because Zsh must find it in `$HOME`.
+The Stow target is `~/.config/`. The only exception is `.zshenv`, which `bin/dotfiles-link` symlinks from the repo root to `~/.zshenv` (backing up a real file to `~/.zshenv.dotfiles-bak`) because Zsh must find it in `$HOME`.
 
 ---
 

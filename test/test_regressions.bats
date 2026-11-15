@@ -23,12 +23,17 @@ teardown() {
 	assert_success
 }
 
-@test "git delta and neovim are configured for the danse palette" {
+@test "git delta and neovim are configured for the rice palettes" {
 	# git's own parser, not a regex over git's syntax: this passes only if
-	# the setting is in a section git actually reads.
-	run git config --file .config/git/config --get delta.syntax-theme
-	assert_success
-	assert_output "danse"
+	# the setting is in a section git actually reads, through the include.
+	local rice
+	for rice in danse field-notebook monochrome-43; do
+		run git config --file .config/git/config --includes --get "delta.rice-$rice.syntax-theme"
+		assert_success
+		assert_output "$rice"
+	done
+	run git config --file .config/git/config --get delta.features
+	assert_output "rice-danse"
 
 	# nvim would need a headless boot to observe; a text check is the
 	# proportionate tool here.
@@ -273,7 +278,7 @@ EOS
 @test "make link has a rule for generic linux" {
 	run make -n OS=linux link
 	assert_success
-	[[ "$output" == *"stow -t"* ]]
+	[[ "$output" == *"bin/dotfiles-link\" --apply"* ]]
 }
 
 # Regression: Homebrew >= 5 refuses third-party taps until `brew trust`ed,
@@ -328,7 +333,7 @@ EOS
 	# Before linking, the dry run must say it would append.
 	run make -C "$DOTFILES_DIR" link-dry-run HOME="$TEST_HOME" XDG_CONFIG_HOME="$TEST_HOME/.config"
 	assert_success
-	[[ "$output" == *"Would append"* ]]
+	[[ "$output" == *"would   append Include"* ]]
 
 	run make -C "$DOTFILES_DIR" link HOME="$TEST_HOME" XDG_CONFIG_HOME="$TEST_HOME/.config"
 	assert_success

@@ -228,3 +228,6 @@ credentials.json
 # the remap rules are ours, but its churn is expected.
 .config/karabiner/automatic_backups/
 .config/karabiner/assets/
+
+# SSH signing keys carry an email address (identity stays out of tracked config)
+.config/git/allowed_signers

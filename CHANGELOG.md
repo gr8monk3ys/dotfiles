@@ -11,6 +11,8 @@ Everything since 1.0.0 (2025-10-24), by theme.
 
 ### Added
 
+- `bin/dotfiles-link`: the steps behind `make link` — `~/.zshenv`, `stow` of `.config/`, `~/.ssh` and its Include, `~/.local/runtime` — as one dry-run-by-default script on `bin/lib/plan.sh`, so the dry run and the real run can no longer disagree. `test/test_dotfiles_link.bats` covers it against a fixture HOME
+
 - `.config/claude/themes/` with `lscaturchio.json` and `lscaturchio-light.json`: Claude Code themes in the colours of lscaturchio.xyz (dark and light), and `bin/claude-themes` (and `make claude-themes`) to place them in `~/.claude/themes`, which is where Claude Code reads custom themes — the stow target `~/.config/claude/themes` is never opened. Per-file symlinks by default so a theme made with `/theme` stays local, `--copy` where symlinks are not available, and a same-named file it did not write is backed up first. `windows/setup.ps1` copies them on Windows. These two files are deliberately not drawn from `danse.conf`: they match the website, not the desktop. `test/test_claude_themes.bats` covers it against a fixture directory
 
 - `bin/validate-config-live` (and `make verify-config-live`): asserts that tools actually honour the configs this repo tracks. `make link` proves a file is in place and `bin/link-state` proves it resolves into the checkout; neither proves the tool reads it, and twelve configs here were tracked, linked, documented and applying to nothing. Each probe must be offline, fast, and fail when the config is _not_ honoured — asserting a file exists is not a probe, which is the mistake it exists to catch. Tools with no probe meeting that bar are deliberately absent rather than probed badly
@@ -52,6 +54,8 @@ Everything since 1.0.0 (2025-10-24), by theme.
 
 ### Changed
 
+- `make link` and `make link-dry-run` run `bin/dotfiles-link` (`--apply` and dry run) instead of their own recipes. A real `~/.zshenv` is now backed up to `~/.zshenv.dotfiles-bak` (`make unlink` and `make restore-zshenv` still restore a legacy `~/.zshenv.bak`), and the SSH Include line and pattern live once in `bin/lib/ssh-include.sh`, shared with `dotfiles-init`. `bin/claude-sync` and `bin/hermes-offline` source `bin/lib/plan.sh` instead of each carrying a copy of its helpers
+
 - `dotfiles-doctor` now has a Local Configuration section and is a reporter over `bin/dotfiles-init --status`, carrying no detection of its own. It used to name the problem ("git identity not set") without being able to point at a fix, and asked `git config --global user.email` to find out — which, because `--global` defaults to `--no-includes`, could not see an identity that arrived through `config.local`'s `[include]`, the only place this repo puts one
 - `make help` documents `GIT_USER_NAME`, `GIT_USER_EMAIL`, `GIT_SIGNING_KEY`, `JJ_USER_NAME` and `JJ_USER_EMAIL`, with a test that fails if an identity variable the Makefile reads is missing from it
 - The fresh-laptop checklist in `OPERATING.md` is now `make init` rather than two `cp` commands and a note about jj that had no template behind it
@@ -91,6 +95,8 @@ Everything since 1.0.0 (2025-10-24), by theme.
 - `SETUP.md`, `CONTRIBUTING.md`, `MAKEFILE.md`, `TODO.md` (folded into the three top-level docs)
 
 ### Fixed
+
+- `make verify-shell` syntax-checked only `.zshenv`: it passed every zsh file to one `zsh -n`, which reads the first as the script and the rest as its arguments. It now checks each file, and globs `.config/zsh/*.zsh` instead of a hand-kept list that had already left out `lib.zsh`
 
 - A broken third-party tap could fail the whole core macOS install. `tap "psharma04/dorion"` sat in `install/Brewfile` although its only cask, `dorion`, is in the optional `Caskfile.extra`; when that tap shipped a cask with a syntax error, `brew bundle` on the Brewfile failed and so did the fresh-install CI job, on every branch. The tap line is gone and the cask is tap-qualified (`psharma04/dorion/dorion`) where it is installed, so the tap is only fetched by `make cask-apps-extra`. `bin/manifest` already strips the tap prefix, so the catalog entry is unchanged
 - eza was unthemed. `.config/eza/theme.yml` needs a build feature Homebrew's bottle does not enable — this eza reports `v0.23.5 [+git]` and nothing else — so it ignores the file silently, malformed YAML included. No schema fix would have helped; the earlier theory that the keys were wrong (`filekinds` vs `filetype`) was chasing the wrong problem. The OneDark palette is now expressed through `EZA_COLORS`, which this build honours, and a booted-shell test asserts eza emits `#61afef` for directories

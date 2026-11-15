@@ -25,10 +25,11 @@ options=(
 # The older danse look, with `danse` in palette/rice.local (same switch as
 # sketchybar/colors.sh): a 5px blue border, from .config/palette/danse.conf
 # (blue, surface).
-rice=""
-rice_file="${XDG_CONFIG_HOME:-$HOME/.config}/palette/rice.local"
-[ -r "$rice_file" ] && read -r rice < "$rice_file"
-if [ "$rice" = danse ]; then
+RICE=monochrome-43
+rice_lib="${XDG_CONFIG_HOME:-$HOME/.config}/palette/rice.sh"
+# shellcheck source=../palette/rice.sh
+[ -r "$rice_lib" ] && . "$rice_lib" && rice_select macos
+if [ "$RICE" = danse ]; then
     options=(
         style=round
         width=5.0

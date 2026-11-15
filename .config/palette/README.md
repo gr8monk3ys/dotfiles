@@ -18,29 +18,60 @@ the Makefile's `verify-stale-refs` pattern, which fails the build on any copy
 left anywhere under `.config`, `bin` or `.zshenv` — including in prose.)
 
 Each `<name>.conf` here is one palette, and the one place its colours are
-defined. `bin/palette` reads `danse.conf` by default (it is the palette most
-tracked files are checked against); `PALETTE=<name>` picks another
+defined. Each palette is one **Rice**'s (`rice.sh` is the Rice module), and
+every themed tool follows the active rice (ADR 0003). `bin/palette` reads
+the active rice's palette by default; `PALETTE=<name>` picks another
 (`palette palettes` lists them).
 
-| Palette | Used by |
-| --- | --- |
-| `monochrome-43` | the default rice: Ghostty (`themes/monochrome-43`), btop, fastfetch, cava, SketchyBar, borders, the starship prompt, spicetify and the Omarchy theme |
-| `danse` | zsh highlighting, zellij, yazi, eza, atuin, bat, delta, nvim, `windows/`, and the rice when `rice.local` says `danse` |
+| Palette | Rice | Where |
+| --- | --- | --- |
+| `monochrome-43` | the default on macOS | macOS and Omarchy |
+| `field-notebook` | the default on Omarchy | Omarchy |
+| `danse` | opt-in | macOS; also `windows/` |
 
 ## Choosing the rice
 
-The rice is Monochrome 43 unless `~/.config/palette/rice.local` (one word,
-gitignored, per machine) says `danse`:
+One word in `~/.config/palette/rice.local` (gitignored, per machine), else
+the platform default:
 
 ```bash
-echo danse > ~/.config/palette/rice.local   # opt back in to danse
-rm ~/.config/palette/rice.local             # back to Monochrome 43
+echo danse > ~/.config/palette/rice.local   # macOS: opt in to danse
+rm ~/.config/palette/rice.local             # back to the platform default
 ```
 
-Read at start-up by SketchyBar (`colors.sh`), borders (`bordersrc`) and
-`.zshrc`, which picks `starship/danse.toml` and aliases `fastfetch`/`cava` to
-their danse files. Ghostty, btop and AeroSpace cannot read it; their READMEs
-say what to change by hand. `test/test_rice.bats` boots each reader both ways.
+Then open a new shell (and restart Neovim). Read at start-up by SketchyBar
+(`colors.sh`), borders (`bordersrc`), Neovim (`nvim/lua/palette.lua`) and the
+shell (`zsh/rice.zsh`), which points every CLI tool at its rice's file. On
+Omarchy the desktop, Ghostty and btop follow the Omarchy theme instead
+(`make omarchy`). `test/test_rice.bats` boots each reader.
+
+## Roles and the rendered themes
+
+The CLI tools' themes are written once, in `templates/`, in **roles**
+instead of colours: `{{blue}}`, `{{comment:rgb}}`. The roles are danse's
+colour names (every template began as a danse theme). `<rice>.roles` says
+which of that rice's colours fills each role; danse's map is the identity,
+so danse renders exactly as before.
+
+`bin/rice-themes render` writes one file per tool per rice
+(`bin/rice-themes list` shows them); the output is committed, and
+`test_palette.bats` runs `bin/rice-themes check`, which fails on a stale or
+hand-edited output. To change a tool's look, edit its template and render.
+
+| Template | Rendered to | Picked by |
+| --- | --- | --- |
+| `bat.tmTheme` | `bat/themes/<rice>.tmTheme` | `BAT_THEME` |
+| `delta.gitconfig` | `git/delta/<rice>.gitconfig` | `DELTA_FEATURES=rice-<rice>` |
+| `eza-theme.yml` | `eza/rices/<rice>/theme.yml` | `EZA_CONFIG_DIR` |
+| `zsh.zsh` | `zsh/rices/<rice>.zsh` (highlight, autosuggest, fzf, `EZA_COLORS`) | sourced by `rice.zsh` |
+| `yazi-theme.toml` | `yazi/rices/<rice>/theme.toml` | `YAZI_CONFIG_HOME` |
+| `atuin.toml` | `atuin/themes/<rice>.toml` | `ATUIN_THEME__NAME` |
+| `zellij.kdl` | `zellij/themes/<rice>.kdl` | the `zellij` shell function |
+| `zathurarc` | `zathura/rices/<rice>/zathurarc` | the `zathura` shell function |
+| `starship.toml` | `starship/<rice>.toml` (not Monochrome 43, which has its own) | `STARSHIP_CONFIG` |
+
+The environment variables and functions are set in `zsh/rice.zsh`, so an
+app started outside a shell gets its file default.
 
 ## The palette
 
@@ -80,8 +111,12 @@ palette get blue --format rgb     # 97;175;239   (EZA_COLORS and other SGR)
 palette get blue --format raw     # 61afef
 palette export SB                 # SB_BLUE='#61afef' ...
 PALETTE=monochrome-43 palette get fg   # #ffffff
-palette palettes                  # danse, monochrome-43
+palette palettes                  # danse, field-notebook, monochrome-43
+PALETTE=field-notebook palette role green   # #42a979 (the pen)
+palette roles                     # role<TAB>colour<TAB>hex for the rice
 ```
+
+The examples without `PALETTE=` assume the active rice is danse.
 
 An unknown colour name is an error, not an empty string: a typo in a theme
 should fail loudly rather than silently paint something black.
@@ -106,5 +141,5 @@ so a copy left behind anywhere fails the build.
 - Changing a hex here changes nothing on its own. Propagate it, then run
   `make verify` — the drift tests and the stale-ref grep are what catch a
   half-finished retune.
-- bat caches compiled themes. After editing `bat/themes/danse.tmTheme`, run
-  `bat cache --build` or bat keeps painting the old one.
+- bat caches compiled themes. After rendering, run `bat cache --build` or
+  bat keeps painting the old ones (and does not know a new rice's name).

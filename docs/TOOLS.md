@@ -1274,6 +1274,52 @@ package name.
 - **Alternatives:** xsel, wl-clipboard (Wayland, also installed)
 - **Installed via:** pacmanfile
 
+## Omarchy rice packages
+
+Packages a Rice ships for itself, read by `bin/manifest list rice-pacman|rice-aur`
+from `omarchy/rices/<rice>/packages.pacman|.aur` and installed by
+`make omarchy apply=1` (the `packages` step). AUR ones cannot go in `pacmanfile`.
+
+### spotify-launcher
+
+- **Why:** The Spotify client the Field Notebook session starts (`fn-session`); spotify-player in pacmanfile is its now-playing pane.
+- **Installed via:** omarchy/rices/field-notebook/packages.pacman
+
+### onefetch
+
+- **Why:** Repository summary in the terminal, installed with the Field Notebook rice.
+- **Installed via:** omarchy/rices/field-notebook/packages.pacman
+
+### ttf-ibmplex-mono-nerd
+
+- **Why:** BlexMono Nerd Font: Field Notebook's terminal font and the wallpaper label face.
+- **Installed via:** omarchy/rices/field-notebook/packages.pacman
+
+### vesktop-bin
+
+- **Why:** Discord client whose settings carry the Field Notebook look.
+- **Installed via:** omarchy/rices/field-notebook/packages.aur
+
+### ttf-fraunces
+
+- **Why:** Display serif from lscaturchio.xyz, used by the Field Notebook rice.
+- **Installed via:** omarchy/rices/field-notebook/packages.aur
+
+### ttf-instrument-sans
+
+- **Why:** Text sans from lscaturchio.xyz, used by the Field Notebook rice.
+- **Installed via:** omarchy/rices/field-notebook/packages.aur
+
+### cbonsai
+
+- **Why:** Terminal bonsai, a Field Notebook terminal extra.
+- **Installed via:** omarchy/rices/field-notebook/packages.aur
+
+### gh-dash-bin
+
+- **Why:** GitHub dashboard TUI: the GitHub pane of the Field Notebook session.
+- **Installed via:** omarchy/rices/field-notebook/packages.aur
+
 ## Windows (winget)
 
 `install/wingetfile`, installed by `windows/setup.ps1` (Windows has no `make`).
