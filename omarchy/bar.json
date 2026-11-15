@@ -11,6 +11,9 @@
     "centerBegin": [
       {
         "id": "omarchy.indicators"
+      },
+      {
+        "id": "omarchy.media"
       }
     ],
     "centerEnd": [
@@ -65,6 +68,9 @@
     "right": [
       {
         "id": "omarchy.tray"
+      },
+      {
+        "id": "omarchy.microphone"
       },
       {
         "id": "io.github.steveb98.segue"
