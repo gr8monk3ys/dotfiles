@@ -57,5 +57,12 @@ make claude-sync               # what would be added
 make claude-sync apply=1       # add it
 ```
 
+Hooks get the same treatment. `~/.claude/settings.json` is not tracked, so
+[hooks.json](hooks.json) holds the value of its `hooks` key and `claude-sync`
+merges in any command missing under its event and matcher, leaving every
+other hook and setting alone. The one hook there denies a raw `gh pr merge`
+in an agent's Bash tool and names
+[bin/gh-merge-green](../../bin/gh-merge-green) instead.
+
 The github plugin authenticates with `$GITHUB_PERSONAL_ACCESS_TOKEN`, exported
 by `.zshrc` from `gh auth token`; run `gh auth login` once per machine.

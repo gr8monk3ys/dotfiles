@@ -1,0 +1,13 @@
+{
+  "PreToolUse": [
+    {
+      "matcher": "Bash",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "jq -c 'select(.tool_input.command | test(\"(^|[;&|(\\\\n]\\\\s*)gh\\\\s+pr\\\\s+merge(\\\\s|$)\")) | {hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"Raw gh pr merge can merge before CI finishes. Use ~/.dotfiles/bin/gh-merge-green <pr> [-R owner/repo]: it waits for every check on the head commit and merges only that commit.\"}}'"
+        }
+      ]
+    }
+  ]
+}

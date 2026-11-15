@@ -1,11 +1,13 @@
 #!/usr/bin/env bats
 # bin/claude-sync - adds the tracked Claude Code marketplaces, plugins and
-# user-scope MCP servers through the `claude` CLI. A logging stub stands in
-# for `claude`, so nothing here touches the real ~/.claude or ~/.claude.json.
+# user-scope MCP servers through the `claude` CLI, and merges the tracked
+# hooks into settings.json. A logging stub stands in for `claude` and HOME is
+# a temp dir, so nothing here touches the real ~/.claude or ~/.claude.json.
 
 load test_helper/common
 
 SYNC="$DOTFILES_DIR/bin/claude-sync"
+HOOKS="$DOTFILES_DIR/.config/claude/hooks.json"
 
 setup() {
     setup_test_env
@@ -53,6 +55,14 @@ everything_present() {
     sed -n '/^readonly PLUGINS=/,/'"'"'$/p' "$SYNC" | sed "s/^readonly PLUGINS='//; s/'\$//" |
         jq -R '{id: .}' | jq -s . > "$STUB_STATE/plugins.json"
     jq -n '{mcpServers: {gimp:{}, blender:{}, godot:{}, discord:{}}}' > "$HOME/.claude.json"
+    mkdir -p "$HOME/.claude"
+    jq '{hooks: .}' "$HOOKS" > "$HOME/.claude/settings.json"
+}
+
+# Run the tracked PreToolUse hook on a Bash tool call for <command>.
+hook_says() {
+    jq -n --arg c "$1" '{tool_name: "Bash", tool_input: {command: $c}}' |
+        bash -c "$(jq -r '.PreToolUse[0].hooks[0].command' "$HOOKS")"
 }
 
 @test "claude-sync --help prints usage" {
@@ -72,6 +82,7 @@ everything_present() {
     assert_output --partial "Dry run"
     assert_output --partial "would   claude plugin install github@claude-plugins-official --scope user"
     [[ ! -e "$CLAUDE_LOG" ]]
+    [[ ! -e "$HOME/.claude/settings.json" ]]
 }
 
 @test "claude-sync --apply adds marketplaces, plugins and MCP servers" {
@@ -112,6 +123,81 @@ everything_present() {
     assert_success
     assert_output --partial "Everything already in place."
     [[ ! -e "$CLAUDE_LOG" ]]
+}
+
+@test "claude-sync hooks dry run writes nothing" {
+    mkdir -p "$HOME/.claude"
+    echo '{"theme":"dark"}' > "$HOME/.claude/settings.json"
+    run "$SYNC" --only hooks
+    assert_success
+    assert_output --partial "would   add PreToolUse Bash"
+    [[ "$(< "$HOME/.claude/settings.json")" == '{"theme":"dark"}' ]]
+}
+
+@test "claude-sync --apply merges the hook and keeps other settings and hooks" {
+    local settings="$HOME/.claude/settings.json"
+    mkdir -p "$HOME/.claude"
+    jq -n '{theme: "dark", hooks: {
+        PreToolUse: [
+            {matcher: "Bash", hooks: [{type: "command", command: "true"}]},
+            {matcher: "Edit", hooks: [{type: "command", command: "echo edit"}]}],
+        Stop: [{hooks: [{type: "command", command: "echo stop"}]}]}}' > "$settings"
+    chmod 600 "$settings"
+    run "$SYNC" --apply --only hooks
+    assert_success
+    run jq -e --slurpfile want "$HOOKS" '
+        .theme == "dark"
+        and .hooks.Stop == [{hooks: [{type: "command", command: "echo stop"}]}]
+        and (.hooks.PreToolUse | length) == 2
+        and .hooks.PreToolUse[1] == {matcher: "Edit", hooks: [{type: "command", command: "echo edit"}]}
+        and .hooks.PreToolUse[0] == {matcher: "Bash", hooks:
+            ([{type: "command", command: "true"}] + $want[0].PreToolUse[0].hooks)}' "$settings"
+    assert_success
+    # settings.json can hold env secrets; the rewrite must not widen its mode.
+    [[ "$(ls -l "$settings" | cut -c1-10)" == "-rw-------" ]]
+    [[ -z "$(find "$HOME/.claude" -name 'settings.json.*')" ]]
+}
+
+@test "claude-sync --apply creates settings.json when it is missing" {
+    run "$SYNC" --apply --only hooks
+    assert_success
+    run jq -e --slurpfile want "$HOOKS" '. == {hooks: $want[0]}' "$HOME/.claude/settings.json"
+    assert_success
+}
+
+@test "claude-sync hooks: a second --apply is a no-op" {
+    "$SYNC" --apply --only hooks
+    cp "$HOME/.claude/settings.json" "$TEST_TEMP_DIR/first.json"
+    run "$SYNC" --apply --only hooks
+    assert_success
+    assert_output --partial "ok      PreToolUse Bash"
+    assert_output --partial "Everything already in place."
+    cmp -s "$TEST_TEMP_DIR/first.json" "$HOME/.claude/settings.json"
+}
+
+@test "claude-sync refuses a settings.json that is not a JSON object" {
+    mkdir -p "$HOME/.claude"
+    echo 'not json' > "$HOME/.claude/settings.json"
+    run "$SYNC" --apply --only hooks
+    assert_failure
+    [[ "$(< "$HOME/.claude/settings.json")" == 'not json' ]]
+}
+
+@test "the tracked hook denies a raw gh pr merge and nothing else" {
+    local cmd
+    for cmd in 'gh pr merge 12 --squash' 'cd x && gh pr merge 12' '$(gh pr merge 3)'; do
+        echo "command: $cmd"
+        run hook_says "$cmd"
+        assert_success
+        assert_output --partial '"permissionDecision":"deny"'
+    done
+    for cmd in '~/.dotfiles/bin/gh-merge-green 12' 'gh pr view 12' 'gh pr merged-list' \
+        'git commit -m "docs: mention gh pr merge"'; do
+        echo "command: $cmd"
+        run hook_says "$cmd"
+        assert_success
+        assert_output ""
+    done
 }
 
 @test "claude-sync carries no secrets" {

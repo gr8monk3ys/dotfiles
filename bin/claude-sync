@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# claude-sync - Give any machine this user's Claude Code plugins and MCP servers.
+# claude-sync - Give any machine this user's Claude Code plugins, MCP servers
+# and hooks.
 #
 # Claude Code keeps its marketplaces and plugins in ~/.claude and its
 # user-scope MCP servers in ~/.claude.json, alongside session state, OAuth
@@ -8,12 +9,17 @@
 # whatever is missing. Idempotent - anything already present is reported as
 # ok and left alone (an existing MCP server is not compared or rewritten).
 #
+# Hooks live in ~/.claude/settings.json, which is not vendored either. The
+# tracked ones are in .config/claude/hooks.json (the value of its "hooks"
+# key); a command missing under its event and matcher is merged in with jq,
+# and every other hook and setting is left as it is.
+#
 # Dry run by default: prints what it would do and changes nothing.
 #
 # Usage:
 #   claude-sync                  # dry run
 #   claude-sync --apply          # do it
-#   claude-sync --only mcp       # one part: marketplaces|plugins|mcp
+#   claude-sync --only mcp       # one part: marketplaces|plugins|mcp|hooks
 #   make claude-sync [apply=1]
 #
 # No secrets live here. The github plugin authenticates with
@@ -67,11 +73,13 @@ readonly GODOT_MCP_PACKAGE="@coding-solo/godot-mcp@0.1.1"
 readonly OMCP_BIN="${XDG_CONFIG_HOME:-$HOME/.config}/omarchy/plugins/tsouth89.omcp/bin/omcp"
 GIMP_MCP_DIR="${GIMP_MCP_DIR:-$HOME/code/gimp-mcp}"
 CLAUDE_JSON="${CLAUDE_CONFIG_DIR:-$HOME}/.claude.json"
+SETTINGS_JSON="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"
+readonly HOOKS_JSON="$DOTFILES_DIR/.config/claude/hooks.json"
 
 APPLY=0
 ONLY=""
 
-usage() { sed -n '2,33p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,39p' "$0" | sed 's/^# \{0,1\}//'; }
 
 wants() { [[ -z "$ONLY" || "$ONLY" == "$1" ]]; }
 
@@ -174,14 +182,50 @@ sync_mcp() {
     add_mcp discord --transport http http://127.0.0.1:8085/mcp
 }
 
+# Merge each tracked hook into settings.json unless that exact command is
+# already under the same event and matcher.
+sync_hooks() {
+    echo "hooks:"
+    local entries entry label tmp="$SETTINGS_JSON.claude-sync.$$"
+    if [[ -f "$SETTINGS_JSON" ]]; then
+        jq -e 'type == "object"' "$SETTINGS_JSON" > /dev/null ||
+            die "$SETTINGS_JSON is not a JSON object"
+    fi
+    entries="$(jq -c 'to_entries[] | .key as $event | .value[] | .matcher as $matcher
+        | .hooks[] | {event: $event, matcher: $matcher, hook: .}' "$HOOKS_JSON")"
+    while read -r entry; do
+        label="$(jq -r '"\(.event) \(.matcher): \(.hook.command[0:60])..."' <<< "$entry")"
+        if [[ -f "$SETTINGS_JSON" ]] && jq -e --argjson e "$entry" '
+            any(.hooks[$e.event][]?; .matcher == $e.matcher
+                and any(.hooks[]?; .command == $e.hook.command))' "$SETTINGS_JSON" > /dev/null; then
+            ok "$label"
+        elif change "add $label to $SETTINGS_JSON"; then
+            mkdir -p "$(dirname "$SETTINGS_JSON")"
+            [[ -f "$SETTINGS_JSON" ]] || echo '{}' > "$SETTINGS_JSON"
+            # cp -p first: the temp file takes settings.json's mode (0600).
+            if ! { cp -p "$SETTINGS_JSON" "$tmp" &&
+                jq --argjson e "$entry" '
+                    .hooks[$e.event] |= ((. // [])
+                        | (map(.matcher == $e.matcher) | index(true)) as $i
+                        | if $i then .[$i].hooks += [$e.hook]
+                          else . + [{matcher: $e.matcher, hooks: [$e.hook]} | del(.matcher | nulls)]
+                          end)' "$SETTINGS_JSON" > "$tmp" &&
+                mv "$tmp" "$SETTINGS_JSON"; }; then
+                rm -f "$tmp"
+                die "could not update $SETTINGS_JSON"
+            fi
+        fi
+    done <<< "$entries"
+}
+
 main() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --apply) APPLY=1 ;;
             --only)
                 ONLY="${2:-}"
-                [[ "$ONLY" =~ ^(marketplaces|plugins|mcp)$ ]] ||
-                    die "--only takes marketplaces|plugins|mcp"
+                [[ "$ONLY" =~ ^(marketplaces|plugins|mcp|hooks)$ ]] ||
+                    die "--only takes marketplaces|plugins|mcp|hooks"
                 shift
                 ;;
             -h | --help)
@@ -202,6 +246,7 @@ main() {
     wants marketplaces && sync_marketplaces
     wants plugins && sync_plugins
     wants mcp && sync_mcp
+    wants hooks && sync_hooks
 
     plan_summary
 }
