@@ -42,8 +42,22 @@ def mix(a, b, t):
     return "#" + "".join(f"{round(x + (y - x) * t):02x}" for x, y in zip(pa, pb))
 
 
+MARK = "themed.py"   # every generated file names its generator in its header
+
+
 def write(path, text):
     path = pathlib.Path(path)
+    # A symlink is someone else's managed file (the dotfiles stow cava's
+    # config): leave it alone rather than replace the link with a copy.
+    if path.is_symlink():
+        print(f"themed.py: {path} is a symlink; not overwriting it", file=sys.stderr)
+        return
+    # A hand-written file is kept once, as <file>.dotfiles-bak, before the
+    # first overwrite; later runs only replace what this script generated.
+    if path.exists() and MARK not in path.read_text(errors="ignore")[:400]:
+        backup = path.with_name(path.name + ".dotfiles-bak")
+        if not backup.exists():
+            path.replace(backup)
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(text)

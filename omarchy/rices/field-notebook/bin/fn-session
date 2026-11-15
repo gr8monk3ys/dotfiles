@@ -70,7 +70,7 @@ if [[ ${1:-} == --music ]]; then start_music; exit; fi
 hyprctl dispatch "hl.dsp.focus({ workspace = \"$WS\" })" >/dev/null 2>&1
 
 open org.fieldnotebook.claude "claude · field notebook" --working-directory="$CODE_DIR" \
-  -- bash -lc 'claude --allow-dangerously-skip-permissions; exec "${SHELL:-bash}" -l'
+  -- bash -lc 'claude; exec "${SHELL:-bash}" -l'
 open org.fieldnotebook.dash "field log" --font-size=10 \
   -- fn-dashboard
 open org.fieldnotebook.music "now playing" \

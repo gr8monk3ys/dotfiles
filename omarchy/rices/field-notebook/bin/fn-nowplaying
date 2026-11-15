@@ -175,9 +175,16 @@ noise_reduction = 77
 
     def read(self):
         try:
-            chunk = self.proc.stdout.read(65536) or b""
+            chunk = self.proc.stdout.read(65536)
         except Exception:
+            chunk = None
+        if chunk == b"":
+            # EOF: cava exited (no PipeWire, a crash). Drop it, or select()
+            # would report the dead pipe ready forever and spin a core.
+            self.stop()
+            self.proc = None
             chunk = b""
+        chunk = chunk or b""
         self.buf += chunk
         if b"\n" in self.buf:
             *lines, self.buf = self.buf.split(b"\n")
@@ -191,6 +198,10 @@ noise_reduction = 77
     def stop(self):
         if self.proc:
             self.proc.terminate()
+            try:
+                self.proc.wait(timeout=1)     # reap it: no zombie per resize
+            except subprocess.TimeoutExpired:
+                self.proc.kill()
 
 
 class Pane:
