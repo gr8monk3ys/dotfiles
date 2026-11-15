@@ -559,6 +559,18 @@ package (directly, via the mapping, or as an explicit `-` exemption), and
 every mapping entry must still name a package that exists and a command
 doctor still probes. Run by `make verify-doctor-tools`.
 
+### [ci-summary](ci-summary)
+
+Turns one `make verify` run into a Markdown report, which CI appends to the
+job's step summary: each prerequisite of `verify:` with its result (passed,
+skipped and why, failed, not run), BATS counts per test file from the junit
+report, and the seed every property test drew.
+
+```bash
+BATS_REPORT_DIR=/tmp/r SKIP_DOCKER=1 make verify 2>&1 | tee /tmp/verify.log
+bin/ci-summary --log /tmp/verify.log --report /tmp/r
+```
+
 ## Compatibility Helpers
 
 ### [pacman](pacman)
