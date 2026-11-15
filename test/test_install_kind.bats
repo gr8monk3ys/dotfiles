@@ -16,6 +16,21 @@ setup() {
     : > "$CALL_LOG"
 }
 
+# The system's tools minus the ones install-kind installs with, so a real
+# brew/npm/cargo/pacman/codium on this machine can never be reached.
+setup_file() {
+    export SYS_BIN="$BATS_FILE_TMPDIR/sysbin"
+    mkdir -p "$SYS_BIN"
+    local f
+    for f in /usr/bin/* /bin/*; do
+        case "${f##*/}" in
+            brew | npm | cargo | rustup | pacman | codium | code) continue ;;
+        esac
+        [[ -x "$f" && ! -e "$SYS_BIN/${f##*/}" ]] && ln -s "$f" "$SYS_BIN/${f##*/}"
+    done
+    return 0
+}
+
 teardown() {
     cleanup_test_env
 }
@@ -31,10 +46,9 @@ STUB
     chmod +x "$STUB_BIN/$name"
 }
 
-# Run install-kind with ONLY the stubs plus the repo's bin on PATH, so a real
-# brew/npm/cargo on this machine can never be reached.
+# Run install-kind with ONLY the stubs, the repo's bin and SYS_BIN on PATH.
 run_kind() {
-    run env PATH="$STUB_BIN:$DOTFILES_DIR/bin:/usr/bin:/bin" \
+    run env PATH="$STUB_BIN:$DOTFILES_DIR/bin:$SYS_BIN" \
         CALL_LOG="$CALL_LOG" HOME="$TEST_HOME" \
         SKIP_KINDS="${SKIP_KINDS:-}" STRICT_PACKAGES="${STRICT_PACKAGES:-}" \
         bash "$DOTFILES_DIR/bin/install-kind" "$@"
