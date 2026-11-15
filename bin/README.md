@@ -279,6 +279,21 @@ dotfiles-why ripgrep        # print one tool's entry
 dotfiles-why --list         # list all documented tools
 ```
 
+### [gh-merge-green](gh-merge-green)
+
+Merges a PR only after every check on its head has passed, and only that
+head commit (`--match-head-commit`). Refuses a head with no checks, which
+`gh pr checks --watch --required` treats as green on a repo with no required
+checks.
+
+**Usage:**
+
+```bash
+gh-merge-green 42                   # squash-merge #42 here, delete the branch
+gh-merge-green 42 -R owner/repo     # another repo
+gh-merge-green 42 --rebase          # your own merge flags instead
+```
+
 ### [lib/ui.sh](lib/ui.sh)
 
 Shared terminal UI helpers (`print_header`, `print_success`, `print_info`,
