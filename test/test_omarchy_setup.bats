@@ -355,7 +355,8 @@ be_omarchy() { mkdir -p "$PLATFORM_OMARCHY_SYSTEM_DIR"; }
     assert_success
     run "$SETUP" --apply --only idle
     assert_success
-    run bash -c 'ls "$1"/shell.json.dotfiles-bak* | wc -l' _ "$cfg"
+    # BSD wc pads its count with spaces; strip them.
+    run bash -c 'ls "$1"/shell.json.dotfiles-bak* | wc -l | tr -d " "' _ "$cfg"
     assert_output "2"
 }
 
