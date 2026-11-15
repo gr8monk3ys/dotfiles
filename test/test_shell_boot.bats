@@ -61,10 +61,12 @@ teardown() {
     local dump="$FAKE_HOME/.config/zsh/.zcompdump"
     [[ -f "$dump" ]]
     local m1 m2 ms
-    m1=$(stat -f %m "$dump" 2>/dev/null || stat -c %Y "$dump")
+    # GNU stat first: on Linux `stat -f` succeeds too, but reports the
+    # filesystem (free blocks, inodes), so the BSD form must be the fallback.
+    m1=$(stat -c %Y "$dump" 2>/dev/null || stat -f %m "$dump")
     ms=$(env -u ZDOTDIR -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_CACHE_HOME HOME="$FAKE_HOME" TERM=xterm \
         zsh -c 'zmodload zsh/datetime; s=$EPOCHREALTIME; zsh -ic exit; e=$EPOCHREALTIME; printf "%.0f" $(( (e-s)*1000 ))')
-    m2=$(stat -f %m "$dump" 2>/dev/null || stat -c %Y "$dump")
+    m2=$(stat -c %Y "$dump" 2>/dev/null || stat -f %m "$dump")
     echo "startup: ${ms}ms"
     [[ "$ms" -lt 900 ]]
     [[ "$m1" == "$m2" ]]
