@@ -23,6 +23,13 @@
 #   packages (field-notebook) each package in field-notebook/packages.tsv
 #            that pacman does not have: `omarchy pkg add` for repo ones,
 #            `omarchy pkg aur add` for AUR ones.
+#   hooks    each file under hooks/<event>.d/ here (and, for field-notebook,
+#            field-notebook/hooks/<event>.d/) linked into
+#            ~/.config/omarchy/hooks/<event>.d/.
+#   extras   (field-notebook) the session scripts in field-notebook/bin
+#            linked into ~/.local/bin, field-notebook/share into
+#            ~/.local/share/field-notebook, and the screensaver art into
+#            ~/.config/omarchy/branding/screensaver.txt.
 #   theme    ~/.config/omarchy/themes/<rice>: colors.toml and icons.theme
 #            linked from themes/<rice>/ here. Backgrounds are not tracked:
 #            monochrome-43 copies Omarchy's Vantablack ones plus 43PR's
@@ -32,7 +39,7 @@
 #            Then `omarchy theme set <rice>` if it is not already current.
 #   plugins  each plugin in plugins.tsv: `omarchy plugin add`, then checked
 #            out at its pinned commit and validated; then enabled if marked
-#            yes. `external` plugins are managed outside this repo: their
+#            yes, disabled if marked no. `external` plugins are managed outside this repo: their
 #            directory is never created, linked, moved or enabled from here.
 #   bar      `omarchy bar position`, and bar.json's layout written to
 #            .bar.layout in ~/.config/omarchy/shell.json (other keys and
@@ -43,13 +50,6 @@
 #   hypr     hypr/<rice>.lua linked into ~/.config/hypr and a require() for
 #            it appended once to ~/.config/hypr/looknfeel.lua; for
 #            field-notebook also hypr/hyprsunset.conf (night-light schedule).
-#   hooks    each file under hooks/<event>.d/ here (and, for field-notebook,
-#            field-notebook/hooks/<event>.d/) linked into
-#            ~/.config/omarchy/hooks/<event>.d/.
-#   extras   (field-notebook) the session scripts in field-notebook/bin
-#            linked into ~/.local/bin, field-notebook/share into
-#            ~/.local/share/field-notebook, and the screensaver art into
-#            ~/.config/omarchy/branding/screensaver.txt.
 #   ghostty  one line in ~/.config/ghostty/config.local (gitignored) that
 #            includes ghostty.conf from here: zsh as the terminal's command
 #            and the Omarchy-only Ghostty settings. Skipped while zsh is
@@ -87,7 +87,7 @@ ONLY=""
 CHANGES=0
 RICE="${OMARCHY_RICE:-}"
 
-usage() { sed -n '2,62p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,/^[^#]/p' "$0" | sed '$d' | sed 's/^# \{0,1\}//'; }
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -102,6 +102,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         --rice)
             RICE="${2:-}"
+            [[ -n "$RICE" ]] || { echo "setup.sh: --rice takes a rice name" >&2; exit 2; }
             shift
             ;;
         -h | --help) usage; exit 0 ;;
@@ -244,7 +245,7 @@ step_plugins() {
             if [[ -e "$dir" ]]; then
                 ok "$id (external, not managed here)"
             else
-                note "$id is external and not installed; its bar slot stays empty"
+                note "$id is external and not installed here"
             fi
             continue
         else
@@ -278,6 +279,8 @@ step_plugins() {
             elif change "omarchy plugin enable $id"; then
                 omarchy plugin enable "$id"
             fi
+        elif plugin_enabled "$id" && change "omarchy plugin disable $id (marked no)"; then
+            omarchy plugin disable "$id"
         fi
     done < "$PLUGINS_TSV"
 }
@@ -315,7 +318,16 @@ step_hypr() {
     link "$HERE/hypr/$HYPR_MODULE.lua" "$HYPR_DIR/$HYPR_MODULE.lua"
     [[ "$RICE" == field-notebook ]] && link "$HERE/hypr/hyprsunset.conf" "$HYPR_DIR/hyprsunset.conf"
 
-    local looknfeel="$HYPR_DIR/looknfeel.lua"
+    local looknfeel="$HYPR_DIR/looknfeel.lua" other line
+    # Only one rice's look loads: a require for another rice is taken out.
+    for other in field_notebook monochrome_43; do
+        [[ "$other" == "$HYPR_MODULE" ]] && continue
+        line="require(\"hypr.$other\")"
+        if [[ -f "$looknfeel" ]] && grep -Fxq "$line" "$looknfeel" &&
+            change "remove $line from $looknfeel (switching to $RICE)"; then
+            sed -i "/^-- .* rice, from the dotfiles checkout/{N;/hypr\.$other/d}; /^require(\"hypr\.$other\")\$/d" "$looknfeel"
+        fi
+    done
     if [[ -f "$looknfeel" ]] && grep -Fq "$HYPR_REQUIRE" "$looknfeel"; then
         ok "$looknfeel loads hypr.$HYPR_MODULE"
     elif [[ -f "$looknfeel" ]] && grep -Fq "$INLINE_MARK" "$looknfeel"; then
@@ -336,8 +348,10 @@ shell_json_set() {
     local key="$1" src="$2" shell_json="$OMARCHY_CONFIG/shell.json" tmp backup
     mkdir -p "$OMARCHY_CONFIG"
     [[ -s "$shell_json" ]] || echo '{"version": 1}' > "$shell_json"
+    # Two steps can back up within one second; never reuse a name.
+    local n=0
     backup="$shell_json.dotfiles-bak.$(date +%s)"
-    [[ -e "$backup" ]] && die "$backup already exists; re-run in a second"
+    while [[ -e "$backup" ]]; do n=$((n + 1)); backup="$shell_json.dotfiles-bak.$(date +%s).$n"; done
     cp -p "$shell_json" "$backup"
     tmp="$(mktemp "$shell_json.XXXXXX")"
     jq --arg k "$key" --slurpfile v "$src" 'setpath($k | split("."); $v[0])' "$shell_json" > "$tmp"
@@ -426,15 +440,18 @@ step_ghostty() {
         ok "$local_conf includes ghostty.conf"
     elif [[ ! -x "$GHOSTTY_ZSH" ]]; then
         warn "$GHOSTTY_ZSH not found; install zsh (make arch) before pointing Ghostty at it"
+        return 0
     elif change "append '$GHOSTTY_INCLUDE' to $local_conf"; then
         mkdir -p "$(dirname "$local_conf")"
         printf '# Omarchy-only Ghostty settings, from the dotfiles (omarchy/setup.sh)\n%s\n' \
             "$GHOSTTY_INCLUDE" >> "$local_conf"
     fi
-    # The include only takes effect from the repo's config, which stow links.
-    if [[ -f "$CONFIG_DIR/ghostty/config" ]] &&
-        ! grep -Fq 'config-file = ?"config.local"' "$CONFIG_DIR/ghostty/config"; then
-        note "$CONFIG_DIR/ghostty/config is not the dotfiles one, so it never reads config.local; see omarchy/README.md"
+    # Omarchy's own config never reads config.local, so give it the one include line
+    # the dotfiles config already has (a relative config-file resolves next to it).
+    local main_conf="$CONFIG_DIR/ghostty/config"
+    if [[ -f "$main_conf" ]] && ! grep -Fq 'config-file = ?"config.local"' "$main_conf" &&
+        change "append 'config-file = ?\"config.local\"' to $main_conf"; then
+        printf '\n# dotfiles: read config.local (omarchy/setup.sh)\nconfig-file = ?"config.local"\n' >> "$main_conf"
     fi
 }
 
@@ -455,13 +472,14 @@ main() {
     ((APPLY)) || echo "Dry run: nothing will change. Re-run with --apply to act."
     echo "rice: $RICE"
     wants packages && step_packages
+    # Hooks and the files they run go in before `omarchy theme set` fires them.
+    wants extras && step_extras
+    wants hooks && step_hooks
     wants theme && step_theme
     wants plugins && step_plugins
     wants bar && step_bar
     wants idle && step_idle
     wants hypr && step_hypr
-    wants hooks && step_hooks
-    wants extras && step_extras
     wants ghostty && step_ghostty
 
     if ((CHANGES == 0)); then

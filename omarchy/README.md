@@ -68,9 +68,9 @@ What `apply=1` changes, and how to undo it:
   pasted block first, or the look is applied twice.
 - **Ghostty**: appends `config-file = <checkout>/omarchy/ghostty.conf` to
   `~/.config/ghostty/config.local`; delete that line to undo. Skipped while
-  `/usr/bin/zsh` is missing. It does nothing until `~/.config/ghostty/config`
-  is this repo's (Omarchy's own config never reads `config.local`; setup
-  notes this) — see the conflict list in OPERATING.md.
+  `/usr/bin/zsh` is missing. Omarchy's own `~/.config/ghostty/config` never
+  reads `config.local`, so setup also appends `config-file = ?"config.local"`
+  to it (the repo's config already has that line).
 
 ## Plugins and pins
 

@@ -181,6 +181,20 @@ be_omarchy() { mkdir -p "$PLATFORM_OMARCHY_SYSTEM_DIR"; }
     grep -qx 'theme = danse' "$XDG_CONFIG_HOME/ghostty/config.local"
 }
 
+@test "ghostty step makes Omarchy's own config read config.local, once" {
+    be_omarchy
+    export OMARCHY_GHOSTTY_ZSH="$STUB_BIN/omarchy" # any executable will do
+    mkdir -p "$XDG_CONFIG_HOME/ghostty"
+    echo 'font-size = 9' > "$XDG_CONFIG_HOME/ghostty/config"
+    run "$SETUP" --apply --only ghostty
+    assert_success
+    run "$SETUP" --apply --only ghostty
+    assert_output --partial "Everything already in place"
+    run grep -c '^config-file = ?"config.local"$' "$XDG_CONFIG_HOME/ghostty/config"
+    assert_output "1"
+    grep -qx 'font-size = 9' "$XDG_CONFIG_HOME/ghostty/config"
+}
+
 @test "ghostty step leaves Ghostty alone while zsh is missing" {
     be_omarchy
     export OMARCHY_GHOSTTY_ZSH="$TEST_TEMP_DIR/no-such-zsh"
@@ -303,7 +317,8 @@ be_omarchy() { mkdir -p "$PLATFORM_OMARCHY_SYSTEM_DIR"; }
     assert_output "1"
     run grep -c '^pkg aur add ' "$OMARCHY_LOG"
     assert_output "1"
-    ! grep -q ' cava\b' "$OMARCHY_LOG"
+    run grep -E "^pkg (aur )?add .*\\bcava\\b" "$OMARCHY_LOG"
+    assert_failure
     grep -q '^pkg aur add .*gh-dash-bin' "$OMARCHY_LOG"
 }
 
@@ -318,4 +333,51 @@ be_omarchy() { mkdir -p "$PLATFORM_OMARCHY_SYSTEM_DIR"; }
     run awk '!/^#/ && NF && $2 != "repo" && $2 != "aur" { print; bad=1 } END { exit bad }' \
         "$DOTFILES_DIR/omarchy/field-notebook/packages.tsv"
     assert_success
+}
+
+@test "bar and idle in one run each get their own shell.json backup" {
+    command -v jq > /dev/null || skip "jq not installed"
+    be_omarchy
+    local cfg="$XDG_CONFIG_HOME/omarchy"
+    mkdir -p "$cfg"
+    printf '{"bar": {"position": "left", "layout": {}}, "idle": {"lock": 300}}\n' > "$cfg/shell.json"
+    run "$SETUP" --apply --only bar
+    assert_success
+    run "$SETUP" --apply --only idle
+    assert_success
+    run bash -c 'ls "$1"/shell.json.dotfiles-bak.* | wc -l' _ "$cfg"
+    assert_output "2"
+}
+
+@test "switching rice swaps the Hyprland require instead of stacking it" {
+    be_omarchy
+    mkdir -p "$XDG_CONFIG_HOME/hypr"
+    echo '-- user look' > "$XDG_CONFIG_HOME/hypr/looknfeel.lua"
+    OMARCHY_RICE=field-notebook run "$SETUP" --apply --only hypr
+    assert_success
+    OMARCHY_RICE=monochrome-43 run "$SETUP" --apply --only hypr
+    assert_success
+    run grep -c 'require("hypr\.' "$XDG_CONFIG_HOME/hypr/looknfeel.lua"
+    assert_output "1"
+    grep -qx 'require("hypr.monochrome_43")' "$XDG_CONFIG_HOME/hypr/looknfeel.lua"
+    grep -qx -- '-- user look' "$XDG_CONFIG_HOME/hypr/looknfeel.lua"
+}
+
+@test "a plugin marked no is disabled when it is enabled" {
+    be_omarchy
+    local dir="$XDG_CONFIG_HOME/omarchy/plugins/someone.widget" head
+    mkdir -p "$dir"
+    git -C "$dir" init -q
+    git -C "$dir" -c user.name=t -c user.email=t@example.invalid commit -q --allow-empty -m init
+    head="$(git -C "$dir" rev-parse HEAD)"
+    cat > "$STUB_BIN/omarchy" <<'STUB'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >> "$OMARCHY_LOG"
+[[ "$1 $2" == "plugin list" ]] && echo '[{"id": "someone.widget", "enabled": true}]'
+exit 0
+STUB
+    printf 'someone.widget\thttps://github.com/someone/widget.git\t%s\tno\n' "$head" > "$TEST_TEMP_DIR/plugins.tsv"
+    OMARCHY_PLUGINS_TSV="$TEST_TEMP_DIR/plugins.tsv" run "$SETUP" --apply --only plugins
+    assert_success
+    grep -qx 'plugin disable someone.widget' "$OMARCHY_LOG"
 }
