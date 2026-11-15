@@ -9,20 +9,9 @@ return {
 		lazy = false,
 		priority = 1000,
 		config = function()
-			-- onedark.nvim's "dark" style already is this checkout's ground and
-			-- accents, with two exceptions: the red and orange were retuned to
-			-- Matisse vermilion and terracotta everywhere else. Override exactly
-			-- those two, read from the shared palette, so the editor stops being
-			-- the one window where "everything matches" is false.
-			local palette = require("palette").load()
-			require("onedark").setup({
-				style = "dark",
-				colors = {
-					red = palette.vermilion,
-					orange = palette.terracotta,
-				},
-			})
-			require("onedark").load()
+			-- The engine; the colours are the active Rice's (lua/palette.lua), so
+			-- the editor matches the desktop and every other tool (ADR 0003).
+			require("palette").apply()
 		end,
 	},
 
@@ -195,7 +184,9 @@ return {
 		event = "VeryLazy",
 		config = function()
 			require("lualine").setup({
-				options = { theme = "onedark", section_separators = "", component_separators = "" },
+				-- "auto" derives the bar from the loaded colorscheme, so it follows
+				-- the Rice; lualine's own "onedark" theme hard-codes OneDark.
+				options = { theme = "auto", section_separators = "", component_separators = "" },
 				extensions = { "nvim-tree", "quickfix" },
 			})
 		end,
