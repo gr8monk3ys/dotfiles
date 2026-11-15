@@ -85,7 +85,7 @@ be_omarchy() { mkdir -p "$PLATFORM_OMARCHY_SYSTEM_DIR"; }
     assert_output --partial "Everything already in place"
     run grep -c 'require("hypr.monochrome_43")' "$XDG_CONFIG_HOME/hypr/looknfeel.lua"
     assert_output "1"
-    [[ "$(readlink "$XDG_CONFIG_HOME/hypr/monochrome_43.lua")" == "$DOTFILES_DIR/omarchy/hypr/monochrome_43.lua" ]]
+    [[ "$(readlink "$XDG_CONFIG_HOME/hypr/monochrome_43.lua")" == "$DOTFILES_DIR/omarchy/rices/monochrome-43/hypr.lua" ]]
 }
 
 @test "hypr step does not stack a require on top of an inline copy" {
@@ -215,9 +215,20 @@ be_omarchy() { mkdir -p "$PLATFORM_OMARCHY_SYSTEM_DIR"; }
 # Rice selection and the Field Notebook steps
 # ---------------------------------------------------------------------------
 
-@test "omarchy/rice names a rice setup.sh knows" {
-    run tr -d '[:space:]' < "$DOTFILES_DIR/omarchy/rice"
-    [[ "$output" =~ ^(field-notebook|monochrome-43)$ ]]
+@test "every Omarchy rice in the Rice module has a rice directory, and no other directory exists" {
+    run bash -c '. "$1/.config/palette/rice.sh"; diff <(rice_list omarchy | sort) <(ls "$1/omarchy/rices" | sort)' _ "$DOTFILES_DIR"
+    assert_success
+}
+
+@test "rice.local picks the rice; --rice overrides it for one run" {
+    be_omarchy
+    mkdir -p "$XDG_CONFIG_HOME/palette"
+    echo monochrome-43 > "$XDG_CONFIG_HOME/palette/rice.local"
+    unset OMARCHY_RICE
+    run "$SETUP" --only extras
+    assert_output --partial "rice: monochrome-43"
+    run "$SETUP" --only extras --rice field-notebook
+    assert_output --partial "rice: field-notebook"
 }
 
 @test "setup.sh rejects an unknown rice" {
@@ -226,13 +237,12 @@ be_omarchy() { mkdir -p "$PLATFORM_OMARCHY_SYSTEM_DIR"; }
     assert_output --partial "unknown rice"
 }
 
-@test "every rice has its theme files and Hyprland module" {
-    local r m
-    for r in field-notebook monochrome-43; do
-        m="${r//-/_}"
-        [[ -f "$DOTFILES_DIR/omarchy/themes/$r/colors.toml" ]]
-        [[ -f "$DOTFILES_DIR/omarchy/themes/$r/icons.theme" ]]
-        [[ -f "$DOTFILES_DIR/omarchy/hypr/$m.lua" ]]
+@test "every rice directory ships a theme and a Hyprland module" {
+    local d
+    for d in "$DOTFILES_DIR"/omarchy/rices/*/; do
+        [[ -f "$d/theme/colors.toml" && -f "$d/theme/icons.theme" && -f "$d/hypr.lua" ]] ||
+            { echo "incomplete rice: $d"; return 1; }
+        [[ ! -e "$d/backgrounds" || -x "$d/backgrounds" ]] || { echo "$d/backgrounds not executable"; return 1; }
     done
 }
 
@@ -247,8 +257,8 @@ be_omarchy() { mkdir -p "$PLATFORM_OMARCHY_SYSTEM_DIR"; }
     assert_output --partial "Everything already in place"
     run grep -c 'require("hypr.field_notebook")' "$XDG_CONFIG_HOME/hypr/looknfeel.lua"
     assert_output "1"
-    [[ "$(readlink "$XDG_CONFIG_HOME/hypr/field_notebook.lua")" == "$DOTFILES_DIR/omarchy/hypr/field_notebook.lua" ]]
-    [[ "$(readlink "$XDG_CONFIG_HOME/hypr/hyprsunset.conf")" == "$DOTFILES_DIR/omarchy/hypr/hyprsunset.conf" ]]
+    [[ "$(readlink "$XDG_CONFIG_HOME/hypr/field_notebook.lua")" == "$DOTFILES_DIR/omarchy/rices/field-notebook/hypr.lua" ]]
+    [[ "$(readlink "$XDG_CONFIG_HOME/hypr/hyprsunset.conf")" == "$DOTFILES_DIR/omarchy/rices/field-notebook/hypr/hyprsunset.conf" ]]
 }
 
 @test "field-notebook hypr step does not stack a require on an inline copy" {
@@ -287,7 +297,7 @@ be_omarchy() { mkdir -p "$PLATFORM_OMARCHY_SYSTEM_DIR"; }
     [[ ! -e "$hooks/20-field-notebook-apps" ]]
     OMARCHY_RICE=field-notebook run "$SETUP" --apply --only hooks
     assert_success
-    [[ "$(readlink "$hooks/20-field-notebook-apps")" == "$DOTFILES_DIR/omarchy/field-notebook/hooks/theme-set.d/20-field-notebook-apps" ]]
+    [[ "$(readlink "$hooks/20-field-notebook-apps")" == "$DOTFILES_DIR/omarchy/rices/field-notebook/hooks/theme-set.d/20-field-notebook-apps" ]]
 }
 
 @test "extras step links the session scripts, shared files and screensaver art" {
@@ -296,7 +306,7 @@ be_omarchy() { mkdir -p "$PLATFORM_OMARCHY_SYSTEM_DIR"; }
     run "$SETUP" --apply --only extras
     assert_success
     local f
-    for f in "$DOTFILES_DIR"/omarchy/field-notebook/bin/*; do
+    for f in "$DOTFILES_DIR"/omarchy/rices/field-notebook/bin/*; do
         [[ "$(readlink "$OMARCHY_BIN_DIR/$(basename "$f")")" == "$f" ]]
     done
     [[ -L "$XDG_DATA_HOME/field-notebook/themed.py" ]]
@@ -308,8 +318,8 @@ be_omarchy() { mkdir -p "$PLATFORM_OMARCHY_SYSTEM_DIR"; }
 @test "packages step installs only what pacman lacks, repo and AUR apart" {
     be_omarchy
     export OMARCHY_RICE=field-notebook
-    # pacman knows cava and nothing else.
-    printf '#!/usr/bin/env bash\n[[ "$2" == cava ]]\n' > "$STUB_BIN/pacman"
+    # pacman knows onefetch and nothing else.
+    printf '#!/usr/bin/env bash\n[[ "$2" == onefetch ]]\n' > "$STUB_BIN/pacman"
     chmod +x "$STUB_BIN/pacman"
     run "$SETUP" --apply --only packages
     assert_success
@@ -317,7 +327,7 @@ be_omarchy() { mkdir -p "$PLATFORM_OMARCHY_SYSTEM_DIR"; }
     assert_output "1"
     run grep -c '^pkg aur add ' "$OMARCHY_LOG"
     assert_output "1"
-    run grep -E "^pkg (aur )?add .*\\bcava\\b" "$OMARCHY_LOG"
+    run grep -E "^pkg (aur )?add .*\\bonefetch\\b" "$OMARCHY_LOG"
     assert_failure
     grep -q '^pkg aur add .*gh-dash-bin' "$OMARCHY_LOG"
 }
@@ -329,10 +339,10 @@ be_omarchy() { mkdir -p "$PLATFORM_OMARCHY_SYSTEM_DIR"; }
     [[ ! -s "$OMARCHY_LOG" ]] || ! grep -q '^pkg ' "$OMARCHY_LOG"
 }
 
-@test "packages.tsv names a repo or aur source for every package" {
-    run awk '!/^#/ && NF && $2 != "repo" && $2 != "aur" { print; bad=1 } END { exit bad }' \
-        "$DOTFILES_DIR/omarchy/field-notebook/packages.tsv"
+@test "rice packages never repeat what pacmanfile already installs" {
+    run bash -c 'comm -12 <("$1/bin/manifest" list pacman | sort) <({ "$1/bin/manifest" list rice-pacman; "$1/bin/manifest" list rice-aur; } | sort)' _ "$DOTFILES_DIR"
     assert_success
+    assert_output ""
 }
 
 @test "bar and idle in one run each get their own shell.json backup" {
@@ -345,7 +355,7 @@ be_omarchy() { mkdir -p "$PLATFORM_OMARCHY_SYSTEM_DIR"; }
     assert_success
     run "$SETUP" --apply --only idle
     assert_success
-    run bash -c 'ls "$1"/shell.json.dotfiles-bak.* | wc -l' _ "$cfg"
+    run bash -c 'ls "$1"/shell.json.dotfiles-bak* | wc -l' _ "$cfg"
     assert_output "2"
 }
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# omarchy/setup.sh - install an Omarchy rice (Field Notebook or Monochrome 43)
-# and the desktop settings that go with it, on an Omarchy 4.x machine.
+# omarchy/setup.sh - put a Rice and the desktop settings that go with it on an
+# Omarchy 4.x machine.
 #
 # This directory is the Omarchy layer of the checkout, the way windows/ is the
 # Windows one. It is not under .config/ because Omarchy owns ~/.config/hypr
@@ -11,49 +11,54 @@
 # Dry run by default - it prints what it would do and changes nothing.
 #
 # Usage:
-#   omarchy/setup.sh                     # dry run, every step
-#   omarchy/setup.sh --apply             # do it
-#   omarchy/setup.sh --only hypr         # one step (names below)
-#   omarchy/setup.sh --rice monochrome-43   # another rice than omarchy/rice
+#   omarchy/setup.sh                        # dry run, every step
+#   omarchy/setup.sh --apply                # do it
+#   omarchy/setup.sh --only hypr            # one step (names below)
+#   omarchy/setup.sh --rice monochrome-43   # another rice, for this run
 #
-# The rice is read from omarchy/rice (one word: field-notebook or
-# monochrome-43); --rice or $OMARCHY_RICE overrides it for one run.
+# Which rice: the Rice module (.config/palette/rice.sh) reads the one-word
+# ~/.config/palette/rice.local and falls back to Omarchy's default,
+# field-notebook. --rice or $OMARCHY_RICE overrides it for one run.
+#
+# A rice is a directory, rices/<rice>/, and every step acts on whatever that
+# directory ships; no step names a rice. Everything is optional except theme/
+# and hypr.lua:
+#   theme/            colors.toml, icons.theme
+#   backgrounds       executable: `backgrounds --check DIR` / `backgrounds DIR`
+#   hypr.lua          the look, require()d from looknfeel.lua
+#   hypr/             more files for ~/.config/hypr (e.g. hyprsunset.conf)
+#   packages.pacman   official-repo packages (bin/manifest list rice-pacman)
+#   packages.aur      AUR packages (bin/manifest list rice-aur)
+#   hooks/<event>.d/  Omarchy hooks
+#   bin/  share/      ~/.local/bin and ~/.local/share/<rice>
+#   branding/         ~/.config/omarchy/branding
 #
 # Steps, in order:
-#   packages (field-notebook) each package in field-notebook/packages.tsv
-#            that pacman does not have: `omarchy pkg add` for repo ones,
-#            `omarchy pkg aur add` for AUR ones.
-#   hooks    each file under hooks/<event>.d/ here (and, for field-notebook,
-#            field-notebook/hooks/<event>.d/) linked into
-#            ~/.config/omarchy/hooks/<event>.d/.
-#   extras   (field-notebook) the session scripts in field-notebook/bin
-#            linked into ~/.local/bin, field-notebook/share into
-#            ~/.local/share/field-notebook, and the screensaver art into
-#            ~/.config/omarchy/branding/screensaver.txt.
-#   theme    ~/.config/omarchy/themes/<rice>: colors.toml and icons.theme
-#            linked from themes/<rice>/ here. Backgrounds are not tracked:
-#            monochrome-43 copies Omarchy's Vantablack ones plus 43PR's
-#            wallpaper, fetched by URL and checked against a SHA-256;
-#            field-notebook renders its plates with
-#            field-notebook/share/make-wallpapers.sh when none are there.
-#            Then `omarchy theme set <rice>` if it is not already current.
-#   plugins  each plugin in plugins.tsv: `omarchy plugin add`, then checked
-#            out at its pinned commit and validated; then enabled if marked
-#            yes, disabled if marked no. `external` plugins are managed outside this repo: their
-#            directory is never created, linked, moved or enabled from here.
-#   bar      `omarchy bar position`, and bar.json's layout written to
-#            .bar.layout in ~/.config/omarchy/shell.json (other keys and
-#            their order untouched; backed up first to
-#            shell.json.dotfiles-bak.<epoch>).
-#   idle     idle.json written to .idle in the same shell.json, the same
-#            way: the screensaver and auto-lock timeouts, in seconds (0 off).
-#   hypr     hypr/<rice>.lua linked into ~/.config/hypr and a require() for
-#            it appended once to ~/.config/hypr/looknfeel.lua; for
-#            field-notebook also hypr/hyprsunset.conf (night-light schedule).
-#   ghostty  one line in ~/.config/ghostty/config.local (gitignored) that
-#            includes ghostty.conf from here: zsh as the terminal's command
-#            and the Omarchy-only Ghostty settings. Skipped while zsh is
-#            missing, since Ghostty could not start a shell at all.
+#   packages  the rice's packages pacman does not have yet, via
+#             `omarchy pkg add` / `omarchy pkg aur add`.
+#   extras    rice bin/, share/ and branding/ linked into place.
+#   hooks     hooks/<event>.d/ here (every rice) and the rice's own, linked
+#             into ~/.config/omarchy/hooks/<event>.d/. Before the theme step,
+#             because `omarchy theme set` fires theme-set hooks.
+#   theme     theme/ linked into ~/.config/omarchy/themes/<rice>, backgrounds
+#             populated by the rice's script when its --check fails, then
+#             `omarchy theme set <rice>` if it is not already current.
+#   plugins   each plugin in plugins.tsv: `omarchy plugin add`, then checked
+#             out at its pinned commit and validated; then enabled if marked
+#             yes, disabled if marked no. `external` plugins are managed
+#             outside this repo and only reported on.
+#   bar       `omarchy bar position`, and bar.json's layout written to
+#             .bar.layout in ~/.config/omarchy/shell.json (only that key
+#             changes; backed up first).
+#   idle      idle.json written to .idle in the same shell.json, the same
+#             way: screensaver and auto-lock timeouts in seconds (0 off).
+#   hypr      hypr.lua linked as ~/.config/hypr/<rice_with_underscores>.lua
+#             and require()d once from looknfeel.lua (another rice's require
+#             is taken out), plus the rice's hypr/ files.
+#   ghostty   one line in ~/.config/ghostty/config.local (gitignored) that
+#             includes ghostty.conf from here: zsh as the terminal's command
+#             and the Omarchy-only Ghostty settings. Skipped while zsh is
+#             missing, since Ghostty could not start a shell at all.
 
 set -euo pipefail
 
@@ -63,29 +68,27 @@ CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 OMARCHY_CONFIG="$CONFIG_DIR/omarchy"
 HYPR_DIR="$CONFIG_DIR/hypr"
 OMARCHY_STATE="${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/current"
-OMARCHY_SYSTEM_DIR="${PLATFORM_OMARCHY_SYSTEM_DIR:-/usr/share/omarchy}"
+export PLATFORM_OMARCHY_SYSTEM_DIR="${PLATFORM_OMARCHY_SYSTEM_DIR:-/usr/share/omarchy}"
+readonly RICES_DIR="$HERE/rices"
 
 # Overridable for tests only.
 PLUGINS_TSV="${OMARCHY_PLUGINS_TSV:-$HERE/plugins.tsv}"
-
-# Overridable for tests only.
 BIN_DIR="${OMARCHY_BIN_DIR:-$HOME/.local/bin}"
 SHARE_DIR="${XDG_DATA_HOME:-$HOME/.local/share}"
-# 43PR/dotfiles ships this wallpaper at its repo root. Pinned to a commit and
-# a hash so the bytes cannot change under us; it is not committed here.
-readonly WALLPAPER_URL="https://raw.githubusercontent.com/43PR/dotfiles/b015f39d558cdd4c77907132532d56be8ab34594/wallhaven-k8jvm7.jpg"
-readonly WALLPAPER_SHA256="acffe6dc9dd07a5d0e2d7539a7725430239be418a3817b4c58be2b5af7ab2759"
-readonly WALLPAPER_NAME="00-43pr-wallhaven.jpg"
-readonly GHOSTTY_INCLUDE="config-file = $HERE/ghostty.conf"
-# Overridable for tests only; ghostty.conf itself names /usr/bin/zsh.
+# ghostty.conf itself names /usr/bin/zsh.
 GHOSTTY_ZSH="${OMARCHY_GHOSTTY_ZSH:-/usr/bin/zsh}"
+readonly GHOSTTY_INCLUDE="config-file = $HERE/ghostty.conf"
 
-readonly STEPS="packages|theme|plugins|bar|idle|hypr|hooks|extras|ghostty"
+readonly STEPS="packages|extras|hooks|theme|plugins|bar|idle|hypr|ghostty"
 
-APPLY=0
+PLAN_NAME="setup.sh"
+# shellcheck source=../bin/lib/plan.sh
+source "$DOTFILES_DIR/bin/lib/plan.sh"
+# shellcheck source=../.config/palette/rice.sh
+source "$DOTFILES_DIR/.config/palette/rice.sh"
+
 ONLY=""
-CHANGES=0
-RICE="${OMARCHY_RICE:-}"
+RICE_ARG="${OMARCHY_RICE:-}"
 
 usage() { sed -n '2,/^[^#]/p' "$0" | sed '$d' | sed 's/^# \{0,1\}//'; }
 
@@ -101,8 +104,8 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --rice)
-            RICE="${2:-}"
-            [[ -n "$RICE" ]] || { echo "setup.sh: --rice takes a rice name" >&2; exit 2; }
+            RICE_ARG="${2:-}"
+            [[ -n "$RICE_ARG" ]] || { echo "setup.sh: --rice takes a rice name" >&2; exit 2; }
             shift
             ;;
         -h | --help) usage; exit 0 ;;
@@ -111,117 +114,97 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
-[[ -n "$RICE" ]] || RICE="$(tr -d '[:space:]' < "$HERE/rice" 2> /dev/null || true)"
-case "$RICE" in
-    field-notebook) HYPR_MODULE="field_notebook" INLINE_MARK='hl.curve("notebook"' ;;
-    monochrome-43) HYPR_MODULE="monochrome_43" INLINE_MARK='hl.curve("riceOut"' ;;
-    *) echo "setup.sh: unknown rice '${RICE}' (field-notebook | monochrome-43)" >&2; exit 2 ;;
-esac
-readonly RICE HYPR_MODULE INLINE_MARK
-readonly THEME="$RICE"
+if [[ -n "$RICE_ARG" ]]; then
+    RICE="$RICE_ARG"
+else
+    rice_select omarchy
+fi
+if ! rice_available "$RICE" omarchy || [[ ! -d "$RICES_DIR/$RICE" ]]; then
+    echo "setup.sh: unknown rice '$RICE' (one of: $(rice_list omarchy | tr '\n' ' '))" >&2
+    exit 2
+fi
+readonly RICE
+readonly RICE_DIR="$RICES_DIR/$RICE"
+readonly HYPR_MODULE="${RICE//-/_}"
 readonly HYPR_REQUIRE="require(\"hypr.$HYPR_MODULE\")"
-readonly FN_DIR="$HERE/field-notebook"
-
-ok() { printf '  ok      %s\n' "$*"; }
-note() { printf '  note    %s\n' "$*"; }
-warn() { printf '  WARN    %s\n' "$*" >&2; }
-die() { printf 'setup.sh: %s\n' "$*" >&2; exit 1; }
-
-# Announce a change and say whether to make it: true under --apply.
-change() {
-    CHANGES=$((CHANGES + 1))
-    if ((APPLY)); then
-        printf '  do      %s\n' "$*"
-        return 0
-    fi
-    printf '  would   %s\n' "$*"
-    return 1
-}
 
 wants() { [[ -z "$ONLY" || "$ONLY" == "$1" ]]; }
 
-# Point dest at src with a symlink. Something else already there is moved to
-# dest.dotfiles-bak - unless it is an identical copy, which is simply replaced.
-link() {
-    local src="$1" dest="$2" backup="$2.dotfiles-bak"
-    if [[ -L "$dest" && "$(readlink "$dest")" == "$src" ]]; then
-        ok "$dest"
-        return 0
-    fi
-    if [[ ! -L "$dest" ]] && { { [[ -f "$dest" ]] && cmp -s "$src" "$dest"; } ||
-        { [[ -d "$dest" ]] && diff -rq "$src" "$dest" > /dev/null 2>&1; }; }; then
-        change "replace identical copy $dest with a link" || return 0
-        rm -rf "$dest"
-    elif [[ -e "$dest" || -L "$dest" ]]; then
-        [[ -e "$backup" || -L "$backup" ]] && die "$dest differs and $backup already exists; resolve by hand"
-        change "move $dest -> $backup, then link it" || return 0
-        mkdir -p "$(dirname "$backup")"
-        mv "$dest" "$backup"
-    else
-        change "link $dest -> $src" || return 0
-    fi
-    mkdir -p "$(dirname "$dest")"
-    ln -s "$src" "$dest"
+# Link every file directly under <src> to the same name under <dest>.
+link_dir_files() {
+    local src="$1" dest="$2" f
+    [[ -d "$src" ]] || return 0
+    for f in "$src"/*; do
+        [[ -f "$f" ]] && plan_link "$f" "$dest/$(basename "$f")"
+    done
+    return 0
 }
 
-backgrounds_monochrome_43() {
-    local bg="$1" vanta="" f
-    vanta="$(omarchy theme dir vantablack 2> /dev/null || true)"
-    [[ -d "$vanta" ]] || vanta="$OMARCHY_SYSTEM_DIR/themes/vantablack"
-    if [[ -d "$vanta/backgrounds" ]]; then
-        for f in "$vanta"/backgrounds/*; do
-            [[ -f "$f" ]] || continue
-            if [[ -f "$bg/$(basename "$f")" ]]; then
-                ok "$bg/$(basename "$f")"
-            elif change "copy $(basename "$f") from $vanta/backgrounds"; then
-                mkdir -p "$bg"
-                cp "$f" "$bg/"
+step_packages() {
+    echo "packages: $RICE_DIR/packages.{pacman,aur}"
+    local kind name missing
+    for kind in pacman aur; do
+        missing=()
+        while read -r name; do
+            [[ -n "$name" ]] || continue
+            if pacman -Q "$name" > /dev/null 2>&1; then
+                ok "$name"
+            else
+                missing+=("$name")
             fi
-        done
-    else
-        warn "no Vantablack backgrounds found under $vanta; skipped"
-    fi
-
-    local wp="$bg/$WALLPAPER_NAME"
-    if [[ -f "$wp" ]] && sha256sum "$wp" | grep -q "^$WALLPAPER_SHA256 "; then
-        ok "$wp"
-    elif change "fetch 43PR wallpaper -> $wp (sha256-checked)"; then
-        mkdir -p "$bg"
-        curl -fsSL --max-time 120 -o "$wp.part" "$WALLPAPER_URL" ||
-            { rm -f "$wp.part"; die "could not fetch $WALLPAPER_URL"; }
-        sha256sum "$wp.part" | grep -q "^$WALLPAPER_SHA256 " ||
-            { rm -f "$wp.part"; die "wallpaper hash mismatch; refusing it"; }
-        mv "$wp.part" "$wp"
-    fi
+        done < <("$DOTFILES_DIR/bin/manifest" list "rice-$kind" "$RICE")
+        ((${#missing[@]})) || continue
+        if [[ "$kind" == pacman ]]; then
+            change "omarchy pkg add ${missing[*]}" && omarchy pkg add "${missing[@]}"
+        else
+            change "omarchy pkg aur add ${missing[*]}" && omarchy pkg aur add "${missing[@]}"
+        fi
+    done
+    return 0
 }
 
-# The plates are rendered, not tracked: three 2560x1440 PNGs are ~35 MB.
-backgrounds_field_notebook() {
-    local bg="$1"
-    if compgen -G "$bg/*.png" > /dev/null || compgen -G "$bg/*.jpg" > /dev/null; then
-        ok "$bg has backgrounds"
-    elif ! command -v magick > /dev/null 2>&1; then
-        warn "imagemagick missing; run the packages step, then re-run to render the plates"
-    elif change "render Field Notebook plates into $bg (make-wallpapers.sh)"; then
-        "$FN_DIR/share/make-wallpapers.sh" "$bg"
-    fi
+step_extras() {
+    echo "extras: $RICE_DIR/{bin,share,branding}"
+    link_dir_files "$RICE_DIR/bin" "$BIN_DIR"
+    link_dir_files "$RICE_DIR/share" "$SHARE_DIR/$RICE"
+    link_dir_files "$RICE_DIR/branding" "$OMARCHY_CONFIG/branding"
+}
+
+# Link every file under <root>/<event>.d/ into Omarchy's hook directories.
+link_hooks() {
+    local root="$1" d
+    for d in "$root"/*.d; do
+        [[ -d "$d" ]] && link_dir_files "$d" "$OMARCHY_CONFIG/hooks/$(basename "$d")"
+    done
+    return 0
+}
+
+step_hooks() {
+    echo "hooks: $HERE/hooks, $RICE_DIR/hooks"
+    link_hooks "$HERE/hooks"
+    link_hooks "$RICE_DIR/hooks"
 }
 
 step_theme() {
-    echo "theme: $THEME"
-    local dir="$OMARCHY_CONFIG/themes/$THEME" f
-    for f in colors.toml icons.theme; do
-        link "$HERE/themes/$THEME/$f" "$dir/$f"
-    done
+    echo "theme: $RICE"
+    local dir="$OMARCHY_CONFIG/themes/$RICE"
+    link_dir_files "$RICE_DIR/theme" "$dir"
 
-    "backgrounds_${RICE//-/_}" "$dir/backgrounds"
+    local script="$RICE_DIR/backgrounds"
+    if [[ ! -x "$script" ]]; then
+        :
+    elif "$script" --check "$dir/backgrounds"; then
+        ok "$dir/backgrounds"
+    elif change "populate $dir/backgrounds ($RICE/backgrounds)"; then
+        "$script" "$dir/backgrounds" || warn "$RICE/backgrounds failed; re-run once it can"
+    fi
 
     local current=""
     [[ -r "$OMARCHY_STATE/theme.name" ]] && current="$(cat "$OMARCHY_STATE/theme.name")"
-    if [[ "$current" == "$THEME" ]]; then
-        ok "current theme is $THEME"
-    elif change "omarchy theme set $THEME (current: ${current:-unknown})"; then
-        omarchy theme set "$THEME"
+    if [[ "$current" == "$RICE" ]]; then
+        ok "current theme is $RICE"
+    elif change "omarchy theme set $RICE (current: ${current:-unknown})"; then
+        omarchy theme set "$RICE"
     fi
 }
 
@@ -285,6 +268,19 @@ step_plugins() {
     done < "$PLUGINS_TSV"
 }
 
+# Write one JSON file from here into one key path of shell.json: only that
+# key changes (other keys keep their values and order), after a backup.
+shell_json_set() {
+    local key="$1" src="$2" shell_json="$OMARCHY_CONFIG/shell.json" tmp
+    mkdir -p "$OMARCHY_CONFIG"
+    [[ -s "$shell_json" ]] || echo '{"version": 1}' > "$shell_json"
+    cp -p "$shell_json" "$(plan_backup "$shell_json")"
+    tmp="$(mktemp "$shell_json.XXXXXX")"
+    jq --arg k "$key" --slurpfile v "$src" 'setpath($k | split("."); $v[0])' "$shell_json" > "$tmp"
+    mv "$tmp" "$shell_json"
+    omarchy-shell shell reloadConfig > /dev/null 2>&1 || true
+}
+
 step_bar() {
     echo "bar: $HERE/bar.json"
     local shell_json="$OMARCHY_CONFIG/shell.json"
@@ -313,52 +309,6 @@ step_bar() {
     fi
 }
 
-step_hypr() {
-    echo "hypr: $HYPR_MODULE"
-    link "$HERE/hypr/$HYPR_MODULE.lua" "$HYPR_DIR/$HYPR_MODULE.lua"
-    [[ "$RICE" == field-notebook ]] && link "$HERE/hypr/hyprsunset.conf" "$HYPR_DIR/hyprsunset.conf"
-
-    local looknfeel="$HYPR_DIR/looknfeel.lua" other line
-    # Only one rice's look loads: a require for another rice is taken out.
-    for other in field_notebook monochrome_43; do
-        [[ "$other" == "$HYPR_MODULE" ]] && continue
-        line="require(\"hypr.$other\")"
-        if [[ -f "$looknfeel" ]] && grep -Fxq "$line" "$looknfeel" &&
-            change "remove $line from $looknfeel (switching to $RICE)"; then
-            sed -i "/^-- .* rice, from the dotfiles checkout/{N;/hypr\.$other/d}; /^require(\"hypr\.$other\")\$/d" "$looknfeel"
-        fi
-    done
-    if [[ -f "$looknfeel" ]] && grep -Fq "$HYPR_REQUIRE" "$looknfeel"; then
-        ok "$looknfeel loads hypr.$HYPR_MODULE"
-    elif [[ -f "$looknfeel" ]] && grep -Fq "$INLINE_MARK" "$looknfeel"; then
-        # A hand-pasted copy of the snippet. Appending the require as well
-        # would apply it twice; leave the user to choose which to keep.
-        warn "$looknfeel already holds an inline copy of the rice ($INLINE_MARK)."
-        warn "Delete that block, then re-run to load it from the dotfiles instead."
-    elif change "append $HYPR_REQUIRE to $looknfeel"; then
-        mkdir -p "$HYPR_DIR"
-        printf '\n-- %s rice, from the dotfiles checkout (omarchy/setup.sh)\n%s\n' \
-            "$RICE" "$HYPR_REQUIRE" >> "$looknfeel"
-    fi
-}
-
-# Write one JSON file from here into one top-level key of shell.json: only
-# that key changes (other keys keep their values and order), after a backup.
-shell_json_set() {
-    local key="$1" src="$2" shell_json="$OMARCHY_CONFIG/shell.json" tmp backup
-    mkdir -p "$OMARCHY_CONFIG"
-    [[ -s "$shell_json" ]] || echo '{"version": 1}' > "$shell_json"
-    # Two steps can back up within one second; never reuse a name.
-    local n=0
-    backup="$shell_json.dotfiles-bak.$(date +%s)"
-    while [[ -e "$backup" ]]; do n=$((n + 1)); backup="$shell_json.dotfiles-bak.$(date +%s).$n"; done
-    cp -p "$shell_json" "$backup"
-    tmp="$(mktemp "$shell_json.XXXXXX")"
-    jq --arg k "$key" --slurpfile v "$src" 'setpath($k | split("."); $v[0])' "$shell_json" > "$tmp"
-    mv "$tmp" "$shell_json"
-    omarchy-shell shell reloadConfig > /dev/null 2>&1 || true
-}
-
 step_idle() {
     echo "idle: $HERE/idle.json"
     local shell_json="$OMARCHY_CONFIG/shell.json" want have=""
@@ -371,66 +321,42 @@ step_idle() {
     fi
 }
 
-# Link every file under <root>/<event>.d/ into Omarchy's hook directories.
-link_hooks() {
-    local root="$1" f event
-    [[ -d "$root" ]] || return 0
-    for f in "$root"/*.d/*; do
-        [[ -f "$f" ]] || continue
-        event="$(basename "$(dirname "$f")")"
-        link "$f" "$OMARCHY_CONFIG/hooks/$event/$(basename "$f")"
-    done
+# A rice's hypr.lua may carry an inline marker: the first hl.curve name it
+# defines. Finding it in looknfeel.lua means a pasted copy of the rice.
+inline_mark() {
+    sed -nE 's/^hl\.curve\("([^"]+)".*/hl.curve("\1"/p' "$1" | head -n1
 }
 
-step_hooks() {
-    echo "hooks: $HERE/hooks"
-    link_hooks "$HERE/hooks"
-    [[ "$RICE" == field-notebook ]] && link_hooks "$FN_DIR/hooks"
-    return 0
-}
+step_hypr() {
+    echo "hypr: $HYPR_MODULE"
+    plan_link "$RICE_DIR/hypr.lua" "$HYPR_DIR/$HYPR_MODULE.lua"
+    link_dir_files "$RICE_DIR/hypr" "$HYPR_DIR"
 
-step_extras() {
-    echo "extras: $FN_DIR"
-    if [[ "$RICE" != field-notebook ]]; then
-        ok "nothing for $RICE"
-        return 0
-    fi
-    local f
-    for f in "$FN_DIR"/bin/*; do
-        link "$f" "$BIN_DIR/$(basename "$f")"
-    done
-    for f in "$FN_DIR"/share/*; do
-        link "$f" "$SHARE_DIR/field-notebook/$(basename "$f")"
-    done
-    link "$FN_DIR/branding/screensaver.txt" "$OMARCHY_CONFIG/branding/screensaver.txt"
-}
-
-step_packages() {
-    echo "packages: $FN_DIR/packages.tsv"
-    if [[ "$RICE" != field-notebook ]]; then
-        ok "nothing for $RICE"
-        return 0
-    fi
-    local name src _ repo=() aur=()
-    while read -r name src _; do
-        [[ -z "$name" || "$name" == \#* ]] && continue
-        if pacman -Q "$name" > /dev/null 2>&1; then
-            ok "$name"
-            continue
+    local looknfeel="$HYPR_DIR/looknfeel.lua" other module line mark
+    # Only one rice's look loads: a require for another rice is taken out.
+    while read -r other; do
+        [[ "$other" == "$RICE" ]] && continue
+        module="${other//-/_}"
+        line="require(\"hypr.$module\")"
+        if [[ -f "$looknfeel" ]] && grep -Fxq "$line" "$looknfeel" &&
+            change "remove $line from $looknfeel (switching to $RICE)"; then
+            sed -i "/^-- .* rice, from the dotfiles checkout/{N;/hypr\.$module/d}; /^require(\"hypr\.$module\")\$/d" "$looknfeel"
         fi
-        case "$src" in
-            repo) repo+=("$name") ;;
-            aur) aur+=("$name") ;;
-            *) die "packages.tsv: $name: source must be repo|aur, not $src" ;;
-        esac
-    done < "$FN_DIR/packages.tsv"
-    if ((${#repo[@]})) && change "omarchy pkg add ${repo[*]}"; then
-        omarchy pkg add "${repo[@]}"
+    done < <(rice_list omarchy)
+
+    mark="$(inline_mark "$RICE_DIR/hypr.lua")"
+    if [[ -f "$looknfeel" ]] && grep -Fq "$HYPR_REQUIRE" "$looknfeel"; then
+        ok "$looknfeel loads hypr.$HYPR_MODULE"
+    elif [[ -n "$mark" && -f "$looknfeel" ]] && grep -Fq "$mark" "$looknfeel"; then
+        # A hand-pasted copy of the rice. Appending the require as well
+        # would apply it twice; leave the user to choose which to keep.
+        warn "$looknfeel already holds an inline copy of the rice ($mark)."
+        warn "Delete that block, then re-run to load it from the dotfiles instead."
+    elif change "append $HYPR_REQUIRE to $looknfeel"; then
+        mkdir -p "$HYPR_DIR"
+        printf '\n-- %s rice, from the dotfiles checkout (omarchy/setup.sh)\n%s\n' \
+            "$RICE" "$HYPR_REQUIRE" >> "$looknfeel"
     fi
-    if ((${#aur[@]})) && change "omarchy pkg aur add ${aur[*]}"; then
-        omarchy pkg aur add "${aur[@]}"
-    fi
-    return 0
 }
 
 step_ghostty() {
@@ -465,14 +391,10 @@ main() {
     for tool in omarchy jq git; do
         command -v "$tool" > /dev/null 2>&1 || die "$tool not found on PATH"
     done
-    if ((APPLY)) && wants theme; then
-        command -v curl > /dev/null 2>&1 || die "curl not found on PATH"
-    fi
 
     ((APPLY)) || echo "Dry run: nothing will change. Re-run with --apply to act."
     echo "rice: $RICE"
     wants packages && step_packages
-    # Hooks and the files they run go in before `omarchy theme set` fires them.
     wants extras && step_extras
     wants hooks && step_hooks
     wants theme && step_theme
@@ -481,12 +403,7 @@ main() {
     wants idle && step_idle
     wants hypr && step_hypr
     wants ghostty && step_ghostty
-
-    if ((CHANGES == 0)); then
-        echo "Everything already in place."
-    elif ((!APPLY)); then
-        echo "$CHANGES change(s) pending; run with --apply."
-    fi
+    plan_summary
 }
 
 main

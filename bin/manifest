@@ -9,6 +9,10 @@
 #
 # Usage:
 #   manifest list <kind>   One normalized package name per line
+#   manifest list rice-pacman|rice-aur [rice]
+#                          A Rice's own packages (omarchy/rices/<rice>/
+#                          packages.pacman | packages.aur); every rice's
+#                          when no rice is named
 #   manifest kinds         The kind vocabulary, one per line
 #   manifest taps          Homebrew tap names declared in the Brewfile
 #
@@ -35,7 +39,8 @@ readonly DOTFILES_DIR
 readonly INSTALL_DIR="$DOTFILES_DIR/install"
 
 # kind -> filename
-readonly KINDS="brew cask cask-extra npm rust pacman code winget"
+readonly KINDS="brew cask cask-extra npm rust pacman code winget rice-pacman rice-aur"
+readonly RICES_DIR="$DOTFILES_DIR/omarchy/rices"
 
 # Per-kind name grammar. These were seven hand-rolled regexes in
 # test/test_packages.bats; they live here so the rule that parses a manifest
@@ -45,7 +50,7 @@ kind_pattern() {
         brew | cask | cask-extra) echo '^[A-Za-z0-9@._+-]+$' ;;
         npm) echo '^[@a-z0-9][a-z0-9._/-]*$' ;;
         rust) echo '^[a-z0-9][a-z0-9_-]*$' ;;
-        pacman) echo '^[a-z0-9][a-z0-9._+-]*$' ;;
+        pacman | rice-pacman | rice-aur) echo '^[a-z0-9][a-z0-9._+-]*$' ;;
         code) echo '^[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+$' ;;
         # winget ids are Publisher.Package; ids are case-sensitive for `-e`.
         winget) echo '^[A-Za-z0-9][A-Za-z0-9-]*\.[A-Za-z0-9][A-Za-z0-9.+_-]*$' ;;
@@ -113,7 +118,32 @@ _list_bare() {
             continue
         fi
         echo "$name"
-    done < "$INSTALL_DIR/$file"
+    done < "$(_path "$file")"
+    return "$status"
+}
+
+# install/ manifests are named relative to INSTALL_DIR; rice ones are absolute.
+_path() { [[ "$1" == /* ]] && echo "$1" || echo "$INSTALL_DIR/$1"; }
+
+# A Rice's packages live in its own directory, so a rice is self-describing
+# (see omarchy/README.md). With no rice named, every rice's list is read.
+_list_rice() {
+    local kind="$1" rice="${2:-}" ext="${1#rice-}" pattern f status=0
+    pattern="$(kind_pattern "$kind")"
+    if [[ -n "$rice" ]]; then
+        [[ "$rice" =~ ^[a-z0-9][a-z0-9-]*$ && -d "$RICES_DIR/$rice" ]] || {
+            echo "manifest list: no such rice '$rice' under $RICES_DIR" >&2
+            return 2
+        }
+        f="$RICES_DIR/$rice/packages.$ext"
+        [[ -f "$f" ]] || return 0
+        _list_bare "$f" "$pattern"
+        return
+    fi
+    for f in "$RICES_DIR"/*/packages."$ext"; do
+        [[ -f "$f" ]] || continue
+        _list_bare "$f" "$pattern" || status=1
+    done
     return "$status"
 }
 
@@ -123,6 +153,7 @@ cmd_list() {
         echo "manifest list: kind required (one of: $KINDS)" >&2
         return 2
     fi
+    case "$kind" in rice-pacman | rice-aur) _list_rice "$kind" "${2:-}"; return ;; esac
     if ! file="$(kind_file "$kind")"; then
         echo "manifest list: unknown kind '$kind' (one of: $KINDS)" >&2
         return 2

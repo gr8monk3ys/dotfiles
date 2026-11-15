@@ -39,6 +39,8 @@ manifest_tools() {
     DOTFILES_DIR="$ROOT_ABS" "$MANIFEST" list rust
     DOTFILES_DIR="$ROOT_ABS" "$MANIFEST" list pacman
     DOTFILES_DIR="$ROOT_ABS" "$MANIFEST" list winget
+    DOTFILES_DIR="$ROOT_ABS" "$MANIFEST" list rice-pacman
+    DOTFILES_DIR="$ROOT_ABS" "$MANIFEST" list rice-aur
 }
 
 catalog_entries() {

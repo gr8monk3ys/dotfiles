@@ -1,48 +1,61 @@
 # omarchy
 
-The Omarchy layer: two rices for an Omarchy 4.x desktop, and the desktop
-settings that go with them. **Field Notebook** (lscaturchio.xyz at night:
-night paper, one forest-green pen) is the one in use; [`rice`](rice) names
-it, and `--rice` or `$OMARCHY_RICE` picks the other for one run.
-**Monochrome 43** follows [43PR/dotfiles](https://github.com/43PR/dotfiles)
-(MIT). Like
-[`windows/`](../windows/README.md), it sits outside `.config/` on purpose:
-Omarchy owns `~/.config/hypr` and `~/.config/omarchy`, so stowing them would
-fight `omarchy update`. [`setup.sh`](setup.sh) places individual files and
-drives Omarchy's own commands instead. It is this directory's `make link`.
+The Omarchy layer: the rices for an Omarchy 4.x desktop, and the desktop
+settings that go with them. Like [`windows/`](../windows/README.md), it sits
+outside `.config/` on purpose: Omarchy owns `~/.config/hypr` and
+`~/.config/omarchy`, so stowing them would fight `omarchy update`.
+[`setup.sh`](setup.sh) places individual files and drives Omarchy's own
+commands instead. It is this directory's `make link`.
+
+## Rices
+
+A **Rice** is one desktop look. Which one a machine shows is decided by the
+Rice module, [`.config/palette/rice.sh`](../.config/palette/rice.sh): one
+word in the gitignored `~/.config/palette/rice.local`, else the platform
+default. On Omarchy:
+
+- **Field Notebook** (the default): lscaturchio.xyz at night, night paper
+  and one forest-green pen.
+- **Monochrome 43**: black, white and greys, after
+  [43PR/dotfiles](https://github.com/43PR/dotfiles) (MIT).
+
+`--rice <name>` (or `$OMARCHY_RICE`) picks another for one run.
+
+Each rice is a directory, [`rices/<rice>/`](rices/), and `setup.sh` acts on
+whatever it ships; no step names a rice. Adding a rice is adding a directory
+plus one line in the Rice module's table.
+
+| In `rices/<rice>/` | Lands in |
+| --- | --- |
+| `theme/` (`colors.toml`, `icons.theme`) | `~/.config/omarchy/themes/<rice>/` (symlinks) |
+| `backgrounds` (executable, optional) | fills the theme's `backgrounds/` when `backgrounds --check` fails: Field Notebook renders its plates (~35 MB, not tracked); Monochrome 43 copies Vantablack's and fetches 43PR's wallpaper by pinned URL and SHA-256 |
+| `hypr.lua` | `~/.config/hypr/<rice_with_underscores>.lua` (symlink), loaded by one `require` line in `looknfeel.lua`; another rice's line is removed |
+| `hypr/` (optional) | `~/.config/hypr/` (symlinks); Field Notebook's night-light schedule |
+| `packages.pacman`, `packages.aur` (optional) | `omarchy pkg add` / `omarchy pkg aur add`, missing ones only; read through `bin/manifest list rice-pacman|rice-aur` |
+| `hooks/<event>.d/` (optional) | `~/.config/omarchy/hooks/<event>.d/` (symlinks) |
+| `bin/`, `share/` (optional) | `~/.local/bin/`, `~/.local/share/<rice>/` (symlinks); Field Notebook's `fn-*` session scripts and `themed.py`, which re-themes cava, spotify_player, Firefox and gh-dash on every `theme-set` |
+| `branding/` (optional) | `~/.config/omarchy/branding/` (symlinks); screensaver art |
+
+Field Notebook's `hypr.lua` also carries glass on every app, the workspace-1
+master layout, and `fn-session` and `hyprsunset` at login.
+
+## Desktop settings (every rice)
 
 | Piece | File | Lands in |
 | --- | --- | --- |
-| Theme colours | [`themes/monochrome-43/colors.toml`](themes/monochrome-43/colors.toml) | `~/.config/omarchy/themes/monochrome-43/` (symlink) |
-| Icon theme | [`themes/monochrome-43/icons.theme`](themes/monochrome-43/icons.theme) | same (symlink) |
-| Backgrounds | not tracked | copied from Omarchy's Vantablack theme, plus 43PR's wallpaper fetched by URL and SHA-256 checked |
-| Hyprland look | [`hypr/monochrome_43.lua`](hypr/monochrome_43.lua) | `~/.config/hypr/monochrome_43.lua` (symlink), loaded by one `require` line appended to `looknfeel.lua` |
 | Shell plugins | [`plugins.tsv`](plugins.tsv) | `~/.config/omarchy/plugins/<id>`, via `omarchy plugin add`, pinned |
 | Bar | [`bar.json`](bar.json) | position via `omarchy bar position`; layout merged into `~/.config/omarchy/shell.json` |
 | Idle | [`idle.json`](idle.json) | `.idle` in `~/.config/omarchy/shell.json`: screensaver after 150 s, auto-lock off (`0`), so the display never turns itself off |
 | Theme hooks | [`hooks/`](hooks/) | `~/.config/omarchy/hooks/<event>.d/` (symlinks) |
 | Ghostty | [`ghostty.conf`](ghostty.conf) | included from `~/.config/ghostty/config.local` by one appended line: zsh as the terminal's command, Omarchy's font size, keybinds and `async-backend` |
 
-Field Notebook adds:
-
-| Piece | File | Lands in |
-| --- | --- | --- |
-| Theme | [`themes/field-notebook/`](themes/field-notebook/) | `~/.config/omarchy/themes/field-notebook/` (symlinks) |
-| Backgrounds | not tracked (~35 MB) | rendered by [`field-notebook/share/make-wallpapers.sh`](field-notebook/share/make-wallpapers.sh) when the theme has none |
-| Hyprland | [`hypr/field_notebook.lua`](hypr/field_notebook.lua) | `~/.config/hypr/`, `require`d from `looknfeel.lua`: the look, glass on every app, the workspace-1 master layout, `fn-session` and `hyprsunset` at login |
-| Night light | [`hypr/hyprsunset.conf`](hypr/hyprsunset.conf) | `~/.config/hypr/hyprsunset.conf` (symlink) |
-| Packages | [`field-notebook/packages.tsv`](field-notebook/packages.tsv) | `omarchy pkg add` / `omarchy pkg aur add`, missing ones only |
-| Session scripts | [`field-notebook/bin/`](field-notebook/bin/) | `~/.local/bin/fn-*` (symlinks) |
-| App theming | [`field-notebook/share/`](field-notebook/share/) | `~/.local/share/field-notebook/` (symlinks); `themed.py` re-themes cava, spotify_player, Firefox and gh-dash on every `theme-set` |
-| Theme hook | [`field-notebook/hooks/`](field-notebook/hooks/) | `~/.config/omarchy/hooks/theme-set.d/` (symlink) |
-| Screensaver art | [`field-notebook/branding/screensaver.txt`](field-notebook/branding/screensaver.txt) | `~/.config/omarchy/branding/` (symlink) |
-
 ## Use
 
 ```bash
 make omarchy                 # dry run: what would change
 make omarchy apply=1         # do it
-make omarchy only=hypr       # one step: packages | theme | plugins | bar | idle | hypr | hooks | extras | ghostty
+make omarchy only=hypr       # one step: packages | extras | hooks | theme | plugins | bar | idle | hypr | ghostty
+make omarchy rice=monochrome-43   # another rice, this run only
 omarchy/setup.sh --help
 ```
 
@@ -51,9 +64,10 @@ and exits 0; `apply=1` refuses. A second run reports everything as `ok`.
 
 What `apply=1` changes, and how to undo it:
 
-- **Theme**: `omarchy theme set monochrome-43` if it is not already current.
-  Switch back with `omarchy theme set <name>`. A differing `colors.toml`
-  already there is kept as `colors.toml.dotfiles-bak`.
+- **Theme**: `omarchy theme set <rice>` if it is not already current.
+  Switch back with `omarchy theme set <name>`. Any file a link would replace
+  that is not identical is kept as `<file>.dotfiles-bak` (the shared
+  `bin/lib/plan.sh` rule).
 - **Plugins**: each missing plugin is added with `omarchy plugin add <url>
   --yes`, then checked out at its pinned commit and re-validated; installed
   ones are moved to their pin only when their tree is clean. Enabled when

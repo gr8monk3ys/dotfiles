@@ -10,8 +10,8 @@ load test_helper/common
 setup() {
     FAKE_XDG="$(mktemp -d)"
     mkdir -p "$FAKE_XDG/palette"
-    # The palettes themselves, but never rice.local: that file is the subject.
-    for f in "$DOTFILES_DIR"/.config/palette/*.conf; do
+    # The palettes and the Rice module, but never rice.local: that file is the subject.
+    for f in "$DOTFILES_DIR"/.config/palette/*.conf "$DOTFILES_DIR"/.config/palette/rice.sh; do
         ln -s "$f" "$FAKE_XDG/palette/"
     done
     STUB_BIN="$(mktemp -d)"
@@ -131,4 +131,36 @@ shell_rice() {
         btop/themes/danse.theme palette/danse.conf; do
         [[ -f "$DOTFILES_DIR/.config/$f" ]] || { echo "missing .config/$f"; return 1; }
     done
+}
+
+# The Rice module itself: one table, one default per platform.
+
+rice_sh() { sh -c '. "$1/.config/palette/rice.sh"; shift; "$@"; printf "%s\n" "${RICE:-}"' _ "$DOTFILES_DIR" "$@"; }
+
+@test "rice module: defaults are monochrome-43 on macOS and field-notebook on Omarchy" {
+    XDG_CONFIG_HOME="$FAKE_XDG" run rice_sh rice_select macos
+    assert_output "monochrome-43"
+    XDG_CONFIG_HOME="$FAKE_XDG" run rice_sh rice_select omarchy
+    assert_output "field-notebook"
+}
+
+@test "rice module: a rice that does not ship on the platform falls back to its default" {
+    echo danse > "$FAKE_XDG/palette/rice.local"
+    XDG_CONFIG_HOME="$FAKE_XDG" run rice_sh rice_select omarchy
+    assert_output "field-notebook"
+    XDG_CONFIG_HOME="$FAKE_XDG" run rice_sh rice_select macos
+    assert_output "danse"
+    echo vaporwave > "$FAKE_XDG/palette/rice.local"
+    XDG_CONFIG_HOME="$FAKE_XDG" run rice_sh rice_select macos
+    assert_output "monochrome-43"
+}
+
+@test "rice module: every rice has a palette file, under bash, sh and zsh alike" {
+    local r
+    for r in $(sh -c '. "$1/.config/palette/rice.sh"; rice_list' _ "$DOTFILES_DIR"); do
+        [[ -f "$DOTFILES_DIR/.config/palette/$r.conf" ]] || { echo "no palette for $r"; return 1; }
+    done
+    command -v zsh > /dev/null || skip "zsh not installed"
+    run zsh -c 'source "$1/.config/palette/rice.sh"; rice_list omarchy' _ "$DOTFILES_DIR"
+    assert_output "$(printf 'monochrome-43\nfield-notebook')"
 }

@@ -196,6 +196,10 @@ main() {
         # winget only exists on Windows, where there is no make: the Windows
         # side is installed by windows/setup.ps1, which reads the same manifest.
         winget) print_info "winget packages are installed by windows/setup.ps1, not here" ;;
+        # A Rice's own packages, some from the AUR: installed for the chosen
+        # rice only, by omarchy/setup.sh (make omarchy), never wholesale.
+        rice-pacman) print_info "rice packages are installed by omarchy/setup.sh (make omarchy), not here" ;;
+        rice-aur) print_info "rice packages are installed by omarchy/setup.sh (make omarchy), not here" ;;
     esac
 }
 

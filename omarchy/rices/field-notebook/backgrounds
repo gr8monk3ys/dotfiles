@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Field Notebook backgrounds: rendered, not tracked (three 2560x1440 PNGs
+# are ~35 MB). omarchy/setup.sh calls this with the theme's backgrounds dir.
+#
+#   backgrounds --check DIR   exit 0 when DIR already has backgrounds
+#   backgrounds DIR           render the plates into DIR (needs imagemagick)
+set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if [[ "${1:-}" == --check ]]; then
+    compgen -G "$2/*.png" > /dev/null || compgen -G "$2/*.jpg" > /dev/null
+    exit
+fi
+command -v magick > /dev/null 2>&1 || {
+    echo "field-notebook backgrounds: imagemagick missing (packages step installs it)" >&2
+    exit 1
+}
+exec "$HERE/share/make-wallpapers.sh" "$1"

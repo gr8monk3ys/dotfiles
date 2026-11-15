@@ -142,7 +142,9 @@ danse         windows/windows-terminal/danse.json.tpl
 monochrome-43 .config/ghostty/themes/monochrome-43
 monochrome-43 .config/btop/themes/monochrome-43.theme
 monochrome-43 .config/cava/config
-monochrome-43 omarchy/themes/monochrome-43/colors.toml
+monochrome-43 omarchy/rices/monochrome-43/theme/colors.toml
+field-notebook omarchy/rices/field-notebook/theme/colors.toml
+field-notebook omarchy/rices/field-notebook/share/make-wallpapers.sh
 monochrome-43 .config/starship/starship.toml
 monochrome-43 .config/ghostty/config
 danse         .config/starship/danse.toml
