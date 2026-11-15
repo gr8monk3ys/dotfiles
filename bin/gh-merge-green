@@ -23,13 +23,13 @@ fi
 merge_flags=("$@")
 ((${#merge_flags[@]})) || merge_flags=(--squash --delete-branch)
 
-head=$(gh pr view "$pr" "${repo[@]}" --json headRefOid -q .headRefOid)
+head=$(gh pr view "$pr" ${repo[@]+"${repo[@]}"} --json headRefOid -q .headRefOid)
 [[ $head =~ ^[0-9a-f]{40}$ ]] || die "could not read the head commit of #$pr"
 
-checks=$(gh pr checks "$pr" "${repo[@]}" --json name -q length 2>/dev/null || echo 0)
+checks=$(gh pr checks "$pr" ${repo[@]+"${repo[@]}"} --json name -q length 2>/dev/null || echo 0)
 ((checks > 0)) || die "#$pr has no checks on ${head:0:8}; not merging. Retry once CI has started."
 
-gh pr checks "$pr" "${repo[@]}" --watch --fail-fast --interval 15 ||
+gh pr checks "$pr" ${repo[@]+"${repo[@]}"} --watch --fail-fast --interval 15 ||
     die "#$pr: checks did not all pass on ${head:0:8}; not merging."
 
-gh pr merge "$pr" "${repo[@]}" --match-head-commit "$head" "${merge_flags[@]}"
+gh pr merge "$pr" ${repo[@]+"${repo[@]}"} --match-head-commit "$head" "${merge_flags[@]}"
