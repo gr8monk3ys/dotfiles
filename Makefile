@@ -354,12 +354,12 @@ claude-sync:
 hermes-offline:
 	@$(MAKEFILE_DIR)/bin/hermes-offline $(if $(apply),--apply) $(if $(pull),--pull)
 
-## Install the Monochrome 43 rice on Omarchy (dry run unless apply=1)
+## Install the Omarchy rice (omarchy/rice) and desktop settings (dry run unless apply=1)
 # Not folded into `link`: Omarchy owns ~/.config/hypr and ~/.config/omarchy,
 # so omarchy/setup.sh places single files and drives Omarchy's own commands
 # instead of stowing. On any other machine it says so and does nothing.
 omarchy:
-	@$(MAKEFILE_DIR)/omarchy/setup.sh $(if $(apply),--apply) $(if $(only),--only $(only))
+	@$(MAKEFILE_DIR)/omarchy/setup.sh $(if $(apply),--apply) $(if $(only),--only $(only)) $(if $(rice),--rice $(rice))
 
 ## Benchmark interactive zsh startup against a performance budget
 bench-shell:
@@ -553,7 +553,7 @@ help:
 	@echo "                      plugins and user-scope MCP servers (dry run by default)"
 	@echo "  make hermes-offline [apply=1] [pull=1] - Hermes Agent on the local Ollama"
 	@echo "                      (docs/hermes.md; dry run by default)"
-	@echo "  make omarchy [apply=1] [only=theme|plugins|bar|hypr|ghostty] - Monochrome 43 rice"
+	@echo "  make omarchy [apply=1] [only=<step>] [rice=<name>] - Omarchy rice + desktop settings"
 	@echo "                      on Omarchy (omarchy/setup.sh; dry run unless apply=1)"
 	@echo "  make restore [backup=/path] - Restore latest/specified backup snapshot"
 	@echo "  make restore-zshenv - Restore legacy .zshenv backup only"

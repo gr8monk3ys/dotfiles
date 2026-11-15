@@ -14,6 +14,11 @@ setup() {
     export XDG_STATE_HOME="$TEST_HOME/.local/state"
     export PLATFORM_OS_RELEASE="$TEST_TEMP_DIR/os-release"
     export PLATFORM_OMARCHY_SYSTEM_DIR="$TEST_TEMP_DIR/usr-share-omarchy"
+    export OMARCHY_BIN_DIR="$TEST_HOME/.local/bin"
+    export XDG_DATA_HOME="$TEST_HOME/.local/share"
+    # The older tests were written against Monochrome 43; Field Notebook
+    # tests set their own rice.
+    export OMARCHY_RICE=monochrome-43
     : > "$PLATFORM_OS_RELEASE"
 
     # A logging stand-in for the omarchy CLI.
@@ -189,5 +194,128 @@ be_omarchy() { mkdir -p "$PLATFORM_OMARCHY_SYSTEM_DIR"; }
     grep -qx 'command = /usr/bin/zsh' "$DOTFILES_DIR/omarchy/ghostty.conf"
     command -v ghostty > /dev/null || skip "ghostty not installed"
     run ghostty +validate-config --config-file="$DOTFILES_DIR/omarchy/ghostty.conf"
+    assert_success
+}
+
+# ---------------------------------------------------------------------------
+# Rice selection and the Field Notebook steps
+# ---------------------------------------------------------------------------
+
+@test "omarchy/rice names a rice setup.sh knows" {
+    run tr -d '[:space:]' < "$DOTFILES_DIR/omarchy/rice"
+    [[ "$output" =~ ^(field-notebook|monochrome-43)$ ]]
+}
+
+@test "setup.sh rejects an unknown rice" {
+    run "$SETUP" --rice vaporwave
+    assert_failure
+    assert_output --partial "unknown rice"
+}
+
+@test "every rice has its theme files and Hyprland module" {
+    local r m
+    for r in field-notebook monochrome-43; do
+        m="${r//-/_}"
+        [[ -f "$DOTFILES_DIR/omarchy/themes/$r/colors.toml" ]]
+        [[ -f "$DOTFILES_DIR/omarchy/themes/$r/icons.theme" ]]
+        [[ -f "$DOTFILES_DIR/omarchy/hypr/$m.lua" ]]
+    done
+}
+
+@test "field-notebook hypr step links the module and night light, requires once" {
+    be_omarchy
+    export OMARCHY_RICE=field-notebook
+    mkdir -p "$XDG_CONFIG_HOME/hypr"
+    echo '-- user look' > "$XDG_CONFIG_HOME/hypr/looknfeel.lua"
+    run "$SETUP" --apply --only hypr
+    assert_success
+    run "$SETUP" --apply --only hypr
+    assert_output --partial "Everything already in place"
+    run grep -c 'require("hypr.field_notebook")' "$XDG_CONFIG_HOME/hypr/looknfeel.lua"
+    assert_output "1"
+    [[ "$(readlink "$XDG_CONFIG_HOME/hypr/field_notebook.lua")" == "$DOTFILES_DIR/omarchy/hypr/field_notebook.lua" ]]
+    [[ "$(readlink "$XDG_CONFIG_HOME/hypr/hyprsunset.conf")" == "$DOTFILES_DIR/omarchy/hypr/hyprsunset.conf" ]]
+}
+
+@test "field-notebook hypr step does not stack a require on an inline copy" {
+    be_omarchy
+    export OMARCHY_RICE=field-notebook
+    mkdir -p "$XDG_CONFIG_HOME/hypr"
+    printf 'hl.curve("notebook", {})\n' > "$XDG_CONFIG_HOME/hypr/looknfeel.lua"
+    run "$SETUP" --apply --only hypr
+    assert_success
+    assert_output --partial "inline copy"
+    run grep -c 'require("hypr.field_notebook")' "$XDG_CONFIG_HOME/hypr/looknfeel.lua"
+    assert_output "0"
+}
+
+@test "idle step replaces only .idle and keeps key order" {
+    command -v jq > /dev/null || skip "jq not installed"
+    be_omarchy
+    local cfg="$XDG_CONFIG_HOME/omarchy"
+    mkdir -p "$cfg"
+    printf '{"bar": {"position": "left"}, "idle": {"lock": 300, "screensaver": 150}, "version": 1}\n' > "$cfg/shell.json"
+    run "$SETUP" --apply --only idle
+    assert_success
+    run jq -c 'keys_unsorted' "$cfg/shell.json"
+    assert_output '["bar","idle","version"]'
+    [[ "$(jq -S -c .idle "$cfg/shell.json")" == "$(jq -S -c . "$DOTFILES_DIR/omarchy/idle.json")" ]]
+    run "$SETUP" --apply --only idle
+    assert_output --partial "Everything already in place"
+}
+
+@test "hooks step links the shared hooks, and Field Notebook's only for that rice" {
+    be_omarchy
+    local hooks="$XDG_CONFIG_HOME/omarchy/hooks/theme-set.d"
+    run "$SETUP" --apply --only hooks
+    assert_success
+    [[ -L "$hooks/10-owe-sync" ]]
+    [[ ! -e "$hooks/20-field-notebook-apps" ]]
+    OMARCHY_RICE=field-notebook run "$SETUP" --apply --only hooks
+    assert_success
+    [[ "$(readlink "$hooks/20-field-notebook-apps")" == "$DOTFILES_DIR/omarchy/field-notebook/hooks/theme-set.d/20-field-notebook-apps" ]]
+}
+
+@test "extras step links the session scripts, shared files and screensaver art" {
+    be_omarchy
+    export OMARCHY_RICE=field-notebook
+    run "$SETUP" --apply --only extras
+    assert_success
+    local f
+    for f in "$DOTFILES_DIR"/omarchy/field-notebook/bin/*; do
+        [[ "$(readlink "$OMARCHY_BIN_DIR/$(basename "$f")")" == "$f" ]]
+    done
+    [[ -L "$XDG_DATA_HOME/field-notebook/themed.py" ]]
+    [[ -L "$XDG_CONFIG_HOME/omarchy/branding/screensaver.txt" ]]
+    run "$SETUP" --apply --only extras
+    assert_output --partial "Everything already in place"
+}
+
+@test "packages step installs only what pacman lacks, repo and AUR apart" {
+    be_omarchy
+    export OMARCHY_RICE=field-notebook
+    # pacman knows cava and nothing else.
+    printf '#!/usr/bin/env bash\n[[ "$2" == cava ]]\n' > "$STUB_BIN/pacman"
+    chmod +x "$STUB_BIN/pacman"
+    run "$SETUP" --apply --only packages
+    assert_success
+    run grep -c '^pkg add ' "$OMARCHY_LOG"
+    assert_output "1"
+    run grep -c '^pkg aur add ' "$OMARCHY_LOG"
+    assert_output "1"
+    ! grep -q ' cava\b' "$OMARCHY_LOG"
+    grep -q '^pkg aur add .*gh-dash-bin' "$OMARCHY_LOG"
+}
+
+@test "packages step is a no-op for Monochrome 43" {
+    be_omarchy
+    run "$SETUP" --apply --only packages
+    assert_success
+    [[ ! -s "$OMARCHY_LOG" ]] || ! grep -q '^pkg ' "$OMARCHY_LOG"
+}
+
+@test "packages.tsv names a repo or aur source for every package" {
+    run awk '!/^#/ && NF && $2 != "repo" && $2 != "aur" { print; bad=1 } END { exit bad }' \
+        "$DOTFILES_DIR/omarchy/field-notebook/packages.tsv"
     assert_success
 }

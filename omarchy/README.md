@@ -1,7 +1,11 @@
 # omarchy
 
-The Omarchy layer: the **Monochrome 43** rice for an Omarchy 4.x desktop,
-after [43PR/dotfiles](https://github.com/43PR/dotfiles) (MIT). Like
+The Omarchy layer: two rices for an Omarchy 4.x desktop, and the desktop
+settings that go with them. **Field Notebook** (lscaturchio.xyz at night:
+night paper, one forest-green pen) is the one in use; [`rice`](rice) names
+it, and `--rice` or `$OMARCHY_RICE` picks the other for one run.
+**Monochrome 43** follows [43PR/dotfiles](https://github.com/43PR/dotfiles)
+(MIT). Like
 [`windows/`](../windows/README.md), it sits outside `.config/` on purpose:
 Omarchy owns `~/.config/hypr` and `~/.config/omarchy`, so stowing them would
 fight `omarchy update`. [`setup.sh`](setup.sh) places individual files and
@@ -15,14 +19,30 @@ drives Omarchy's own commands instead. It is this directory's `make link`.
 | Hyprland look | [`hypr/monochrome_43.lua`](hypr/monochrome_43.lua) | `~/.config/hypr/monochrome_43.lua` (symlink), loaded by one `require` line appended to `looknfeel.lua` |
 | Shell plugins | [`plugins.tsv`](plugins.tsv) | `~/.config/omarchy/plugins/<id>`, via `omarchy plugin add`, pinned |
 | Bar | [`bar.json`](bar.json) | position via `omarchy bar position`; layout merged into `~/.config/omarchy/shell.json` |
+| Idle | [`idle.json`](idle.json) | `.idle` in `~/.config/omarchy/shell.json`: screensaver after 150 s, auto-lock off (`0`), so the display never turns itself off |
+| Theme hooks | [`hooks/`](hooks/) | `~/.config/omarchy/hooks/<event>.d/` (symlinks) |
 | Ghostty | [`ghostty.conf`](ghostty.conf) | included from `~/.config/ghostty/config.local` by one appended line: zsh as the terminal's command, Omarchy's font size, keybinds and `async-backend` |
+
+Field Notebook adds:
+
+| Piece | File | Lands in |
+| --- | --- | --- |
+| Theme | [`themes/field-notebook/`](themes/field-notebook/) | `~/.config/omarchy/themes/field-notebook/` (symlinks) |
+| Backgrounds | not tracked (~35 MB) | rendered by [`field-notebook/share/make-wallpapers.sh`](field-notebook/share/make-wallpapers.sh) when the theme has none |
+| Hyprland | [`hypr/field_notebook.lua`](hypr/field_notebook.lua) | `~/.config/hypr/`, `require`d from `looknfeel.lua`: the look, glass on every app, the workspace-1 master layout, `fn-session` and `hyprsunset` at login |
+| Night light | [`hypr/hyprsunset.conf`](hypr/hyprsunset.conf) | `~/.config/hypr/hyprsunset.conf` (symlink) |
+| Packages | [`field-notebook/packages.tsv`](field-notebook/packages.tsv) | `omarchy pkg add` / `omarchy pkg aur add`, missing ones only |
+| Session scripts | [`field-notebook/bin/`](field-notebook/bin/) | `~/.local/bin/fn-*` (symlinks) |
+| App theming | [`field-notebook/share/`](field-notebook/share/) | `~/.local/share/field-notebook/` (symlinks); `themed.py` re-themes cava, spotify_player, Firefox and gh-dash on every `theme-set` |
+| Theme hook | [`field-notebook/hooks/`](field-notebook/hooks/) | `~/.config/omarchy/hooks/theme-set.d/` (symlink) |
+| Screensaver art | [`field-notebook/branding/screensaver.txt`](field-notebook/branding/screensaver.txt) | `~/.config/omarchy/branding/` (symlink) |
 
 ## Use
 
 ```bash
 make omarchy                 # dry run: what would change
 make omarchy apply=1         # do it
-make omarchy only=hypr       # one step: theme | plugins | bar | hypr | ghostty
+make omarchy only=hypr       # one step: packages | theme | plugins | bar | idle | hypr | hooks | extras | ghostty
 omarchy/setup.sh --help
 ```
 
@@ -64,19 +84,20 @@ the commit in `plugins.tsv`, run `make omarchy apply=1 only=plugins`.
 | --- | --- | --- |
 | Exposé | kristofferR/omarchy-expose | yes |
 | Rice Bar | jcarcinogen/omarchy-rice-bar | no (installed only) |
-| Dynamic Island | ofa14-prog/omarchy-dynamic-island | yes |
+| Dynamic Island | ofa14-prog/omarchy-dynamic-island | no (installed only) |
 | Omaudix | qempexe/omarchy-omaudix | yes |
 | Segue | SteveB98/omarchy-segue | yes |
 | Hardware Monitor | meviusisback/omarchy-hw-monitor | yes |
 | Agent Skills Manager | oliwier-xiao/agent-skills-manager | yes |
-| 60Hz Audio Spectrum | pennyfx/omarchy-spectrum | yes |
+| 60Hz Audio Spectrum | pennyfx/omarchy-spectrum | no (installed only) |
 | Agent Usage | robzolkos/omarchy-agent-usage | yes |
 | Colophon | ssandys/colophon | yes |
 | Spaces | tornikegomareli/omarchy-spaces | yes |
 | OMCP | btsouth/omarchy-omcp | yes |
 
-`gr8monk3ys.sysstats` (CPU, memory, temperature) is placed by `bar.json`
-but is `external` in `plugins.tsv`: it is maintained outside this repo, and
+`gr8monk3ys.sysstats` (CPU, memory, temperature), `superwhisper.panel` and
+`io.voxtype.settings` (each shipped by its app's package) are `external` in
+`plugins.tsv`: it is maintained outside this repo, and
 `setup.sh` never creates, replaces, links or enables its directory. Without
 it installed, its bar slot is simply empty.
 
@@ -96,6 +117,11 @@ it installed, its bar slot is simply empty.
   [`.config/sketchybar/README.md`](../.config/sketchybar/README.md).
 
 ## Not automated
+
+- Field Notebook's own wallpapers under `~/.config/omarchy/backgrounds/`
+  (the Monet and Shishkin paintings) are not tracked; copy them by hand.
+- Spotify sign-in for `spotify_player` (its `client_id` in
+  `~/.config/spotify-player/app.toml`) is a secret and stays local.
 
 - The terminal configs (Ghostty, Starship, fastfetch, cava, btop) are
   Monochrome 43 by default and come from `make link`, not from here. Ghostty

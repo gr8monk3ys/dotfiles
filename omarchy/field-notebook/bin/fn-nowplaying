@@ -1,0 +1,334 @@
+#!/usr/bin/env python3
+"""Field Notebook now-playing pane: Spotify (official app, via MPRIS) with a
+built-in cava visualizer underneath, in one terminal.
+
+Keys: space play/pause · n next · p previous · s shuffle · +/- volume ·
+      o show the Spotify window · q quit to a shell.
+"""
+import base64
+import hashlib
+import os
+import pathlib
+import re
+import select
+import shutil
+import signal
+import subprocess
+import sys
+import termios
+import threading
+import time
+import tomllib
+import tty
+import urllib.request
+
+HOME = pathlib.Path.home()
+CACHE = HOME / ".cache/field-notebook"
+ART = CACHE / "art"
+COLORS = HOME / ".local/state/omarchy/current/theme/colors.toml"
+ART_COLS, ART_ROWS, TEXT_COL = 20, 9, 26
+VIZ_TOP = ART_ROWS + 4          # first row of the visualizer
+BLOCKS = " ▁▂▃▄▅▆▇█"
+ART_URL = re.compile(r"^https://i\.scdn\.co/image/[A-Za-z0-9]{10,64}$")
+CTRL = re.compile(r"[\x00-\x1f\x7f-\x9f]")
+out = sys.stdout
+
+
+def hexrgb(h):
+    return tuple(int(h[i:i + 2], 16) for i in (1, 3, 5))
+
+
+def mix(a, b, t):
+    return tuple(round(x + (y - x) * t) for x, y in zip(a, b))
+
+
+def fg(rgb):
+    return "\x1b[38;2;%d;%d;%dm" % rgb
+
+
+def load_theme():
+    try:
+        with open(COLORS, "rb") as f:
+            c = tomllib.load(f)
+    except Exception:
+        c = {}
+    pick = lambda k, d: hexrgb(c[k]) if isinstance(c.get(k), str) and re.match(r"^#[0-9a-fA-F]{6}$", c[k]) else hexrgb(d)
+    bg, acc = pick("background", "#111317"), pick("accent", "#42a979")
+    return {
+        "fg": pick("foreground", "#eceef1"), "bright": pick("bright_foreground", "#fafafa"),
+        "muted": pick("muted", "#767c87"), "accent": acc, "bg": bg,
+        "track": mix(bg, pick("foreground", "#eceef1"), 0.18),
+        "low": mix(bg, acc, 0.45), "high": mix(acc, pick("bright_foreground", "#fafafa"), 0.65),
+    }
+
+
+def clean(s, n):
+    s = CTRL.sub("", s or "")
+    return s if len(s) <= n else s[: max(0, n - 1)] + "…"
+
+
+def run(*args, timeout=2):
+    try:
+        return subprocess.run(args, capture_output=True, text=True, timeout=timeout).stdout.strip()
+    except Exception:
+        return ""
+
+
+class Player(threading.Thread):
+    """Polls playerctl once a second off the render thread."""
+
+    def __init__(self):
+        super().__init__(daemon=True)
+        self.state = None
+        self.lock = threading.Lock()
+
+    def run(self):
+        fmt = "\t".join("{{%s}}" % k for k in
+                        ("status", "title", "artist", "album", "position", "mpris:length", "mpris:artUrl", "volume", "shuffle"))
+        while True:
+            raw = run("playerctl", "-p", "spotify", "metadata", "--format", fmt)
+            st = None
+            if raw:
+                f = (raw.split("\t") + [""] * 9)[:9]
+                num = lambda x: int(float(x)) if re.match(r"^\d+(\.\d+)?$", x or "") else 0
+                st = {"status": f[0], "title": f[1], "artist": f[2], "album": f[3],
+                      "pos": num(f[4]), "len": num(f[5]), "art": f[6],
+                      "vol": float(f[7]) if re.match(r"^\d+(\.\d+)?$", f[7] or "") else 0.0,
+                      "shuffle": f[8] in ("true", "On")}
+            with self.lock:
+                self.state = st
+            time.sleep(1)
+
+
+def art_png(url):
+    """Album art from Spotify's CDN only, size-capped, cached as a small PNG."""
+    if not ART_URL.match(url or ""):
+        return None
+    ART.mkdir(parents=True, exist_ok=True)
+    png = ART / (hashlib.sha1(url.encode()).hexdigest()[:16] + ".png")
+    if png.exists():
+        return png
+    try:
+        with urllib.request.urlopen(url, timeout=5) as r:
+            data = r.read(2_000_001)
+        if len(data) > 2_000_000:
+            return None
+        src = png.with_suffix(".src")
+        src.write_bytes(data)
+        subprocess.run(["magick", str(src), "-resize", "300x300", str(png)], timeout=10, check=False)
+        src.unlink(missing_ok=True)
+    except Exception:
+        return None
+    return png if png.exists() else None
+
+
+def kitty_image(path):
+    data = base64.b64encode(path.read_bytes()).decode()
+    chunks = [data[i:i + 4096] for i in range(0, len(data), 4096)]
+    s = "\x1b_Ga=d,q=2\x1b\\\x1b[2;3H"
+    for i, ch in enumerate(chunks):
+        more = 1 if i < len(chunks) - 1 else 0
+        if i == 0:
+            s += f"\x1b_Ga=T,f=100,q=2,c={ART_COLS},r={ART_ROWS},m={more};{ch}\x1b\\"
+        else:
+            s += f"\x1b_Gm={more};{ch}\x1b\\"
+    return s
+
+
+class Cava:
+    """cava in raw ASCII mode; one line of bar heights (0..1000) per frame."""
+
+    def __init__(self, bars):
+        conf = CACHE / "cava-raw.conf"
+        CACHE.mkdir(parents=True, exist_ok=True)
+        conf.write_text(f"""[general]
+framerate = 30
+bars = {bars}
+autosens = 1
+lower_cutoff_freq = 40
+higher_cutoff_freq = 12000
+[input]
+method = pipewire
+source = auto
+[output]
+method = raw
+raw_target = /dev/stdout
+data_format = ascii
+ascii_max_range = 1000
+bar_delimiter = 59
+frame_delimiter = 10
+channels = mono
+[smoothing]
+monstercat = 1
+noise_reduction = 77
+""")
+        self.proc = None
+        if shutil.which("cava"):
+            self.proc = subprocess.Popen(["cava", "-p", str(conf)], stdout=subprocess.PIPE,
+                                         stderr=subprocess.DEVNULL, bufsize=0)
+            os.set_blocking(self.proc.stdout.fileno(), False)
+        self.buf = b""
+        self.last = [0] * bars
+
+    def fileno(self):
+        return self.proc.stdout.fileno() if self.proc else None
+
+    def read(self):
+        try:
+            chunk = self.proc.stdout.read(65536) or b""
+        except Exception:
+            chunk = b""
+        self.buf += chunk
+        if b"\n" in self.buf:
+            *lines, self.buf = self.buf.split(b"\n")
+            for line in reversed(lines):
+                vals = [v for v in line.decode(errors="ignore").split(";") if v]
+                if vals:
+                    self.last = [min(1000, int(v)) for v in vals if v.isdigit()]
+                    break
+        return self.last
+
+    def stop(self):
+        if self.proc:
+            self.proc.terminate()
+
+
+class Pane:
+    def __init__(self):
+        self.theme = load_theme()
+        self.player = Player()
+        self.player.start()
+        self.cava = None
+        self.art_url = None
+        self.size = (0, 0)
+        self.text_key = None
+
+    def resize(self):
+        cols, rows = shutil.get_terminal_size((100, 24))
+        self.size = (cols, rows)
+        if self.cava:
+            self.cava.stop()
+        self.cava = Cava(max(8, (cols - 4) // 2))
+        self.art_url = None
+        self.text_key = None
+        out.write("\x1b[H\x1b[2J\x1b_Ga=d,q=2\x1b\\")
+
+    # ---- text block --------------------------------------------------
+    def draw_text(self, st):
+        t, (cols, _rows) = self.theme, self.size
+        R, B, I = "\x1b[0m", "\x1b[1m", "\x1b[3m"
+        w = max(10, cols - TEXT_COL - 2)
+        at = lambda r: f"\x1b[{r};{TEXT_COL}H\x1b[K"
+        s = at(2) + fg(t["muted"]) + "N O W   P L A Y I N G" + R
+        if not st:
+            s += at(4) + fg(t["fg"]) + "Spotify isn't running yet." + R
+            s += at(5) + fg(t["muted"]) + "It starts with your session; press " + fg(t["accent"]) + "o" + fg(t["muted"]) + " to open it." + R
+            for r in (6, 8, 10):
+                s += at(r)
+            return s
+        s += at(4) + B + fg(t["bright"]) + clean(st["title"], w) + R
+        s += at(5) + fg(t["accent"]) + clean(st["artist"], w) + R
+        s += at(6) + I + fg(t["muted"]) + clean(st["album"], w) + R
+        tm = lambda us: "%d:%02d" % divmod(us // 1_000_000, 60)
+        times = f" {tm(st['pos'])} / {tm(st['len'])}"
+        barw = max(10, cols - TEXT_COL - 4 - len(times))
+        filled = min(barw, st["pos"] * barw // st["len"]) if st["len"] else 0
+        icon = "󰏤" if st["status"] == "Playing" else "󰐊"
+        s += at(8) + fg(t["accent"]) + icon + "  " + "━" * filled + fg(t["track"]) + "─" * (barw - filled) + fg(t["muted"]) + times + R
+        k = lambda key, label: fg(t["accent"]) + key + fg(t["muted"]) + " " + label + "   "
+        s += at(10) + k("space", "play") + k("n p", "skip") + k("s", "shuffle " + ("on" if st["shuffle"] else "off")) + k("+ -", f"vol {round(st['vol'] * 100)}%") + R
+        return s
+
+    # ---- visualizer --------------------------------------------------
+    def draw_viz(self, bars):
+        t, (cols, rows) = self.theme, self.size
+        height = rows - VIZ_TOP
+        if height < 2:
+            return ""
+        s = []
+        for i in range(height):                      # i = 0 is the top row
+            row = VIZ_TOP + i
+            level_from_bottom = height - 1 - i
+            col = mix(t["low"], t["accent"], min(1, level_from_bottom / max(1, height * 0.55)))
+            if level_from_bottom > height * 0.55:
+                col = mix(t["accent"], t["high"], (level_from_bottom - height * 0.55) / max(1, height * 0.45))
+            line = []
+            for v in bars:
+                eighths = v * height * 8 // 1000 - level_from_bottom * 8
+                ch = BLOCKS[max(0, min(8, eighths))]
+                line.append(ch + " ")
+            s.append(f"\x1b[{row};3H" + fg(col) + "".join(line)[: cols - 4])
+        return "".join(s) + "\x1b[0m"
+
+    def frame(self, force_text=False):
+        with self.player.lock:
+            st = self.player.state
+        key = None if not st else (st["status"], st["title"], st["artist"], st["pos"] // 1_000_000, st["vol"], st["shuffle"])
+        buf = ""
+        if force_text or key != self.text_key:
+            self.text_key = key
+            art = st["art"] if st else None
+            if art != self.art_url:
+                self.art_url = art
+                png = art_png(art) if art else None
+                buf += kitty_image(png) if png else "\x1b_Ga=d,q=2\x1b\\"
+            buf += self.draw_text(st)
+        if self.cava and self.cava.proc:
+            buf += self.draw_viz(self.cava.read())
+        if buf:
+            out.write(buf)
+            out.flush()
+
+    def key(self, ch):
+        p = ("playerctl", "-p", "spotify")
+        acts = {" ": p + ("play-pause",), "n": p + ("next",), "p": p + ("previous",),
+                "s": p + ("shuffle", "toggle"), "+": p + ("volume", "0.05+"), "=": p + ("volume", "0.05+"),
+                "-": p + ("volume", "0.05-")}
+        if ch in acts:
+            subprocess.Popen(acts[ch], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        elif ch == "o":
+            subprocess.Popen(["sh", "-c", 'a=$(hyprctl clients -j | jq -r \'.[]|select(.class=="Spotify")|.address\' | head -1); '
+                              'if [ -n "$a" ]; then hyprctl dispatch "hl.dsp.focus({ window = \\"address:$a\\" })"; '
+                              'else setsid -f uwsm-app -- spotify-launcher; fi'],
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def main():
+    fd = sys.stdin.fileno()
+    old = termios.tcgetattr(fd)
+    tty.setcbreak(fd)                       # keys without Enter, no echo
+    out.write("\x1b[?1049h\x1b[?25l")
+    pane = Pane()
+    resized = [True]
+    signal.signal(signal.SIGWINCH, lambda *_: resized.__setitem__(0, True))
+    quit_to_shell = False
+    try:
+        while True:
+            if resized[0]:
+                resized[0] = False
+                pane.resize()
+                pane.frame(force_text=True)
+            fds = [fd] + ([pane.cava.fileno()] if pane.cava and pane.cava.proc else [])
+            ready, _, _ = select.select(fds, [], [], 0.25)
+            if fd in ready:
+                ch = os.read(fd, 1).decode(errors="ignore")
+                if ch == "q":
+                    quit_to_shell = True
+                    break
+                pane.key(ch)
+            pane.frame()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        if pane.cava:
+            pane.cava.stop()
+        termios.tcsetattr(fd, termios.TCSADRAIN, old)
+        out.write("\x1b_Ga=d,q=2\x1b\\\x1b[0m\x1b[?25h\x1b[?1049l")
+        out.flush()
+    if quit_to_shell:
+        shell = os.environ.get("SHELL", "/bin/bash")
+        os.execv(shell, [shell, "-l"])
+
+
+if __name__ == "__main__":
+    main()

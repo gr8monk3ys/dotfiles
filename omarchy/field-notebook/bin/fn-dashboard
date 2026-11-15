@@ -1,0 +1,59 @@
+#!/bin/bash
+# Field Notebook dashboard: plate 01 ("Instrument"), fastfetch with the
+# signature logo. Numbers refresh in place every $FN_REFRESH seconds; the
+# screen is only repainted when the output actually changes.
+# Keys: r refresh now · q quit (drops to a shell).
+#
+# Layout is absolute, not relative: the signature is placed by us at a fixed
+# cell (kitty graphics, C=1 so it never moves the cursor), the text block is
+# drawn from a fixed row below it, autowrap is off and output is clipped to
+# the window height, so nothing can scroll and frames can't drift/overlap.
+# Each frame is wrapped in synchronized output (?2026) so a full clear
+# doesn't flicker.
+set -u
+REFRESH="${FN_REFRESH:-30}"
+DIR="$HOME/.local/share/field-notebook"
+CONF="$DIR/fastfetch.jsonc"
+SIG="$DIR/signature-pen.png"
+SIG_COLS=38 SIG_ROWS=4 SIG_ROW=2 SIG_COL=3   # where the signature sits
+TEXT_ROW=$((SIG_ROW + SIG_ROWS + 1))          # text starts below it
+
+render() {
+  { fastfetch --config "$CONF" --logo-type none --pipe false 2>/dev/null \
+      || fastfetch --logo-type none --pipe false; } | sed '/./,$!d'   # drop leading blank lines
+}
+
+# Signature: kitty graphics by file path (same as fastfetch's kitty-direct),
+# placed at a fixed cell with C=1 so it never moves the cursor.
+SIG_B64=$(printf '%s' "$SIG" | base64 -w0)
+
+cleanup() { stty echo 2>/dev/null; printf '\e_Ga=d,d=I,i=77,q=2\e\\\e[?7h\e[?25h\e[?1049l'; }
+
+stty -echo 2>/dev/null
+printf '\e[?1049h\e[?25l\e[?7l\e[H\e[2J'
+trap cleanup EXIT
+
+draw() {
+  local rows; rows=$(tput lines 2>/dev/null || echo 40)
+  local max=$((rows - TEXT_ROW))
+  local body; body=$(printf '%s\n' "$1" | head -n "$max")
+  printf '\e[?2026h\e[H\e[2J'
+  [[ -r $SIG ]] && printf '\e[%d;%dH\e_Ga=T,f=100,t=f,i=77,p=1,c=%d,r=%d,C=1,q=2;%s\e\\' "$SIG_ROW" "$SIG_COL" "$SIG_COLS" "$SIG_ROWS" "$SIG_B64"
+  printf '\e[%d;1H%s' "$TEXT_ROW" "${body//$'\n'/$'\r\n'}"
+  printf '\e[?2026l'
+}
+
+last=""
+trap 'last=""' WINCH
+while :; do
+  now=$(render)
+  if [[ $now != "$last" ]]; then
+    draw "$now"
+    last=$now
+  fi
+  key=""; read -rsn1 -t "$REFRESH" key || true
+  case $key in
+    q) cleanup; trap - EXIT; printf '\e[H\e[2J'; exec "${SHELL:-bash}" -l ;;
+    r) last="" ;;
+  esac
+done

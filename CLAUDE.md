@@ -25,9 +25,11 @@ into `~/.config/`; `make` drives install, link and verification.
   Terminal fragment). Not under `.config/`, because Stow would link it on macOS
   and Arch; `windows/setup.ps1` (Windows PowerShell 5.1, dry run by default) is
   its `make link`.
-- `omarchy/` — the Monochrome 43 rice for Omarchy 4.x (theme, Hyprland snippet,
-  pinned shell plugins, bar layout, a Linux-only Ghostty include that runs
-  zsh). Outside `.config/` because Omarchy owns
+- `omarchy/` — the Omarchy 4.x layer: two rices (Field Notebook, the one in
+  use and named in `omarchy/rice`, and Monochrome 43) with theme, Hyprland
+  module, rice packages and session scripts, plus pinned shell plugins, bar
+  layout, idle timeouts, theme hooks and a Linux-only Ghostty include that
+  runs zsh. Outside `.config/` because Omarchy owns
   `~/.config/hypr` and `~/.config/omarchy`; `omarchy/setup.sh` (dry run by
   default, `make omarchy apply=1`) places single files instead of stowing.
 - `docs/TOOLS.md` — one rationale entry per package; `validate-tool-docs` fails
