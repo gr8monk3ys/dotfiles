@@ -1,0 +1,23 @@
+# monochrome-43.roles - which Monochrome 43 colour fills each role.
+#
+# Black, white and greys; colour only where it means something: the one
+# blue for focus and links, red for errors, the urgent pink for warnings.
+# Strings, keywords and git noise stay grey. Format: role|colour name in
+# monochrome-43.conf.
+
+bg|bg
+bg-dark|bg
+surface|surface
+fg|fg-soft
+comment|fg-dark
+blue|highlight
+cyan|fg-muted
+green|fg-dim
+yellow|urgent
+magenta|fg
+vermilion|danger
+terracotta|urgent
+ultramarine|surface
+viridian|bg-track
+diff-add|bg-track
+diff-del|surface

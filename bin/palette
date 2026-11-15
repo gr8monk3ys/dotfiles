@@ -18,9 +18,16 @@
 #   palette get <name> [--format F]  # F: hex (default) | raw | 0x | rgb
 #   palette export [prefix]          # PREFIX_NAME='#hex' shell assignments
 #   palette palettes                 # the palettes this checkout ships
+#   palette role <role> [--format F] # the colour filling a role (see below)
+#   palette roles                    # role<TAB>colour name<TAB>hex
 #
 # Palette selection: PALETTE=<name> reads .config/palette/<name>.conf
-# (default: danse). PALETTE_FILE=<path> overrides both.
+# (default: the active Rice, from .config/palette/rice.sh; ADR 0003).
+# PALETTE_FILE=<path> overrides both.
+#
+# Roles: tool themes are written once in danse's colour names, which act as
+# slots ("the error colour"). .config/palette/<name>.roles maps each slot to
+# one of that palette's colours; danse's map is the identity.
 #
 # Formats:
 #   hex   #61afef      most config files
@@ -38,7 +45,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/preamble.sh"
 
 PALETTE_DIR="$DOTFILES_DIR/.config/palette"
-PALETTE="${PALETTE:-danse}"
+if [[ -z "${PALETTE:-}" ]]; then
+    # shellcheck source=../.config/palette/rice.sh
+    . "$PALETTE_DIR/rice.sh"
+    rice_select
+    PALETTE="$RICE"
+fi
 # A name, not a path: refuse anything that could walk out of PALETTE_DIR.
 if [[ -z "${PALETTE_FILE:-}" && ! "$PALETTE" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
     printf 'palette: bad palette name %q\n' "$PALETTE" >&2
@@ -112,6 +124,39 @@ cmd_get() {
     return 1
 }
 
+# role <role> [--format F]: the colour this palette puts in a danse-named slot.
+cmd_role() {
+    local want="${1:-}" roles_file="${PALETTE_FILE%.conf}.roles" role name
+    [[ -n "$want" ]] || {
+        printf 'palette: role needs a role name\n' >&2
+        return 2
+    }
+    shift
+    [[ -f "$roles_file" ]] || {
+        printf 'palette: no role map: %s\n' "$roles_file" >&2
+        return 1
+    }
+    while IFS='|' read -r role name; do
+        if [[ "$role" == "$want" ]]; then
+            cmd_get "$name" "$@"
+            return
+        fi
+    done < <(grep -vE '^[[:space:]]*(#|$)' "$roles_file")
+    printf 'palette: no such role %q in %s\n' "$want" "$roles_file" >&2
+    return 1
+}
+
+cmd_roles() {
+    local roles_file="${PALETTE_FILE%.conf}.roles" role name
+    [[ -f "$roles_file" ]] || {
+        printf 'palette: no role map: %s\n' "$roles_file" >&2
+        return 1
+    }
+    while IFS='|' read -r role name; do
+        printf '%s\t%s\t%s\n' "$role" "$name" "$(cmd_get "$name")"
+    done < <(grep -vE '^[[:space:]]*(#|$)' "$roles_file")
+}
+
 cmd_palettes() {
     local f
     for f in "$PALETTE_DIR"/*.conf; do
@@ -140,13 +185,15 @@ main() {
         get) cmd_get "$@" ;;
         export) cmd_export "$@" ;;
         palettes) cmd_palettes ;;
+        role) cmd_role "$@" ;;
+        roles) cmd_roles ;;
         -h | --help | "")
-            sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//'
+            sed -n '2,40p' "$0" | sed 's/^# \{0,1\}//'
             [[ -z "$cmd" ]] && return 2
             return 0
             ;;
         *)
-            printf 'palette: unknown command %q (list|names|get|export|palettes)\n' "$cmd" >&2
+            printf 'palette: unknown command %q (list|names|get|export|palettes|role|roles)\n' "$cmd" >&2
             return 2
             ;;
     esac

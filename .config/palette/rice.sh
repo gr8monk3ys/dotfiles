@@ -17,14 +17,19 @@
 # word, or no file at all gives that platform's default.
 #
 # Interface:
-#   rice_select [platform]       sets RICE (platform: macos | omarchy | empty
-#                                for "any": the shell, which only asks
-#                                whether danse is on)
+#   rice_select [platform]       sets RICE. No argument: this machine's
+#                                platform, from rice_platform. An explicit
+#                                empty argument ("") means "any platform".
+#   rice_platform                sets RICE_PLATFORM (macos | omarchy | empty
+#                                for anything else) unless it is already set:
+#                                the override for tests and odd machines
 #   rice_available <rice> [platform]   true if <rice> ships there
 #   rice_default [platform]      sets RICE to the platform default
 #   rice_list [platform]         prints the rices, one per line
 #
-# A rice's palette file is palette/<rice>.conf; there is no separate mapping.
+# A rice's palette file is palette/<rice>.conf, and its role map (which of
+# its colours fills each danse-named role in the tool templates) is
+# palette/<rice>.roles; see bin/rice-themes.
 
 rice_available() {
     case "$1:${2:-}" in
@@ -50,7 +55,25 @@ rice_list() {
     return 0
 }
 
+# Builtins only (no uname, no command substitution): the shell calls this on
+# its startup path. The Omarchy markers are bin/platform's; /System/Library
+# exists only on macOS.
+rice_platform() {
+    [ "${RICE_PLATFORM+set}" = set ] && return 0
+    if [ -d /usr/share/omarchy ] || [ -d "$HOME/.local/share/omarchy" ]; then
+        RICE_PLATFORM=omarchy
+    elif [ -d /System/Library/CoreServices ]; then
+        RICE_PLATFORM=macos
+    else
+        RICE_PLATFORM=""
+    fi
+}
+
 rice_select() {
+    if [ $# -eq 0 ]; then
+        rice_platform
+        set -- "$RICE_PLATFORM"
+    fi
     RICE=""
     _rice_file="${XDG_CONFIG_HOME:-$HOME/.config}/palette/rice.local"
     if [ -r "$_rice_file" ]; then

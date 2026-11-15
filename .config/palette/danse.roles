@@ -1,0 +1,23 @@
+# danse.roles - danse fills every role with its own colour of the same name.
+#
+# Roles are the slots the tool templates in templates/ are written in. They
+# are danse's colour names because every template began life as a danse
+# theme. This identity map is what makes danse render byte-for-byte as it
+# did before the templates existed. Format: role|colour name in danse.conf.
+
+bg|bg
+bg-dark|bg-dark
+surface|surface
+fg|fg
+comment|comment
+blue|blue
+cyan|cyan
+green|green
+yellow|yellow
+magenta|magenta
+vermilion|vermilion
+terracotta|terracotta
+ultramarine|ultramarine
+viridian|viridian
+diff-add|diff-add
+diff-del|diff-del

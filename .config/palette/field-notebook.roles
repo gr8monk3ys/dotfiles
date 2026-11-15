@@ -1,0 +1,24 @@
+# field-notebook.roles - which Field Notebook colour fills each role.
+#
+# By ANSI meaning, so the CLI tools agree with what Ghostty and the Omarchy
+# theme already paint (Omarchy renders colors.toml with green = the pen):
+# the accent slot `green` is the pen, the chrome fills are pen tints, and
+# nothing borrows OneDark's greys. Format: role|colour name in
+# field-notebook.conf.
+
+bg|bg
+bg-dark|bg-dark
+surface|border
+fg|fg
+comment|fg-faint
+blue|blue
+cyan|cyan
+green|pen
+yellow|yellow
+magenta|magenta
+vermilion|red
+terracotta|orange
+ultramarine|selection
+viridian|pen-deep
+diff-add|selection
+diff-del|selection-red
