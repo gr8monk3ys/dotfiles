@@ -31,7 +31,7 @@ plus one line in the Rice module's table.
 | `backgrounds` (executable, optional) | fills the theme's `backgrounds/` when `backgrounds --check` fails: Field Notebook renders its plates (~35 MB, not tracked); Monochrome 43 copies Vantablack's and fetches 43PR's wallpaper by pinned URL and SHA-256 |
 | `hypr.lua` | `~/.config/hypr/<rice_with_underscores>.lua` (symlink), loaded by one `require` line in `looknfeel.lua`; another rice's line is removed |
 | `hypr/` (optional) | `~/.config/hypr/` (symlinks); Field Notebook's night-light schedule |
-| `packages.pacman`, `packages.aur` (optional) | `omarchy pkg add` / `omarchy pkg aur add`, missing ones only; read through `bin/manifest list rice-pacman|rice-aur` |
+| `packages.pacman`, `packages.aur` (optional) | `omarchy pkg add` / `omarchy pkg aur add`, missing ones only; read through `bin/manifest list rice-pacman` / `rice-aur` |
 | `hooks/<event>.d/` (optional) | `~/.config/omarchy/hooks/<event>.d/` (symlinks) |
 | `bin/`, `share/` (optional) | `~/.local/bin/`, `~/.local/share/<rice>/` (symlinks); Field Notebook's `fn-*` session scripts and `themed.py`, which re-themes cava, spotify_player, Firefox and gh-dash on every `theme-set` |
 | `branding/` (optional) | `~/.config/omarchy/branding/` (symlinks); screensaver art |
