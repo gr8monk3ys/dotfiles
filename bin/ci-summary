@@ -1,0 +1,182 @@
+#!/usr/bin/env bash
+# ci-summary - Turn one `make verify` run into a Markdown verification report.
+#
+# CI appends this to $GITHUB_STEP_SUMMARY so a reviewer reads what was
+# checked, not the code: which validators ran and how each ended, how many
+# tests each BATS file ran and failed, and the seed every property test drew
+# (so a property failure can be replayed exactly).
+#
+# Usage:
+#   ci-summary --log <verify.log> [--report <dir>] [--outcome <o>] [--title <t>]
+#
+#   --log      the captured output of `make verify`
+#   --report   the BATS_REPORT_DIR that `make test` wrote (report.xml from
+#              bats' junit formatter, bats.tap, prop-seeds.tsv)
+#   --outcome  the verify step's outcome (success|failure|cancelled|skipped);
+#              without it the outcome is read from the log
+#   --title    heading for the report (default: Verification)
+#
+# Validators are the prerequisites of the Makefile's `verify:` target, in
+# order, so a new one shows up here without editing this script. Each
+# target's first recipe line is an `@echo` header (test_ci_summary.bats keeps
+# it that way); the log between two headers is that target's output, which
+# is how a skipped validator is told apart from a passing one. The failed
+# target comes from make's own `make: *** [target] Error` line.
+#
+# Reads only; writes the report to stdout. Exits 0 even when verify failed:
+# the report is most useful exactly then, and the verify step is the gate.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/preamble.sh
+source "$SCRIPT_DIR/lib/preamble.sh"
+
+LOG="" REPORT="" OUTCOME="" TITLE="Verification"
+
+usage() { sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'; }
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --log | --report | --outcome | --title)
+            [[ $# -ge 2 ]] || { echo "ci-summary: $1 needs a value" >&2; exit 2; }
+            case "$1" in
+                --log) LOG="$2" ;;
+                --report) REPORT="$2" ;;
+                --outcome) OUTCOME="$2" ;;
+                --title) TITLE="$2" ;;
+            esac
+            shift 2
+            ;;
+        -h | --help) usage; exit 0 ;;
+        *) echo "ci-summary: unexpected argument '$1'" >&2; usage >&2; exit 2 ;;
+    esac
+done
+[[ -n "$LOG" ]] || { echo "ci-summary: --log is required" >&2; exit 2; }
+
+MAKEFILE="$DOTFILES_DIR/Makefile"
+
+# The prerequisites of `verify:`, one per line.
+verify_targets() {
+    sed -n 's/^verify:[[:space:]]*//p' "$MAKEFILE" | tr ' \t' '\n\n' | sed '/^$/d'
+}
+
+# The text of <target>'s first recipe line when it is `@echo "..."`.
+target_header() {
+    awk -v t="$1" '
+        $0 ~ "^" t ":" { found = 1; next }
+        found {
+            if ($0 ~ /^\t@echo "/) { sub(/^\t@echo "/, ""); sub(/"[[:space:]]*$/, ""); print }
+            exit
+        }' "$MAKEFILE"
+}
+
+# The target make reported as failing at the top level, if any. GNU make 4
+# prints `make: *** [Makefile:228: verify-doc-links] Error 1`; 3.81 (macOS)
+# prints `make: *** [verify-doc-links] Error 1`.
+failed_target() {
+    sed -n 's/^g\{0,1\}make: \*\*\* \[\(.*: \)\{0,1\}\([^] ]*\)\] Error.*/\2/p' "$LOG" | tail -n 1
+}
+
+# Lines from <header> up to (not including) <next header>, or to the end.
+section() {
+    awk -v h="$1" -v n="$2" '
+        !on && index($0, h) == 1 { on = 1; next }
+        on && n != "" && index($0, n) == 1 { exit }
+        on { print }' "$LOG"
+}
+
+report_validators() {
+    local failed targets t next header next_header status i=0 n state=passed
+    failed="$(failed_target)"
+    if [[ -z "$OUTCOME" ]]; then
+        if [[ -n "$failed" ]]; then OUTCOME=failure; else OUTCOME=success; fi
+    fi
+    # shellcheck disable=SC2207 # target names are single words
+    targets=($(verify_targets))
+    n=${#targets[@]}
+
+    printf '### Validators (`make verify`: %s)\n\n' "$OUTCOME"
+    printf '| # | Target | Result |\n| --- | --- | --- |\n'
+    for t in "${targets[@]}"; do
+        i=$((i + 1))
+        header="$(target_header "$t")"
+        next_header=""
+        if ((i < n)); then
+            next="${targets[i]}"
+            next_header="$(target_header "$next")"
+        fi
+        if [[ "$state" == passed && "$t" == "$failed" ]]; then
+            status="**FAILED**"
+            state="not run"
+        elif [[ "$state" == "not run" ]]; then
+            status="not run"
+        elif [[ "$OUTCOME" != success && -z "$failed" ]]; then
+            status="unknown (verify did not finish: $OUTCOME)"
+        elif [[ -n "$header" ]] && ! grep -qF "$header" "$LOG"; then
+            status="no output found"
+        elif [[ -n "$header" ]] && section "$header" "$next_header" | grep -qE 'Skipping|SKIPPED'; then
+            status="skipped: $(section "$header" "$next_header" | grep -m1 -E 'Skipping|SKIPPED' |
+                sed 's/^[^A-Za-z]*//; s/|/\\|/g')"
+        else
+            status="passed"
+        fi
+        printf '| %s | `%s` | %s |\n' "$i" "$t" "$status"
+    done
+    printf '\n'
+}
+
+xml_attr() { sed -n "s/.* $1=\"\\([^\"]*\\)\".*/\\1/p" <<< "$2"; }
+
+report_tests() {
+    local xml="$REPORT/report.xml" line name tests failures errors skipped time
+    local total=0 total_failed=0 total_skipped=0 rows=""
+    printf '### Tests (BATS)\n\n'
+    if [[ ! -f "$xml" ]]; then
+        printf 'No BATS report at `%s`: the suite did not run.\n\n' "$xml"
+        return 0
+    fi
+    while IFS= read -r line; do
+        name="$(xml_attr name "$line")"
+        tests="$(xml_attr tests "$line")"
+        failures="$(xml_attr failures "$line")"
+        errors="$(xml_attr errors "$line")"
+        skipped="$(xml_attr skipped "$line")"
+        time="$(xml_attr time "$line")"
+        total=$((total + tests))
+        total_failed=$((total_failed + failures + errors))
+        total_skipped=$((total_skipped + skipped))
+        rows+="| \`$name\` | $tests | $((tests - failures - errors - skipped)) | $((failures + errors)) | $skipped | ${time}s |"$'\n'
+    done < <(grep '<testsuite ' "$xml")
+    printf '**%s tests: %s passed, %s failed, %s skipped.**\n\n' "$total" \
+        "$((total - total_failed - total_skipped))" "$total_failed" "$total_skipped"
+    printf '| File | Tests | Passed | Failed | Skipped | Time |\n| --- | ---: | ---: | ---: | ---: | ---: |\n'
+    printf '%s\n' "$rows"
+    if [[ -f "$REPORT/bats.tap" ]] && grep -q '^not ok' "$REPORT/bats.tap"; then
+        printf '<details><summary>Failing tests</summary>\n\n```text\n'
+        # Colour escapes from the tests' own output would show as noise.
+        grep -A8 '^not ok' "$REPORT/bats.tap" | head -n 120 | sed "s/$(printf '\033')\[[0-9;]*m//g"
+        printf '```\n\n</details>\n\n'
+    fi
+}
+
+report_seeds() {
+    local seeds="$REPORT/prop-seeds.tsv" file test seed cases
+    [[ -s "$seeds" ]] || return 0
+    printf '### Property-test seeds\n\n'
+    printf 'Replay any row with `PROP_SEED=<seed> PROP_CASES=<cases> bats test/<file> -f <test>`.\n\n'
+    printf '| File | Property | Seed | Cases |\n| --- | --- | ---: | ---: |\n'
+    while IFS=$'\t' read -r file test seed cases; do
+        printf '| `%s` | %s | `%s` | %s |\n' "$file" "${test//|/\\|}" "$seed" "$cases"
+    done < "$seeds"
+    printf '\n'
+}
+
+printf '## %s\n\n' "$TITLE"
+if [[ ! -f "$LOG" ]]; then
+    printf 'No `make verify` log at `%s`: verify did not run (outcome: %s).\n' "$LOG" "${OUTCOME:-unknown}"
+    exit 0
+fi
+report_validators
+[[ -n "$REPORT" ]] && report_tests && report_seeds
+exit 0

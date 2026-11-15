@@ -192,6 +192,7 @@ verify: verify-shell verify-shellcheck verify-markdown verify-shell-surface veri
 # If that becomes intolerable locally, SKIP_ARCH_DOCKER=1 drops it and the
 # Arch job in .github/workflows/ci.yml still covers it on every PR.
 verify-docker:
+	@echo "Running container tests..."
 	@if [ -n "$(SKIP_DOCKER)" ]; then echo "Skipping container tests (SKIP_DOCKER set)"; \
 	elif docker info >/dev/null 2>&1; then \
 		$(MAKE) test-docker; \
@@ -287,6 +288,7 @@ verify-doctor-tools:
 	@bin/validate-doctor-tools
 
 verify-tests:
+	@echo "Running the BATS suite..."
 	@$(MAKE) test
 
 ## Run core pre-push checks (fast local confidence loop)
