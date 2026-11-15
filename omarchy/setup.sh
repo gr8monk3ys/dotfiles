@@ -332,15 +332,26 @@ step_hypr() {
     plan_link "$RICE_DIR/hypr.lua" "$HYPR_DIR/$HYPR_MODULE.lua"
     link_dir_files "$RICE_DIR/hypr" "$HYPR_DIR"
 
-    local looknfeel="$HYPR_DIR/looknfeel.lua" other module line mark
-    # Only one rice's look loads: a require for another rice is taken out.
+    local looknfeel="$HYPR_DIR/looknfeel.lua" other module line mark tmp
+    # Only one rice's look loads: a require for another rice is taken out,
+    # with the marker comment this script wrote above it. awk, not sed -i:
+    # BSD sed has no suffix-less -i, and the tests run on macOS too.
     while read -r other; do
         [[ "$other" == "$RICE" ]] && continue
         module="${other//-/_}"
         line="require(\"hypr.$module\")"
         if [[ -f "$looknfeel" ]] && grep -Fxq "$line" "$looknfeel" &&
             change "remove $line from $looknfeel (switching to $RICE)"; then
-            sed -i "/^-- .* rice, from the dotfiles checkout/{N;/hypr\.$module/d}; /^require(\"hypr\.$module\")\$/d" "$looknfeel"
+            tmp="$(mktemp "$looknfeel.XXXXXX")"
+            awk -v req="$line" '
+                held != "" { if ($0 == req) { held = ""; next } print held; held = "" }
+                /^-- .* rice, from the dotfiles checkout/ { held = $0; next }
+                $0 == req { next }
+                { print }
+                END { if (held != "") print held }
+            ' "$looknfeel" > "$tmp"
+            cat "$tmp" > "$looknfeel"
+            rm -f "$tmp"
         fi
     done < <(rice_list omarchy)
 
