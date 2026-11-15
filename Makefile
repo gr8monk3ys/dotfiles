@@ -32,7 +32,7 @@ export STOW_DIR = $(DOTFILES_DIR)
 
 .PHONY: all macos arch link unlink link-dry-run test test-setup verify \
         verify-config-live verify-shell verify-shellcheck verify-markdown verify-shell-surface verify-stale-refs verify-doc-links verify-tool-docs verify-doctor-tools verify-tests \
-        doctor init update backup firefox claude-themes worktree-add worktree-list worktree-remove worktree-prune \
+        doctor init update backup firefox claude-themes claude-sync hermes-offline omarchy worktree-add worktree-list worktree-remove worktree-prune \
         backup-compress backup-cleanup bench-shell daily clean restore restore-zshenv brew-update brew-cleanup \
         brew git packages-macos packages-arch core-macos core-arch \
         stow-arch stow-macos stow-linux linux unknown cask-apps cask-apps-extra vscode-extensions node-packages \
@@ -62,8 +62,17 @@ core-macos: brew git
 core-arch:
 	pacman -Syu --noconfirm
 
-stow-arch: core-arch
-	bin/platform has stow || pacman -S --noconfirm stow
+# `link`, `unlink` and `link-dry-run` depend on this, so it may only ensure
+# stow is present. It used to depend on core-arch, which made even
+# `make link-dry-run` run `pacman -Syu`: a preview that upgraded the system.
+# The full upgrade belongs to `make arch` alone, which lists core-arch first.
+ifeq ($(HAVE_STOW),yes)
+stow-arch:
+	@true
+else
+stow-arch:
+	pacman -S --needed --noconfirm stow
+endif
 
 # Only pull in the Homebrew bootstrap when stow is actually missing, so
 # `make link` on a machine that already has stow touches nothing else.
@@ -210,7 +219,7 @@ verify-docker:
 verify-shell:
 	@echo "Running shell syntax checks..."
 	@if command -v zsh >/dev/null 2>&1; then \
-		zsh -n .zshenv .config/zsh/.zshrc .config/zsh/aliases.zsh .config/zsh/functions.zsh; \
+		zsh -n .zshenv .config/zsh/.zshrc .config/zsh/aliases.zsh .config/zsh/functions.zsh .config/zsh/rice.zsh; \
 	else \
 		echo "⚠️  zsh not found; skipping zsh syntax checks"; \
 	fi
@@ -333,6 +342,24 @@ firefox:
 # from ~/.claude/themes (or $$CLAUDE_CONFIG_DIR/themes).
 claude-themes:
 	@DOTFILES_DIR="$(DOTFILES_DIR)" $(MAKEFILE_DIR)/bin/claude-themes install 		$(if $(copy),--copy) $(if $(dry),--dry-run)
+
+## Add the tracked Claude Code marketplaces, plugins and MCP servers
+# Dry run unless apply=1. Drives the `claude` CLI; ~/.claude and
+# ~/.claude.json are never tracked (they hold tokens and session state).
+claude-sync:
+	@$(MAKEFILE_DIR)/bin/claude-sync $(if $(apply),--apply) $(if $(only),--only $(only))
+
+## Point Hermes Agent at the local Ollama (dry run unless apply=1)
+# ~/.hermes/config.yaml is never tracked; only four model keys are set.
+hermes-offline:
+	@$(MAKEFILE_DIR)/bin/hermes-offline $(if $(apply),--apply) $(if $(pull),--pull)
+
+## Install the Monochrome 43 rice on Omarchy (dry run unless apply=1)
+# Not folded into `link`: Omarchy owns ~/.config/hypr and ~/.config/omarchy,
+# so omarchy/setup.sh places single files and drives Omarchy's own commands
+# instead of stowing. On any other machine it says so and does nothing.
+omarchy:
+	@$(MAKEFILE_DIR)/omarchy/setup.sh $(if $(apply),--apply) $(if $(only),--only $(only))
 
 ## Benchmark interactive zsh startup against a performance budget
 bench-shell:
@@ -522,6 +549,12 @@ help:
 	@echo "                      reports where it landed)"
 	@echo "  make claude-themes [copy=1] [dry=1] - Install the tracked Claude Code themes"
 	@echo "                      into ~/.claude/themes (bin/claude-themes status reports them)"
+	@echo "  make claude-sync [apply=1] [only=marketplaces|plugins|mcp] - Claude Code"
+	@echo "                      plugins and user-scope MCP servers (dry run by default)"
+	@echo "  make hermes-offline [apply=1] [pull=1] - Hermes Agent on the local Ollama"
+	@echo "                      (docs/hermes.md; dry run by default)"
+	@echo "  make omarchy [apply=1] [only=theme|plugins|bar|hypr|ghostty] - Monochrome 43 rice"
+	@echo "                      on Omarchy (omarchy/setup.sh; dry run unless apply=1)"
 	@echo "  make restore [backup=/path] - Restore latest/specified backup snapshot"
 	@echo "  make restore-zshenv - Restore legacy .zshenv backup only"
 	@echo "  make bench-shell [runs=7] [budget=900] - Benchmark zsh startup budget"

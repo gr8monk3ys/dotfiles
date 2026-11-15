@@ -52,50 +52,86 @@ make
 ### Arch: Omarchy
 
 [Omarchy](https://github.com/basecamp/omarchy) is Arch + Hyprland. `bin/platform detect`
-still says `arch` on it (`bin/platform is-omarchy` distinguishes it; the marker is the
-`~/.local/share/omarchy` checkout — Omarchy does not write its own `/etc/os-release`),
-so the install path is `make arch`: `pacman -Syu` via `bin/pacman` (sudo wrapper),
-then `install/pacmanfile`, then `make link`. Facts below were checked against the
-v3.8.4 tag and not on a live Omarchy box.
+still says `arch` on it; `bin/platform is-omarchy` distinguishes it. The install
+path is `make arch`: `pacman -Syu` via `bin/pacman` (sudo wrapper), then
+`install/pacmanfile`, then `make link`. The Omarchy half of the rice (theme,
+Hyprland, bar, plugins, zsh in Ghostty) is a separate, dry-run-first step:
+`make omarchy` (see [`omarchy/README.md`](omarchy/README.md)).
 
-**Who owns what.** Omarchy owns `~/.local/share/omarchy` and, on install, copies its
-`config/*` into `~/.config` (`hypr`, `waybar`, `walker`, `alacritty`, `kitty`, `foot`,
-`btop`, `lazygit`, `uwsm`, `xdg-terminals.list`, …) and writes `~/.bashrc`. These
-dotfiles own zsh, git, nvim, tmux, ghostty, yazi, jj, zellij, starship, atuin, and the
-rest of `.config/`. Leave Omarchy's Hyprland/waybar/walker configs alone.
+Facts below were read off an Omarchy 4.5 machine (`omarchy version` →
+`4.5.0-3`). Re-check them after a major Omarchy update.
 
-**Stow conflicts.** Omarchy also writes files these dotfiles ship, so `make link` will
-refuse on a fresh box: `~/.config/ghostty/config`, `~/.config/tmux/tmux.conf`,
-`~/.config/fastfetch/config.jsonc`, and `~/.config/nvim` (LazyVim, via
-`omarchy-nvim-setup`). Move them aside, then link:
+**Where Omarchy lives.** 4.x is the `omarchy` pacman package, installed under
+`/usr/share/omarchy` (`pacman -Qo /usr/share/omarchy/bin/omarchy`), with the
+`omarchy` command on PATH; there is no `~/.local/share/omarchy` checkout (that
+was 3.x). `/etc/os-release` says `ID=omarchy`. Use `omarchy version` for the
+version: the package's own `/usr/share/omarchy/version` file is not it.
+`omarchy --help` lists the command groups (`theme`, `bar`, `plugin`, `font`,
+`update`, …).
+
+**Who owns what.** Omarchy owns `~/.config/hypr` and `~/.config/omarchy`, and
+writes `~/.bashrc` plus first-run copies of configs these dotfiles also ship.
+These dotfiles own zsh, git, nvim, tmux, ghostty, yazi, jj, zellij, starship,
+atuin and the rest of `.config/`. Leave Omarchy's Hyprland config alone except
+through [`omarchy/setup.sh`](omarchy/setup.sh), which adds one `require` line.
+
+- **Hyprland** is configured in Lua. `~/.config/hypr/hyprland.lua` runs
+  Omarchy's bootstrap, loads its defaults (`require("default.hypr.omarchy")`),
+  then the user files `hypr/monitors.lua`, `input.lua`, `bindings.lua`,
+  `looknfeel.lua` and `autostart.lua`.
+- **The bar** is `omarchy-shell`, a Quickshell shell (`/usr/share/omarchy/shell`;
+  no waybar or walker package is installed). Its settings — bar position,
+  widget layout, enabled plugins, idle timers — live in
+  `~/.config/omarchy/shell.json`, edited with `omarchy bar …` and
+  `omarchy plugin …`.
+- **Shell plugins** are third-party code in `~/.config/omarchy/plugins/<id>/`,
+  added with `omarchy plugin add <git-url>` and run unsandboxed inside
+  `omarchy-shell`. `omarchy/plugins.tsv` pins the ones this rice uses.
+- **Themes**: `omarchy theme set <name>` renders the theme's `colors.toml` into
+  per-app files under `~/.local/state/omarchy/current/theme/` (`ghostty.conf`,
+  `btop.theme`, `kitty.conf`, …); user themes go in
+  `~/.config/omarchy/themes/<name>/`. Omarchy's own Ghostty config includes
+  `ghostty.conf` from there, and so does ours (optionally — see
+  [`.config/ghostty/README.md`](.config/ghostty/README.md)); its btop config
+  selects a `current` theme symlinked to `btop.theme`, ours does not.
+
+**Stow conflicts.** Omarchy writes real files where these dotfiles ship theirs,
+so `make link` refuses until they are moved. On the 4.5 machine these existed:
+`~/.config/ghostty`, `~/.config/btop`, `~/.config/tmux`, `~/.config/nvim`
+(LazyVim) and `~/.config/git/config`. Check first with `make link-dry-run`
+(it no longer upgrades anything), then move the conflicting files aside:
 
 ```bash
-for p in ghostty/config tmux/tmux.conf fastfetch/config.jsonc nvim; do
-  [[ -e ~/.config/$p ]] && mv ~/.config/$p ~/.config/$p.omarchy-backup; done
+for p in ghostty/config btop/btop.conf btop/themes tmux/tmux.conf nvim; do
+  [[ -e ~/.config/$p && ! -L ~/.config/$p ]] && mv ~/.config/$p ~/.config/$p.omarchy-backup; done
 make link
 ```
 
 Or `stow --adopt` then `git checkout -- .config` to discard the adopted copies.
-`~/.config/git/config` (Omarchy's) does not collide: this repo ships `git/ignore` and a
-`config.local.example`, not `git/config`. Starship: Omarchy writes `~/.config/starship.toml`;
-`.zshrc` sets `STARSHIP_CONFIG` to `~/.config/starship/starship.toml`, so zsh uses ours.
+`~/.config/git/config` (Omarchy's) does not collide: this repo ships `git/ignore`
+and a `config.local.example`, not `git/config`. Starship: Omarchy writes
+`~/.config/starship.toml`; `.zshrc` sets `STARSHIP_CONFIG` to
+`~/.config/starship/starship.toml`, so zsh uses ours (bash keeps Omarchy's).
 
-**Shell.** Omarchy's login shell is bash and its boot chain (SDDM session script,
-`~/.bashrc` → `~/.local/share/omarchy/default/bash/rc`, the `omarchy-*` helpers)
-assumes it. Upstream advises against `chsh -s $(which zsh)`
-([discussion #2495](https://github.com/basecamp/omarchy/discussions/2495)); instead
-launch zsh from the terminal: `command = /usr/bin/zsh` in `~/.config/ghostty/config`
-(ours), or `exec zsh` at the end of `~/.bashrc` guarded so it only fires interactively.
-`make doctor` reports this. The terminal itself is picked with
-`omarchy-install-terminal ghostty`, which rewrites `~/.config/xdg-terminals.list` for
-`xdg-terminal-exec`; the manual's default is Alacritty.
+**Shell.** Omarchy's login shell is bash, and `~/.bashrc` sources Omarchy's
+environment (`/usr/share/omarchy/default/bash/env-bootstrap`) and its rc
+(`$OMARCHY_PATH/default/bash/rc`). Rather than `chsh -s $(which zsh)`, launch zsh
+from the terminal: `make omarchy apply=1 only=ghostty` adds one line to the
+gitignored `~/.config/ghostty/config.local` that includes
+[`omarchy/ghostty.conf`](omarchy/ghostty.conf) — `command = /usr/bin/zsh` plus
+the Omarchy Ghostty settings the shared config would otherwise drop. It only
+takes effect once `~/.config/ghostty/config` is this repo's (see the conflict
+list above). The Hyprland session (uwsm) already exports `OMARCHY_PATH` and
+Omarchy's `PATH`, so zsh inherits them without bash's rc. `make doctor`
+reports the login shell. The terminal is chosen in
+`~/.config/xdg-terminals.list` (Ghostty on this machine).
 
-**Packages.** `install/pacmanfile` overlaps Omarchy's base set on `base-devel`,
-`bash-completion`, `fd`, `fzf`, `git`, `zoxide` (harmless re-install); only `git-delta`
-and `nano` are new. Nothing in it conflicts with an Omarchy package.
+**Packages.** `install/pacmanfile` overlaps Omarchy's base set (harmless
+re-install). Nothing in it conflicts with an Omarchy package.
 
-**Updating.** `omarchy-update` (snapshot, `git pull` of the Omarchy checkout, migrations,
-`pacman -Syu`) is separate from `make update`, which knows nothing about Omarchy. Run both.
+**Updating.** `omarchy update` (Omarchy and system packages) is separate from
+`make update`, which knows nothing about Omarchy. Run both. Do not run
+`omarchy plugin update` on the pinned plugins; see `omarchy/README.md`.
 
 ### Fresh-laptop checklist
 
@@ -136,6 +172,9 @@ Commands you re-run routinely.
 | `make daily` | Fast pre-push check: shell syntax + doc links + tests. |
 | `make verify` | Full repo verification: shell syntax + stale-ref check + doc links + tests. |
 | `make clean` | Remove broken symlinks in `~/.config/`. |
+| `make omarchy [apply=1]` | Omarchy only: install the Monochrome 43 rice (`omarchy/setup.sh`). Dry run unless `apply=1`. |
+| `make hermes-offline [apply=1]` | Point Hermes Agent at the local Ollama (`docs/hermes.md`). Dry run unless `apply=1`. |
+| `make claude-sync [apply=1]` | Add the tracked Claude Code marketplaces, plugins and user-scope MCP servers (`bin/claude-sync`). Dry run unless `apply=1`. |
 | `make restore [backup=/path]` | Restore the latest (or a named) `dotfiles-backup` snapshot. |
 | `make help` | List every target with its one-line description. |
 
@@ -279,6 +318,8 @@ Top-level directories, one sentence each.
 - **`test/`** — BATS test suite. Run with `make test`. Pattern: `test_*.bats`, helpers in `test_helper/`.
 - **`.github/`** — `workflows/ci.yml` (shellcheck, markdownlint, validators, BATS on macOS and Ubuntu, the curl installer on Ubuntu) and `dependabot.yml`. `make verify` before pushing is still the local gate. `.pre-commit-config.yaml` is available for local hooks (`pre-commit install`).
 - **`docs/`** — `TOOLS.md` (the tool catalog).
+- **`omarchy/`** — The Monochrome 43 rice for Omarchy 4.x: theme, Hyprland snippet, pinned shell plugins, bar layout, and `setup.sh` (`make omarchy`). Not stowed.
+- **`spicetify/`** — Monochrome 43 Spotify theme, linked into Spicetify by hand (see its README). Not stowed.
 
 The Stow target is `~/.config/`. The only exception is `.zshenv`, which is manually symlinked from the repo root to `~/.zshenv` because Zsh must find it in `$HOME`.
 

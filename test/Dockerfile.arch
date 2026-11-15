@@ -23,6 +23,7 @@ RUN sed -i '/^\[options\]/a DisableSandbox' /etc/pacman.conf && \
     make \
     bats \
     diffutils \
+    jq \
     && pacman -Scc --noconfirm
 
 # Create a non-root user for testing

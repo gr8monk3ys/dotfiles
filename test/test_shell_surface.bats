@@ -39,6 +39,11 @@ teardown() {
     assert_success
 }
 
+@test "shell-surface: rice.zsh parses as valid zsh" {
+    run zsh -n "$DOTFILES_DIR/.config/zsh/rice.zsh"
+    assert_success
+}
+
 # --- Source checks ---------------------------------------------------------
 # Source each file in a clean subshell with HOME pointed at a temp dir.
 # Any error written to stderr at source time is a failure.
@@ -51,6 +56,12 @@ teardown() {
 
 @test "shell-surface: aliases.zsh sources cleanly in a clean subshell" {
     run zsh -c "HOME='$TEST_HOME' source '$DOTFILES_DIR/.config/zsh/aliases.zsh'"
+    assert_success
+    assert_output ""
+}
+
+@test "shell-surface: rice.zsh sources cleanly in a clean subshell" {
+    run zsh -c "HOME='$TEST_HOME' XDG_CONFIG_HOME='$TEST_HOME/.config' source '$DOTFILES_DIR/.config/zsh/rice.zsh'"
     assert_success
     assert_output ""
 }

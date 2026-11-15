@@ -12,12 +12,21 @@ answer to "which window will my next keystroke go to" is a guess.
 
 ## Colours
 
-From [`.config/palette/danse.conf`](../palette/danse.conf), as `0xAARRGGBB`:
+By default the Monochrome 43 look, as on Omarchy's Hyprland: a 1px hairline
+from [`.config/palette/monochrome-43.conf`](../palette/monochrome-43.conf),
+as `0xAARRGGBB`:
 
 | Role | Palette name | Value |
 | --- | --- | --- |
-| Focused | `blue` | `0xff61afef` |
-| Everything else | `surface` | `0xff3e4451` |
+| Focused | `fg` | `0xffffffff` |
+| Everything else | `inactive` | `0xff333333` |
+
+### danse (opt back in)
+
+With `danse` in `~/.config/palette/rice.local` (see the SketchyBar README)
+the border is the older 5px one from
+[`.config/palette/danse.conf`](../palette/danse.conf): `blue` `0xff61afef`
+focused, `surface` `0xff3e4451` otherwise.
 
 ## Lifecycle
 

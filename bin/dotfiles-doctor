@@ -92,7 +92,7 @@ check_system() {
         fi
         check_info "Distribution: $distro"
         if "$PLATFORM" is-omarchy; then
-            check_info "Omarchy detected (~/.local/share/omarchy) — see OPERATING.md § Omarchy"
+            check_info "Omarchy detected — see OPERATING.md § Omarchy"
         fi
     else
         # The module answers the question; the raw value stays as detail,

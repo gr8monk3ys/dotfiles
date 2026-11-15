@@ -35,20 +35,43 @@ teardown() {
     assert_failure
 }
 
-@test "platform is-omarchy fails without the Omarchy checkout" {
-    HOME="$TEST_HOME" run bin/platform is-omarchy
+# Every marker is pointed at a temp path, so these hold on an Omarchy box too.
+omarchy_env() {
+    HOME="$TEST_HOME" \
+        PLATFORM_OMARCHY_SYSTEM_DIR="$TEST_TEMP_DIR/usr-share-omarchy" \
+        PLATFORM_OS_RELEASE="$TEST_TEMP_DIR/os-release" \
+        "$@"
+}
+
+@test "platform is-omarchy fails without any Omarchy marker" {
+    printf 'ID=arch\nNAME="Arch Linux"\n' > "$TEST_TEMP_DIR/os-release"
+    run omarchy_env bin/platform is-omarchy
     assert_failure
 }
 
 @test "platform is-omarchy detects ~/.local/share/omarchy and detect stays arch-compatible" {
     mkdir -p "$TEST_HOME/.local/share/omarchy"
-    HOME="$TEST_HOME" run bin/platform is-omarchy
+    run omarchy_env bin/platform is-omarchy
     assert_success
     # Omarchy is Arch: detect must not grow a new OS name for it.
-    HOME="$TEST_HOME" run bin/platform detect
+    run omarchy_env bin/platform detect
     assert_success
     [[ "$output" =~ ^(macos|arch|linux|unknown)$ ]]
     [[ "$output" != "omarchy" ]]
+}
+
+@test "platform is-omarchy detects Omarchy 4.x installed as a package" {
+    # Regression: 4.x lives in /usr/share/omarchy and has no
+    # ~/.local/share/omarchy checkout, so is-omarchy said no on Omarchy.
+    mkdir -p "$TEST_TEMP_DIR/usr-share-omarchy"
+    run omarchy_env bin/platform is-omarchy
+    assert_success
+}
+
+@test "platform is-omarchy detects ID=omarchy in os-release" {
+    printf 'NAME="Omarchy"\nID=omarchy\nID_LIKE=arch\n' > "$TEST_TEMP_DIR/os-release"
+    run omarchy_env bin/platform is-omarchy
+    assert_success
 }
 
 @test "platform is-arm64 detects ARM architecture" {

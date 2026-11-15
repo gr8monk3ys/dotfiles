@@ -12,6 +12,8 @@ repo-root `.zshenv`), so everything zsh loads lives in this directory.
 - `aliases.zsh` — aliases (modern CLI replacements, macOS-only block,
   utility shortcuts); sourced by `.zshrc`
 - `functions.zsh` — fzf-powered helper functions (`f`, `fv`, `cx`, …)
+- `rice.zsh` — reads `~/.config/palette/rice.local` and switches the prompt
+  (and `fastfetch`/`cava`) to danse when it says so
 - `zshrc.local.example` — template for machine-local overrides
 
 ### Load order
@@ -30,9 +32,12 @@ what makes this a checked constraint instead of a comment.
 ## Prompt
 
 [Starship](https://starship.rs) (config:
-[`../starship/starship.toml`](../starship/starship.toml), OneDark). If the
-`starship` binary is missing, `.zshrc` sets a plain two-line prompt until
-`make brew-packages` installs it.
+[`../starship/starship.toml`](../starship/starship.toml), a Monochrome 43
+powerline prompt in a Nerd Font). `rice.zsh` switches it to
+[`../starship/danse.toml`](../starship/danse.toml) — and points `fastfetch`
+and `cava` at their danse files — when `~/.config/palette/rice.local` says
+`danse`. If the `starship` binary is missing, `.zshrc` sets a plain two-line
+prompt until `make brew-packages` installs it.
 
 ## Plugin manager
 
@@ -52,6 +57,10 @@ exists). OMZ itself is **not** installed.
   [`../atuin/`](../atuin/))
 - **direnv** — per-directory environments
 - **mise** — runtime version manager
+- **gh** — `GITHUB_PERSONAL_ACCESS_TOKEN` is exported from `gh auth token`
+  (gh's keyring login) when it is not already set, for the github Claude Code
+  plugin's MCP server. Nothing is written to disk; log in once with
+  `gh auth login`. Costs one `gh` call (~70ms) per shell start.
 
 ## Local overrides & machine types
 

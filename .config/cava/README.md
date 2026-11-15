@@ -4,10 +4,18 @@ Console audio visualiser.
 
 ## Theme
 
-Colours come from [`.config/palette/danse.conf`](../palette/danse.conf). The
-eight-stop gradient is the painting's own progression: the ultramarine sky at
-the quiet end, up through the viridian ground, to the vermilion figures at the
-peaks.
+[`config`](config), the default, is Monochrome 43: a grey-to-white gradient
+from [`.config/palette/monochrome-43.conf`](../palette/monochrome-43.conf)
+with [43PR/dotfiles](https://github.com/43PR/dotfiles) (MIT)'s fixed
+sensitivity. It leaves `[input] method` unset so each platform's build picks
+its default backend (PortAudio on macOS, PipeWire on Arch/Omarchy).
+
+[`danse`](danse) is the older look, from
+[`.config/palette/danse.conf`](../palette/danse.conf): an eight-stop gradient
+that follows the painting from the ultramarine sky at the quiet end, up
+through the viridian ground, to the vermilion figures at the peaks. With
+`danse` in `~/.config/palette/rice.local`, `.zshrc` aliases `cava` to it; by
+hand: `cava -p ~/.config/cava/danse`.
 
 `bars = 0` lets cava fill whatever width the pane has, which is the right
 answer under a tiling window manager where that width is not cava's to choose.
@@ -41,3 +49,7 @@ you to do deliberately rather than applied by `make`.
   on first run and cava draws a flat line until it is granted.
 - `framerate = 60` is cheap here but it is a busy-loop on battery. Drop it to
   30 if that matters.
+
+`shaders/` and `themes/` are cava's own upstream examples
+([karlstav/cava](https://github.com/karlstav/cava), MIT); 43PR ships the same
+files.

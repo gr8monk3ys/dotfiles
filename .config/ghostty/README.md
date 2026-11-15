@@ -51,16 +51,28 @@ brew install --cask ghostty
 
 ## Theme
 
-`theme = Atom One Dark` matches the repo-wide OneDark palette (verify names with `ghostty +list-themes`).
+`theme = monochrome-43` — [`themes/monochrome-43`](themes/monochrome-43) is
+generated from [`.config/palette/monochrome-43.conf`](../palette/monochrome-43.conf):
+black ground, white text, the ANSI colours of
+[43PR/dotfiles](https://github.com/43PR/dotfiles) (MIT). Split chrome and the
+Dock icon use the same palette.
 
 UI/UX profile in this repo:
 
-- Frosted-glass effect (`background-opacity = 0.8`, `background-blur = 90`)
+- Frosted-glass effect (`background-opacity = 0.86`, `background-blur = 90`)
 - Comfortable spacing (`window-padding-x = 10`, balanced padding enabled)
-- Clean native chrome (`macos-titlebar-style = transparent`)
+- Clean native chrome (`macos-titlebar-style = hidden`)
 
 On Linux, blur depends on compositor support.
-Popular theme alternatives right now: Catppuccin Mocha, Rose Pine Moon, TokyoNight Storm.
+
+### danse (opt back in)
+
+[`themes/danse`](themes/danse) is still shipped. Ghostty cannot read
+`~/.config/palette/rice.local`, so opt back in per machine:
+
+```bash
+echo 'theme = danse' >> ~/.config/ghostty/config.local
+```
 
 ## Why Ghostty over Kitty?
 
@@ -93,3 +105,19 @@ ghostty +validate-config --config-file ~/.config/ghostty/config
 - [Ghostty Documentation](https://ghostty.org/docs)
 - [Ghostty GitHub](https://github.com/ghostty-org/ghostty)
 - [Configuration Reference](https://ghostty.org/docs/config)
+
+## Includes and Omarchy
+
+The config ends with two optional (`?`) includes; a missing file is skipped,
+so neither changes anything on a machine without it. Later wins.
+
+1. Omarchy's live theme colours,
+   `~/.local/state/omarchy/current/theme/ghostty.conf` — only exists on
+   Omarchy, where it keeps `omarchy theme set` theming this terminal.
+2. `config.local` — gitignored, per machine.
+
+On Omarchy, `omarchy/setup.sh` (step `ghostty`) puts one line in
+`config.local` that includes [`omarchy/ghostty.conf`](../../omarchy/ghostty.conf):
+`command = /usr/bin/zsh` (Omarchy keeps bash as the login shell, see
+OPERATING.md) plus the Omarchy defaults this file would otherwise drop
+(font size, Linux-only keybinds, `async-backend`). The Mac never reads it.

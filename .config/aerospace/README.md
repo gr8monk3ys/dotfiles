@@ -20,7 +20,7 @@ AeroSpace is an i3-like tiling window manager for macOS that provides:
 
 - **Start at Login**: AeroSpace launches automatically when you log in
 - **Container Normalization**: Automatic layout optimization for nested containers
-- **No Gaps**: Windows are tiled without spacing (gaps set to 0)
+- **Gaps**: Monochrome 43 spacing — 4 between windows, 8 at the edges, `outer.top` 36 to clear the 28pt SketchyBar (for the danse bar: inner 8, `outer.top` 45, by hand)
 - **Mouse Follows Focus**: Mouse automatically moves when switching monitors
 
 ### Keyboard Shortcuts

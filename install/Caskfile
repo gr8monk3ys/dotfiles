@@ -35,11 +35,24 @@ cask "docker-desktop"                  # Docker Desktop (containers + Docker CLI
 cask "obsidian"                        # Markdown-based knowledge base
 cask "keepassxc"                       # Password manager
 cask "proton-drive"                    # End-to-end encrypted cloud storage
+cask "proton-mail-bridge"              # IMAP/SMTP bridge for Proton Mail (neomutt, himalaya)
+
+# ============================================================================
+# Communication
+# ============================================================================
+cask "discord"                         # Discord (the Discord MCP server talks to it)
+
+# ============================================================================
+# Graphics
+# ============================================================================
+cask "gimp"                            # Raster image editor (gimp-mcp drives it)
+cask "inkscape"                        # Vector graphics editor
 
 # ============================================================================
 # Music
 # ============================================================================
 cask "tidal"                           # Music streaming service
+cask "spotify"                         # Spotify client (themed by spicetify-cli)
 
 # ============================================================================
 # Fonts

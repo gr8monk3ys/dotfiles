@@ -21,6 +21,7 @@ RUN apt-get update && apt-get install -y \
     sudo \
     make \
     locales \
+    jq \
     && rm -rf /var/lib/apt/lists/*
 
 # Ubuntu's `bats` package is 1.2.1, which predates

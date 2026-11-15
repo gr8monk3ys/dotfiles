@@ -1,0 +1,60 @@
+# monochrome-43 - btop's view of .config/palette/monochrome-43.conf.
+#
+# The Monochrome 43 rice: white text, grey structure, and gradients that run
+# faint grey to white. Colour appears only where it means something: the top
+# of the temperature and memory-used ranges goes to the palette's danger red.
+#
+# OPT-IN: btop.conf still selects danse. Pick this one in btop's options menu
+# (Esc > Options > color_theme) or set color_theme = "monochrome-43".
+#
+# main_bg is empty so btop leaves the background to the terminal (black).
+
+theme[main_bg]=""
+theme[main_fg]="#ffffff"
+theme[title]="#ffffff"
+theme[hi_fg]="#ffffff"
+theme[selected_bg]="#2a2a2a"
+theme[selected_fg]="#ffffff"
+theme[inactive_fg]="#4a4a4a"
+theme[graph_text]="#6f6f6f"
+theme[meter_bg]="#161616"
+theme[proc_misc]="#c2c2c2"
+
+# Box outlines: the unfocused-window grey.
+theme[cpu_box]="#333333"
+theme[mem_box]="#333333"
+theme[net_box]="#333333"
+theme[proc_box]="#333333"
+theme[div_line]="#2a2a2a"
+
+# Temperature: grey, then danger at the top.
+theme[temp_start]="#6f6f6f"
+theme[temp_mid]="#c2c2c2"
+theme[temp_end]="#ff003c"
+
+# CPU load: faint to white.
+theme[cpu_start]="#4a4a4a"
+theme[cpu_mid]="#c2c2c2"
+theme[cpu_end]="#ffffff"
+
+# Memory
+theme[free_start]="#4a4a4a"
+theme[free_mid]=""
+theme[free_end]="#c2c2c2"
+theme[cached_start]="#4a4a4a"
+theme[cached_mid]=""
+theme[cached_end]="#8b93a7"
+theme[available_start]="#6f6f6f"
+theme[available_mid]=""
+theme[available_end]="#e6eaf2"
+theme[used_start]="#c2c2c2"
+theme[used_mid]=""
+theme[used_end]="#ff003c"
+
+# Network
+theme[download_start]="#4a4a4a"
+theme[download_mid]="#c2c2c2"
+theme[download_end]="#ffffff"
+theme[upload_start]="#4a4a4a"
+theme[upload_mid]="#6f6f6f"
+theme[upload_end]="#e6eaf2"

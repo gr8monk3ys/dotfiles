@@ -9,15 +9,34 @@
 # Launched from aerospace.toml's after-startup-command, not as a brew service,
 # so window-manager chrome starts and stops with the window manager.
 #
-# Colours are 0xAARRGGBB and come from .config/palette/danse.conf.
+# Colours are 0xAARRGGBB. The default is Monochrome 43
+# (.config/palette/monochrome-43.conf: fg, inactive): a 1px white hairline on
+# the focused window and #333333 on the rest, as on Omarchy's Hyprland.
 
 options=(
     style=round
-    width=5.0
+    width=1.0
     hidpi=on
-    active_color=0xff61afef      # blue - focused
-    inactive_color=0xff3e4451 # surface - everything else
+    active_color=0xffffffff   # fg - focused
+    inactive_color=0xff333333 # inactive - everything else
     background_color=0x00000000
 )
+
+# The older danse look, with `danse` in palette/rice.local (same switch as
+# sketchybar/colors.sh): a 5px blue border, from .config/palette/danse.conf
+# (blue, surface).
+rice=""
+rice_file="${XDG_CONFIG_HOME:-$HOME/.config}/palette/rice.local"
+[ -r "$rice_file" ] && read -r rice < "$rice_file"
+if [ "$rice" = danse ]; then
+    options=(
+        style=round
+        width=5.0
+        hidpi=on
+        active_color=0xff61afef   # blue - focused
+        inactive_color=0xff3e4451 # surface - everything else
+        background_color=0x00000000
+    )
+fi
 
 borders "${options[@]}"

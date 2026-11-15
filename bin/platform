@@ -40,12 +40,20 @@ detect_os() {
     esac
 }
 
-# Omarchy (basecamp/omarchy) is Arch + Hyprland. It does not write its own
-# /etc/os-release; its marker is the checkout it installs into. `detect`
-# still says "arch" on it on purpose: `make arch` is the right path.
+# Omarchy (basecamp/omarchy) is Arch + Hyprland. `detect` still says "arch"
+# on it on purpose: `make arch` is the right path. Three markers, any one is
+# enough:
+#   - ~/.local/share/omarchy   the git checkout Omarchy 3.x installed into
+#   - /usr/share/omarchy       Omarchy 4.x, installed as the `omarchy` package
+#   - /etc/os-release          ID=omarchy, which 4.x writes (3.x did not)
+# The system paths are overridable so tests can run on an Omarchy machine.
+OMARCHY_SYSTEM_DIR="${PLATFORM_OMARCHY_SYSTEM_DIR:-/usr/share/omarchy}"
+OS_RELEASE_FILE="${PLATFORM_OS_RELEASE:-/etc/os-release}"
+
 is_omarchy() {
     [[ -d "$HOME/.local/share/omarchy" ]] ||
-        { [[ -r /etc/os-release ]] && grep -qi '^\(ID\|NAME\)=.*omarchy' /etc/os-release; }
+        [[ -d "$OMARCHY_SYSTEM_DIR" ]] ||
+        { [[ -r "$OS_RELEASE_FILE" ]] && grep -qi '^\(ID\|NAME\)=.*omarchy' "$OS_RELEASE_FILE"; }
 }
 
 # BSD and GNU stat spell the octal-permissions format differently, and the
@@ -123,7 +131,7 @@ Usage:
   platform detect           Output: macos, arch, linux, or unknown
   platform arch             Output: arm64, x86_64, or unknown
   platform is-macos         Exit 0 if macOS, 1 otherwise
-  platform is-omarchy       Exit 0 if Omarchy (~/.local/share/omarchy), 1 otherwise
+  platform is-omarchy       Exit 0 if Omarchy (3.x checkout or 4.x package), 1 otherwise
   platform is-linux         Exit 0 if Linux, 1 otherwise
   platform is-arm64         Exit 0 if ARM64, 1 otherwise
   platform has <cmd>        Exit 0 if command exists, 1 otherwise

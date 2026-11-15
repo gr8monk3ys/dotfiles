@@ -79,7 +79,9 @@ load test_helper/common
     run bash -c '
         set -euo pipefail
         repo="$1"
-        names="$("$repo/bin/palette" names | tr "[:lower:]-" "[:upper:]_")"
+        # colors.sh maps danse by default and monochrome-43 when opted in
+        # (palette/rice.local), so a name must exist in one of the two.
+        names="$({ "$repo/bin/palette" names; PALETTE=monochrome-43 "$repo/bin/palette" names; } | tr "[:lower:]-" "[:upper:]_")"
         status=0
         for var in $(grep -oE "\$PAL_[A-Z_]+" "$repo/.config/sketchybar/colors.sh" | sort -u); do
             want="${var#\$PAL_}"
@@ -114,28 +116,56 @@ load test_helper/common
 }
 
 @test "every colour in a generated theme is a palette colour" {
-    # ghostty/themes/danse, btop/themes/danse.theme, cava/config and the
-    # windows/ theme files are all derived from the palette by hand-running
-    # `palette get`. Nothing re-runs
-    # that, so this is what keeps them true — and it is what catches a colour
-    # typed straight into a theme instead of taken from the palette.
+    # The theme files below are all derived from a palette by hand-running
+    # `palette get`. Nothing re-runs that, so this is what keeps them true —
+    # and it is what catches a colour typed straight into a theme instead of
+    # taken from the palette. Each file is checked against its own palette.
     run bash -c '
         set -euo pipefail
         repo="$1"
-        allowed="$("$repo/bin/palette" list | cut -f2)"
         status=0
-        for f in .config/ghostty/themes/danse \
-                 .config/btop/themes/danse.theme \
-                 .config/cava/config \
-                 windows/glazewm/config.yaml \
-                 windows/zebar/danse/styles.css \
-                 windows/windows-terminal/danse.json.tpl; do
+        while read -r pal f; do
+            [[ -n "$pal" ]] || continue
+            allowed="$(PALETTE="$pal" "$repo/bin/palette" list | cut -f2)"
             [[ -f "$repo/$f" ]] || { echo "missing generated theme: $f"; status=1; continue; }
             for hex in $(grep -oE "#[0-9a-f]{6}" "$repo/$f" | sort -u); do
                 printf "%s\n" "$allowed" | grep -Fxq "$hex" \
-                    || { echo "$f uses $hex, which is not in the palette"; status=1; }
+                    || { echo "$f uses $hex, which is not in the $pal palette"; status=1; }
             done
+        done <<THEMES
+danse         .config/ghostty/themes/danse
+danse         .config/btop/themes/danse.theme
+danse         .config/cava/danse
+danse         windows/glazewm/config.yaml
+danse         windows/zebar/danse/styles.css
+danse         windows/windows-terminal/danse.json.tpl
+monochrome-43 .config/ghostty/themes/monochrome-43
+monochrome-43 .config/btop/themes/monochrome-43.theme
+monochrome-43 .config/cava/config
+monochrome-43 omarchy/themes/monochrome-43/colors.toml
+monochrome-43 .config/starship/starship.toml
+monochrome-43 .config/ghostty/config
+danse         .config/starship/danse.toml
+THEMES
+        exit $status
+    ' _ "$DOTFILES_DIR"
+    assert_success
+}
+
+@test "every colour in the spicetify theme is a monochrome-43 colour" {
+    # Spicetify wants bare hex, so the generated-theme check above (which
+    # looks for #rrggbb) cannot see these values.
+    run bash -c '
+        set -euo pipefail
+        allowed="$(PALETTE=monochrome-43 "$1/bin/palette" list | cut -f2)"
+        status=0
+        for hex in $(sed -nE "s/^[a-z-]+[[:space:]]*=[[:space:]]*([0-9a-f]{6})[[:space:]]*$/\1/p" \
+                "$1/spicetify/Themes/monochrome-43/color.ini" | sort -u); do
+            printf "%s\n" "$allowed" | grep -Fxq "#$hex" \
+                || { echo "color.ini uses $hex, not in monochrome-43"; status=1; }
         done
+        n="$(grep -cE "^[a-z-]+[[:space:]]*=" "$1/spicetify/Themes/monochrome-43/color.ini")"
+        [[ "$n" -gt 0 ]] || { echo "no values parsed from color.ini"; status=1; }
         exit $status
     ' _ "$DOTFILES_DIR"
     assert_success
@@ -174,6 +204,45 @@ load test_helper/common
         for ws in $drawn; do
             printf "%s\n" "$declared" | grep -Fxq "$ws" \
                 || { echo "sketchybar draws workspace $ws, aerospace does not persist it"; status=1; }
+        done
+        exit $status
+    ' _ "$DOTFILES_DIR"
+    assert_success
+}
+
+@test "PALETTE selects another palette file by name" {
+    PALETTE=monochrome-43 run "$DOTFILES_DIR/bin/palette" get bg
+    assert_success
+    assert_output "#000000"
+    # The default is unchanged.
+    run "$DOTFILES_DIR/bin/palette" get bg
+    assert_output "#282c34"
+}
+
+@test "PALETTE refuses a name that is a path" {
+    PALETTE=../danse run "$DOTFILES_DIR/bin/palette" get bg
+    assert_failure
+    assert_output --partial "bad palette name"
+}
+
+@test "palettes lists every shipped palette" {
+    run "$DOTFILES_DIR/bin/palette" palettes
+    assert_success
+    assert_output --partial "danse"
+    assert_output --partial "monochrome-43"
+}
+
+@test "every entry in every palette is a valid six-digit hex with a role" {
+    run bash -c '
+        set -euo pipefail
+        status=0
+        for p in $("$1/bin/palette" palettes); do
+            while IFS="	" read -r name hex role; do
+                [[ "$hex" =~ ^\#[0-9a-f]{6}$ ]] || { echo "$p: bad hex for $name: $hex"; status=1; }
+                [[ -n "$role" ]] || { echo "$p: no role documented for $name"; status=1; }
+            done < <(PALETTE="$p" "$1/bin/palette" list)
+            dupes="$(PALETTE="$p" "$1/bin/palette" names | sort | uniq -d)"
+            [[ -z "$dupes" ]] || { echo "$p: duplicate names: $dupes"; status=1; }
         done
         exit $status
     ' _ "$DOTFILES_DIR"
