@@ -1,6 +1,6 @@
 # 0002: bin/palette keeps danse as its default
 
-Status: accepted (2026-11-14)
+Status: superseded by 0003 (2026-11-14)
 
 ## Context
 

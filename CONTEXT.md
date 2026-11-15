@@ -142,10 +142,19 @@ Which rice a machine shows is answered only by the Rice module,
 `.config/palette/rice.sh` (sourced, POSIX sh): the one word in the gitignored
 `~/.config/palette/rice.local`, else the platform default (`monochrome-43`
 on macOS, `field-notebook` on Omarchy). A rice that does not ship on the
-platform is treated as unset. A rice's palette is `palette/<rice>.conf`.
+platform is treated as unset. The module detects the platform itself
+(`rice_platform`; `RICE_PLATFORM` overrides it), so every caller that asks
+gets the rice the desktop shows. A rice's palette is `palette/<rice>.conf`.
 
-Not the same as the **palette** `bin/palette` reads by default (`danse`):
-that is the CLI tools' palette, independent of the rice (ADR 0002).
+Every themed tool follows the active rice (ADR 0003, superseding 0002):
+the editor, the prompt and the CLI tools as well as the desktop. `bin/palette`
+with no `PALETTE=` reads the active rice's palette.
+
+A **role** is one of danse's colour names used as a slot ("the error
+colour", "the comment colour"). Tool themes are written once against roles
+(`palette/templates/`); `palette/<rice>.roles` maps each role to one of that
+rice's colours, and `bin/rice-themes` renders one file per tool per rice.
+Danse's role map is the identity.
 
 On Omarchy a rice is a directory, `omarchy/rices/<rice>/`, and
 `omarchy/setup.sh` acts on whatever it ships; no step names a rice.
