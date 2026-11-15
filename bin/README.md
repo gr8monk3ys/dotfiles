@@ -508,11 +508,14 @@ Gives a machine this user's Claude Code marketplaces, plugins and user-scope
 MCP servers by driving the `claude` CLI. `~/.claude` and `~/.claude.json` are
 never tracked — they hold OAuth tokens and session state — so the script
 holds the list and adds only what is missing. Dry run by default; idempotent.
+The hooks in [.config/claude/hooks.json](../.config/claude/hooks.json) are
+merged into `~/.claude/settings.json` the same way: only a missing command is
+added, and every other hook and setting stays as it is.
 
 ```bash
 claude-sync                   # dry run: ok / would per item
 claude-sync --apply
-claude-sync --only mcp        # marketplaces | plugins | mcp
+claude-sync --only mcp        # marketplaces | plugins | mcp | hooks
 # or
 make claude-sync [apply=1] [only=mcp]
 ```
