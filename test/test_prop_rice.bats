@@ -105,7 +105,7 @@ file_word() {
         loc="$REPLY"
         prop_pick arg arg override override detect
         mode="$REPLY"
-        prop_pick macos omarchy ""
+        prop_pick macos omarchy "" linux
         plat="$REPLY"
         mkdir -p "$root/c$PROP_CASE/home" "$root/c$PROP_CASE/xdg"
         if [[ "$loc" == xdg ]]; then dir="$root/c$PROP_CASE/xdg"; else dir="$root/c$PROP_CASE/home/.config"; fi
@@ -153,6 +153,7 @@ file_word() {
         [[ "$ok" == yes ]] ||
             prop_fail "$loc/$mode platform '$p': picked '$rice', which rice_available rejects" || return
         file_word "$f"
+        case "$p" in macos | omarchy | "") ;; *) p="" ;; esac   # unknown platform = any
         if rice_available "$REPLY" "$p"; then
             want="$REPLY"
         else

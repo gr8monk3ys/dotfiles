@@ -19,7 +19,8 @@
 # Interface:
 #   rice_select [platform]       sets RICE. No argument: this machine's
 #                                platform, from rice_platform. An explicit
-#                                empty argument ("") means "any platform".
+#                                empty argument (""), or any platform not in
+#                                the table, means "any platform".
 #   rice_platform                sets RICE_PLATFORM (macos | omarchy | empty
 #                                for anything else) unless it is already set:
 #                                the override for tests and odd machines
@@ -74,6 +75,9 @@ rice_select() {
         rice_platform
         set -- "$RICE_PLATFORM"
     fi
+    # A platform outside the table means "any": rice_default would otherwise
+    # pick a rice that rice_available rejects for it (found by property test).
+    case "${1:-}" in macos | omarchy | "") ;; *) set -- "" ;; esac
     RICE=""
     _rice_file="${XDG_CONFIG_HOME:-$HOME/.config}/palette/rice.local"
     if [ -r "$_rice_file" ]; then
