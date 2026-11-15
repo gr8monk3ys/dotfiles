@@ -128,6 +128,27 @@ Tests for package file validation:
 - Rustfile format
 - Codefile format
 
+### test_prop_*.bats (property tests)
+
+Invariants checked against generated inputs instead of hand-picked ones:
+`bin/manifest` (`test_prop_manifest.bats`), the Rice module under sh, bash and
+zsh (`test_prop_rice.bats`), `plan_backup` (`test_prop_plan.bats`) and
+`bin/palette` (`test_prop_palette.bats`). The generator lives in
+`test_helper/prop.bash`: a seeded LCG, so a failure prints its seed and a
+command that replays exactly the same inputs:
+
+```text
+property failed: PALETTE=monochrome-43 palette get z --format : exit 1 with no message
+  seed 893927458, case 21 of 40
+  reproduce: PROP_SEED=893927458 PROP_CASES=40 bats test/test_prop_palette.bats -f ...
+```
+
+`PROP_CASES` (default 40) sets how many inputs each property draws; raise it
+locally to search harder (`PROP_CASES=500 bats test/test_prop_manifest.bats`).
+Each run picks a fresh seed unless `PROP_SEED` is set. When a property finds a
+bug, fix it with an example test beside the module's other tests, so the case
+stays covered whatever seed later runs draw.
+
 ## Writing Tests
 
 ### Basic Test Structure
