@@ -98,7 +98,13 @@ cmd_get() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --format)
-                fmt="${2:-}"
+                # `shift 2` with no value fails under set -e and exits 1
+                # without a word; say what is missing instead.
+                [[ $# -ge 2 ]] || {
+                    printf 'palette: --format needs a value (hex|raw|0x|rgb)\n' >&2
+                    return 2
+                }
+                fmt="$2"
                 shift 2
                 ;;
             *)

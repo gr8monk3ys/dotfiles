@@ -49,6 +49,14 @@ setup() {
     assert_output --partial "unknown format"
 }
 
+# Found by test_prop_palette.bats: `get <name> --format` with no value exited
+# 1 with nothing on stderr (set -e killed the script at `shift 2`).
+@test "get --format with no value says so" {
+    run "$DOTFILES_DIR/bin/palette" get blue --format
+    assert_failure
+    assert_output --partial "--format needs a value"
+}
+
 @test "every palette entry is a valid six-digit hex" {
     run bash -c '
         set -euo pipefail
