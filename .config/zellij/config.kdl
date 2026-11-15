@@ -3,25 +3,11 @@
 // Modern terminal multiplexer as tmux alternative
 
 // ============================================================================
-// Theme — danse palette, from .config/palette/danse.conf
+// Theme — one per Rice in themes/<rice>.kdl, rendered by bin/rice-themes.
+// A bare `zellij` from the shell starts with the active rice's theme
+// (.config/zsh/rice.zsh); this name is the fallback outside such a shell.
 // ============================================================================
-theme "custom"
-
-themes {
-    custom {
-        fg "#abb2bf"
-        bg "#282c34"
-        black "#282c34"
-        red "#e06a51"
-        green "#98c379"
-        yellow "#e5c07b"
-        blue "#61afef"
-        magenta "#c678dd"
-        cyan "#56b6c2"
-        white "#abb2bf"
-        orange "#d98c5c"
-    }
-}
+theme "danse"
 
 // ============================================================================
 // UI Settings

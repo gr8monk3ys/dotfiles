@@ -137,7 +137,10 @@ it installed, its bar slot is simply empty.
 - Spotify sign-in for `spotify_player` (its `client_id` in
   `~/.config/spotify-player/app.toml`) is a secret and stays local.
 
-- The terminal configs (Ghostty, Starship, fastfetch, cava, btop) are
-  Monochrome 43 by default and come from `make link`, not from here. Ghostty
-  also follows the Omarchy theme once this repo's config is linked.
+- The terminal configs come from `make link`, not from here. Ghostty and
+  btop follow the Omarchy theme; the editor (Neovim, and the Strudel
+  profile), the prompt and the CLI tools (bat, delta, eza, fzf, zsh
+  highlighting, yazi, atuin, zellij, zathura) follow the active Rice through
+  `.config/zsh/rice.zsh` and `bin/rice-themes` (ADR 0003), so on Field
+  Notebook they wear the same night paper and pen.
 - Spotify theming: see [`spicetify/README.md`](../spicetify/README.md).

@@ -122,7 +122,14 @@ set synctex-editor-command "vim --remote +%{line} %{input}"
 
 ### Color Schemes
 
-Easily create color schemes for day/night reading:
+The colours follow the Rice (ADR 0003): `rices/<rice>/zathurarc` is the
+whole config, rendered per rice by `bin/rice-themes` from
+`.config/palette/templates/zathurarc`, and the shell's `zathura` function
+opens zathura with `-c` on the rice's directory. `zathurarc` here links to
+danse's, so a PDF opened from a file manager (no shell) gets danse. Edit the
+template, not the rendered files.
+
+To hand-roll a day/night variant:
 
 **Dark Theme**
 ```

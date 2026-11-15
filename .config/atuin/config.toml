@@ -2,7 +2,9 @@
 # Only deviations from defaults are set; sync stays opt-in per machine
 # (run `atuin register`/`atuin login` manually if wanted).
 
-# Match the repo-wide danse theme (themes/danse.toml).
+# The theme follows the Rice: themes/<rice>.toml, rendered by
+# bin/rice-themes, picked per shell by ATUIN_THEME__NAME (.config/zsh/rice.zsh).
+# This name is only the fallback outside such a shell.
 [theme]
 name = "danse"
 

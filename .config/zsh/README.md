@@ -12,8 +12,10 @@ repo-root `.zshenv`), so everything zsh loads lives in this directory.
 - `aliases.zsh` — aliases (modern CLI replacements, macOS-only block,
   utility shortcuts); sourced by `.zshrc`
 - `functions.zsh` — fzf-powered helper functions (`f`, `fv`, `cx`, …)
-- `rice.zsh` — reads `~/.config/palette/rice.local` and switches the prompt
-  (and `fastfetch`/`cava`) to danse when it says so
+- `rice.zsh` — asks the Rice module (`palette/rice.sh`) for the active rice
+  and points every themed CLI tool at that rice's file (ADR 0003)
+- `rices/<rice>.zsh` — the shell's own colours per rice (highlight styles,
+  autosuggestions, fzf, `EZA_COLORS`), rendered by `bin/rice-themes`
 - `zshrc.local.example` — template for machine-local overrides
 
 ### Load order
@@ -33,16 +35,17 @@ what makes this a checked constraint instead of a comment.
 
 [Starship](https://starship.rs) (config:
 [`../starship/starship.toml`](../starship/starship.toml), a Monochrome 43
-powerline prompt in a Nerd Font). `rice.zsh` switches it to
-[`../starship/danse.toml`](../starship/danse.toml) — and points `fastfetch`
-and `cava` at their danse files — when `~/.config/palette/rice.local` says
-`danse`. If the `starship` binary is missing, `.zshrc` sets a plain two-line
+powerline prompt in a Nerd Font) on Monochrome 43. On another rice
+`rice.zsh` switches it to that rice's lean prompt,
+[`../starship/field-notebook.toml`](../starship/field-notebook.toml) or
+[`../starship/danse.toml`](../starship/danse.toml), and on danse also points
+`fastfetch` and `cava` at their danse files. If the `starship` binary is missing, `.zshrc` sets a plain two-line
 prompt until `make brew-packages` installs it.
 
 ## Plugin manager
 
 Plugins are managed by [zinit](https://github.com/zdharma-continuum/zinit)
-(self-bootstraps on first shell start): zsh-syntax-highlighting (OneDark `ZSH_HIGHLIGHT_STYLES` palette),
+(self-bootstraps on first shell start): zsh-syntax-highlighting (the rice's `ZSH_HIGHLIGHT_STYLES`),
 zsh-completions, zsh-autosuggestions, fzf-tab, plus a few OMZ snippets
 (git, sudo, command-not-found; aws/kubectl/archlinux only when the tool
 exists). OMZ itself is **not** installed.
@@ -51,9 +54,9 @@ exists). OMZ itself is **not** installed.
 
 `.zshrc` initializes these when installed (all from the Brewfile):
 
-- **fzf** — ctrl-r / ctrl-t, themed OneDark via `FZF_DEFAULT_OPTS`
+- **fzf** — ctrl-r / ctrl-t, in the rice's colours via `FZF_DEFAULT_OPTS`
 - **zoxide** — frecency `cd` replacement (`--cmd cd`)
-- **atuin** — searchable shell history UI (OneDark theme in
+- **atuin** — searchable shell history UI (the rice's theme in
   [`../atuin/`](../atuin/))
 - **direnv** — per-directory environments
 - **mise** — runtime version manager
