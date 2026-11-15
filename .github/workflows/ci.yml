@@ -60,11 +60,41 @@ jobs:
           sudo git clone --depth 1 https://github.com/bats-core/bats-support.git /usr/lib/bats/bats-support
           sudo git clone --depth 1 https://github.com/bats-core/bats-assert.git /usr/lib/bats/bats-assert
 
+      # The gate is unchanged: `make verify`, failing the job when it fails
+      # (shell: bash runs with -o pipefail, so tee does not mask the status).
+      # BATS_REPORT_DIR only makes `make test` also write TAP, a junit
+      # report and the property-test seeds for the two steps below.
       - name: make verify (no Docker)
+        id: verify
+        shell: bash
         env:
           SKIP_DOCKER: "1"
           TERM: xterm
-        run: make verify
+          BATS_REPORT_DIR: ${{ runner.temp }}/bats-report
+        run: make verify 2>&1 | tee "$RUNNER_TEMP/verify.log"
+
+      # The verification artifact: what ran and how it ended, per validator
+      # and per test file, in the run's summary page.
+      - name: Verification summary
+        if: always()
+        shell: bash
+        env:
+          VERIFY_OUTCOME: ${{ steps.verify.outcome }}
+        run: |
+          bin/ci-summary --log "$RUNNER_TEMP/verify.log" \
+            --report "$RUNNER_TEMP/bats-report" \
+            --outcome "$VERIFY_OUTCOME" \
+            --title "Verification ($RUNNER_OS)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload BATS report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: bats-report-${{ matrix.os }}
+          path: |
+            ${{ runner.temp }}/bats-report
+            ${{ runner.temp }}/verify.log
+          if-no-files-found: warn
 
       - name: link / unlink round-trip
         run: |

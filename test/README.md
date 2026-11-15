@@ -210,6 +210,13 @@ is the local equivalent — run it before pushing. On an Apple Silicon host the
 Arch image runs under `linux/amd64` emulation and takes several minutes;
 `SKIP_ARCH_DOCKER=1` drops it locally without losing the CI coverage.
 
+Each Tests job also leaves a verification report: `bin/ci-summary` writes the
+result of every `make verify` validator, test counts per file and the
+property-test seeds to the run's summary page, and the TAP output, junit
+report, seeds and full `make verify` log are uploaded as the
+`bats-report-<os>` artifact. `BATS_REPORT_DIR=<dir> make test` produces the
+same files locally.
+
 ## Test Coverage
 
 ### Current Coverage
