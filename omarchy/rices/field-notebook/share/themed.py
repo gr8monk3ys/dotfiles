@@ -248,6 +248,14 @@ def firefox(c):
     color: {ink} !important;
   }}
 }}
+
+/* Vim Vixen hangs its command-line frame at the bottom of every page. With
+   pages asked for their dark scheme, that light-scheme frame is painted as an
+   opaque white panel over the page; matching the page's scheme keeps it clear. */
+iframe#vimvixen-console-frame {{
+  color-scheme: normal !important;
+  background: transparent !important;
+}}
 """
     prefs = f"""\
 // Managed by ~/.local/share/field-notebook/themed.py. Lets userChrome.css load
