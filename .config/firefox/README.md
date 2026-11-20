@@ -25,7 +25,7 @@ bin/firefox-user-js status   # where it actually landed
 
 See [bin/firefox-user-js](../../bin/firefox-user-js) for the full interface
 (`--copy`, `--dry-run`, `--root`), and
-[CONTEXT.md § Firefox profile state](../../CONTEXT.md) for the vocabulary its
+[GLOSSARY.md § Firefox profile state](../../GLOSSARY.md) for the vocabulary its
 `status` output uses.
 
 ## How installation works

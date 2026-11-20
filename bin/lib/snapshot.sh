@@ -7,7 +7,7 @@
 # read by nothing.
 #
 # A snapshot is a *forensic record*, not a replayable installer. Replay lives
-# in install/ and `make` — see CONTEXT.md § Snapshot. What a snapshot uniquely
+# in install/ and `make` — see GLOSSARY.md § Snapshot. What a snapshot uniquely
 # holds is drift: what was actually on the machine at that moment, including
 # things no manifest tracks.
 #
