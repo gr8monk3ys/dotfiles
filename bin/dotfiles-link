@@ -121,8 +121,6 @@ link_ssh() {
         ok "$SSH_CONFIG (600)"
     fi
 
-    # grep against a file, not a pipeline: under pipefail `producer | grep -q`
-    # can report failure when grep exits on the first match.
     if [[ -f "$SSH_CONFIG" ]] && grep -Eq "$SSH_INCLUDE_RE" "$SSH_CONFIG"; then
         ok "SSH Include already present in $SSH_CONFIG"
     elif change "append $SSH_INCLUDE_LINE to $SSH_CONFIG"; then

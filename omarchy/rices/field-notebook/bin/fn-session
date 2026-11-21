@@ -47,7 +47,7 @@ spotify_addr() {
 # as of Nov 2026: aome510/spotify-player#1107.)
 start_music() {
   command -v spotify-launcher >/dev/null || { echo "spotify: spotify-launcher missing"; return 0; }
-  if ! playerctl -l 2>/dev/null | grep -qx spotify && [[ -z $(spotify_addr) ]]; then
+  if ! grep -qx spotify <<< "$(playerctl -l 2>/dev/null)" && [[ -z $(spotify_addr) ]]; then
     setsid -f uwsm-app -- spotify-launcher >/dev/null 2>&1
   fi
   # Spotify names its window late, so watch for it and tuck it away.

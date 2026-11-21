@@ -115,7 +115,7 @@ report_validators() {
             status="unknown (verify did not finish: $OUTCOME)"
         elif [[ -n "$header" ]] && ! grep -qF "$header" "$LOG"; then
             status="no output found"
-        elif [[ -n "$header" ]] && section "$header" "$next_header" | grep -qE 'Skipping|SKIPPED'; then
+        elif [[ -n "$header" ]] && grep -qE 'Skipping|SKIPPED' <<< "$(section "$header" "$next_header")"; then
             status="skipped: $(section "$header" "$next_header" | grep -m1 -E 'Skipping|SKIPPED' |
                 sed 's/^[^A-Za-z]*//; s/|/\\|/g')"
         else

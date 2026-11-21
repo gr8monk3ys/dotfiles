@@ -99,7 +99,7 @@ setup() {
         status=0
         for var in $(grep -oE "\$PAL_[A-Z_]+" "$repo/.config/sketchybar/colors.sh" | sort -u); do
             want="${var#\$PAL_}"
-            printf "%s\n" "$names" | grep -Fxq "$want" || { echo "colors.sh wants \$PAL_$want, palette has no such colour"; status=1; }
+            grep -Fxq "$want" <<< "$names" || { echo "colors.sh wants \$PAL_$want, palette has no such colour"; status=1; }
         done
         exit $status
     ' _ "$DOTFILES_DIR"
@@ -153,7 +153,7 @@ setup() {
             allowed="$(PALETTE="$rice" "$repo/bin/palette" list | cut -f2)"
             [[ -f "$repo/$f" ]] || { echo "missing rendered theme: $f"; status=1; continue; }
             for hex in $(grep -oiE "#[0-9a-f]{6}" "$repo/$f" | tr "[:upper:]" "[:lower:]" | sort -u); do
-                printf "%s\n" "$allowed" | grep -Fxq "$hex" \
+                grep -Fxq "$hex" <<< "$allowed" \
                     || { echo "$f uses $hex, which is not in the $rice palette"; status=1; }
             done
         done < <("$repo/bin/rice-themes" list)
@@ -220,7 +220,7 @@ setup() {
             allowed="$(PALETTE="$pal" "$repo/bin/palette" list | cut -f2)"
             [[ -f "$repo/$f" ]] || { echo "missing generated theme: $f"; status=1; continue; }
             for hex in $(grep -oE "#[0-9a-f]{6}" "$repo/$f" | sort -u); do
-                printf "%s\n" "$allowed" | grep -Fxq "$hex" \
+                grep -Fxq "$hex" <<< "$allowed" \
                     || { echo "$f uses $hex, which is not in the $pal palette"; status=1; }
             done
         done <<THEMES
@@ -254,7 +254,7 @@ THEMES
         status=0
         for hex in $(sed -nE "s/^[a-z-]+[[:space:]]*=[[:space:]]*([0-9a-f]{6})[[:space:]]*$/\1/p" \
                 "$1/spicetify/Themes/monochrome-43/color.ini" | sort -u); do
-            printf "%s\n" "$allowed" | grep -Fxq "#$hex" \
+            grep -Fxq "#$hex" <<< "$allowed" \
                 || { echo "color.ini uses $hex, not in monochrome-43"; status=1; }
         done
         n="$(grep -cE "^[a-z-]+[[:space:]]*=" "$1/spicetify/Themes/monochrome-43/color.ini")"
@@ -318,7 +318,7 @@ nvim_colours() {
             | grep -oE "\"[^\"]+\"" | tr -d "\"")"
         [[ -n "$drawn" ]] || { echo "could not read SPACE_ICONS from spaces.sh"; exit 1; }
         for ws in $drawn; do
-            printf "%s\n" "$declared" | grep -Fxq "$ws" \
+            grep -Fxq "$ws" <<< "$declared" \
                 || { echo "sketchybar draws workspace $ws, aerospace does not persist it"; status=1; }
         done
         exit $status

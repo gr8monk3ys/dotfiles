@@ -203,8 +203,6 @@ status_jj() {
 }
 
 status_ssh_include() {
-    # grep against a file, not a pipeline: `producer | grep -q` under
-    # `set -o pipefail` reports failure when grep exits on the first match.
     if [[ -f "$SSH_CONFIG" ]] && grep -Eq "$SSH_INCLUDE_RE" "$SSH_CONFIG"; then
         emit configured ssh-include "$SSH_CONFIG includes $SSH_SNIPPET_DIR"
     else

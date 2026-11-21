@@ -169,13 +169,9 @@ main() {
         return 0
     fi
 
-    # Deliberately not `"$MANIFEST" kinds | grep -Fxq`: grep -q exits on the
-    # first match, SIGPIPEs the producer, and `set -o pipefail` then reports
-    # the pipeline as failed — so a valid kind read as unknown unless it
-    # happened to be the last one listed.
     local known
     known="$("$MANIFEST" kinds)"
-    if ! printf '%s\n' "$known" | grep -Fxq -- "$kind"; then
+    if ! grep -Fxq -- "$kind" <<< "$known"; then
         print_error "Unknown kind '$kind' (one of: $(printf '%s' "$known" | tr '\n' ' '))"
         return 2
     fi

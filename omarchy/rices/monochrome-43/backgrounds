@@ -14,7 +14,7 @@ readonly WALLPAPER_NAME="00-43pr-wallhaven.jpg"
 OMARCHY_SYSTEM_DIR="${PLATFORM_OMARCHY_SYSTEM_DIR:-/usr/share/omarchy}"
 
 has_wallpaper() {
-    [[ -f "$1/$WALLPAPER_NAME" ]] && sha256sum "$1/$WALLPAPER_NAME" | grep -q "^$WALLPAPER_SHA256 "
+    [[ -f "$1/$WALLPAPER_NAME" ]] && [[ "$(sha256sum "$1/$WALLPAPER_NAME")" == "$WALLPAPER_SHA256 "* ]]
 }
 
 if [[ "${1:-}" == --check ]]; then
@@ -38,7 +38,7 @@ if ! has_wallpaper "$bg"; then
     wp="$bg/$WALLPAPER_NAME"
     curl -fsSL --max-time 120 -o "$wp.part" "$WALLPAPER_URL" ||
         { rm -f "$wp.part"; echo "could not fetch $WALLPAPER_URL" >&2; exit 1; }
-    sha256sum "$wp.part" | grep -q "^$WALLPAPER_SHA256 " ||
+    [[ "$(sha256sum "$wp.part")" == "$WALLPAPER_SHA256 "* ]] ||
         { rm -f "$wp.part"; echo "wallpaper hash mismatch; refusing it" >&2; exit 1; }
     mv "$wp.part" "$wp"
 fi

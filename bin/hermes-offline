@@ -95,7 +95,7 @@ main() {
         note "ollama not installed (it is in install/Brewfile and install/pacmanfile)"
     elif ! ollama list > /dev/null 2>&1; then
         note "ollama is installed but not running; start it, then re-run to check the model"
-    elif ollama list | awk 'NR > 1 { print $1 }' | grep -Fxq "$MODEL"; then
+    elif ollama list | awk -v m="$MODEL" 'NR > 1 && $1 == m { found = 1 } END { exit !found }'; then
         ok "ollama has $MODEL"
     elif ((PULL)); then
         if change "ollama pull $MODEL"; then

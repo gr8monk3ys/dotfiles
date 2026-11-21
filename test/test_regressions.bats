@@ -393,3 +393,19 @@ EOS
 	run grep -c '{ name = ' .config/yazi/yazi.toml
 	assert_output "0"
 }
+
+@test "no command is piped into grep -q (SIGPIPE + pipefail makes a match read as a miss)" {
+	# grep -q exits on the first match; a producer still writing gets
+	# SIGPIPE, and under `set -o pipefail` the pipeline then fails. It only
+	# bites when timing goes the wrong way, so it shows up as a flaky test.
+	# Scoped to the trees that run under pipefail; plain-sh files have neither
+	# pipefail nor here-strings.
+	run bash -c "git grep -nIE '\\|[[:space:]]*grep([[:space:]]+-[A-Za-z]+)*[[:space:]]+(-[A-Za-z]*q|--quiet)' \
+		-- bin omarchy test install.sh | grep -vE '^[^:]+:[0-9]+:[[:space:]]*#'"
+	[[ -z "$output" ]] || {
+		echo "Pipe into grep -q found. Feed grep a here-string or a file instead:"
+		echo "  grep -Fxq -- \"\$x\" <<< \"\$list\"    or    grep -q pat <<< \"\$(producer)\""
+		echo "$output"
+		return 1
+	}
+}

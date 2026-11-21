@@ -94,7 +94,7 @@ sync_marketplaces() {
     local have name src
     have="$("$CLAUDE" plugin marketplace list --json 2> /dev/null | jq -r '.[].name' 2> /dev/null || true)"
     while IFS=$'\t' read -r name src; do
-        if printf '%s\n' "$have" | grep -Fxq "$name"; then
+        if grep -Fxq "$name" <<< "$have"; then
             ok "$name"
         elif change "claude plugin marketplace add $src"; then
             run_claude plugin marketplace add "$src"
@@ -107,7 +107,7 @@ sync_plugins() {
     local have id
     have="$("$CLAUDE" plugin list --json 2> /dev/null | jq -r '.[].id' 2> /dev/null || true)"
     while read -r id; do
-        if printf '%s\n' "$have" | grep -Fxq "$id"; then
+        if grep -Fxq "$id" <<< "$have"; then
             ok "$id"
         elif change "claude plugin install $id --scope user"; then
             run_claude plugin install "$id" --scope user
@@ -125,7 +125,7 @@ mcp_names() {
 add_mcp() {
     local name="$1"
     shift
-    if printf '%s\n' "$MCP_HAVE" | grep -Fxq "$name"; then
+    if grep -Fxq "$name" <<< "$MCP_HAVE"; then
         ok "$name (present; not compared)"
     elif change "claude mcp add --scope user $name $*"; then
         run_claude mcp add --scope user "$name" "$@"

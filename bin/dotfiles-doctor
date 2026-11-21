@@ -126,7 +126,7 @@ check_dotfiles() {
             fi
 
             # Check remote
-            if git remote -v | grep -q origin; then
+            if grep -q origin <<< "$(git remote -v)"; then
                 check_pass "Remote origin configured"
             else
                 check_warn "No remote origin configured"

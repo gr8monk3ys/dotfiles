@@ -22,7 +22,7 @@ setup() {
 
 # bats-assert's assert_line is not in the fallback helpers; this is enough.
 has_line() {
-    printf '%s\n' "$output" | grep -Fxq -- "$1" || {
+    grep -Fxq -- "$1" <<< "$output" || {
         echo "no line '$1' in:"
         printf '%s\n' "$output"
         return 1

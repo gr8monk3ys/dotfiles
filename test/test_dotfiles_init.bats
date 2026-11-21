@@ -389,7 +389,7 @@ link_git_include_chain() {
         help="$(make help 2>/dev/null)"
         status=0
         for v in $(grep -oE "\$\((GIT|JJ)_[A-Z_]+\)" Makefile | tr -d "\$()" | sort -u); do
-            printf "%s" "$help" | grep -q "$v" || { echo "undocumented in make help: $v"; status=1; }
+            grep -q "$v" <<< "$help" || { echo "undocumented in make help: $v"; status=1; }
         done
         exit $status
     ' _ "$DOTFILES_DIR"
