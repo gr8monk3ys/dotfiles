@@ -336,7 +336,7 @@ file_mode() {
 
 # Check the gitignored local files: git identity, jj identity, SSH snippets.
 #
-# A reporter over bin/dotfiles-init (CONTEXT.md § Reporter), which is also what
+# A reporter over bin/dotfiles-init (GLOSSARY.md § Reporter), which is also what
 # writes them — so the health check and the fix cannot disagree about what
 # "configured" means. Doctor used to ask `git config --global user.email`
 # itself and name the problem without being able to point at a fix.

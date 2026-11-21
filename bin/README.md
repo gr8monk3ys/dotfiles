@@ -76,7 +76,7 @@ make doctor
 
 Creates the gitignored local files `make` cannot: git identity, jj identity,
 and a report on the SSH host snippets it can only look at. See
-[CONTEXT.md](../CONTEXT.md) § Local config for the subjects and states.
+[GLOSSARY.md](../GLOSSARY.md) § Local config for the subjects and states.
 
 **Usage:**
 
@@ -317,7 +317,7 @@ separately and had drifted, so backup wrote nine artifacts and restore
 handled two.
 
 Artifacts have a class — `tree` (restore replays it), `record` (preserved,
-never replayed) and `metadata`. See CONTEXT.md § Snapshot for the table and
+never replayed) and `metadata`. See GLOSSARY.md § Snapshot for the table and
 the reasoning. Rows may carry a legacy filename so older snapshots still
 resolve after a rename.
 
@@ -368,7 +368,7 @@ recognises it. `dotfiles-link` appends it; `dotfiles-init` reports on it.
 Shared git fast-forward state machine, sourced by `dotfiles-update`,
 `dotfiles-sync` and `dotfiles-doctor`. One module decides whether a checkout
 is safe to fast-forward; each caller maps the resulting state to its own
-output. See CONTEXT.md § Sync state for the vocabulary.
+output. See GLOSSARY.md § Sync state for the vocabulary.
 
 Both entry points always return 0 — the result is `GIT_SYNC_STATE`, not the
 exit code — and neither ever `cd`s or suppresses git's stderr (captured into
@@ -422,7 +422,7 @@ link-state /tmp/fixture    # classify against another root (used by tests)
 link-state --states        # the state vocabulary
 ```
 
-See CONTEXT.md § Link state for the vocabulary. The directory list is derived
+See GLOSSARY.md § Link state for the vocabulary. The directory list is derived
 from what the checkout ships; doctor previously carried a hand-written list of
 8 while stow links all 26.
 
@@ -462,7 +462,7 @@ firefox-user-js --states      # the state vocabulary
 make firefox [profiles=all] [copy=1] [dry=1]
 ```
 
-See CONTEXT.md § Firefox profile state for the vocabulary. Three things it
+See GLOSSARY.md § Firefox profile state for the vocabulary. Three things it
 does not do the obvious way, each for a reason:
 
 - Profiles come from `profiles.ini`, never a `Profiles/*/` glob. An

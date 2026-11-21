@@ -19,5 +19,5 @@ to the rice would re-theme every CLI tool when a machine switches rice.
 ## Consequences
 
 A caller that wants the rice's colours asks for them by name:
-`PALETTE="$RICE" palette ...` after `rice_select`. CONTEXT.md's **Rice** entry
+`PALETTE="$RICE" palette ...` after `rice_select`. GLOSSARY.md's **Rice** entry
 says the two are different things.
