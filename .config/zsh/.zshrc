@@ -51,7 +51,8 @@ zinit snippet OMZP::command-not-found
 # sudo-pacman aliases; aws costs ~20ms probing for a binary that isn't there).
 [[ "$OSTYPE" == linux* ]] && command -v pacman &> /dev/null && zinit snippet OMZP::archlinux
 command -v aws     &> /dev/null && zinit snippet OMZP::aws
-command -v kubectl &> /dev/null && zinit snippet OMZP::kubectl
+# The kubectl snippet writes completions via =(...), which aborts zsh 5.9.2 when that dir is read-only (sandboxed shells).
+command -v kubectl &> /dev/null && [[ -w "$ZSH_CACHE_DIR/completions" ]] && zinit snippet OMZP::kubectl
 command -v kubectx &> /dev/null && zinit snippet OMZP::kubectx
 
 # Load completions. Only re-scan fpath once a day; otherwise trust the dump
