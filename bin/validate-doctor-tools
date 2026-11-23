@@ -91,7 +91,7 @@ probed="$("$DOCTOR" --list-checked-tools | sort -u)"
 while read -r cmd pkg; do
     [[ -n "$cmd" ]] || continue
 
-    if ! printf '%s\n' "$probed" | grep -Fxq "$cmd"; then
+    if ! grep -Fxq "$cmd" <<< "$probed"; then
         echo "$MAP_FILE maps '$cmd', which dotfiles-doctor no longer probes"
         status=1
     fi

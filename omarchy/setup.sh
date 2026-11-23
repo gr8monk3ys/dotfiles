@@ -209,7 +209,7 @@ step_theme() {
 }
 
 plugin_enabled() {
-    printf '%s\n' "$ENABLED" | grep -Fxq "$1"
+    grep -Fxq "$1" <<< "$ENABLED"
 }
 
 step_plugins() {

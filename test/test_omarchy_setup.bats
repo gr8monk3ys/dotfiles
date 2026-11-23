@@ -159,7 +159,7 @@ be_omarchy() { mkdir -p "$PLATFORM_OMARCHY_SYSTEM_DIR"; }
         status=0
         for w in $(jq -r ".layout[][] | .id" "$1/omarchy/bar.json"); do
             [[ "$w" == omarchy.* ]] && continue
-            printf "%s\n" "$ids" | grep -Fxq "$w" || { echo "bar.json places $w, which plugins.tsv does not install"; status=1; }
+            grep -Fxq "$w" <<< "$ids" || { echo "bar.json places $w, which plugins.tsv does not install"; status=1; }
         done
         exit $status
     ' _ "$DOTFILES_DIR"

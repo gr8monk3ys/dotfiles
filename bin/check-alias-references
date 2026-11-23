@@ -40,11 +40,12 @@ is_builtin() {
 is_in_allowlist() {
     local cmd="$1"
     [[ -f "$ALLOWLIST_FILE" ]] || return 1
-    awk '
+    awk -v c="$cmd" '
         /^[[:space:]]*#/ { next }
         /^[[:space:]]*$/ { next }
-        { print $1 }
-    ' "$ALLOWLIST_FILE" | grep -Fxq "$cmd"
+        $1 == c { found = 1 }
+        END { exit !found }
+    ' "$ALLOWLIST_FILE"
 }
 
 # Every package name this system installs, from the one manifest reader.
@@ -58,7 +59,7 @@ manifest_names() {
 }
 
 is_in_manifest() {
-    printf '%s\n' "$MANIFEST_NAMES" | grep -Fxq "$1"
+    grep -Fxq "$1" <<< "$MANIFEST_NAMES"
 }
 
 MANIFEST_NAMES="$(manifest_names | sort -u)"

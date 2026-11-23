@@ -871,7 +871,7 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 ### discord
 
-- **Why:** Discord itself, for parity with the Omarchy box (where it comes from the `discord` package by hand); the Discord MCP server in `bin/claude-sync` talks to a running client. Core rather than extra: it is a daily app, not a one-off.
+- **Why:** Discord itself, for parity with the Omarchy box (where the Field Notebook rice ships Vesktop instead); the Discord MCP server in `bin/claude-sync` talks to a running client. Core rather than extra: it is a daily app, not a one-off.
 - **Alternatives:** dorion (Caskfile.extra, a lighter client)
 - **Installed via:** Caskfile
 
@@ -1295,9 +1295,24 @@ from `omarchy/rices/<rice>/packages.pacman|.aur` and installed by
 - **Why:** BlexMono Nerd Font: Field Notebook's terminal font and the wallpaper label face.
 - **Installed via:** omarchy/rices/field-notebook/packages.pacman
 
+### claude-desktop
+
+- **Why:** Claude Desktop, the big left pane `fn-session` opens on workspace 1.
+- **Installed via:** omarchy/rices/field-notebook/packages.pacman (Omarchy repo)
+
+### brave-bin
+
+- **Why:** The browser `fn-session` opens on workspace 2.
+- **Installed via:** omarchy/rices/field-notebook/packages.pacman (Omarchy repo)
+
+### qbittorrent-nox
+
+- **Why:** Headless qBittorrent the OmaqBT bar plugin drives over its local Web API.
+- **Installed via:** omarchy/rices/field-notebook/packages.pacman
+
 ### vesktop-bin
 
-- **Why:** Discord client whose settings carry the Field Notebook look.
+- **Why:** Discord client whose settings carry the Field Notebook look; `fn-session` opens it on workspace 3.
 - **Installed via:** omarchy/rices/field-notebook/packages.aur
 
 ### ttf-fraunces
@@ -1421,7 +1436,7 @@ package manifests. Documented here so the gap is visible.
 
 ### Linux counterparts of the GUI casks
 
-- **Why:** On Arch, Discord, Spotify, GIMP, Inkscape, Blender, Godot, OBS, Steam and Proton Mail Bridge come from the official repos (`discord`, `spotify-launcher`, `gimp`, `inkscape`, `blender`, `godot`, `obs-studio`, `steam` from multilib, `protonmail-bridge`); VSCodium, DaVinci Resolve and spicetify-cli from the AUR. None are in pacmanfile: it mirrors the Brewfile (terminal tools the repo configures), not the Caskfiles, `test/Dockerfile.arch` installs every line of it, and Omarchy already provides Obsidian and Docker. Install them by hand: `sudo pacman -S --needed discord spotify-launcher gimp inkscape blender godot obs-studio protonmail-bridge steam`.
+- **Why:** On Arch, Spotify, GIMP, Inkscape, Blender, Godot, OBS, Steam and Proton Mail Bridge come from the official repos (`spotify-launcher`, `gimp`, `inkscape`, `blender`, `godot`, `obs-studio`, `steam` from multilib, `protonmail-bridge`); VSCodium, DaVinci Resolve and spicetify-cli from the AUR. None are in pacmanfile: it mirrors the Brewfile (terminal tools the repo configures), not the Caskfiles, `test/Dockerfile.arch` installs every line of it, and Omarchy already provides Obsidian and Docker. Discord comes with the Field Notebook rice as Vesktop. Install the rest by hand: `sudo pacman -S --needed spotify-launcher gimp inkscape blender godot obs-studio protonmail-bridge steam`.
 - **Installed via:** by hand on Arch
 
 ### hermes-agent

@@ -83,7 +83,7 @@ teardown() {
 }
 
 @test "platform helper has proper shebang" {
-    head -n1 bin/platform | grep -q "^#!/"
+    [[ "$(head -n1 bin/platform)" == "#!/"* ]]
 }
 
 # General script validation
@@ -101,7 +101,7 @@ teardown() {
 @test "no bin scripts have syntax errors" {
     for script in bin/*; do
         if [[ -f "$script" ]] && [[ "$script" != */README.md ]]; then
-            if head -n1 "$script" | grep -q "bash"; then
+            if [[ "$(head -n1 "$script")" == *bash* ]]; then
                 bash -n "$script" || {
                     echo "Syntax error in: $script"
                     return 1

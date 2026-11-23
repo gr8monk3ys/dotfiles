@@ -108,6 +108,8 @@ the commit in `plugins.tsv`, run `make omarchy apply=1 only=plugins`.
 | Colophon | ssandys/colophon | yes |
 | Spaces | tornikegomareli/omarchy-spaces | yes |
 | OMCP | btsouth/omarchy-omcp | yes |
+| Omastorm | wesleygrimes/omastorm | yes |
+| OmaqBT | Aweiward/omaqbt | yes |
 
 `gr8monk3ys.sysstats` (CPU, memory, temperature), `superwhisper.panel` and
 `io.voxtype.settings` (each shipped by its app's package) are `external` in
