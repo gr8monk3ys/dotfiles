@@ -484,7 +484,7 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 ### xsv
 
 - **Why:** Fast CSV toolkit (Rust).
-- **Installed via:** Brewfile, pacmanfile
+- **Installed via:** pacmanfile (Homebrew disabled the formula on 2026-04-27: upstream is archived)
 
 ### duf
 
