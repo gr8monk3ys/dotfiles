@@ -76,7 +76,7 @@ make doctor
 
 Creates the gitignored local files `make` cannot: git identity, jj identity,
 and a report on the SSH host snippets it can only look at. See
-[CONTEXT.md](../CONTEXT.md) § Local config for the subjects and states.
+[GLOSSARY.md](../GLOSSARY.md) § Local config for the subjects and states.
 
 **Usage:**
 
@@ -294,6 +294,21 @@ gh-merge-green 42 -R owner/repo     # another repo
 gh-merge-green 42 --rebase          # your own merge flags instead
 ```
 
+### [gh-merge-local-green](gh-merge-local-green)
+
+The same guarantee when hosted CI cannot run. Runs the check you give it in a
+throwaway worktree holding the PR head merged with the current base tip, and
+squash-merges that exact head commit only if the check passes. Refuses a
+draft, a conflict, and a call with no check command.
+
+**Usage:**
+
+```bash
+gh-merge-local-green 42 -R owner/repo -- make check
+gh-merge-local-green 42 -R owner/repo -C ~/src/repo -- bash -c 'bun install --frozen-lockfile && bun run check'
+gh-merge-local-green 42 -R owner/repo --admin -- make check   # past required checks that cannot run
+```
+
 ### [lib/ui.sh](lib/ui.sh)
 
 Shared terminal UI helpers (`print_header`, `print_success`, `print_info`,
@@ -317,7 +332,7 @@ separately and had drifted, so backup wrote nine artifacts and restore
 handled two.
 
 Artifacts have a class — `tree` (restore replays it), `record` (preserved,
-never replayed) and `metadata`. See CONTEXT.md § Snapshot for the table and
+never replayed) and `metadata`. See GLOSSARY.md § Snapshot for the table and
 the reasoning. Rows may carry a legacy filename so older snapshots still
 resolve after a rename.
 
@@ -368,7 +383,7 @@ recognises it. `dotfiles-link` appends it; `dotfiles-init` reports on it.
 Shared git fast-forward state machine, sourced by `dotfiles-update`,
 `dotfiles-sync` and `dotfiles-doctor`. One module decides whether a checkout
 is safe to fast-forward; each caller maps the resulting state to its own
-output. See CONTEXT.md § Sync state for the vocabulary.
+output. See GLOSSARY.md § Sync state for the vocabulary.
 
 Both entry points always return 0 — the result is `GIT_SYNC_STATE`, not the
 exit code — and neither ever `cd`s or suppresses git's stderr (captured into
@@ -422,7 +437,7 @@ link-state /tmp/fixture    # classify against another root (used by tests)
 link-state --states        # the state vocabulary
 ```
 
-See CONTEXT.md § Link state for the vocabulary. The directory list is derived
+See GLOSSARY.md § Link state for the vocabulary. The directory list is derived
 from what the checkout ships; doctor previously carried a hand-written list of
 8 while stow links all 26.
 
@@ -462,7 +477,7 @@ firefox-user-js --states      # the state vocabulary
 make firefox [profiles=all] [copy=1] [dry=1]
 ```
 
-See CONTEXT.md § Firefox profile state for the vocabulary. Three things it
+See GLOSSARY.md § Firefox profile state for the vocabulary. Three things it
 does not do the obvious way, each for a reason:
 
 - Profiles come from `profiles.ini`, never a `Profiles/*/` glob. An

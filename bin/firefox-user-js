@@ -88,7 +88,7 @@ readonly USER_JS_STATES="linked installed foreign absent missing"
 # --- where Firefox keeps its profiles --------------------------------------
 
 # The one OS branch in this module, and it goes through bin/platform rather
-# than testing $OSTYPE inline (CONTEXT.md § Platform).
+# than testing $OSTYPE inline (GLOSSARY.md § Platform).
 default_root() {
     if "$PLATFORM" is-macos; then
         printf '%s\n' "$HOME/Library/Application Support/Firefox"

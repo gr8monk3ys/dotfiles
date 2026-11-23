@@ -55,12 +55,12 @@ into `~/.config/`; `make` drives install, link and verification.
 
 ### Issue tracker
 
-Issues live as GitHub issues in `gr8monk3ys/dotfiles`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+GitHub Issues on `gr8monk3ys/dotfiles`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
-The five canonical triage roles, each label string equal to its name. See `docs/agents/triage-labels.md`.
+The five canonical roles, label string equal to role name. See `docs/agents/triage-labels.md`.
 
 ### Domain docs
 
-Single-context: `CONTEXT.md` and `docs/adr/` at the repo root, created lazily. See `docs/agents/domain.md`.
+Single-context: `GLOSSARY.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.

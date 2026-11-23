@@ -9,7 +9,7 @@
 # checklist in OPERATING.md, and neither could do anything about it.
 #
 # This module both classifies and writes. `dotfiles-doctor` is a reporter over
-# `--status` (CONTEXT.md § Reporter) and carries no detection of its own.
+# `--status` (GLOSSARY.md § Reporter) and carries no detection of its own.
 #
 # Usage:
 #   dotfiles-init [VALUE OPTIONS]  configure what is missing, leave the rest alone
