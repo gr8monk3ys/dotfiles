@@ -163,7 +163,6 @@ brew "ouch"                            # Universal archive compress/decompress
 brew "jnv"                             # Interactive JSON navigator with jq
 brew "glow"                            # Terminal markdown renderer
 brew "csvlens"                         # Interactive CSV viewer
-brew "xsv"                             # Fast CSV toolkit (Rust)
 
 ## System & Network
 brew "duf"                             # Modern df replacement (disk free)
