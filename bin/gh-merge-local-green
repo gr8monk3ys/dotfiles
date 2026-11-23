@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# gh-merge-local-green - merge a PR only after its check passes locally.
+#
+# Usage: gh-merge-local-green <pr> -R owner/repo [-C clone] -- <check command...>
+#        (clone defaults to ~/code/<repo>)
+#
+# For when hosted CI cannot run, so gh-merge-green has nothing to wait on.
+# Runs the check in a throwaway worktree holding the PR head merged with the
+# current base tip, then merges that exact head commit. A second PR in the
+# same repo is therefore checked against the base the first one left behind.
+set -euo pipefail
+
+die() { printf 'gh-merge-local-green: %s\n' "$*" >&2; exit 1; }
+usage="usage: gh-merge-local-green <pr> -R owner/repo [-C clone] -- <check command...>"
+
+[[ $# -ge 1 && $1 != -* ]] || die "$usage"
+pr=$1
+shift
+repo="" clone=""
+while [[ $# -gt 0 && $1 != -- ]]; do
+    case $1 in
+        -R | --repo) repo=${2:-}; shift 2 ;;
+        -C) clone=${2:-}; shift 2 ;;
+        *) die "$usage" ;;
+    esac
+done
+[[ ${1:-} == -- ]] && shift
+[[ -n $repo && $# -gt 0 ]] || die "$usage"
+clone=${clone:-$HOME/code/${repo#*/}}
+git -C "$clone" rev-parse --git-dir >/dev/null 2>&1 || die "no clone of $repo at $clone"
+
+IFS=$'\t' read -r head base draft < <(gh pr view "$pr" -R "$repo" \
+    --json headRefOid,baseRefName,isDraft -q '[.headRefOid,.baseRefName,(.isDraft|tostring)]|@tsv')
+[[ $head =~ ^[0-9a-f]{40}$ ]] || die "could not read the head commit of #$pr"
+[[ $draft == false ]] || die "#$pr is a draft; not merging."
+
+git -C "$clone" fetch -q origin "+refs/heads/$base:refs/remotes/origin/$base" "refs/pull/$pr/head"
+wt=$(mktemp -d)
+trap 'git -C "$clone" worktree remove --force "$wt" >/dev/null 2>&1 || rm -rf "$wt"' EXIT
+git -C "$clone" worktree add -q --detach "$wt" "$head"
+git -C "$wt" merge -q --no-edit "origin/$base" ||
+    die "#$pr: ${head:0:8} does not merge cleanly with $base; not merging."
+
+(cd "$wt" && "$@") || die "#$pr: check failed on ${head:0:8} merged with $base; not merging."
+
+gh pr merge "$pr" -R "$repo" --match-head-commit "$head" --squash --delete-branch
