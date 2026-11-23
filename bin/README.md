@@ -294,6 +294,21 @@ gh-merge-green 42 -R owner/repo     # another repo
 gh-merge-green 42 --rebase          # your own merge flags instead
 ```
 
+### [gh-merge-local-green](gh-merge-local-green)
+
+The same guarantee when hosted CI cannot run. Runs the check you give it in a
+throwaway worktree holding the PR head merged with the current base tip, and
+squash-merges that exact head commit only if the check passes. Refuses a
+draft, a conflict, and a call with no check command.
+
+**Usage:**
+
+```bash
+gh-merge-local-green 42 -R owner/repo -- make check
+gh-merge-local-green 42 -R owner/repo -C ~/src/repo -- bash -c 'bun install --frozen-lockfile && bun run check'
+gh-merge-local-green 42 -R owner/repo --admin -- make check   # past required checks that cannot run
+```
+
 ### [lib/ui.sh](lib/ui.sh)
 
 Shared terminal UI helpers (`print_header`, `print_success`, `print_info`,
