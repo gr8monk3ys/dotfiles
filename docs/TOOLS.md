@@ -871,9 +871,9 @@ install manifests (`install/Brewfile`, `Caskfile`, `Caskfile.extra`, `npmfile`, 
 
 ### discord
 
-- **Why:** Discord itself, on both machines (on Omarchy the Field Notebook session opens it on workspace 3); the Discord MCP server in `bin/claude-sync` talks to a running client. Core rather than extra: it is a daily app, not a one-off.
+- **Why:** Discord itself, for parity with the Omarchy box (where the Field Notebook rice ships Vesktop instead); the Discord MCP server in `bin/claude-sync` talks to a running client. Core rather than extra: it is a daily app, not a one-off.
 - **Alternatives:** dorion (Caskfile.extra, a lighter client)
-- **Installed via:** Caskfile; omarchy/rices/field-notebook/packages.pacman on Arch
+- **Installed via:** Caskfile
 
 ### db-browser-for-sqlite
 
@@ -1312,7 +1312,7 @@ from `omarchy/rices/<rice>/packages.pacman|.aur` and installed by
 
 ### vesktop-bin
 
-- **Why:** Discord client whose settings carry the Field Notebook look.
+- **Why:** Discord client whose settings carry the Field Notebook look; `fn-session` opens it on workspace 3.
 - **Installed via:** omarchy/rices/field-notebook/packages.aur
 
 ### ttf-fraunces
@@ -1436,7 +1436,7 @@ package manifests. Documented here so the gap is visible.
 
 ### Linux counterparts of the GUI casks
 
-- **Why:** On Arch, Spotify, GIMP, Inkscape, Blender, Godot, OBS, Steam and Proton Mail Bridge come from the official repos (`spotify-launcher`, `gimp`, `inkscape`, `blender`, `godot`, `obs-studio`, `steam` from multilib, `protonmail-bridge`); VSCodium, DaVinci Resolve and spicetify-cli from the AUR. None are in pacmanfile: it mirrors the Brewfile (terminal tools the repo configures), not the Caskfiles, `test/Dockerfile.arch` installs every line of it, and Omarchy already provides Obsidian and Docker. Discord comes with the Field Notebook rice. Install the rest by hand: `sudo pacman -S --needed spotify-launcher gimp inkscape blender godot obs-studio protonmail-bridge steam`.
+- **Why:** On Arch, Spotify, GIMP, Inkscape, Blender, Godot, OBS, Steam and Proton Mail Bridge come from the official repos (`spotify-launcher`, `gimp`, `inkscape`, `blender`, `godot`, `obs-studio`, `steam` from multilib, `protonmail-bridge`); VSCodium, DaVinci Resolve and spicetify-cli from the AUR. None are in pacmanfile: it mirrors the Brewfile (terminal tools the repo configures), not the Caskfiles, `test/Dockerfile.arch` installs every line of it, and Omarchy already provides Obsidian and Docker. Discord comes with the Field Notebook rice as Vesktop. Install the rest by hand: `sudo pacman -S --needed spotify-launcher gimp inkscape blender godot obs-studio protonmail-bridge steam`.
 - **Installed via:** by hand on Arch
 
 ### hermes-agent

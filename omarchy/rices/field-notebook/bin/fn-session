@@ -2,7 +2,7 @@
 # Field Notebook login session: opens the workspace-1 terminals in a fixed
 # order (master layout: Claude Desktop is the big left pane; the system plate,
 # now-playing + visualizer, and gh-dash stack on the right), opens Brave on
-# workspace 2 and Discord on workspace 3, then starts music.
+# workspace 2 and Vesktop (Discord) on workspace 3, then starts music.
 #
 #   fn-session          open whatever is missing (safe to re-run)
 #   fn-session --music  only (re)start Spotify and resume playback
@@ -86,7 +86,7 @@ open org.fieldnotebook.gh "github" \
        printf "\n  \e[90mG I T H U B\e[0m\n\n  gh-dash is not installed yet. Install it with:\n\n    \e[32momarchy pkg aur add gh-dash-bin\e[0m\n\n  then run \e[32mgh-dash\e[0m here.\n\n"; fi; exec "${SHELL:-bash}" -l'
 
 launch brave-browser 2 brave
-launch discord 3 discord
+launch vesktop 3 vesktop
 
 # Hand focus back to Claude, the pane you will type in.
 addr=$(hyprctl clients -j | jq -r '.[] | select(.class == "com.anthropic.Claude") | .address' | head -1)
