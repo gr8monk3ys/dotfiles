@@ -62,7 +62,7 @@ o.window({ title = "Picture[- ]in[- ][Pp]icture" }, { opacity = "1.0 override 1.
 
 -- ── Login session ──
 -- Workspace 1 uses the master layout so fn-session's panes land the same way
--- every login: Claude Code as the big left pane, then the dashboard, Spotify
+-- every login: Claude Desktop as the big left pane, then the dashboard, Spotify
 -- and cava stacked on the right, top to bottom.
 hl.workspace_rule({ workspace = "1", layout = "master" })
 hl.config({ master = { mfact = 0.56, new_status = "slave", new_on_top = false } })
