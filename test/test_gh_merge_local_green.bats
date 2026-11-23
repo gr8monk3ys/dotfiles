@@ -53,6 +53,18 @@ teardown() { cleanup_test_env; }
     [ "$status" -eq 0 ]
 }
 
+@test "--admin is passed to the merge, and only when asked for" {
+    run "$GMLG" 7 -R o/r -C "$CLONE" --admin -- true
+    [ "$status" -eq 0 ]
+    [ "$(cat "$GH_LOG")" = "pr merge 7 -R o/r --match-head-commit $HEAD_SHA --squash --delete-branch --admin" ]
+}
+
+@test "--admin does not merge when the check fails" {
+    run "$GMLG" 7 -R o/r -C "$CLONE" --admin -- false
+    [ "$status" -ne 0 ]
+    [ ! -e "$GH_LOG" ]
+}
+
 @test "does not merge when the check fails" {
     run "$GMLG" 7 -R o/r -C "$CLONE" -- false
     [ "$status" -ne 0 ]

@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # gh-merge-local-green - merge a PR only after its check passes locally.
 #
-# Usage: gh-merge-local-green <pr> -R owner/repo [-C clone] -- <check command...>
+# Usage: gh-merge-local-green <pr> -R owner/repo [-C clone] [--admin] -- <check command...>
 #        (clone defaults to ~/code/<repo>)
+#        --admin merges past branch protection whose required checks cannot
+#        run; the local check is then the only gate, so pass it on purpose.
 #
 # For when hosted CI cannot run, so gh-merge-green has nothing to wait on.
 # Runs the check in a throwaway worktree holding the PR head merged with the
@@ -11,16 +13,17 @@
 set -euo pipefail
 
 die() { printf 'gh-merge-local-green: %s\n' "$*" >&2; exit 1; }
-usage="usage: gh-merge-local-green <pr> -R owner/repo [-C clone] -- <check command...>"
+usage="usage: gh-merge-local-green <pr> -R owner/repo [-C clone] [--admin] -- <check command...>"
 
 [[ $# -ge 1 && $1 != -* ]] || die "$usage"
 pr=$1
 shift
-repo="" clone=""
+repo="" clone="" admin=()
 while [[ $# -gt 0 && $1 != -- ]]; do
     case $1 in
         -R | --repo) repo=${2:-}; shift 2 ;;
         -C) clone=${2:-}; shift 2 ;;
+        --admin) admin=(--admin); shift ;;
         *) die "$usage" ;;
     esac
 done
@@ -43,4 +46,4 @@ git -C "$wt" merge -q --no-edit "origin/$base" ||
 
 (cd "$wt" && "$@") || die "#$pr: check failed on ${head:0:8} merged with $base; not merging."
 
-gh pr merge "$pr" -R "$repo" --match-head-commit "$head" --squash --delete-branch
+gh pr merge "$pr" -R "$repo" --match-head-commit "$head" --squash --delete-branch ${admin[@]+"${admin[@]}"}

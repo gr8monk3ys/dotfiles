@@ -306,6 +306,7 @@ draft, a conflict, and a call with no check command.
 ```bash
 gh-merge-local-green 42 -R owner/repo -- make check
 gh-merge-local-green 42 -R owner/repo -C ~/src/repo -- bash -c 'bun install --frozen-lockfile && bun run check'
+gh-merge-local-green 42 -R owner/repo --admin -- make check   # past required checks that cannot run
 ```
 
 ### [lib/ui.sh](lib/ui.sh)
