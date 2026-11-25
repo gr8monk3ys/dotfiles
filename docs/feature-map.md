@@ -6,7 +6,7 @@ printed. Commands that change the machine are listed by their `--help`, or by
 the dry run they default to.
 
 | Feature | Where | How to reach it | How to check it works |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Install everything for this OS | `Makefile` | `make` (`make macos`, `make arch`, `make linux`) | `make -n` prints the steps for the detected platform |
 | Detect the platform | `bin/platform` | `bin/platform detect` | prints `macos`, `arch`, `linux` or `unknown` (`arch` here) |
 | Preview linking configs into `$HOME` | `bin/dotfiles-link` | `make link-dry-run` or `bin/dotfiles-link` | starts `Dry run: nothing will change.`, lists `would link ...` lines, exit 0 |
